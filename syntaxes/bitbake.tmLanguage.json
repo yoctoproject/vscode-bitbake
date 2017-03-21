@@ -1,0 +1,270 @@
+{
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "scopeName": "source.bb",
+    "name": "BitBake",
+    "fileTypes": [
+        "bb",
+        "bbappend",
+        "bbclass",
+        "inc"
+    ],
+    "patterns": [
+        {
+            "include": "#comment"
+        },
+        {
+            "include": "#variable-assignment"
+        },
+        {
+            "include": "#variables"
+        },
+        {
+            "include": "#directives"
+        },
+        {
+            "include": "source.python"
+        },
+        {
+            "include": "source.shell"
+        }
+    ],
+    "repository": {
+        "string": {
+            "patterns": [
+                {
+                    "begin": "\"",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.string.begin.bb"
+                        }
+                    },
+                    "end": "\"",
+                    "endCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.string.end.bb"
+                        }
+                    },
+                    "name": "string.quoted.double.bb",
+                    "patterns": [
+                        {
+                            "include": "#variables"
+                        }
+                    ]
+                },
+                {
+                    "begin": "'",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.string.begin.bb"
+                        }
+                    },
+                    "end": "'",
+                    "endCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.string.end.bb"
+                        }
+                    },
+                    "name": "string.quoted.single.bb"
+                }
+            ]
+        },
+        "comment": {
+            "begin": "(^\\s+)?(?=#)",
+            "beginCaptures": {
+                "1": {
+                    "name": "punctuation.whitespace.comment.leading.bb"
+                }
+            },
+            "end": "(?!\\G)",
+            "patterns": [
+                {
+                    "begin": "#",
+                    "beginCaptures": {
+                        "0": {
+                            "name": "punctuation.definition.comment.bb"
+                        }
+                    },
+                    "end": "\\n",
+                    "name": "comment.line.number-sign.bb",
+                    "patterns": [
+                        {
+                            "match": "\\\\\\n",
+                            "name": "constant.character.escape.continuation.bb"
+                        }
+                    ]
+                }
+            ]
+        },
+        "directives": {
+            "patterns": [
+                {
+                    "begin": "^\\s*(include)\\b",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.include.bb"
+                        }
+                    },
+                    "end": "^",
+                    "patterns": [
+                        {
+                            "include": "#comment"
+                        }
+                    ]
+                },
+                {
+                    "begin": "^\\s*(require)\\b",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.require.bb"
+                        }
+                    },
+                    "end": "^",
+                    "patterns": [
+                        {
+                            "include": "#comment"
+                        }
+                    ]
+                },
+                {
+                    "begin": "^\\s*(inherit)\\b",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.inherit.bb"
+                        }
+                    },
+                    "end": "^",
+                    "patterns": [
+                        {
+                            "include": "#comment"
+                        }
+                    ]
+                },
+                {
+                    "begin": "^\\s*(fakeroot)?\\s*(python)\\s*([a-zA-Z0-9-_]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\{)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.fakeroot.bb"
+                        },
+                        "2": {
+                            "name": "storage.type.function.python.bb"
+                        },
+                        "3": {
+                            "name": "entity.name.function.python.bb"
+                        },
+                        "5": {
+                            "name": "punctuation.definition.python-function.bb"
+                        }
+                    },
+                    "end": "(\\})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.definition.python-function.bb"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "source.python"
+                        }
+                    ]
+                },
+                {
+                    "begin": "^\\s*(fakeroot)?\\s*(def)\\s*([a-zA-Z0-9-_]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\:)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.fakeroot.bb"
+                        },
+                        "2": {
+                            "name": "storage.type.function.python.bb"
+                        },
+                        "3": {
+                            "name": "entity.name.function.python.bb"
+                        },
+                        "5": {
+                            "name": "punctuation.definition.python-function.bb"
+                        }
+                    },
+                    "end": "(?=^\\S)",
+                    "patterns": [
+                        {
+                            "include": "source.python"
+                        }
+                    ]
+                },
+                {
+                    "begin": "^\\s*(fakeroot)?\\s*([a-zA-Z0-9-_]+)\\s*(\\(\\))?\\s*(\\{)",
+                    "beginCaptures": {
+                        "1": {
+                            "name": "keyword.control.fakeroot.bb"
+                        },
+                        "2": {
+                            "name": "entity.name.function.shell.bb"
+                        },
+                        "4": {
+                            "name": "punctuation.definition.shell-function.bb"
+                        }
+                    },
+                    "end": "(\\})",
+                    "endCaptures": {
+                        "1": {
+                            "name": "punctuation.definition.shell-function.bb"
+                        }
+                    },
+                    "patterns": [
+                        {
+                            "include": "source.shell"
+                        }
+                    ]
+                }
+            ]
+        },
+        "variable-assignment": {
+            "begin": "(^\\s*|\\G\\s*)([^\\s]+)\\s*(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.)\\s*",
+            "beginCaptures": {
+                "2": {
+                    "name": "variable.other.bb"
+                },
+                "3": {
+                    "name": "keyword.operator.assignment.bb"
+                }
+            },
+            "end": "\\n",
+            "patterns": [
+                {
+                    "match": "\\\\\\n",
+                    "name": "constant.character.escape.continuation.bb"
+                },
+                {
+                    "include": "#comment"
+                },
+                {
+                    "include": "#variables"
+                },
+                {
+                    "include": "#string"
+                }
+            ]
+        },
+        "variables": {
+            "patterns": [
+                {
+                    "captures": {
+                        "1": {
+                            "name": "punctuation.definition.variable.bb"
+                        }
+                    },
+                    "match": "(\\$)([a-zA-Z0-9_])*\\b",
+                    "name": "variable.language.bb"
+                },
+                {
+                    "captures": {
+                        "1": {
+                            "name": "punctuation.definition.variable.bb"
+                        }
+                    },
+                    "match": "(\\$\\{)(?:[a-zA-Z0-9_])*(\\})",
+                    "name": "variable.language.bb"
+                }
+            ]
+        }
+    }
+}

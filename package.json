@@ -1,0 +1,26 @@
+{
+    "name": "bitbake",
+    "displayName": "bitbake",
+    "description": "BitBake language support",
+    "version": "0.0.1",
+    "publisher": "mholo65",
+    "engines": {
+        "vscode": "^1.10.0"
+    },
+    "categories": [
+        "Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "bitbake",
+            "aliases": ["BitBake", "bitbake"],
+            "extensions": [".bb",".bbappend",".inc",".bbclass"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "bitbake",
+            "scopeName": "source.bb",
+            "path": "./syntaxes/bitbake.tmLanguage.json"
+        }]
+    }
+}
