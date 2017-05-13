@@ -1,1 +1,1 @@
-<<[extension/README.md]
+see [README.md](./extension/README.md)
