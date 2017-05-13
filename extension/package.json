@@ -3,7 +3,7 @@
   "displayName": "bitbake",
   "description": "BitBake language support",
   "license": "MIT",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "EugenWiens",
   "bugs": {
     "url": "https://github.com/EugenWiens/vscode-bitbake/issues"
