@@ -1,0 +1,78 @@
+{
+  "name": "bitbake",
+  "displayName": "bitbake",
+  "description": "BitBake language support",
+  "license": "MIT",
+  "version": "0.0.1",
+  "publisher": "EugenWiens",
+  "bugs": {
+    "url": "https://github.com/EugenWiens/vscode-bitbake/issues"
+  },
+  "homepage": "https://github.com/EugenWiens/vscode-bitbake",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EugenWiens/vscode-bitbake.git"
+  },
+  "engines": {
+    "vscode": "^1.10.0"
+  },
+  "categories": [
+    "Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:bitbake"
+  ],
+  "main": "./out/extension",
+  "contributes": {
+    "languages": [{
+      "id": "bitbake",
+      "aliases": [
+        "BitBake",
+        "bitbake"
+      ],
+      "extensions": [
+        ".bb",
+        ".bbappend",
+        ".inc",
+        ".bbclass"
+      ],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "bitbake",
+      "scopeName": "source.bb",
+      "path": "./syntaxes/bitbake.tmLanguage.json"
+    }],
+    "configuration": {
+      "type": "object",
+      "title": "Language Server for Bitbake configuration",
+      "properties": {
+        "languageServerBitbake.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "off",
+          "description": "Traces the communication between VSCode and the languageServerBitbake service."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "tsc -p ./",
+    "compile": "tsc -watch -p ./",
+    "update-vscode": "node ./node_modules/vscode/bin/install",
+    "postinstall": "node ./node_modules/vscode/bin/install"
+  },
+  "devDependencies": {
+    "@types/mocha": "^2.2.33",
+    "@types/node": "^6.0.52",
+    "typescript": "^2.1.5",
+    "vscode": "^1.0.3"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^3.1.0"
+  }
+}
