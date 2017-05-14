@@ -74,7 +74,7 @@ export class ContextHandler {
             let path: PathInfo = item.data.path;
             let pathToRemove: string = this._projectScanner.projectPath + '/' + item.data.layerInfo.name + '/';
             let pathAsString: string = path.dir.replace(pathToRemove, '');
-            insertString = pathAsString + item.data.layerInfo.base;
+            insertString = pathAsString + '/' + item.data.path.base;
         }
 
         return insertString
