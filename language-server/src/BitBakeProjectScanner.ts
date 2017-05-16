@@ -93,6 +93,7 @@ export class BitBakeProjectScanner {
 
                 this.scanForRecipes(() => {
                     console.log('scan ready');
+                    this.printScanStatistic();
                     this._scanStatus.scanIsRunning = false;
 
                     if( this._scanStatus.scanIsPending === true ) {
@@ -108,6 +109,16 @@ export class BitBakeProjectScanner {
         }
     }
 
+    private printScanStatistic() {
+        console.log(`\nScan results for path: ${this._projectPath}`);
+        console.log('******************************************************************');
+        console.log(`Layer:     ${this._layers.length}`);
+        console.log(`Recipes:   ${this._recipes.length}`);
+        console.log(`Inc-Files: ${this._includes.length}`);
+        console.log(`bbclass:   ${this._classes.length}`)
+        
+    }
+
     private scanForClasses() {
         this._classes = this.searchFiles(this._classFileExtension);
     }
@@ -117,7 +128,6 @@ export class BitBakeProjectScanner {
     }
 
     private scanAvailableLayers(callback: () => void) {
-        console.log(`scanAvailableLayers for Path ${this._projectPath}`);
         this._layers = new Array < LayerInfo > ();
 
         this.executeCommandInBitBakeEnvironment('bitbake-layers show-layers', output => {
@@ -140,13 +150,10 @@ export class BitBakeProjectScanner {
     }
 
     private searchFiles(pattern: string): ElementInfo[] {
-        console.log(`searchClasses for layers ${this._layers.length}`);
         let elements: ElementInfo[] = new Array < ElementInfo > ();
 
         for (let layer of this._layers) {
             let files = find.fileSync(new RegExp(`.${pattern}$`), layer.path);
-            console.log(`${files.length} elements in layer ${layer.path} for pattern ${pattern} found`);
-
 
             for (let file of files) {
                 let pathObj: PathInfo = path.parse(file);
@@ -166,7 +173,6 @@ export class BitBakeProjectScanner {
     }
 
     scanForRecipes(callback: () => void) {
-        console.log('scanAvailableRecipes');
         this._recipes = new Array< ElementInfo> ();
         
         this.executeCommandInBitBakeEnvironment('bitbake-layers show-recipes', output => {
@@ -209,13 +215,11 @@ export class BitBakeProjectScanner {
                 this._recipes.push(element);
             }
 
-            console.log(`${this._recipes.length} recipes found`);
             callback();
         });
     }
 
     private executeCommandInBitBakeEnvironment(command: string, callback: (output: string) => void) {
-        console.log(`executeCommandInBitBakeEnvironment: ${JSON.stringify(command)}`);
 
         if (this._projectPath !== null) {
             let str: string = `. ./oe-init-build-env > /dev/null; ${command}`;
@@ -229,7 +233,6 @@ export class BitBakeProjectScanner {
     }
 
     private executeCommandInProjectPathWithoutBitBakeEnvironment(command: string, callback: (output: string) => void) {
-        console.log(`executeCommandInProjectPathWithoutBitBakeEnvironment: ${JSON.stringify(command)}`);
 
         if (this._projectPath !== null) {
 

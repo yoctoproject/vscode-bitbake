@@ -57,7 +57,6 @@ documents.listen(connection);
 // in the passed params the rootPath of the workspace plus the client capabilities. 
 let workspaceRoot: string;
 connection.onInitialize((params): InitializeResult => {
-	connection.console.log(`onInitialize ${workspaceRoot}`);
 	workspaceRoot = params.rootPath;
 	bitBakeProjectScanner.setprojectPath(workspaceRoot);
 	bitBakeProjectScanner.rescanProject();
@@ -83,14 +82,12 @@ interface LanguageServerBitbakeSettings {}
 
 
 connection.onDidChangeWatchedFiles((change) => {
-	// Monitored files have change in VSCode
-	connection.console.log(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`);
-	
+	connection.console.log('onDidChangeWatchedFiles');
 	bitBakeProjectScanner.rescanProject();
 });
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-	connection.console.log(`onCompletion ${JSON.stringify(textDocumentPosition)}`);
+	connection.console.log('onCompletion');
 
 	return contextHandler.getComletionItems(textDocumentPosition, documentAsText);
 });
@@ -106,14 +103,12 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 let t: Thenable < string > ;
 
 connection.onDidOpenTextDocument((params) => {
-	connection.console.log(`${JSON.stringify(params)} opened.`);
 	if (params.textDocument.text.length > 0) {
 		documentAsText = params.textDocument.text.split(/\r?\n/g);
 	}
 });
 
 connection.onDidChangeTextDocument((params) => {
-	connection.console.log(`${params.textDocument.uri} changed`);
 	if (params.contentChanges.length > 0) {
 		documentAsText = params.contentChanges[0].text.split(/\r?\n/g);
 	}
