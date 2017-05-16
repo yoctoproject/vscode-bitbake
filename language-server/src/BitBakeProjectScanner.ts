@@ -6,7 +6,7 @@
 
 const execa = require('execa');
 const find = require('find');
-const path = require('path')
+const path = require('path');
 
 export type LayerInfo = {
     name: string,
@@ -30,16 +30,31 @@ export type ElementInfo = {
     layerInfo ? : LayerInfo
 };
 
+type ScannStatus = {
+    scanIsRunning: boolean,
+    scanIsPending: boolean
+}
+
 /**
  * BitBakeProjectScanner
  */
 export class BitBakeProjectScanner {
 
+    private _classFileExtension: string = 'bbclass';
+    private _includeFileExtension: string = 'inc';
+    private _recipesFileExtension: string = 'bb';
+    private _configFileExtension: string = 'conf';
+    
     private _projectPath: string;
     private _layers: LayerInfo[] = new Array < LayerInfo > ();
     private _classes: ElementInfo[] = new Array < ElementInfo > ();
     private _includes: ElementInfo[] = new Array < ElementInfo > ();
     private _recipes: ElementInfo[] = new Array < ElementInfo > ();
+
+    private _scanStatus: ScannStatus = { 
+        scanIsRunning: false,
+        scanIsPending: false
+    };
 
     setprojectPath(projectPath: string) {
         this._projectPath = projectPath;
@@ -65,51 +80,46 @@ export class BitBakeProjectScanner {
         return this._recipes;
     }
 
-    private executeCommandInBitBakeEnvironment(command: string, callback: (output: string) => void) {
-        console.log(`executeCommandInBitBakeEnvironment: ${JSON.stringify(command)}`);
-        console.log(`pwd: ${JSON.stringify(execa.shellSync('pwd').stdout)}`);
-
-        if (this._projectPath !== null) {
-            let str: string = `. ./oe-init-build-env > /dev/null; ${command}`;
-
-            execa.shell(str).then(result => {
-                callback(result.stdout);
-            }).catch(error => {
-                console.error(`cannot execute ${command} error: ${error}`);
-            });
-        }
-    }
-
-    private executeCommandInProjectPathWithoutBitBakeEnvironment(command: string, callback: (output: string) => void) {
-        console.log(`executeCommandInProjectPathWithoutBitBakeEnvironment: ${JSON.stringify(command)}`);
-        console.log(`pwd: ${JSON.stringify(execa.shellSync('pwd').stdout)}`);
-
-        if (this._projectPath !== null) {
-
-            execa.shell(command).then(result => {
-                callback(result.stdout);
-            }).catch(error => {
-                console.error(`cannot execute ${command} error: ${error}`);
-            });
-        }
-    }
-
-
     rescanProject() {
-        console.log(`rescanProject ${this._projectPath}`);
+        console.log(`request rescanProject ${this._projectPath}`);
 
-        this.scanAvailableLayers(() => {
-            this._classes = this.searchFiles('bbclass');
-            this._includes = this.searchFiles('inc');
+        if( this._scanStatus.scanIsRunning === false ) {
+            this._scanStatus.scanIsRunning = true;
+            console.log('start rescanProject');
 
-            this.scanAvailableRecipes(() => {
-                console.log('scan ready');
+            this.scanAvailableLayers(() => {
+                this.scanForClasses();
+                this.scanForIncludeFiles();
+
+                this.scanForRecipes(() => {
+                    console.log('scan ready');
+                    this._scanStatus.scanIsRunning = false;
+
+                    if( this._scanStatus.scanIsPending === true ) {
+                        this._scanStatus.scanIsPending = false;
+                        this.rescanProject();
+                    }
+                });
             });
-        });
+        }
+        else {
+            console.log('scan is already running, set the pending flag');
+            this._scanStatus.scanIsPending = true;
+        }
+    }
+
+    private scanForClasses() {
+        this._classes = this.searchFiles(this._classFileExtension);
+    }
+
+    private scanForIncludeFiles() {
+        this._includes = this.searchFiles(this._includeFileExtension);
     }
 
     private scanAvailableLayers(callback: () => void) {
         console.log(`scanAvailableLayers for Path ${this._projectPath}`);
+        this._layers = new Array < LayerInfo > ();
+
         this.executeCommandInBitBakeEnvironment('bitbake-layers show-layers', output => {
             let tempStr: string[] = output.split('\n');
             tempStr = tempStr.slice(2);
@@ -155,8 +165,10 @@ export class BitBakeProjectScanner {
         return elements;
     }
 
-    private scanAvailableRecipes(callback: () => void) {
+    scanForRecipes(callback: () => void) {
         console.log('scanAvailableRecipes');
+        this._recipes = new Array< ElementInfo> ();
+        
         this.executeCommandInBitBakeEnvironment('bitbake-layers show-recipes', output => {
             let outerReg: RegExp = /(.+)\:\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g;
             let innerReg: RegExp = /\s+(\S+)\s+(\S+(?:\s+\(skipped\))?)\n/g;
@@ -202,5 +214,30 @@ export class BitBakeProjectScanner {
         });
     }
 
-    
+    private executeCommandInBitBakeEnvironment(command: string, callback: (output: string) => void) {
+        console.log(`executeCommandInBitBakeEnvironment: ${JSON.stringify(command)}`);
+
+        if (this._projectPath !== null) {
+            let str: string = `. ./oe-init-build-env > /dev/null; ${command}`;
+
+            execa.shell(str).then(result => {
+                callback(result.stdout);
+            }).catch(error => {
+                console.error(`cannot execute ${command} error: ${error}`);
+            });
+        }
+    }
+
+    private executeCommandInProjectPathWithoutBitBakeEnvironment(command: string, callback: (output: string) => void) {
+        console.log(`executeCommandInProjectPathWithoutBitBakeEnvironment: ${JSON.stringify(command)}`);
+
+        if (this._projectPath !== null) {
+
+            execa.shell(command).then(result => {
+                callback(result.stdout);
+            }).catch(error => {
+                console.error(`cannot execute ${command} error: ${error}`);
+            });
+        }
+    }    
 }

@@ -28,7 +28,12 @@ export function activate(context: ExtensionContext) {
 		documentSelector: ['bitbake'],
 		synchronize: {
 			// Notify the server about file changes to '.clientrc files contain in the workspace
-			fileEvents: workspace.createFileSystemWatcher('**/.clientrc')
+			fileEvents: [
+				workspace.createFileSystemWatcher('**/*.bbclass', false, true, false),
+				workspace.createFileSystemWatcher('**/*.inc', false, true, false),
+				workspace.createFileSystemWatcher('**/*.bb', false, true, false),
+				workspace.createFileSystemWatcher('**/*.conf', false, false, false)
+			]
 		}
 	}
 	

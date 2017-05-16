@@ -25,18 +25,22 @@ import {
 	SignatureInformation,
 	Definition,
 	Location,
-	Range
+	Range,
+	FileEvent
 } from 'vscode-languageserver';
 
 
 import {
-	BitBakeProjectScanner
+	BitBakeProjectScanner,
+	PathInfo
 } from "./BitBakeProjectScanner";
 
 import { ContextHandler } from "./ContextHandler";
 import {
     BasicKeywordMap
 } from './BasicKeywordMap';
+
+const path = require('path');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
@@ -80,7 +84,9 @@ interface LanguageServerBitbakeSettings {}
 
 connection.onDidChangeWatchedFiles((change) => {
 	// Monitored files have change in VSCode
-	connection.console.log('We received an file change event');
+	connection.console.log(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`);
+	
+	bitBakeProjectScanner.rescanProject();
 });
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
@@ -112,6 +118,7 @@ connection.onDidChangeTextDocument((params) => {
 		documentAsText = params.contentChanges[0].text.split(/\r?\n/g);
 	}
 });
+
 
 
 // connection.onDefinition( (textDocumentPositionParams: TextDocumentPositionParams): Definition => {
