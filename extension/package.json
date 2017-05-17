@@ -5,6 +5,10 @@
   "license": "MIT",
   "version": "0.0.3",
   "publisher": "EugenWiens",
+   "author": {
+    "name": "Eugen Wiens"
+  },
+  "icon": "images/icon.png",
   "bugs": {
     "url": "https://github.com/EugenWiens/vscode-bitbake/issues"
   },
