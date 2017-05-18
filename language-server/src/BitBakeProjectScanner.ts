@@ -131,18 +131,24 @@ export class BitBakeProjectScanner {
         this._layers = new Array < LayerInfo > ();
 
         this.executeCommandInBitBakeEnvironment('bitbake-layers show-layers', output => {
-            let tempStr: string[] = output.split('\n');
-            tempStr = tempStr.slice(2);
+            try {
+                let tempStr: string[] = output.split('\n');
+                tempStr = tempStr.slice(2);
 
-            for (let element of tempStr) {
-                let tempElement: string[] = element.split(/\s+/);
-                let layerElement = {
-                    name: tempElement[0],
-                    path: tempElement[1],
-                    priority: parseInt(tempElement[2])
-                };
+                for (let element of tempStr) {
+                    let tempElement: string[] = element.split(/\s+/);
+                    let layerElement = {
+                        name: tempElement[0],
+                        path: tempElement[1],
+                        priority: parseInt(tempElement[2])
+                    };
 
-                this._layers.push(layerElement);
+                    this._layers.push(layerElement);
+                }
+            } catch (error) {
+                this._scanStatus.scanIsRunning = false;
+                this._scanStatus.scanIsPending = false;
+                throw error;
             }
 
             callback();
