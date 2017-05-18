@@ -38,7 +38,8 @@
         ".bb",
         ".bbappend",
         ".inc",
-        ".bbclass"
+        ".bbclass",
+        ".conf"
       ],
       "configuration": "./language-configuration.json"
     }],

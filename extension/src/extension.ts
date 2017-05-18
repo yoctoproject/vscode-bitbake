@@ -32,7 +32,7 @@ export function activate(context: ExtensionContext) {
 				workspace.createFileSystemWatcher('**/*.bbclass', false, true, false),
 				workspace.createFileSystemWatcher('**/*.inc', false, true, false),
 				workspace.createFileSystemWatcher('**/*.bb', false, true, false),
-				workspace.createFileSystemWatcher('**/*.conf', false, false, false)
+				workspace.createFileSystemWatcher('**/*.conf', false, true, false)
 			]
 		}
 	}
