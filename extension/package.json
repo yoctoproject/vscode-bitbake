@@ -62,7 +62,14 @@
           "description": "Traces the communication between VSCode and the languageServerBitbake service."
         }
       }
-    }
+    },
+   "commands": [
+      {
+        "command": "bitbake.rescan-project",
+        "title": "BitBake: Rescan Project",
+        "description": "This command rescans the bitbake project."
+      }
+   ]
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",

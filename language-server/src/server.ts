@@ -70,6 +70,11 @@ connection.onInitialize((params): InitializeResult => {
 				resolveProvider: true
 			},
 			definitionProvider: true,
+			executeCommandProvider: {
+				commands: [
+					'bitbake.rescan-project'
+				]
+			}
 		}
 	}
 });
@@ -115,6 +120,13 @@ connection.onDidChangeTextDocument((params) => {
 });
 
 
+connection.onExecuteCommand( (params)=> {
+	connection.console.log(`onExecuteCommand ${JSON.stringify(params)}`);
+	
+	if( params.command === 'bitbake.rescan-project' ) {
+		bitBakeProjectScanner.rescanProject();
+	}
+});
 
 // connection.onDefinition( (textDocumentPositionParams: TextDocumentPositionParams): Definition => {
 // 	connection.console.log(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
