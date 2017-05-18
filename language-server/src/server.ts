@@ -63,13 +63,11 @@ connection.onInitialize((params): InitializeResult => {
 
 	return {
 		capabilities: {
-			// Tell the client that the server works in FULL text document sync mode
 			textDocumentSync: documents.syncKind,
-			// Tell the client that the server support code complete
 			completionProvider: {
 				resolveProvider: true
 			},
-			definitionProvider: true,
+			// definitionProvider: true,
 			executeCommandProvider: {
 				commands: [
 					'bitbake.rescan-project'
