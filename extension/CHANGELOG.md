@@ -1,3 +1,9 @@
+# 0.0.5 - 2017.05.28
+## Fixed Bugs:
+
+## Enhancements:
+  - [issue 2](https://github.com/EugenWiens/vscode-bitbake/issues/2) Add go to definition feature
+
 # 0.0.4 - 2017.05.14
 ## Fixed Bugs:
   - [issue 1](https://github.com/EugenWiens/vscode-bitbake/issues/1) The project is parsed only once
