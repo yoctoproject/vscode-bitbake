@@ -7,7 +7,10 @@
 import {
     TextDocumentPositionParams,
     CompletionItem,
-    CompletionItemKind
+    CompletionItemKind,
+    Definition,
+    Location,
+    Range
 } from "vscode-languageserver";
 
 import {
@@ -20,8 +23,16 @@ import {
     BasicKeywordMap
 } from './BasicKeywordMap';
 
+import {
+    DefinitionProvider
+} from "./DefinitionProvider";
+
+import {
+    CompletionProvider
+} from "./CompletionProvider";
+
+
 const find = require('find');
-const path = require('path')
 
 
 /**
@@ -29,38 +40,48 @@ const path = require('path')
  */
 export class ContextHandler {
 
-    private _projectScanner: BitBakeProjectScanner;
-    private _classCompletionItemKind: CompletionItemKind = CompletionItemKind.Class;
-    private _includeCompletionItemKind: CompletionItemKind = CompletionItemKind.Interface;
-    private _recipesCompletionItemKind: CompletionItemKind = CompletionItemKind.Method;
+    private _projectScanner: BitBakeProjectScanner = null;
+    private _definitionProvider: DefinitionProvider = null;
+    private _completionProvider: CompletionProvider = null;
 
     constructor(projectScanner: BitBakeProjectScanner) {
         this._projectScanner = projectScanner;
+        this._definitionProvider = new DefinitionProvider(this._projectScanner);
+        this._completionProvider = new CompletionProvider(this._projectScanner);
+    }
+
+    getDefinition(textDocumentPositionParams: TextDocumentPositionParams, documentAsText: String[]): Definition {
+        let definition: Definition = null;
+
+        if (documentAsText.length > textDocumentPositionParams.position.line) {
+            let keyWord: string = this.getKeyWord(textDocumentPositionParams, documentAsText);
+
+            if ((keyWord !== undefined) && (keyWord !== '')) {
+                let currentLine = documentAsText[textDocumentPositionParams.position.line];
+                let words: string[] = currentLine.split(' ');
+
+                if (words.length === 2) {
+                    if (words[0] === keyWord) {
+                        console.log(`getDefinition: ${JSON.stringify(words)}`);
+                        definition = this._definitionProvider.createDefinition(keyWord, words[1]);
+                    }
+                }
+            }
+        }
+
+        return definition;
     }
 
     getComletionItems(textDocumentPosition: TextDocumentPositionParams, documentAsText: String[]): CompletionItem[] {
         let completionItem: CompletionItem[];
 
         if (documentAsText.length > textDocumentPosition.position.line) {
-            let currentLine = documentAsText[textDocumentPosition.position.line];
-            let lineTillCurrentPosition = currentLine.substr(0, textDocumentPosition.position.character);
-            let words: string[] = lineTillCurrentPosition.split(' ');
-            console.log(`currentLine: ${currentLine}`);
-            console.log(`lineTillCurrentPosition: ${lineTillCurrentPosition}`);
+            let keyWord: string = this.getKeyWord(textDocumentPosition, documentAsText);
 
-            let basicKeywordMap: CompletionItem[] = BasicKeywordMap;
-            let basikKey: CompletionItem;
-
-            if (words.length > 0) {
-                basikKey = basicKeywordMap.find((obj: CompletionItem): boolean => {
-                    return obj.label === words[0];
-                });
-            }
-
-            if ((basikKey === undefined) || (basikKey.label === '')) {
-                completionItem = this.createCompletionItem('*');
+            if ((keyWord === undefined) || (keyWord === '')) {
+                completionItem = this._completionProvider.createCompletionItem('*');
             } else {
-                completionItem = this.createCompletionItem(basikKey.label);
+                completionItem = this._completionProvider.createCompletionItem(keyWord);
             }
         }
 
@@ -68,99 +89,35 @@ export class ContextHandler {
     }
 
     getInsertStringForTheElement(item: CompletionItem): string {
-        let insertString: string = item.label;
+        return this._completionProvider.getInsertStringForTheElement(item);
+    }
 
-        if (item.kind === this._includeCompletionItemKind) {
-            let path: PathInfo = item.data.path;
-            let pathToRemove: string = this._projectScanner.projectPath + '/' + item.data.layerInfo.name + '/';
-            let pathAsString: string = path.dir.replace(pathToRemove, '');
-            insertString = pathAsString + '/' + item.data.path.base;
+    private getKeyWord(textDocumentPosition: TextDocumentPositionParams, documentAsText: String[]): string {
+        let currentLine = documentAsText[textDocumentPosition.position.line];
+        let lineTillCurrentPosition = currentLine.substr(0, textDocumentPosition.position.character);
+        let words: string[] = lineTillCurrentPosition.split(' ');
+        console.log(`currentLine: ${currentLine}`);
+        console.log(`lineTillCurrentPosition: ${lineTillCurrentPosition}`);
+
+        let basicKeywordMap: CompletionItem[] = BasicKeywordMap;
+        let keyword: string;
+
+        if (words.length > 1) {
+            let basicKey: CompletionItem = basicKeywordMap.find((obj: CompletionItem): boolean => {
+                return obj.label === words[0];
+            });
+
+            if (basicKey !== undefined) {
+                keyword = basicKey.label;
+            }
         }
 
-        return insertString
+        return keyword;
     }
 
 
-    private createCompletionItem(keyword: string): CompletionItem[] {
-        let completionItem: CompletionItem[] = new Array < CompletionItem > ();
 
-        switch (keyword) {
-            case 'inherit':
-                completionItem = this.convertElementInfoListToCompletionItemList(
-                    this._projectScanner.classes,
-                    this._classCompletionItemKind
-                );
-                break;
 
-            case 'require':
-            case 'include':
-                completionItem = completionItem.concat(
-                    this.convertElementInfoListToCompletionItemList(
-                        this._projectScanner.includes,
-                        this._includeCompletionItemKind
-                    )
-                );
-                break;
 
-            default:
-                completionItem = completionItem.concat(
-                    this.convertElementInfoListToCompletionItemList(
-                        this._projectScanner.classes,
-                        this._classCompletionItemKind
-                    ),
-                    this.convertElementInfoListToCompletionItemList(
-                        this._projectScanner.includes,
-                        this._includeCompletionItemKind
-                    ),
-                    this.convertElementInfoListToCompletionItemList(
-                        this._projectScanner.recipes,
-                        this._recipesCompletionItemKind
-                    ),
-                    BasicKeywordMap
-                );
-
-                break;
-        }
-
-        return completionItem;
-    }
-
-    private convertElementInfoListToCompletionItemList(elementInfoList, completionType: CompletionItemKind): CompletionItem[] {
-        let completionItems: CompletionItem[] = new Array < CompletionItem > ();
-
-        for (let element of elementInfoList) {
-            let completionItem: CompletionItem = {
-                label: element.name,
-                detail: this.getTypeAsString(completionType),
-                documentation: element.extraInfo,
-                data: element,
-                kind: completionType
-            };
-
-            completionItems.push(completionItem);
-        }
-
-        return completionItems;
-    }
-
-    private getTypeAsString(completionType: CompletionItemKind): string {
-        let typeAsString: string = '';
-
-        switch (completionType) {
-            case this._classCompletionItemKind:
-                typeAsString = 'class';
-                break;
-
-            case this._includeCompletionItemKind:
-                typeAsString = 'inc';
-                break;
-
-            case this._recipesCompletionItemKind:
-                typeAsString = 'recipe';
-                break;
-        }
-
-        return typeAsString;
-    }
 
 }

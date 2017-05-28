@@ -35,27 +35,26 @@ import {
 	PathInfo
 } from "./BitBakeProjectScanner";
 
-import { ContextHandler } from "./ContextHandler";
 import {
-    BasicKeywordMap
+	BasicKeywordMap
 } from './BasicKeywordMap';
+
+import {
+	ContextHandler
+} from "./ContextHandler";
 
 const path = require('path');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 let documents: TextDocuments = new TextDocuments();
-let documentAsText: String[];
+let documentMap: Map < string, string[] > = new Map();
 let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
-let contextHandler: ContextHandler = new ContextHandler( bitBakeProjectScanner );
+let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
+let workspaceRoot: string;
 
 documents.listen(connection);
 
-
-
-// After the server has started the client sends an initialize request. The server receives
-// in the passed params the rootPath of the workspace plus the client capabilities. 
-let workspaceRoot: string;
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
 	bitBakeProjectScanner.setprojectPath(workspaceRoot);
@@ -67,7 +66,7 @@ connection.onInitialize((params): InitializeResult => {
 			completionProvider: {
 				resolveProvider: true
 			},
-			// definitionProvider: true,
+			definitionProvider: true,
 			executeCommandProvider: {
 				commands: [
 					'bitbake.rescan-project'
@@ -80,9 +79,7 @@ connection.onInitialize((params): InitializeResult => {
 
 // The settings interface describe the server relevant settings part
 interface Settings {}
-
 interface LanguageServerBitbakeSettings {}
-
 
 connection.onDidChangeWatchedFiles((change) => {
 	connection.console.log('onDidChangeWatchedFiles');
@@ -91,8 +88,8 @@ connection.onDidChangeWatchedFiles((change) => {
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
 	connection.console.log('onCompletion');
-
-	return contextHandler.getComletionItems(textDocumentPosition, documentAsText);
+	let documentAsStringArray: string[] = documentMap.get(textDocumentPosition.textDocument.uri);
+	return contextHandler.getComletionItems(textDocumentPosition, documentAsStringArray);
 });
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
@@ -103,34 +100,36 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 	return item;
 });
 
-let t: Thenable < string > ;
-
 connection.onDidOpenTextDocument((params) => {
 	if (params.textDocument.text.length > 0) {
-		documentAsText = params.textDocument.text.split(/\r?\n/g);
+		documentMap.set(params.textDocument.uri, params.textDocument.text.split(/\r?\n/g));
 	}
 });
 
 connection.onDidChangeTextDocument((params) => {
 	if (params.contentChanges.length > 0) {
-		documentAsText = params.contentChanges[0].text.split(/\r?\n/g);
+		documentMap.set(params.textDocument.uri, params.contentChanges[0].text.split(/\r?\n/g));
 	}
 });
 
+connection.onDidCloseTextDocument((params) => {
+	documentMap.delete(params.textDocument.uri);
+});
 
-connection.onExecuteCommand( (params)=> {
+connection.onExecuteCommand((params) => {
 	connection.console.log(`onExecuteCommand ${JSON.stringify(params)}`);
-	
-	if( params.command === 'bitbake.rescan-project' ) {
+
+	if (params.command === 'bitbake.rescan-project') {
 		bitBakeProjectScanner.rescanProject();
 	}
 });
 
-// connection.onDefinition( (textDocumentPositionParams: TextDocumentPositionParams): Definition => {
-// 	connection.console.log(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
+connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams): Definition => {
+	connection.console.log(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
+	let documentAsText = documentMap.get(textDocumentPositionParams.textDocument.uri);
 
-// 	return Location.create("", Range.create(0,1));
-// });
+	return contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
+});
 
 
 
