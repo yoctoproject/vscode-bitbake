@@ -126,7 +126,7 @@ connection.onExecuteCommand((params) => {
 
 connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams): Definition => {
 	connection.console.log(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
-	let documentAsText = documentMap.get(textDocumentPositionParams.textDocument.uri);
+	let documentAsText: string[] = documentMap.get(textDocumentPositionParams.textDocument.uri);
 
 	return contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
 });
