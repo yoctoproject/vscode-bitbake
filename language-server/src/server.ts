@@ -128,7 +128,11 @@ connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams)
 	connection.console.log(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
 	let documentAsText: string[] = documentMap.get(textDocumentPositionParams.textDocument.uri);
 
-	return contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
+	let definition: Definition = contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
+
+	connection.console.log(`definition ${JSON.stringify(definition)}`);
+
+	return definition;
 });
 
 

@@ -60,7 +60,8 @@ export class ContextHandler {
             if ((keyWord !== undefined) && (keyWord !== '')) {
                 definition = this.getDefinitionForKeyWord(keyWord, currentLine);
             } else {
-                this.extractSymbolFromLine(textDocumentPositionParams, currentLine);
+                let symbol:string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine);
+                definition = this._definitionProvider.createDefinitionForSymbol(symbol);
             }
         }
         return definition;
@@ -73,7 +74,7 @@ export class ContextHandler {
         if (words.length === 2) {
             if (words[0] === keyWord) {
                 console.log(`getDefinitionForKeyWord: ${JSON.stringify(words)}`);
-                definition = this._definitionProvider.createDefinition(keyWord, words[1]);
+                definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1]);
             }
         }
 
@@ -86,8 +87,8 @@ export class ContextHandler {
         let linePosition: number = textDocumentPositionParams.position.character;
         let symbolEndPosition: number = currentLine.length;
         let symbolStartPosition: number = 0;
-        let rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '-', '}', '"'];
-        let leftBorderCharacter: string[] = [' ', '=', '/', '+', '-', '{', '"'];
+        let rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '}', '"'];
+        let leftBorderCharacter: string[] = [' ', '=', '/', '+', '{', '"'];
 
         for (let character of rightBorderCharacter) {
             let temp: number = currentLine.indexOf(character, linePosition);
@@ -109,12 +110,12 @@ export class ContextHandler {
         }
 
         let symbol: string = symbolRightTrimed.substring(symbolStartPosition);
-        
-       for (let character of leftBorderCharacter) {
-           if( symbol.startsWith(character) ) {
-               symbol = symbol.substring(1);
-               break;
-           }
+
+        for (let character of leftBorderCharacter.concat('-')) {
+            if (symbol.startsWith(character)) {
+                symbol = symbol.substring(1);
+                break;
+            }
         }
 
         console.log(`symbol ${symbol}`);
