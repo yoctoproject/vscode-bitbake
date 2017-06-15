@@ -66,7 +66,7 @@ export class DefinitionProvider {
         if (recipe !== undefined) {
             let definitionsList: PathInfo[] = new Array < PathInfo > (recipe.path);
 
-            if ((recipe.appends !== undefined) && (recipe.appends.length > 0) {
+            if ((recipe.appends !== undefined) && (recipe.appends.length > 0)) {
                 definitionsList = definitionsList.concat(recipe.appends);
             }
             definitions = this.createDefinitionLocationForPathInfoList(definitionsList);
