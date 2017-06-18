@@ -26,14 +26,22 @@ export class DefinitionProvider {
         this._projectScanner = projectScanner;
     }
 
-    createDefinitionForKeyword(keyword: string, restOfLine: string): Definition {
+    createDefinitionForKeyword(keyword: string, restOfLine: string, selectedSympbol ? : string): Definition {
         let definition: Definition = null;
+        restOfLine = restOfLine.trim();
 
         switch (keyword) {
             case 'inherit':
                 {
+                    let searchString: string;
+                    if (selectedSympbol === undefined) {
+                        searchString = restOfLine;
+                    } else {
+                        searchString = selectedSympbol;
+                    }
+
                     let elementInfos: ElementInfo[] = this._projectScanner.classes.filter((obj: ElementInfo): boolean => {
-                        return obj.name === restOfLine;
+                        return obj.name === searchString;
                     });
                     definition = this.createDefinitionForElementInfo(elementInfos);
                 }

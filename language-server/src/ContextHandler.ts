@@ -56,27 +56,36 @@ export class ContextHandler {
         if (documentAsText.length > textDocumentPositionParams.position.line) {
             let keyWord: string = this.getKeyWord(textDocumentPositionParams, documentAsText);
             let currentLine: string = documentAsText[textDocumentPositionParams.position.line];
+            let symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine);
 
             if ((keyWord !== undefined) && (keyWord !== '')) {
-                definition = this.getDefinitionForKeyWord(keyWord, currentLine);
+                definition = this.getDefinitionForKeyWord(keyWord, currentLine, symbol);
             } else {
-                let symbol:string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine);
                 definition = this._definitionProvider.createDefinitionForSymbol(symbol);
             }
         }
         return definition;
     }
 
-    private getDefinitionForKeyWord(keyWord: string, currentLine: string): Definition {
+    get definitionProvider(): DefinitionProvider {
+        return this._definitionProvider;
+    }
+
+    private getDefinitionForKeyWord(keyWord: string, currentLine: string, selectedSympbol ? : string): Definition {
         let definition: Definition = null;
         let words: string[] = currentLine.split(' ');
 
-        if (words.length === 2) {
+        if (words.length >= 2) {
             if (words[0] === keyWord) {
                 console.log(`getDefinitionForKeyWord: ${JSON.stringify(words)}`);
-                definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1]);
+                if (words.length === 2) {
+                    definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1]);
+                } else {
+                    definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1], selectedSympbol);
+                }
             }
         }
+
 
         return definition;
     }
