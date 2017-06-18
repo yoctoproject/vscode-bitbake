@@ -159,20 +159,25 @@ export class BitBakeProjectScanner {
         let elements: ElementInfo[] = new Array < ElementInfo > ();
 
         for (let layer of this._layers) {
-            let files = find.fileSync(new RegExp(`.${pattern}$`), layer.path);
+            try {
+                let files = find.fileSync(new RegExp(`.${pattern}$`), layer.path);
+                for (let file of files) {
+                    let pathObj: PathInfo = path.parse(file);
 
-            for (let file of files) {
-                let pathObj: PathInfo = path.parse(file);
+                    let element: ElementInfo = {
+                        name: pathObj.name,
+                        path: pathObj,
+                        extraInfo: `layer: ${layer.name}`,
+                        layerInfo: layer,
+                    };
 
-                let element: ElementInfo = {
-                    name: pathObj.name,
-                    path: pathObj,
-                    extraInfo: `layer: ${layer.name}`,
-                    layerInfo: layer,
-                };
+                    elements.push(element);
+                }
 
-                elements.push(element);
+            } catch (error) {
+                console.log(`find error: pattern: ${pattern} layer.path: ${layer.path} error: ${JSON.stringify(error)}`)
             }
+
         }
 
         return elements;
@@ -246,7 +251,7 @@ export class BitBakeProjectScanner {
         this.scanForRecipesPath();
     }
 
-    private scanForRecipesPath( ) {
+    private scanForRecipesPath() {
 
         let tmpFiles = this.searchFiles(this._recipesFileExtension);
 
