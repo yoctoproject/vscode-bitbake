@@ -1,3 +1,10 @@
+
+# 0.0.6 - 2017.07.xx
+## Fixed Bugs:
+
+## Enhancements:
+  - [issue 10](https://github.com/EugenWiens/vscode-bitbake/issues/10) Add Context dependent Variables to the suggestion
+
 # 0.0.5 - 2017.05.28
 ## Fixed Bugs:
 

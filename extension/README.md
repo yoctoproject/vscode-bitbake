@@ -14,6 +14,7 @@ The suggestion supports:
 It is possible with *STRG and Click* to open the file that is associated with a class, inc-file, recipe or a variable. If more than one definition exists you will get a definitions list.
 1. If the definition for a class or an inc-file is requested the file is opened. 
 2. If the definition for a recipe is requestet you will get the definition of the recipe and all bbappends.
+3. If the definition for symbol is requested you will get the definitions for the symbols of whole include hierarchy
 
 
 

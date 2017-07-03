@@ -16,14 +16,24 @@ import {
     PathInfo
 } from "./BitBakeProjectScanner";
 
+import {
+    SymbolScanner,
+    SymbolContent
+} from "./SymbolScanner";
+
 const path = require('path');
 
 
 export class DefinitionProvider {
-    private _projectScanner: BitBakeProjectScanner;
+    private _projectScanner: BitBakeProjectScanner = null;
+    private _symbolScanner: SymbolScanner = null;
 
     constructor(projectScanner: BitBakeProjectScanner) {
         this._projectScanner = projectScanner;
+    }
+
+    set symbolScanner(symbolScanner: SymbolScanner) {
+        this._symbolScanner = symbolScanner;
     }
 
     createDefinitionForKeyword(keyword: string, restOfLine: string, selectedSympbol ? : string): Definition {
@@ -65,6 +75,17 @@ export class DefinitionProvider {
     }
 
     createDefinitionForSymbol(symbol: string): Definition {
+        let definitions: Definition = this.createDefinitionForSymbolRecipes(symbol);
+
+        if (definitions === null) {
+            definitions = this.createDefinitionForSymbolVariables(symbol);
+        }
+
+
+        return definitions;
+    }
+
+    private createDefinitionForSymbolRecipes(symbol: string): Definition {
         let definitions: Definition = null;
 
         let recipe: ElementInfo = this._projectScanner.recipes.find((obj: ElementInfo): boolean => {
@@ -80,6 +101,18 @@ export class DefinitionProvider {
             definitions = this.createDefinitionLocationForPathInfoList(definitionsList);
         }
 
+        return definitions;
+    }
+
+    private createDefinitionForSymbolVariables(symbol: string): Definition {
+        let definitions: Definition = null;
+
+        let symbols: SymbolContent[] = this._symbolScanner.symbols.filter((obj: SymbolContent): boolean => {
+            return obj.symbolName === symbol;
+        });
+
+        definitions = this.createDefinitionForSymbolContentList(symbols);
+        
         return definitions;
     }
 
@@ -130,5 +163,34 @@ export class DefinitionProvider {
         let location: Location = Location.create(encodeURI(url), Range.create(0, 0, 0, 0));
 
         return location;
+    }
+
+    private createDefinitionForSymbolContentList(symbolContent: SymbolContent[]): Definition {
+        let definition: Definition = null;
+
+        if ((symbolContent !== undefined) && (symbolContent.length > 0)) {
+            if (symbolContent.length > 1) {
+                definition = new Array < Location > ();
+
+                for (let element of symbolContent) {
+                    console.log(`definition ${JSON.stringify(element)}`);
+                    let location: Location = this.createDefinitionForSymbolContent(element);
+
+                    definition.push(location);
+                }
+            } else {
+                definition = this.createDefinitionForSymbolContent(symbolContent[0]);
+            }
+        }
+
+        return definition;
+    }
+
+    private createDefinitionForSymbolContent(symbolContent: SymbolContent): Location {
+        let url: string = 'file://' + symbolContent.filePath;
+        let range: Range = Range.create(symbolContent.lineNumber, symbolContent.startPosition,
+                symbolContent.lineNumber, symbolContent.endPostion);
+
+        return Location.create(encodeURI(url), range);
     }
 }

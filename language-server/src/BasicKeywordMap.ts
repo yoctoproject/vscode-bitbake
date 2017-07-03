@@ -14,10 +14,6 @@ export let BasicKeywordMap: CompletionItem[] = [{
         kind: CompletionItemKind.Keyword,
     },
     {
-        label: 'export',
-        kind: CompletionItemKind.Keyword,
-    },
-    {
         label: 'inherit',
         kind: CompletionItemKind.Keyword,
     },

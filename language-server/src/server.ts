@@ -43,6 +43,10 @@ import {
 	ContextHandler
 } from "./ContextHandler";
 
+import {
+	SymbolScanner
+} from "./SymbolScanner";
+
 const path = require('path');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
@@ -52,6 +56,7 @@ let documentMap: Map < string, string[] > = new Map();
 let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
 let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
 let workspaceRoot: string;
+let symbolScanner: SymbolScanner = null;
 
 documents.listen(connection);
 
@@ -104,16 +109,21 @@ connection.onDidOpenTextDocument((params) => {
 	if (params.textDocument.text.length > 0) {
 		documentMap.set(params.textDocument.uri, params.textDocument.text.split(/\r?\n/g));
 	}
+
+	symbolScanner = new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider);
 });
 
 connection.onDidChangeTextDocument((params) => {
 	if (params.contentChanges.length > 0) {
 		documentMap.set(params.textDocument.uri, params.contentChanges[0].text.split(/\r?\n/g));
 	}
+	
+	symbolScanner = new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider);
 });
 
 connection.onDidCloseTextDocument((params) => {
 	documentMap.delete(params.textDocument.uri);
+	symbolScanner = null;
 });
 
 connection.onExecuteCommand((params) => {

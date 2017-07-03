@@ -31,6 +31,10 @@ import {
     CompletionProvider
 } from "./CompletionProvider";
 
+import {
+    SymbolScanner
+} from "./SymbolScanner";
+
 
 const find = require('find');
 
@@ -50,6 +54,7 @@ export class ContextHandler {
         this._completionProvider = new CompletionProvider(this._projectScanner);
     }
 
+    
     getDefinition(textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
         let definition: Definition = null;
 
@@ -96,8 +101,8 @@ export class ContextHandler {
         let linePosition: number = textDocumentPositionParams.position.character;
         let symbolEndPosition: number = currentLine.length;
         let symbolStartPosition: number = 0;
-        let rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '}', '"'];
-        let leftBorderCharacter: string[] = [' ', '=', '/', '+', '{', '"'];
+        let rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '}', '"', "'"];
+        let leftBorderCharacter: string[] = [' ', '=', '/', '+', '{', '"', "'"];
 
         for (let character of rightBorderCharacter) {
             let temp: number = currentLine.indexOf(character, linePosition);
