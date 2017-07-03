@@ -1,5 +1,5 @@
 
-# 0.0.6 - 2017.07.xx
+# 0.0.6 - 2017.07.03
 ## Fixed Bugs:
 
 ## Enhancements:

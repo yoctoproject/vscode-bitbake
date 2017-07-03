@@ -3,7 +3,7 @@
   "displayName": "bitbake",
   "description": "BitBake language support",
   "license": "MIT",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "EugenWiens",
   "author": {
     "name": "Eugen Wiens"
@@ -28,26 +28,30 @@
   ],
   "main": "./out/extension",
   "contributes": {
-    "languages": [{
-      "id": "bitbake",
-      "aliases": [
-        "BitBake",
-        "bitbake"
-      ],
-      "extensions": [
-        ".bb",
-        ".bbappend",
-        ".inc",
-        ".bbclass",
-        ".conf"
-      ],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "bitbake",
-      "scopeName": "source.bb",
-      "path": "./syntaxes/bitbake.tmLanguage.json"
-    }],
+    "languages": [
+      {
+        "id": "bitbake",
+        "aliases": [
+          "BitBake",
+          "bitbake"
+        ],
+        "extensions": [
+          ".bb",
+          ".bbappend",
+          ".inc",
+          ".bbclass",
+          ".conf"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "bitbake",
+        "scopeName": "source.bb",
+        "path": "./syntaxes/bitbake.tmLanguage.json"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Language Server for Bitbake configuration",
@@ -69,11 +73,13 @@
         }
       }
     },
-    "commands": [{
-      "command": "bitbake.rescan-project",
-      "title": "BitBake: Rescan Project",
-      "description": "This command rescans the bitbake project."
-    }]
+    "commands": [
+      {
+        "command": "bitbake.rescan-project",
+        "title": "BitBake: Rescan Project",
+        "description": "This command rescans the bitbake project."
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",
@@ -83,9 +89,9 @@
   },
   "devDependencies": {
     "@types/mocha": "^2.2.33",
-    "@types/node": "^6.0.78",
-    "typescript": "^2.4.0",
-    "vscode": "^1.0.3"
+    "@types/node": "^6.0.79",
+    "typescript": "^2.4.1",
+    "vscode": "^1.1.2"
   },
   "dependencies": {
     "vscode-languageclient": "^3.3.0"
