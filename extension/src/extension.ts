@@ -27,6 +27,8 @@ export function activate(context: ExtensionContext) {
 		// Register the server for bitbake documents
 		documentSelector: ['bitbake'],
 		synchronize: {
+			configurationSection: 'languageServerBitbake',
+
 			// Notify the server about file changes to '.clientrc files contain in the workspace
 			fileEvents: [
 				workspace.createFileSystemWatcher('**/*.bbclass', false, true, false),

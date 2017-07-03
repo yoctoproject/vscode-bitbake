@@ -28,30 +28,26 @@
   ],
   "main": "./out/extension",
   "contributes": {
-    "languages": [
-      {
-        "id": "bitbake",
-        "aliases": [
-          "BitBake",
-          "bitbake"
-        ],
-        "extensions": [
-          ".bb",
-          ".bbappend",
-          ".inc",
-          ".bbclass",
-          ".conf"
-        ],
-        "configuration": "./language-configuration.json"
-      }
-    ],
-    "grammars": [
-      {
-        "language": "bitbake",
-        "scopeName": "source.bb",
-        "path": "./syntaxes/bitbake.tmLanguage.json"
-      }
-    ],
+    "languages": [{
+      "id": "bitbake",
+      "aliases": [
+        "BitBake",
+        "bitbake"
+      ],
+      "extensions": [
+        ".bb",
+        ".bbappend",
+        ".inc",
+        ".bbclass",
+        ".conf"
+      ],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "bitbake",
+      "scopeName": "source.bb",
+      "path": "./syntaxes/bitbake.tmLanguage.json"
+    }],
     "configuration": {
       "type": "object",
       "title": "Language Server for Bitbake configuration",
@@ -65,16 +61,19 @@
           ],
           "default": "off",
           "description": "Traces the communication between VSCode and the languageServerBitbake service."
+        },
+        "languageServerBitbake.deepExamine": {
+          "type": "boolean",
+          "default": false,
+          "description": "Activates an deeply examine. If a recipe export an extra package that have not the same name like the recipe file the normal scan will not find this packages. If you like to find the packages you have to activate this option."
         }
       }
     },
-    "commands": [
-      {
-        "command": "bitbake.rescan-project",
-        "title": "BitBake: Rescan Project",
-        "description": "This command rescans the bitbake project."
-      }
-    ]
+    "commands": [{
+      "command": "bitbake.rescan-project",
+      "title": "BitBake: Rescan Project",
+      "description": "This command rescans the bitbake project."
+    }]
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",

@@ -53,6 +53,7 @@ export class BitBakeProjectScanner {
     private _classes: ElementInfo[] = new Array < ElementInfo > ();
     private _includes: ElementInfo[] = new Array < ElementInfo > ();
     private _recipes: ElementInfo[] = new Array < ElementInfo > ();
+    private _deepExamine: boolean = false;
 
     private _scanStatus: ScannStatus = {
         scanIsRunning: false,
@@ -81,6 +82,10 @@ export class BitBakeProjectScanner {
 
     get recipes(): ElementInfo[] {
         return this._recipes;
+    }
+
+    set deepExamine(deepExamine: boolean) {
+        this._deepExamine = deepExamine;
     }
 
     rescanProject() {
@@ -267,23 +272,25 @@ export class BitBakeProjectScanner {
             }
         }
 
-        let recipesWithOutPath: ElementInfo[] = this._recipes.filter((obj: ElementInfo): boolean => {
-            return obj.path === undefined;
-        });
+        if (this._deepExamine === true) {
+            let recipesWithOutPath: ElementInfo[] = this._recipes.filter((obj: ElementInfo): boolean => {
+                return obj.path === undefined;
+            });
 
-        console.log(`${recipesWithOutPath.length} recipes must be examined more deeply.`);
+            console.log(`${recipesWithOutPath.length} recipes must be examined more deeply.`);
 
-        for (let recipeWithOutPath of recipesWithOutPath) {
-            let output: string = this.executeCommandInBitBakeEnvironment(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`);
-            let regExp: RegExp = /(\s.*\.bb)/g;
-            let match: RegExpExecArray;
+            for (let recipeWithOutPath of recipesWithOutPath) {
+                let output: string = this.executeCommandInBitBakeEnvironment(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`);
+                let regExp: RegExp = /(\s.*\.bb)/g;
+                let match: RegExpExecArray;
 
-            while ((match = regExp.exec(output)) !== null) {
-                if (match.index === regExp.lastIndex) {
-                    regExp.lastIndex++;
+                while ((match = regExp.exec(output)) !== null) {
+                    if (match.index === regExp.lastIndex) {
+                        regExp.lastIndex++;
+                    }
+
+                    recipeWithOutPath.path = path.parse(match[0].trim());
                 }
-
-                recipeWithOutPath.path = path.parse(match[0].trim());
             }
         }
     }

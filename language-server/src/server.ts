@@ -83,8 +83,19 @@ connection.onInitialize((params): InitializeResult => {
 
 
 // The settings interface describe the server relevant settings part
-interface Settings {}
-interface LanguageServerBitbakeSettings {}
+interface Settings {
+	languageServerBitbake: LanguageServerBitbakeSettings;
+}
+
+interface LanguageServerBitbakeSettings {
+	deepExamine: boolean;
+}
+
+connection.onDidChangeConfiguration((change) => {
+    let settings = <Settings>change.settings;
+    bitBakeProjectScanner.deepExamine = settings.languageServerBitbake.deepExamine;
+    
+});
 
 connection.onDidChangeWatchedFiles((change) => {
 	connection.console.log('onDidChangeWatchedFiles');
