@@ -2,7 +2,10 @@
 
 For the discription of the extension it self, see [README.md](./extension/README.md). The Change Log for the extension you can find here [CHANGELOG.md](./extension/CHANGELOG.md).
 
-## install
+## installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
+To install this extension from VS Code Marketplace please follow this guide https://marketplace.visualstudio.com/items?itemName=EugenWiens.bitbake. For more informations regarding Extension Marketplace please see following documentation  https://code.visualstudio.com/docs/editor/extension-gallery. 
+
+## installing from code
 Clone the repository and then do:
 For the extension:
 ``` 
