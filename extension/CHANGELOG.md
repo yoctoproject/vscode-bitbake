@@ -1,3 +1,7 @@
+# x.x.x - yyyy.yy.yy
+## Fixed Bugs:
+  - [[issue 13](https://github.com/EugenWiens/vscode-bitbake/issues/13) Symbol SRC_URI[md5sum] is not detected
+
 
 # 0.0.6 - 2017.07.03
 ## Fixed Bugs:
