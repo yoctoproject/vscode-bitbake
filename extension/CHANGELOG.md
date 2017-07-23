@@ -1,3 +1,6 @@
+# 0.0.8 - 2017.07.23
+  - created version after rebase changes on files: README.md, LICENSE
+
 # 0.0.7 - 2017.07.23
 ## Fixed Bugs:
   - [issue 13](https://github.com/EugenWiens/vscode-bitbake/issues/13) Symbol SRC_URI[md5sum] is not detected
