@@ -188,7 +188,7 @@ export class BitBakeProjectScanner {
         return elements;
     }
 
-    private searchFileInPath(pattern: RegExp | String, searchPath: string): PathInfo {
+    private searchFileInPath(pattern: RegExp | string, searchPath: string): PathInfo {
         let filePathInfo: PathInfo;
         let files = find.fileSync(pattern, searchPath);
 

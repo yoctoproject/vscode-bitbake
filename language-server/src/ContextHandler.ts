@@ -137,7 +137,7 @@ export class ContextHandler {
         return symbol;
     }
 
-    getComletionItems(textDocumentPosition: TextDocumentPositionParams, documentAsText: String[]): CompletionItem[] {
+    getComletionItems(textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): CompletionItem[] {
         let completionItem: CompletionItem[];
 
         if (documentAsText.length > textDocumentPosition.position.line) {
@@ -157,7 +157,7 @@ export class ContextHandler {
         return this._completionProvider.getInsertStringForTheElement(item);
     }
 
-    private getKeyWord(textDocumentPosition: TextDocumentPositionParams, documentAsText: String[]): string {
+    private getKeyWord(textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): string {
         let currentLine = documentAsText[textDocumentPosition.position.line];
         let lineTillCurrentPosition = currentLine.substr(0, textDocumentPosition.position.character);
         let words: string[] = lineTillCurrentPosition.split(' ');
