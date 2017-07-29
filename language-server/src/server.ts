@@ -47,10 +47,15 @@ import {
 	SymbolScanner
 } from "./SymbolScanner";
 
+import {
+	Logger
+} from "./Logger";
+
 const path = require('path');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
+let logger: Logger = Logger.getInstance();
 let documents: TextDocuments = new TextDocuments();
 let documentMap: Map < string, string[] > = new Map();
 let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
@@ -59,6 +64,8 @@ let workspaceRoot: string;
 let symbolScanner: SymbolScanner = null;
 
 documents.listen(connection);
+logger.remoteConsole = connection.console;
+
 
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
@@ -88,28 +95,29 @@ interface Settings {
 }
 
 interface LanguageServerBitbakeSettings {
+	loggingLevel: string;
 	deepExamine: boolean;
 }
 
 connection.onDidChangeConfiguration((change) => {
-    let settings = <Settings>change.settings;
-    bitBakeProjectScanner.deepExamine = settings.languageServerBitbake.deepExamine;
-    
+	let settings = < Settings > change.settings;
+	bitBakeProjectScanner.deepExamine = settings.languageServerBitbake.deepExamine;
+	logger.logLevel = settings.languageServerBitbake.loggingLevel;
 });
 
 connection.onDidChangeWatchedFiles((change) => {
-	connection.console.log('onDidChangeWatchedFiles');
+	logger.debug('onDidChangeWatchedFiles');
 	bitBakeProjectScanner.rescanProject();
 });
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-	connection.console.log('onCompletion');
+	logger.debug('onCompletion');
 	let documentAsStringArray: string[] = documentMap.get(textDocumentPosition.textDocument.uri);
 	return contextHandler.getComletionItems(textDocumentPosition, documentAsStringArray);
 });
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-	connection.console.log(`onCompletionResolve ${JSON.stringify(item)}`);
+	logger.debug(`onCompletionResolve ${JSON.stringify(item)}`);
 
 	item.insertText = contextHandler.getInsertStringForTheElement(item);
 
@@ -138,7 +146,7 @@ connection.onDidCloseTextDocument((params) => {
 });
 
 connection.onExecuteCommand((params) => {
-	connection.console.log(`onExecuteCommand ${JSON.stringify(params)}`);
+	logger.info(`executeCommand ${JSON.stringify(params)}`);
 
 	if (params.command === 'bitbake.rescan-project') {
 		bitBakeProjectScanner.rescanProject();
@@ -146,12 +154,12 @@ connection.onExecuteCommand((params) => {
 });
 
 connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams): Definition => {
-	connection.console.log(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
+	logger.debug(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
 	let documentAsText: string[] = documentMap.get(textDocumentPositionParams.textDocument.uri);
 
 	let definition: Definition = contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
 
-	connection.console.log(`definition ${JSON.stringify(definition)}`);
+	logger.debug(`definition ${JSON.stringify(definition)}`);
 
 	return definition;
 });

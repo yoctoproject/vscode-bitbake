@@ -35,6 +35,8 @@ import {
     SymbolScanner
 } from "./SymbolScanner";
 
+import { Logger } from "./Logger";
+let logger: Logger = Logger.getInstance();
 
 const find = require('find');
 
@@ -82,7 +84,7 @@ export class ContextHandler {
 
         if (words.length >= 2) {
             if (words[0] === keyWord) {
-                console.log(`getDefinitionForKeyWord: ${JSON.stringify(words)}`);
+                logger.debug(`getDefinitionForKeyWord: ${JSON.stringify(words)}`);
                 if (words.length === 2) {
                     definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1]);
                 } else {
@@ -97,7 +99,7 @@ export class ContextHandler {
 
     private extractSymbolFromLine(textDocumentPositionParams: TextDocumentPositionParams, currentLine: string): string {
 
-        console.log(`getDefinitionForSymbol ${currentLine}`);
+        logger.debug(`getDefinitionForSymbol ${currentLine}`);
         let linePosition: number = textDocumentPositionParams.position.character;
         let symbolEndPosition: number = currentLine.length;
         let symbolStartPosition: number = 0;
@@ -113,7 +115,7 @@ export class ContextHandler {
         }
 
         let symbolRightTrimed = currentLine.substring(0, symbolEndPosition);
-        console.log(`symbolRightTrimed ${symbolRightTrimed}`);
+        logger.debug(`symbolRightTrimed ${symbolRightTrimed}`);
 
         for (let character of leftBorderCharacter) {
             let temp: number = symbolRightTrimed.lastIndexOf(character, linePosition);
@@ -132,7 +134,7 @@ export class ContextHandler {
             }
         }
 
-        console.log(`symbol ${symbol}`);
+        logger.debug(`symbol ${symbol}`);
 
         return symbol;
     }

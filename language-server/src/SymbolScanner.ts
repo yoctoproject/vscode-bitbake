@@ -21,6 +21,9 @@ import {
     DefinitionProvider
 } from "./DefinitionProvider";
 
+import { Logger } from "./Logger";
+let logger: Logger = Logger.getInstance();
+
 type FileContent = {
     filePath: string,
     fileContent: string[]
@@ -42,7 +45,7 @@ export class SymbolScanner {
     private _symbolsDefinition: SymbolContent[] = new Array < SymbolContent > ();
 
     constructor(fileUrlAsString: string, definitionProvider: DefinitionProvider) {
-        console.log(`scan for symbols file: ${fileUrlAsString}`);
+        logger.debug(`scan for symbols file: ${fileUrlAsString}`);
 
         this._definitionProvider = definitionProvider;
 
@@ -61,7 +64,7 @@ export class SymbolScanner {
     }
 
     private extendsFile(filePath: string) {
-        console.log(`extendsFile file: ${filePath}`);
+        logger.debug(`extendsFile file: ${filePath}`);
 
         try {
             let data: Buffer = fs.readFileSync(filePath);
@@ -76,7 +79,7 @@ export class SymbolScanner {
                 let keyword = this.lineContainsKeyword(line);
 
                 if (keyword !== undefined) {
-                    console.log(`keyword found: ${keyword}`);
+                    logger.debug(`keyword found: ${keyword}`);
                     this.handleKeyword(keyword, line);
                 }
             }
@@ -140,7 +143,7 @@ export class SymbolScanner {
                     symbolContent.filePath = file.filePath;
                     symbolContent.lineNumber = lineIndex;
 
-                    console.log(`lineNumber: ${lineIndex} symbol: ${JSON.stringify(symbolContent)}`);
+                    logger.debug(`lineNumber: ${lineIndex} symbol: ${JSON.stringify(symbolContent)}`);
                     this._symbolsDefinition.push(symbolContent);
                 }
             }

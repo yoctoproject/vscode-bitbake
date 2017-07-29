@@ -8,6 +8,9 @@ const execa = require('execa');
 const find = require('find');
 const path = require('path');
 
+import { Logger } from "./Logger";
+let logger: Logger = Logger.getInstance();
+
 export type LayerInfo = {
     name: string,
     path: string,
@@ -89,11 +92,11 @@ export class BitBakeProjectScanner {
     }
 
     rescanProject() {
-        console.log(`request rescanProject ${this._projectPath}`);
+        logger.info(`request rescanProject ${this._projectPath}`);
 
         if (this._scanStatus.scanIsRunning === false) {
             this._scanStatus.scanIsRunning = true;
-            console.log('start rescanProject');
+            logger.info('start rescanProject');
 
             this.scanAvailableLayers();
             this.scanForClasses();
@@ -101,7 +104,7 @@ export class BitBakeProjectScanner {
             this.scanForRecipes();
             this.scanRecipesAppends();
 
-            console.log('scan ready');
+            logger.info('scan ready');
             this.printScanStatistic();
             this._scanStatus.scanIsRunning = false;
 
@@ -110,18 +113,18 @@ export class BitBakeProjectScanner {
                 this.rescanProject();
             }
         } else {
-            console.log('scan is already running, set the pending flag');
+            logger.info('scan is already running, set the pending flag');
             this._scanStatus.scanIsPending = true;
         }
     }
 
     private printScanStatistic() {
-        console.log(`\nScan results for path: ${this._projectPath}`);
-        console.log('******************************************************************');
-        console.log(`Layer:     ${this._layers.length}`);
-        console.log(`Recipes:   ${this._recipes.length}`);
-        console.log(`Inc-Files: ${this._includes.length}`);
-        console.log(`bbclass:   ${this._classes.length}`);
+        logger.info(`Scan results for path: ${this._projectPath}`);
+        logger.info('******************************************************************');
+        logger.info(`Layer:     ${this._layers.length}`);
+        logger.info(`Recipes:   ${this._recipes.length}`);
+        logger.info(`Inc-Files: ${this._includes.length}`);
+        logger.info(`bbclass:   ${this._classes.length}`);
     }
 
     private scanForClasses() {
@@ -180,7 +183,7 @@ export class BitBakeProjectScanner {
                 }
 
             } catch (error) {
-                console.log(`find error: pattern: ${pattern} layer.path: ${layer.path} error: ${JSON.stringify(error)}`)
+                logger.error(`find error: pattern: ${pattern} layer.path: ${layer.path} error: ${JSON.stringify(error)}`)
             }
 
         }
@@ -193,9 +196,9 @@ export class BitBakeProjectScanner {
         let files = find.fileSync(pattern, searchPath);
 
         if ((files === undefined) || (files.length === 0)) {
-            console.log(`no file found for pattern: ${pattern} searchPath: ${searchPath}`);
+            logger.debug(`no file found for pattern: ${pattern} searchPath: ${searchPath}`);
         } else if (files.length > 1) {
-            console.error(`More then one file found! file(${pattern}) in path(${searchPath}) files: ${files}`);
+            logger.error(`More then one file found! file(${pattern}) in path(${searchPath}) files: ${files}`);
         } else {
             filePathInfo = path.parse(files[0]);
         }
@@ -277,7 +280,7 @@ export class BitBakeProjectScanner {
                 return obj.path === undefined;
             });
 
-            console.log(`${recipesWithOutPath.length} recipes must be examined more deeply.`);
+            logger.info(`${recipesWithOutPath.length} recipes must be examined more deeply.`);
 
             for (let recipeWithOutPath of recipesWithOutPath) {
                 let output: string = this.executeCommandInBitBakeEnvironment(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`);

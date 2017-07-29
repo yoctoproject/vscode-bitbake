@@ -21,6 +21,9 @@ import {
     SymbolContent
 } from "./SymbolScanner";
 
+import { Logger } from "./Logger";
+let logger: Logger = Logger.getInstance();
+
 const path = require('path');
 
 
@@ -124,7 +127,7 @@ export class DefinitionProvider {
                 definition = new Array < Location > ();
 
                 for (let elementInfo of elementInfos) {
-                    console.log(`definition ${JSON.stringify(elementInfo)}`);
+                    logger.debug(`definition ${JSON.stringify(elementInfo)}`);
                     let location: Location = this.createDefinitionLocationForPathInfo(elementInfo.path);
 
                     definition.push(location);
@@ -145,7 +148,7 @@ export class DefinitionProvider {
                 definition = new Array < Location > ();
 
                 for (let pathInfo of pathInfoList) {
-                    console.log(`definition ${JSON.stringify(pathInfo)}`);
+                    logger.debug(`definition ${JSON.stringify(pathInfo)}`);
                     let location: Location = this.createDefinitionLocationForPathInfo(pathInfo);
 
                     definition.push(location);
@@ -173,7 +176,7 @@ export class DefinitionProvider {
                 definition = new Array < Location > ();
 
                 for (let element of symbolContent) {
-                    console.log(`definition ${JSON.stringify(element)}`);
+                    logger.debug(`definition ${JSON.stringify(element)}`);
                     let location: Location = this.createDefinitionForSymbolContent(element);
 
                     definition.push(location);

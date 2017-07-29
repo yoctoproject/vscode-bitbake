@@ -56,7 +56,7 @@
       "type": "object",
       "title": "Language Server for Bitbake configuration",
       "properties": {
-        "languageServerBitbake.trace.server": {
+        "languageServerBitbake.loggingLevel": {
           "type": "string",
           "enum": [
             "off",
@@ -64,7 +64,7 @@
             "verbose"
           ],
           "default": "off",
-          "description": "Traces the communication between VSCode and the languageServerBitbake service."
+          "description": "Adjust the logging level. off: no output; messages: only information that is useful for the user; verbose: the same like messages, but with additional debug informations"
         },
         "languageServerBitbake.deepExamine": {
           "type": "boolean",
