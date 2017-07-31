@@ -11,11 +11,12 @@
     "execa": "^0.6.3",
     "find": "^0.2.7",
     "path": "^0.12.7",
-    "vscode-languageserver": "^3.3.0"
+    "vscode-languageserver": "^3.3.0",
+    "winston": "^2.3.1"
   },
   "devDependencies": {
-    "@types/node": "^6.0.79",
-    "typescript": "^2.4.1"
+    "@types/node": "^6.0.85",
+    "typescript": "^2.4.2"
   },
   "scripts": {
     "compile": "installServerIntoExtension ../extension ./package.json ./tsconfig.json && tsc -p .",
