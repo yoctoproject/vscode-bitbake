@@ -119,7 +119,9 @@ export class SymbolScanner {
             }
 
             for (let location of definition) {
-                this.extendsFile(this.convertUriStringToFilePath(location.uri));
+                if (location !== null) {
+                    this.extendsFile(this.convertUriStringToFilePath(location.uri));
+                }
             }
         }
 

@@ -66,6 +66,12 @@ export class DefinitionProvider {
                     let elementInfos: ElementInfo[] = this._projectScanner.includes.filter((obj: ElementInfo): boolean => {
                         return obj.name === includeFile.name;
                     });
+
+                    if( elementInfos.length == 0 ) {
+                        elementInfos = this._projectScanner.recipes.filter((obj: ElementInfo): boolean => {
+                            return obj.name === includeFile.name;
+                        });
+                    }
                     definition = this.createDefinitionForElementInfo(elementInfos);
                 }
                 break;
