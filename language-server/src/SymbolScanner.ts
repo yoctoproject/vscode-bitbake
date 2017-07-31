@@ -21,8 +21,7 @@ import {
     DefinitionProvider
 } from "./DefinitionProvider";
 
-import { Logger } from "./Logger";
-let logger: Logger = Logger.getInstance();
+var logger = require('winston');
 
 type FileContent = {
     filePath: string,
@@ -128,7 +127,7 @@ export class SymbolScanner {
 
     private convertUriStringToFilePath(fileUrlAsString: string): string {
         let fileUrl = url.parse(fileUrlAsString);
-        let filePath: string = fileUrl.pathname;
+        let filePath: string = decodeURI(fileUrl.pathname);
 
         return filePath;
     }

@@ -47,15 +47,12 @@ import {
 	SymbolScanner
 } from "./SymbolScanner";
 
-import {
-	Logger
-} from "./Logger";
 
+var logger = require('winston');
 const path = require('path');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
-let logger: Logger = Logger.getInstance();
 let documents: TextDocuments = new TextDocuments();
 let documentMap: Map < string, string[] > = new Map();
 let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
@@ -64,7 +61,6 @@ let workspaceRoot: string;
 let symbolScanner: SymbolScanner = null;
 
 documents.listen(connection);
-logger.remoteConsole = connection.console;
 
 
 connection.onInitialize((params): InitializeResult => {
@@ -102,7 +98,7 @@ interface LanguageServerBitbakeSettings {
 connection.onDidChangeConfiguration((change) => {
 	let settings = < Settings > change.settings;
 	bitBakeProjectScanner.deepExamine = settings.languageServerBitbake.deepExamine;
-	logger.logLevel = settings.languageServerBitbake.loggingLevel;
+	logger.level = settings.languageServerBitbake.loggingLevel;
 });
 
 connection.onDidChangeWatchedFiles((change) => {

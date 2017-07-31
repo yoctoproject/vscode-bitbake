@@ -21,8 +21,7 @@ import {
     SymbolContent
 } from "./SymbolScanner";
 
-import { Logger } from "./Logger";
-let logger: Logger = Logger.getInstance();
+var logger = require('winston');
 
 const path = require('path');
 

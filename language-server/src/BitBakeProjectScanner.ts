@@ -8,8 +8,7 @@ const execa = require('execa');
 const find = require('find');
 const path = require('path');
 
-import { Logger } from "./Logger";
-let logger: Logger = Logger.getInstance();
+var logger = require('winston');
 
 export type LayerInfo = {
     name: string,
