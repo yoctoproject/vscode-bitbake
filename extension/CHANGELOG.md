@@ -1,7 +1,8 @@
-# x.x.x - xxxx.xx.xx
+# 0.0.9 - 2017.08.01
 
 ## Fixed Bugs:
 - [issue 12](https://github.com/EugenWiens/vscode-bitbake/issues/12) reduce the output
+- small bug fixes
 
 
 # 0.0.8 - 2017.07.23
