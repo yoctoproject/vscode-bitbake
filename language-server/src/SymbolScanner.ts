@@ -138,7 +138,8 @@ export class SymbolScanner {
         for (let file of this._fileContent) {
             for (let line of file.fileContent) {
                 let lineIndex: number = file.fileContent.indexOf(line);
-                let symbolContent: SymbolContent = this.investigateLine(line);
+                const regex = /^\s*(?:export)?\s*(\w*(?:\[\w*\])?)\s*(?:=|:=|\+=|=\+|-=|=-|\?=|\?\?=|\.=|=\.)/g;
+                let symbolContent: SymbolContent = this.investigateLine(line, regex);
 
                 if (symbolContent !== undefined) {
                     symbolContent.filePath = file.filePath;
@@ -151,9 +152,9 @@ export class SymbolScanner {
         }
     }
 
-    private investigateLine(lineString: string): SymbolContent {
+    private investigateLine(lineString: string, regex: RegExp): SymbolContent {
         let symbolContent: SymbolContent = undefined;
-        const regex = /^\s*(?:export)?\s*(\w*(?:\[\w*\])?)\s*(?:=|:=|\+=|=\+|-=|=-|\?=|\?\?=|\.=|=\.)/g;
+
         let m;
 
         while ((m = regex.exec(lineString)) !== null) {
@@ -195,4 +196,6 @@ export class SymbolScanner {
 
         return filterdSymbolName;
     }
+
+    
 }
