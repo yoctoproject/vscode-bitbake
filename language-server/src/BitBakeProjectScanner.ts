@@ -341,34 +341,26 @@ export class BitBakeProjectScanner {
 
 
     private executeCommandInBitBakeEnvironment(command: string): string {
-        let stdOutput: string;
-
-        if (this._projectPath !== null) {
-            let str: string = `. ./oe-init-build-env > /dev/null; ${command}`;
-
-            let returnObject = execa.shellSync(str)
-
-            if (returnObject.status === 0) {
-                stdOutput = returnObject.stdout;
-            } else {
-                console.error('can not execute command: ' + str);
-            }
-        }
-
-        return stdOutput;
+        let str: string = `. ./oe-init-build-env vsc > /dev/null ; ${command}`;
+        
+        return this.executeCommand(str);
     }
 
-    private executeCommandInProjectPathWithoutBitBakeEnvironment(command: string): string {
+    private executeCommand(command: string): string {
         let stdOutput: string;
 
         if (this._projectPath !== null) {
+            try {
+                logger.debug(`execute command: ${command}`)
+                let returnObject = execa.shellSync(command);
 
-            let returnObject = execa.shellSync(command);
-
-            if (returnObject.status === 0) {
-                stdOutput = returnObject.stdout;
-            } else {
-                console.error('can not execute command: ' + command);
+                if (returnObject.status === 0) {
+                    stdOutput = returnObject.stdout;
+                } else {
+                    logger.error('error on executing command: ' + command);
+                }
+            } catch (error) {
+                logger.error(`can not execute command: ${command} error: ${error}`);
             }
         }
 

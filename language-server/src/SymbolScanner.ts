@@ -84,7 +84,7 @@ export class SymbolScanner {
             }
 
         } catch (error) {
-            console.error(`can not open file error: ${error}`)
+            logger.error(`can not open file error: ${error}`)
         }
     }
 
