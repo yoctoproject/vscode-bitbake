@@ -10,6 +10,11 @@ const path = require('path');
 
 var logger = require('winston');
 
+import {
+    IConnection
+} from 'vscode-languageserver';
+
+
 export type LayerInfo = {
     name: string,
     path: string,
@@ -56,11 +61,16 @@ export class BitBakeProjectScanner {
     private _includes: ElementInfo[] = new Array < ElementInfo > ();
     private _recipes: ElementInfo[] = new Array < ElementInfo > ();
     private _deepExamine: boolean = false;
+    private _connection: IConnection = null;
 
     private _scanStatus: ScannStatus = {
         scanIsRunning: false,
         scanIsPending: false
     };
+    
+    constructor( connection: IConnection ) {
+        this._connection = connection;
+    }
 
     setprojectPath(projectPath: string) {
         this._projectPath = projectPath;
@@ -97,14 +107,21 @@ export class BitBakeProjectScanner {
             this._scanStatus.scanIsRunning = true;
             logger.info('start rescanProject');
 
-            this.scanAvailableLayers();
-            this.scanForClasses();
-            this.scanForIncludeFiles();
-            this.scanForRecipes();
-            this.scanRecipesAppends();
+            try {
+                this.parseAllRecipes();
+                this.scanAvailableLayers();
+                this.scanForClasses();
+                this.scanForIncludeFiles();
+                this.scanForRecipes();
+                this.scanRecipesAppends();
 
-            logger.info('scan ready');
-            this.printScanStatistic();
+                logger.info('scan ready');
+                this.printScanStatistic();
+            } catch (error) {
+                logger.error(`scanning of project is abborted error: ${error}`)
+                // TODO: send status to the user "scann error"
+            }
+
             this._scanStatus.scanIsRunning = false;
 
             if (this._scanStatus.scanIsPending === true) {
@@ -155,8 +172,7 @@ export class BitBakeProjectScanner {
                     this._layers.push(layerElement);
                 }
             } catch (error) {
-                this._scanStatus.scanIsRunning = false;
-                this._scanStatus.scanIsPending = false;
+                logger.error(`can not scan available layers error: ${error}`);
                 throw error;
             }
         }
@@ -182,7 +198,8 @@ export class BitBakeProjectScanner {
                 }
 
             } catch (error) {
-                logger.error(`find error: pattern: ${pattern} layer.path: ${layer.path} error: ${JSON.stringify(error)}`)
+                logger.error(`find error: pattern: ${pattern} layer.path: ${layer.path} error: ${JSON.stringify(error)}`);
+                throw error;
             }
 
         }
@@ -339,10 +356,20 @@ export class BitBakeProjectScanner {
         }
     }
 
+    private parseAllRecipes() {
+        try {
+            this.executeCommandInBitBakeEnvironment('bitbake -p');
+            
+        } catch (error) {
+            logger.error(`can not parse recipes error: ${error}`);
+            // TODO: send status to the user "parsing error"
+        }
+    }
+
 
     private executeCommandInBitBakeEnvironment(command: string): string {
         let str: string = `. ./oe-init-build-env vsc > /dev/null ; ${command}`;
-        
+
         return this.executeCommand(str);
     }
 
@@ -361,6 +388,7 @@ export class BitBakeProjectScanner {
                 }
             } catch (error) {
                 logger.error(`can not execute command: ${command} error: ${error}`);
+                throw error;
             }
         }
 

@@ -55,7 +55,7 @@ const path = require('path');
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 let documents: TextDocuments = new TextDocuments();
 let documentMap: Map < string, string[] > = new Map();
-let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
+let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection);
 let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
 let workspaceRoot: string;
 let symbolScanner: SymbolScanner = null;
