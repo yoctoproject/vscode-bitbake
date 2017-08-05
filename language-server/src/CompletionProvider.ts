@@ -36,8 +36,12 @@ export class CompletionProvider {
 
         if (item.kind === this._includeCompletionItemKind) {
             let path: PathInfo = item.data.path;
-            let pathToRemove: string = this._projectScanner.projectPath + '/' + item.data.layerInfo.name + '/';
-            let pathAsString: string = path.dir.replace(pathToRemove, '');
+            let pathAsString: string = path.dir.replace(item.data.layerInfo.path, '');
+
+            if( pathAsString.startsWith('/') === true ) {
+                pathAsString = pathAsString.substr(1);
+            }
+
             insertString = pathAsString + '/' + item.data.path.base;
         }
 

@@ -2,6 +2,7 @@
 
 ## Fixed Bugs:
 - [issue 15](https://github.com/EugenWiens/vscode-bitbake/issues/15) Error in recipes cause that the plugin crashes and not working any more
+- [issue 17](https://github.com/EugenWiens/vscode-bitbake/issues/17) when using require / include the auto completion is added include files with absolute path
 
  
 # 0.0.9 - 2017.08.01
