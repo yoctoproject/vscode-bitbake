@@ -3,7 +3,7 @@
   "displayName": "bitbake",
   "description": "BitBake language support",
   "license": "MIT",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "publisher": "EugenWiens",
   "author": {
     "name": "Eugen Wiens"

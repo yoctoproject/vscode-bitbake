@@ -1,4 +1,4 @@
-# 0.0.10 - xxxx.xx.xx
+# 0.0.10 - 2017.08.06
 
 ## Fixed Bugs:
 - [issue 15](https://github.com/EugenWiens/vscode-bitbake/issues/15) Error in recipes cause that the plugin crashes and not working any more
