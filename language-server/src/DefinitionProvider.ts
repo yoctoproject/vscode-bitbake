@@ -11,9 +11,13 @@ import {
 } from "vscode-languageserver";
 
 import {
-    BitBakeProjectScanner,
     ElementInfo,
+    LayerInfo,
     PathInfo
+} from "./ElementInfo";
+
+import {
+    BitBakeProjectScanner,
 } from "./BitBakeProjectScanner";
 
 import {

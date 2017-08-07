@@ -29,10 +29,14 @@ import {
 	FileEvent
 } from 'vscode-languageserver';
 
+import {
+    ElementInfo,
+    LayerInfo,
+    PathInfo
+} from "./ElementInfo";
 
 import {
-	BitBakeProjectScanner,
-	PathInfo
+	BitBakeProjectScanner
 } from "./BitBakeProjectScanner";
 
 import {
@@ -95,6 +99,12 @@ interface LanguageServerBitbakeSettings {
 	deepExamine: boolean;
 }
 
+function setSymbolScanner( newSymbolScanner: SymbolScanner ) {
+	symbolScanner = newSymbolScanner;
+	contextHandler.symbolScanner = symbolScanner;
+}
+
+
 connection.onDidChangeConfiguration((change) => {
 	let settings = < Settings > change.settings;
 	bitBakeProjectScanner.deepExamine = settings.languageServerBitbake.deepExamine;
@@ -125,7 +135,7 @@ connection.onDidOpenTextDocument((params) => {
 		documentMap.set(params.textDocument.uri, params.textDocument.text.split(/\r?\n/g));
 	}
 
-	symbolScanner = new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider);
+	setSymbolScanner( new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider) );
 });
 
 connection.onDidChangeTextDocument((params) => {
@@ -133,12 +143,12 @@ connection.onDidChangeTextDocument((params) => {
 		documentMap.set(params.textDocument.uri, params.contentChanges[0].text.split(/\r?\n/g));
 	}
 	
-	symbolScanner = new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider);
+	setSymbolScanner( new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider) );
 });
 
 connection.onDidCloseTextDocument((params) => {
 	documentMap.delete(params.textDocument.uri);
-	symbolScanner = null;
+	setSymbolScanner( null );
 });
 
 connection.onExecuteCommand((params) => {

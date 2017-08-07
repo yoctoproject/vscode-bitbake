@@ -21,6 +21,12 @@ import {
     DefinitionProvider
 } from "./DefinitionProvider";
 
+import {
+    ElementInfo,
+    LayerInfo,
+    PathInfo
+} from "./ElementInfo";
+
 var logger = require('winston');
 
 type FileContent = {
@@ -36,7 +42,6 @@ export type SymbolContent = {
     lineNumber ? : number
 };
 
-
 export class SymbolScanner {
 
     private _fileContent: FileContent[] = new Array < FileContent > ();
@@ -50,12 +55,6 @@ export class SymbolScanner {
 
         this.extendsFile(this.convertUriStringToFilePath(fileUrlAsString));
         this.scanForSymbols();
-
-        this._definitionProvider.symbolScanner = this;
-    }
-
-    cleanSymbols() {
-        this._definitionProvider.symbolScanner = null;
     }
 
     get symbols(): SymbolContent[] {

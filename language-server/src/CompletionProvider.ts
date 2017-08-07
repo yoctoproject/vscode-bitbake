@@ -10,25 +10,37 @@ import {
 } from "vscode-languageserver";
 
 import {
-    BitBakeProjectScanner,
-    ElementInfo,
-    PathInfo
+    BitBakeProjectScanner
 } from "./BitBakeProjectScanner";
+
+import {
+    ElementInfo,
+    LayerInfo,
+    PathInfo
+} from "./ElementInfo";
 
 import {
     BasicKeywordMap
 } from './BasicKeywordMap';
+import { SymbolScanner } from "./SymbolScanner";
 
 export class CompletionProvider {
 
     private _classCompletionItemKind: CompletionItemKind = CompletionItemKind.Class;
     private _includeCompletionItemKind: CompletionItemKind = CompletionItemKind.Interface;
     private _recipesCompletionItemKind: CompletionItemKind = CompletionItemKind.Method;
+    private _symbolComletionItemKind: CompletionItemKind = CompletionItemKind.Variable;
     private _projectScanner: BitBakeProjectScanner;
+    private _symbolScanner: SymbolScanner;
+    
 
     constructor(projectScanner: BitBakeProjectScanner) {
         this._projectScanner = projectScanner;
 
+    }
+
+    set symbolScanner(symbolScanner: SymbolScanner) {
+        this._symbolScanner = symbolScanner;
     }
 
     getInsertStringForTheElement(item: CompletionItem): string {
@@ -83,6 +95,10 @@ export class CompletionProvider {
                         this._projectScanner.recipes,
                         this._recipesCompletionItemKind
                     ),
+                    this.convertSymbolContentListToCompletionItemList(
+                        this._symbolScanner.symbols,
+                        this._symbolComletionItemKind
+                    ),
                     BasicKeywordMap
                 );
 
@@ -110,6 +126,24 @@ export class CompletionProvider {
         return completionItems;
     }
 
+    private convertSymbolContentListToCompletionItemList(symbolContentList, completionType: CompletionItemKind): CompletionItem[] {
+        let completionItems: CompletionItem[] = new Array < CompletionItem > ();
+
+        for (let element of symbolContentList) {
+            let completionItem: CompletionItem = {
+                label: element.symbolName,
+                detail: this.getTypeAsString(completionType),
+                documentation: '',
+                data: element,
+                kind: completionType
+            };
+
+            completionItems.push(completionItem);
+        }
+
+        return completionItems;
+    }
+
     private getTypeAsString(completionType: CompletionItemKind): string {
         let typeAsString: string = '';
 
@@ -124,6 +158,10 @@ export class CompletionProvider {
 
             case this._recipesCompletionItemKind:
                 typeAsString = 'recipe';
+                break;
+
+            case this._symbolComletionItemKind:
+                typeAsString = 'symbol';
                 break;
         }
 

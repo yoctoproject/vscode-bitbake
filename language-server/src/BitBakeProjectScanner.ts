@@ -1,12 +1,13 @@
 /* --------------------------------------------------------------------------------------------
  * Copyright (c) Eugen Wiens. All rights reserved.
- * Licensed under the MIT License. See License.txt in the project root for license information.
+ * Licensed under the MIT License. See License.txt in the project root for license information.Diagnstic
  * ------------------------------------------------------------------------------------------ */
 'use strict';
 
 const execa = require('execa');
 const find = require('find');
 const path = require('path');
+const url = require('url')
 
 var logger = require('winston');
 
@@ -14,31 +15,11 @@ import {
     IConnection
 } from 'vscode-languageserver';
 
-
-export type LayerInfo = {
-    name: string,
-    path: string,
-    priority: number
-};
-
-
-export type PathInfo = {
-    root: string,
-    dir: string,
-    base: string,
-    ext: string,
-    name: string
-};
-
-export type ElementInfo = {
-    name: string,
-    extraInfo ? : string,
-    path ? : PathInfo,
-    layerInfo ? : LayerInfo,
-    appends ? : PathInfo[],
-    overlayes ? : PathInfo[],
-    version ? : string
-};
+import {
+    ElementInfo,
+    LayerInfo,
+    PathInfo
+} from "./ElementInfo";
 
 type ScannStatus = {
     scanIsRunning: boolean,
@@ -67,8 +48,8 @@ export class BitBakeProjectScanner {
         scanIsRunning: false,
         scanIsPending: false
     };
-    
-    constructor( connection: IConnection ) {
+
+    constructor(connection: IConnection) {
         this._connection = connection;
     }
 
@@ -119,7 +100,6 @@ export class BitBakeProjectScanner {
                 this.printScanStatistic();
             } catch (error) {
                 logger.error(`scanning of project is abborted error: ${error}`)
-                // TODO: send status to the user "scann error"
             }
 
             this._scanStatus.scanIsRunning = false;
@@ -357,13 +337,8 @@ export class BitBakeProjectScanner {
     }
 
     private parseAllRecipes() {
-        try {
-            this.executeCommandInBitBakeEnvironment('bitbake -p');
-            
-        } catch (error) {
-            logger.error(`can not parse recipes error: ${error}`);
-            // TODO: send status to the user "parsing error"
-        }
+        logger.debug('parseAllRecipes');
+        this.executeCommandInBitBakeEnvironment('bitbake -p');
     }
 
 

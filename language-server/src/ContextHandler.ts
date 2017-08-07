@@ -14,9 +14,13 @@ import {
 } from "vscode-languageserver";
 
 import {
-    BitBakeProjectScanner,
     ElementInfo,
+    LayerInfo,
     PathInfo
+} from "./ElementInfo";
+
+import {
+    BitBakeProjectScanner,
 } from "./BitBakeProjectScanner";
 
 import {
@@ -75,6 +79,11 @@ export class ContextHandler {
 
     get definitionProvider(): DefinitionProvider {
         return this._definitionProvider;
+    }
+
+    set symbolScanner(symbolScanner: SymbolScanner) {
+        this._completionProvider.symbolScanner = symbolScanner;
+        this._definitionProvider.symbolScanner = symbolScanner;
     }
 
     private getDefinitionForKeyWord(keyWord: string, currentLine: string, selectedSympbol ? : string): Definition {
