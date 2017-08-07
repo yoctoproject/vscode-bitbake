@@ -7,6 +7,14 @@
   "engines": {
     "node": "*"
   },
+  "bugs": {
+    "url": "https://github.com/EugenWiens/vscode-bitbake/issues"
+  },
+  "homepage": "https://github.com/EugenWiens/vscode-bitbake",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/EugenWiens/vscode-bitbake.git"
+  },
   "dependencies": {
     "execa": "^0.6.3",
     "find": "^0.2.7",
