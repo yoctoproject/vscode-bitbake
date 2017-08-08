@@ -1,4 +1,9 @@
-# 0.0.11 - 2017.xx.xx
+# 0.0.11 - 2017.08.08
+
+## Fixed Bugs:
+
+## Enhancements:
+- [issue 18](https://github.com/EugenWiens/vscode-bitbake/issues/18) Add Symbols, find by scanning of current recipe, to the auto completion
 
 
 # 0.0.10 - 2017.08.06
