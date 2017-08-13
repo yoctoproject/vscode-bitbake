@@ -1,20 +1,30 @@
-# BitBake recipe language support in Visual Studio Code with folowing features
+# BitBake recipe language support in Visual Studio Code
 
-## syntax highlighting
+## Features
+
+### Syntax highlighting
+
 Acknowledgements:
-Syntax derived from (https://github.com/mholo65/vscode-bitbake) which is licensed under the MIT License
 
-## context based suggestion
-e.g. ```inherit kernel``` after typing *inherit* it is posible to request suggestion with *STRG+SPACE*. Now you get sugges only classes that you can inherit regarding your layer configuration.
-The suggestion supports:
-* Keyword *inherit, require, include, export*
-* The language server detect context for the keywords *inherit, require and include*
+* Syntax derived from https://github.com/mholo65/vscode-bitbake, which is licensed under the [MIT License](https://github.com/mholo65/vscode-bitbake/blob/master/LICENSE).
 
-## go to definitions
-It is possible with *STRG and Click* to open the file that is associated with a class, inc-file, recipe or a variable. If more than one definition exists you will get a definitions list.
-* If the definition for a class or an inc-file is requested the file is opened. 
-* If the definition for a recipe is requestet you will get the definition of the recipe and all bbappends.
-* If the definition for symbol is requested you will get the definitions for the symbols of whole include hierarchy
+### Context-based suggestions
 
+*CTRL+SPACE* may be used to provide suggestions. For example, typing `inherit` and pressing *CTRL+SPACE* provides the suggestion `inherit kernel`. Suggestions are context-based, only providing suggestions that apply to your specific layer configuration.
 
+The following suggestions are currently supported:
 
+* Keywords `inherit`, `require`, `include` and `export`
+* Context-based suggestions for keywords `inherit`, `require` and `include` (provided by *language-server*)
+
+### Go to definition
+
+*CTRL and click* may be used to open the file associated with a class, inc-file, recipe or variable. If more than one definition exists, a list of definitions is provided.
+
+The go to definition feature currently behaves as follows:
+
+| Definition | Target(s) |
+| --- | --- |
+| class or inc-file | file |
+| recipe | recipe definition and all bbappends |
+| symbol | all symbols within the include hierarchy |
