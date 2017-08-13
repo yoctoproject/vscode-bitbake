@@ -1,25 +1,38 @@
-# This Visual Studio Code Pluggin is based on [Example - Language Server](https://code.visualstudio.com/docs/extensions/example-language-server)
+# BitBake recipe language support plugin for Visual Studio Code
 
-For the discription of the extension it self, see [README.md](./extension/README.md). The Change Log for the extension you can find here [CHANGELOG.md](./extension/CHANGELOG.md).
+This Visual Studio Code plugin is based on [Example - Language Server](https://code.visualstudio.com/docs/extensions/example-language-server).
 
-## installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
-To install this extension from VS Code Marketplace please follow this guide https://marketplace.visualstudio.com/items?itemName=EugenWiens.bitbake. 
-For more informations regarding Extension Marketplace please see following documentation  https://code.visualstudio.com/docs/editor/extension-gallery. 
+For a description of the extension itself, please see [the extension's README](./extension/README.md). The changelog for the extension may be found [here](./extension/CHANGELOG.md).
 
-## build
-### npm install
-Clone the repository and then do:
-For the extension:
-``` 
+## Installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
+
+To install this extension from the VS Code Extension Marketplace, please follow [this guide](https://marketplace.visualstudio.com/items?itemName=EugenWiens.bitbake).
+For more information regarding the Extension Marketplace, please see the [official documentation](https://code.visualstudio.com/docs/editor/extension-gallery).
+
+## Manual installation
+
+Manual installation takes place in two steps. The code must be installed via `npm` and subsequently built within Visual Studio Code. Before performing these steps, please ensure you have cloned this repository.
+
+### Code installation
+
+To install the extension:
+```
 cd extension
 npm install
 ```
 
-For the language-server
+To install *language-server*:
 ```
 cd language-server
 npm install
 ```
 
-### building the *language-server*
-The language-server must be built. Start *Visual Studio Code* and press *STRG+B* after the build step the *language-server* is copied to the extension. After you have build the *language-server* you can build and start the extension.
+### Building
+
+#### *language-server*
+
+The extension depends on *language-server*, which must be installed and built before the extension itself can be built. Start Visual Studio Code and press *CTRL+B*. After building, the *language-server* is automatically copied to the extension.
+
+#### Extension
+
+After building *language-server*, the extension may be built within Visual Studio Code.
