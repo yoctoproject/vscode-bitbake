@@ -16,6 +16,7 @@ The following suggestions are currently supported:
 
 * Keywords `inherit`, `require`, `include` and `export`
 * Context-based suggestions for keywords `inherit`, `require` and `include` (provided by *language-server*)
+* Context-based suggestions for all symbols within the include hierarchy
 
 ### Go to definition
 

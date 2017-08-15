@@ -1,3 +1,8 @@
+# 0.0.12 - 2017.08.15
+
+## Enhancements:
+- [issue 20](https://github.com/EugenWiens/vscode-bitbake/pull/20) Integrate the pull request: Rewording and cleanup of documentation
+
 # 0.0.11 - 2017.08.08
 
 ## Enhancements:
