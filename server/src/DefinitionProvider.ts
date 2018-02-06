@@ -12,7 +12,6 @@ import {
 
 import {
     ElementInfo,
-    LayerInfo,
     PathInfo
 } from "./ElementInfo";
 

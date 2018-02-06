@@ -21,12 +21,6 @@ import {
     DefinitionProvider
 } from "./DefinitionProvider";
 
-import {
-    ElementInfo,
-    LayerInfo,
-    PathInfo
-} from "./ElementInfo";
-
 var logger = require('winston');
 
 type FileContent = {

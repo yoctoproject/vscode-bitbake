@@ -1,0 +1,32 @@
+{
+	"name": "bitbake",
+	"description": "BitBake language support",
+	"author": "Eugen Wiens",
+	"license": "MIT",
+	"version": "0.0.12",
+	"publisher": "EugenWiens",
+	"bugs": {
+		"url": "https://github.com/EugenWiens/vscode-bitbake/issues"
+	},
+	"homepage": "https://github.com/EugenWiens/vscode-bitbake",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/EugenWiens/vscode-bitbake.git"
+	},
+	"scripts": {
+		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
+		"compile": "tsc -p client/tsconfig.json && cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"compile:client": "tsc -p client/tsconfig.json",
+		"watch:client": "tsc -w -p client/tsconfig.json",
+		"compile:server": "cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"watch:server": "cd server && npm run installServer && cd .. && tsc -w -p server/tsconfig.json",
+		"distclean:server": "cd server && rm -fr node_modules && cd ..",
+		"distclean:client": "cd client && rm -fr node_modules && cd ..",
+		"distclean": "npm run-script distclean:server && npm run-script distclean:client && rm -fr node_modules"
+	},
+	"devDependencies": {
+		"@types/mocha": "^2.2.42",
+		"@types/node": "^6.0.88",
+		"typescript": "^2.5.2"
+	}
+}

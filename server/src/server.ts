@@ -9,39 +9,16 @@ import {
 	IPCMessageWriter,
 	createConnection,
 	IConnection,
-	TextDocumentSyncKind,
 	TextDocuments,
-	TextDocument,
-	Diagnostic,
-	DiagnosticSeverity,
-	InitializeParams,
 	InitializeResult,
 	TextDocumentPositionParams,
 	CompletionItem,
-	CompletionItemKind,
-	SignatureHelpOptions,
-	RequestHandler,
-	SignatureHelp,
-	SignatureInformation,
 	Definition,
-	Location,
-	Range,
-	FileEvent
 } from 'vscode-languageserver';
-
-import {
-    ElementInfo,
-    LayerInfo,
-    PathInfo
-} from "./ElementInfo";
 
 import {
 	BitBakeProjectScanner
 } from "./BitBakeProjectScanner";
-
-import {
-	BasicKeywordMap
-} from './BasicKeywordMap';
 
 import {
 	ContextHandler
@@ -53,13 +30,12 @@ import {
 
 
 var logger = require('winston');
-const path = require('path');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 let documents: TextDocuments = new TextDocuments();
 let documentMap: Map < string, string[] > = new Map();
-let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection);
+let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
 let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
 let workspaceRoot: string;
 let symbolScanner: SymbolScanner = null;
@@ -69,7 +45,7 @@ documents.listen(connection);
 
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
-	bitBakeProjectScanner.setprojectPath(workspaceRoot);
+	bitBakeProjectScanner.setProjectPath(workspaceRoot);
 	bitBakeProjectScanner.rescanProject();
 
 	return {
@@ -88,6 +64,12 @@ connection.onInitialize((params): InitializeResult => {
 	}
 });
 
+// The content of a text document has changed. This event is emitted
+// when the text document first opened or when its content has changed.
+documents.onDidChangeContent((change) => {
+	//TODO: add symbol parsing here
+	logger.debug(`change: $change`);
+});
 
 // The settings interface describe the server relevant settings part
 interface Settings {
@@ -97,6 +79,8 @@ interface Settings {
 interface LanguageServerBitbakeSettings {
 	loggingLevel: string;
 	deepExamine: boolean;
+	workingFolder: string;
+	pathToBashScriptInterpreter: string;
 }
 
 function setSymbolScanner( newSymbolScanner: SymbolScanner ) {
@@ -109,10 +93,12 @@ connection.onDidChangeConfiguration((change) => {
 	let settings = < Settings > change.settings;
 	bitBakeProjectScanner.deepExamine = settings.languageServerBitbake.deepExamine;
 	logger.level = settings.languageServerBitbake.loggingLevel;
+	bitBakeProjectScanner.workingPath = settings.languageServerBitbake.workingFolder;
+	bitBakeProjectScanner.scriptInterpreter = settings.languageServerBitbake.pathToBashScriptInterpreter;
 });
 
 connection.onDidChangeWatchedFiles((change) => {
-	logger.debug('onDidChangeWatchedFiles');
+	logger.debug(`onDidChangeWatchedFiles: $change`);
 	bitBakeProjectScanner.rescanProject();
 });
 

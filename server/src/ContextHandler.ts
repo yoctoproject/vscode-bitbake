@@ -7,17 +7,8 @@
 import {
     TextDocumentPositionParams,
     CompletionItem,
-    CompletionItemKind,
-    Definition,
-    Location,
-    Range
+    Definition
 } from "vscode-languageserver";
-
-import {
-    ElementInfo,
-    LayerInfo,
-    PathInfo
-} from "./ElementInfo";
 
 import {
     BitBakeProjectScanner,
@@ -40,8 +31,6 @@ import {
 } from "./SymbolScanner";
 
 var logger = require('winston');
-
-const find = require('find');
 
 
 /**

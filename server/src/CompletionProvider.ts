@@ -1,7 +1,7 @@
 /* --------------------------------------------------------------------------------------------
-* Copyright (c) Eugen Wiens. All rights reserved.
-* Licensed under the MIT License. See License.txt in the project root for license information.
-* ------------------------------------------------------------------------------------------ */
+ * Copyright (c) Eugen Wiens. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
 'use strict';
 
 import {
@@ -14,15 +14,18 @@ import {
 } from "./BitBakeProjectScanner";
 
 import {
-    ElementInfo,
-    LayerInfo,
-    PathInfo
+    PathInfo,
+    ElementInfo
 } from "./ElementInfo";
 
 import {
     BasicKeywordMap
 } from './BasicKeywordMap';
-import { SymbolScanner } from "./SymbolScanner";
+
+import {
+    SymbolScanner,
+    SymbolContent
+} from "./SymbolScanner";
 
 export class CompletionProvider {
 
@@ -32,7 +35,7 @@ export class CompletionProvider {
     private _symbolComletionItemKind: CompletionItemKind = CompletionItemKind.Variable;
     private _projectScanner: BitBakeProjectScanner;
     private _symbolScanner: SymbolScanner;
-    
+
 
     constructor(projectScanner: BitBakeProjectScanner) {
         this._projectScanner = projectScanner;
@@ -50,7 +53,7 @@ export class CompletionProvider {
             let path: PathInfo = item.data.path;
             let pathAsString: string = path.dir.replace(item.data.layerInfo.path, '');
 
-            if( pathAsString.startsWith('/') === true ) {
+            if (pathAsString.startsWith('/') === true) {
                 pathAsString = pathAsString.substr(1);
             }
 
@@ -108,7 +111,7 @@ export class CompletionProvider {
         return completionItem;
     }
 
-    private convertElementInfoListToCompletionItemList(elementInfoList, completionType: CompletionItemKind): CompletionItem[] {
+    private convertElementInfoListToCompletionItemList(elementInfoList: ElementInfo[], completionType: CompletionItemKind): CompletionItem[] {
         let completionItems: CompletionItem[] = new Array < CompletionItem > ();
 
         for (let element of elementInfoList) {
@@ -126,7 +129,7 @@ export class CompletionProvider {
         return completionItems;
     }
 
-    private convertSymbolContentListToCompletionItemList(symbolContentList, completionType: CompletionItemKind): CompletionItem[] {
+    private convertSymbolContentListToCompletionItemList(symbolContentList: SymbolContent[], completionType: CompletionItemKind): CompletionItem[] {
         let completionItems: CompletionItem[] = new Array < CompletionItem > ();
 
         for (let element of symbolContentList) {

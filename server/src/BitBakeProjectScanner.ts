@@ -7,13 +7,9 @@
 const execa = require('execa');
 const find = require('find');
 const path = require('path');
-const url = require('url')
+const fs = require('fs')
 
 var logger = require('winston');
-
-import {
-    IConnection
-} from 'vscode-languageserver';
 
 import {
     ElementInfo,
@@ -34,7 +30,6 @@ export class BitBakeProjectScanner {
     private _classFileExtension: string = 'bbclass';
     private _includeFileExtension: string = 'inc';
     private _recipesFileExtension: string = 'bb';
-    private _configFileExtension: string = 'conf';
 
     private _projectPath: string;
     private _layers: LayerInfo[] = new Array < LayerInfo > ();
@@ -42,20 +37,14 @@ export class BitBakeProjectScanner {
     private _includes: ElementInfo[] = new Array < ElementInfo > ();
     private _recipes: ElementInfo[] = new Array < ElementInfo > ();
     private _deepExamine: boolean = false;
-    private _connection: IConnection = null;
+    private _settingsScriptInterpreter: string;
+    private _settingsWorkingFolder: string;
+    private _settingsBitbakeSourceCmd: string = '.';
 
     private _scanStatus: ScannStatus = {
         scanIsRunning: false,
         scanIsPending: false
     };
-
-    constructor(connection: IConnection) {
-        this._connection = connection;
-    }
-
-    setprojectPath(projectPath: string) {
-        this._projectPath = projectPath;
-    }
 
     get projectPath(): string {
         return this._projectPath;
@@ -79,6 +68,18 @@ export class BitBakeProjectScanner {
 
     set deepExamine(deepExamine: boolean) {
         this._deepExamine = deepExamine;
+    }
+
+    set scriptInterpreter( scriptInterpreter: string) {
+        this._settingsScriptInterpreter = scriptInterpreter;
+    }
+
+    set workingPath( workingPath: string) {
+        this._settingsWorkingFolder = workingPath;
+    }
+
+    setProjectPath(projectPath: string) {
+        this._projectPath = projectPath;
     }
 
     rescanProject() {
@@ -306,7 +307,6 @@ export class BitBakeProjectScanner {
                     outerReg.lastIndex++;
                 }
                 let matchInner: RegExpExecArray;
-                let extraInfoString: string[] = new Array < string > ();
                 let fullRecipeNameAsArray: string[] = match[1].split('_');
 
                 if (fullRecipeNameAsArray.length > 0) {
@@ -343,9 +343,11 @@ export class BitBakeProjectScanner {
 
 
     private executeCommandInBitBakeEnvironment(command: string): string {
-        let str: string = `. ./oe-init-build-env vsc > /dev/null ; ${command}`;
+        let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command);
+        let scriptFileName: string = 'executeBitBakeCmd.sh';
+        fs.writeFileSync(scriptFileName, scriptContent );
 
-        return this.executeCommand(str);
+        return this.executeCommand(scriptFileName);
     }
 
     private executeCommand(command: string): string {
@@ -369,4 +371,15 @@ export class BitBakeProjectScanner {
 
         return stdOutput;
     }
+
+    private generateBitBakeCommandScriptFileContent( bitbakeCommand: string): string {
+        let scriptFileBuffer: string[] = [];
+
+        scriptFileBuffer.push( '#!' + this._settingsScriptInterpreter);
+        scriptFileBuffer.push( this._settingsBitbakeSourceCmd + ' ./oe-init-build-env ' + this._settingsWorkingFolder + ' > /dev/null' );
+        scriptFileBuffer.push( bitbakeCommand );
+
+        return scriptFileBuffer.join('\n');
+    }
+
 }

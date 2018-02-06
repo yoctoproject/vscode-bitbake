@@ -1,13 +1,10 @@
 {
   "name": "bitbake",
-  "displayName": "bitbake",
   "description": "BitBake language support",
+  "author": "Eugen Wiens",
   "license": "MIT",
   "version": "0.0.12",
   "publisher": "EugenWiens",
-  "author": {
-    "name": "Eugen Wiens"
-  },
   "icon": "images/icon.png",
   "bugs": {
     "url": "https://github.com/EugenWiens/vscode-bitbake/issues"
@@ -18,7 +15,7 @@
     "url": "https://github.com/EugenWiens/vscode-bitbake.git"
   },
   "engines": {
-    "vscode": "^1.10.0"
+    "vscode": "^1.16.0"
   },
   "categories": [
     "Languages"
@@ -26,7 +23,7 @@
   "activationEvents": [
     "onLanguage:bitbake"
   ],
-  "main": "./out/extension",
+  "main": "./out/src/extension",
   "contributes": {
     "languages": [
       {
@@ -70,6 +67,16 @@
           "type": "boolean",
           "default": false,
           "description": "Activates an deeply examine. If a recipe export an extra package that have not the same name like the recipe file the normal scan will not find this packages. If you like to find the packages you have to activate this option."
+        },
+        "languageServerBitbake.workingFolder": {
+          "type": "string",
+          "default": "vscode-bitbake-build",
+          "description": "Use this setting to specify the build folder. Use other folder than for your regular 'build' to avoid collisions."
+        },
+        "languageServerBitbake.pathToBashScriptInterpreter": {
+          "type": "string",
+          "default": "/bin/bash",
+          "description": "This interpreter is used to run bash scripts"
         }
       }
     },
@@ -83,17 +90,13 @@
   },
   "scripts": {
     "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -watch -p ./",
+    "compile": "tsc -p ./",
+    "watch": "tsc -w -p ./",
     "update-vscode": "node ./node_modules/vscode/bin/install",
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
-  "devDependencies": {
-    "@types/mocha": "^2.2.33",
-    "@types/node": "^6.0.85",
-    "typescript": "^2.4.2",
-    "vscode": "^1.1.4"
-  },
   "dependencies": {
-    "vscode-languageclient": "^3.3.0"
+    "vscode": "^1.1.5",
+    "vscode-languageclient": "^3.4.2"
   }
 }

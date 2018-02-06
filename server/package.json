@@ -18,16 +18,14 @@
   "dependencies": {
     "execa": "^0.6.3",
     "find": "^0.2.7",
+    "fs": "0.0.1-security",
     "path": "^0.12.7",
-    "vscode-languageserver": "^3.3.0",
+    "vscode-languageserver": "^3.4.2",
     "winston": "^2.3.1"
   },
-  "devDependencies": {
-    "@types/node": "^6.0.85",
-    "typescript": "^2.4.2"
-  },
   "scripts": {
-    "compile": "installServerIntoExtension ../extension ./package.json ./tsconfig.json && tsc -p .",
-    "watch": "installServerIntoExtension ../extension ./package.json ./tsconfig.json && tsc --watch -p ."
+    "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json",
+    "compile": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -p .",
+    "watch": "installServerIntoExtension ../client ./package.json ./tsconfig.json && tsc -w -p ."
   }
 }

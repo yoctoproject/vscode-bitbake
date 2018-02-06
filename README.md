@@ -17,22 +17,5 @@ Manual installation takes place in two steps. The code must be installed via `np
 
 To install the extension:
 ```
-cd extension
 npm install
 ```
-
-To install *language-server*:
-```
-cd language-server
-npm install
-```
-
-### Building
-
-#### *language-server*
-
-The extension depends on *language-server*, which must be installed and built before the extension itself can be built. Start Visual Studio Code and press *CTRL+B*. After building, the *language-server* is automatically copied to the extension.
-
-#### Extension
-
-After building *language-server*, the extension may be built within Visual Studio Code.
