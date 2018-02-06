@@ -37,8 +37,8 @@ export class BitBakeProjectScanner {
     private _includes: ElementInfo[] = new Array < ElementInfo > ();
     private _recipes: ElementInfo[] = new Array < ElementInfo > ();
     private _deepExamine: boolean = false;
-    private _settingsScriptInterpreter: string;
-    private _settingsWorkingFolder: string;
+    private _settingsScriptInterpreter: string = '/bin/bash';
+    private _settingsWorkingFolder: string = 'vscode-bitbake-build'; 
     private _settingsBitbakeSourceCmd: string = '.';
 
     private _scanStatus: ScannStatus = {
@@ -150,7 +150,9 @@ export class BitBakeProjectScanner {
                         priority: parseInt(tempElement[2])
                     };
 
-                    this._layers.push(layerElement);
+                    if( (layerElement.name !== undefined) && (layerElement.path!==undefined) && layerElement.priority !==undefined ) {
+                        this._layers.push(layerElement);
+                    }
                 }
             } catch (error) {
                 logger.error(`can not scan available layers error: ${error}`);
@@ -344,8 +346,9 @@ export class BitBakeProjectScanner {
 
     private executeCommandInBitBakeEnvironment(command: string): string {
         let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command);
-        let scriptFileName: string = 'executeBitBakeCmd.sh';
+        let scriptFileName: string = this._projectPath + '/executeBitBakeCmd.sh';
         fs.writeFileSync(scriptFileName, scriptContent );
+        fs.chmodSync(scriptFileName, '0755');
 
         return this.executeCommand(scriptFileName);
     }
