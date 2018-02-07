@@ -68,7 +68,7 @@ connection.onInitialize((params): InitializeResult => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
 	//TODO: add symbol parsing here
-	logger.debug(`change: $change`);
+	logger.debug(`onDidChangeContent: ${JSON.stringify(change)}`);
 });
 
 // The settings interface describe the server relevant settings part
@@ -84,6 +84,7 @@ interface BitbakeSettings {
 }
 
 function setSymbolScanner( newSymbolScanner: SymbolScanner ) {
+	logger.debug( 'set new symbol scanner');
 	symbolScanner = newSymbolScanner;
 	contextHandler.symbolScanner = symbolScanner;
 }
@@ -150,8 +151,6 @@ connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams)
 	let documentAsText: string[] = documentMap.get(textDocumentPositionParams.textDocument.uri);
 
 	let definition: Definition = contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
-
-	logger.debug(`definition ${JSON.stringify(definition)}`);
 
 	return definition;
 });

@@ -138,7 +138,6 @@ export class SymbolScanner {
                     symbolContent.filePath = file.filePath;
                     symbolContent.lineNumber = lineIndex;
 
-                    logger.debug(`lineNumber: ${lineIndex} symbol: ${JSON.stringify(symbolContent)}`);
                     this._symbolsDefinition.push(symbolContent);
                 }
             }
