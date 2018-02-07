@@ -118,12 +118,16 @@ export class DefinitionProvider {
     private createDefinitionForSymbolVariables(symbol: string): Definition {
         let definitions: Definition = null;
 
-        let symbols: SymbolContent[] = this._symbolScanner.symbols.filter((obj: SymbolContent): boolean => {
-            return obj.symbolName === symbol;
-        });
+        if( this._symbolScanner !== null ) {
+            let symbols: SymbolContent[] = this._symbolScanner.symbols.filter((obj: SymbolContent): boolean => {
+                return obj.symbolName === symbol;
+            });
+            definitions = this.createDefinitionForSymbolContentList(symbols);
+        }
+        else {
+            logger.debug(`Cannot create definitions for symbol ${symbol}: symbol scanner is null`);
+        }
 
-        definitions = this.createDefinitionForSymbolContentList(symbols);
-        
         return definitions;
     }
 
