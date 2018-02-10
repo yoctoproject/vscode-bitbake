@@ -23,7 +23,7 @@ function activate(context) {
         // TODO: check new documentSelector
         documentSelector: [{ scheme: 'file', language: 'bitbake' }],
         synchronize: {
-            configurationSection: 'vscode_bitbake',
+            configurationSection: 'bitbake',
             // Notify the server about file changes to '.clientrc files contain in the workspace
             fileEvents: [
                 vscode_1.workspace.createFileSystemWatcher('**/*.bbclass', false, true, false),
@@ -34,7 +34,7 @@ function activate(context) {
         }
     };
     // Create the language client and start the client.
-    let disposable = new vscode_languageclient_1.LanguageClient('vscode_bitbake', 'Language Server Bitbake', serverOptions, clientOptions).start();
+    let disposable = new vscode_languageclient_1.LanguageClient('bitbake', 'Language Server Bitbake', serverOptions, clientOptions).start();
     // Push the disposable to the context's subscriptions so that the 
     // client can be deactivated on extension deactivation
     context.subscriptions.push(disposable);

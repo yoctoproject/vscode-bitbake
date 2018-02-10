@@ -40,6 +40,7 @@ export class BitBakeProjectScanner {
     private _settingsScriptInterpreter: string = '/bin/bash';
     private _settingsWorkingFolder: string = 'vscode-bitbake-build'; 
     private _settingsBitbakeSourceCmd: string = '.';
+    private _settingsMachine: string = undefined;
 
     private _scanStatus: ScannStatus = {
         scanIsRunning: false,
@@ -77,10 +78,21 @@ export class BitBakeProjectScanner {
     set workingPath( workingPath: string) {
         this._settingsWorkingFolder = workingPath;
     }
+    
+    set machineName( machine: string) {
+
+        if( machine === "") {
+            this._settingsMachine = undefined;
+        }
+        else {
+            this._settingsMachine = machine;
+        }
+    }
 
     setProjectPath(projectPath: string) {
         this._projectPath = projectPath;
     }
+
 
     rescanProject() {
         logger.info(`request rescanProject ${this._projectPath}`);
@@ -189,22 +201,6 @@ export class BitBakeProjectScanner {
 
         return elements;
     }
-
-    private searchFileInPath(pattern: RegExp | string, searchPath: string): PathInfo {
-        let filePathInfo: PathInfo;
-        let files = find.fileSync(pattern, searchPath);
-
-        if ((files === undefined) || (files.length === 0)) {
-            logger.debug(`no file found for pattern: ${pattern} searchPath: ${searchPath}`);
-        } else if (files.length > 1) {
-            logger.error(`More then one file found! file(${pattern}) in path(${searchPath}) files: ${files}`);
-        } else {
-            filePathInfo = path.parse(files[0]);
-        }
-
-        return filePathInfo;
-    }
-
 
     scanForRecipes() {
         this._recipes = new Array < ElementInfo > ();
@@ -340,12 +336,12 @@ export class BitBakeProjectScanner {
 
     private parseAllRecipes() {
         logger.debug('parseAllRecipes');
-        this.executeCommandInBitBakeEnvironment('bitbake -p');
+        this.executeCommandInBitBakeEnvironment('bitbake -p', this._settingsMachine);
     }
 
 
-    private executeCommandInBitBakeEnvironment(command: string): string {
-        let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command);
+    private executeCommandInBitBakeEnvironment(command: string, machine: string = undefined): string {
+        let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command, machine);
         let scriptFileName: string = this._projectPath + '/executeBitBakeCmd.sh';
         fs.writeFileSync(scriptFileName, scriptContent );
         fs.chmodSync(scriptFileName, '0755');
@@ -375,12 +371,18 @@ export class BitBakeProjectScanner {
         return stdOutput;
     }
 
-    private generateBitBakeCommandScriptFileContent( bitbakeCommand: string): string {
+    private generateBitBakeCommandScriptFileContent( bitbakeCommand: string, machine: string = undefined): string {
         let scriptFileBuffer: string[] = [];
+        let scriptBitbakeCommand: string = bitbakeCommand;
 
         scriptFileBuffer.push( '#!' + this._settingsScriptInterpreter);
         scriptFileBuffer.push( this._settingsBitbakeSourceCmd + ' ./oe-init-build-env ' + this._settingsWorkingFolder + ' > /dev/null' );
-        scriptFileBuffer.push( bitbakeCommand );
+
+        if( machine !== undefined ) {
+            scriptBitbakeCommand = `MACHINE=${machine} ` + scriptBitbakeCommand;
+        }
+        
+        scriptFileBuffer.push( scriptBitbakeCommand );
 
         return scriptFileBuffer.join('\n');
     }

@@ -73,7 +73,7 @@ documents.onDidChangeContent((change) => {
 
 // The settings interface describe the server relevant settings part
 interface Settings {
-	vscode_bitbake: BitbakeSettings;
+	bitbake: BitbakeSettings;
 }
 
 interface BitbakeSettings {
@@ -81,6 +81,7 @@ interface BitbakeSettings {
 	deepExamine: boolean;
 	workingFolder: string;
 	pathToBashScriptInterpreter: string;
+	machine: string;
 }
 
 function setSymbolScanner( newSymbolScanner: SymbolScanner ) {
@@ -92,14 +93,15 @@ function setSymbolScanner( newSymbolScanner: SymbolScanner ) {
 
 connection.onDidChangeConfiguration((change) => {
 	let settings = < Settings > change.settings;
-	bitBakeProjectScanner.deepExamine = settings.vscode_bitbake.deepExamine;
-	logger.level = settings.vscode_bitbake.loggingLevel;
-	bitBakeProjectScanner.workingPath = settings.vscode_bitbake.workingFolder;
-	bitBakeProjectScanner.scriptInterpreter = settings.vscode_bitbake.pathToBashScriptInterpreter;
+	bitBakeProjectScanner.deepExamine = settings.bitbake.deepExamine;
+	logger.level = settings.bitbake.loggingLevel;
+	bitBakeProjectScanner.workingPath = settings.bitbake.workingFolder;
+	bitBakeProjectScanner.scriptInterpreter = settings.bitbake.pathToBashScriptInterpreter;
+	bitBakeProjectScanner.machineName = settings.bitbake.machine;
 });
 
 connection.onDidChangeWatchedFiles((change) => {
-	logger.debug(`onDidChangeWatchedFiles: $change`);
+	logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`);
 	bitBakeProjectScanner.rescanProject();
 });
 
