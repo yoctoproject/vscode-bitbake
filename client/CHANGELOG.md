@@ -1,9 +1,11 @@
-# 0.0.13 - 2018.02.09
+# 0.0.13 - 2018.02.10
 
 ## Fixed Bugs:
 - [issue 16](https://github.com/EugenWiens/vscode-bitbake/issues/16) ERROR: Only one copy of bitbake should be run against a build directory
 - [issue 22](https://github.com/EugenWiens/vscode-bitbake/issues/22) parsing is broken with vscode > 1.18 and yocto "roco"
 
+## Enhancements:
+- [issue 10](https://github.com/EugenWiens/vscode-bitbake/pull/21) Add command to set MACHINE Variable
 
 # 0.0.12 - 2017.08.15
 
