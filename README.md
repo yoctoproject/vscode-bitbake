@@ -2,7 +2,7 @@
 
 This Visual Studio Code plugin is based on [Example - Language Server](https://code.visualstudio.com/docs/extensions/example-language-server).
 
-For a description of the extension itself, please see [the extension's README](./extension/README.md). The changelog for the extension may be found [here](./extension/CHANGELOG.md).
+For a description of the extension itself, please see [the client's README](./client/README.md). The changelog for the extension may be found [here](./client/CHANGELOG.md).
 
 ## Installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
 
