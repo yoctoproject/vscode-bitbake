@@ -5,7 +5,7 @@
 - [issue 22](https://github.com/EugenWiens/vscode-bitbake/issues/22) parsing is broken with vscode > 1.18 and yocto "roco"
 
 ## Enhancements:
-- [issue 10](https://github.com/EugenWiens/vscode-bitbake/pull/21) Add command to set MACHINE Variable
+- [issue 21](https://github.com/EugenWiens/vscode-bitbake/pull/21) Add command to set MACHINE Variable
 
 # 0.0.12 - 2017.08.15
 
