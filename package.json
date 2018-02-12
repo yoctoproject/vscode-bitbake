@@ -14,8 +14,8 @@
 		"url": "https://github.com/EugenWiens/vscode-bitbake.git"
 	},
 	"scripts": {
-		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
-		"compile": "tsc -p client/tsconfig.json && cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
+		"postinstall": "cd server && npm install && cd ../client && npm install && cd .. && npm run-script compile",
+		"compile": "npm run-script compile:client && npm run-script compile:server",
 		"compile:client": "tsc -p client/tsconfig.json",
 		"watch:client": "tsc -w -p client/tsconfig.json",
 		"compile:server": "cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
