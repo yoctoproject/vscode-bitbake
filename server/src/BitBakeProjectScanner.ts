@@ -12,10 +12,18 @@ const fs = require('fs')
 var logger = require('winston');
 
 import {
+    IConnection
+} from "vscode-languageserver";
+
+import {
     ElementInfo,
     LayerInfo,
     PathInfo
 } from "./ElementInfo";
+
+import {
+    OutputParser
+} from "./OutputParser";
 
 type ScannStatus = {
     scanIsRunning: boolean,
@@ -38,9 +46,14 @@ export class BitBakeProjectScanner {
     private _recipes: ElementInfo[] = new Array < ElementInfo > ();
     private _deepExamine: boolean = false;
     private _settingsScriptInterpreter: string = '/bin/bash';
-    private _settingsWorkingFolder: string = 'vscode-bitbake-build'; 
+    private _settingsWorkingFolder: string = 'vscode-bitbake-build';
     private _settingsBitbakeSourceCmd: string = '.';
     private _settingsMachine: string = undefined;
+    private _outputParser: OutputParser;
+
+    constructor(connection: IConnection) {
+        this._outputParser = new OutputParser(connection);
+    }
 
     private _scanStatus: ScannStatus = {
         scanIsRunning: false,
@@ -71,20 +84,19 @@ export class BitBakeProjectScanner {
         this._deepExamine = deepExamine;
     }
 
-    set scriptInterpreter( scriptInterpreter: string) {
+    set scriptInterpreter(scriptInterpreter: string) {
         this._settingsScriptInterpreter = scriptInterpreter;
     }
 
-    set workingPath( workingPath: string) {
+    set workingPath(workingPath: string) {
         this._settingsWorkingFolder = workingPath;
     }
-    
-    set machineName( machine: string) {
 
-        if( machine === "") {
+    set machineName(machine: string) {
+
+        if (machine === "") {
             this._settingsMachine = undefined;
-        }
-        else {
+        } else {
             this._settingsMachine = machine;
         }
     }
@@ -102,17 +114,19 @@ export class BitBakeProjectScanner {
             logger.info('start rescanProject');
 
             try {
-                this.parseAllRecipes();
-                this.scanAvailableLayers();
-                this.scanForClasses();
-                this.scanForIncludeFiles();
-                this.scanForRecipes();
-                this.scanRecipesAppends();
+                if( this.parseAllRecipes() ) {
+                    this.scanAvailableLayers();
+                    this.scanForClasses();
+                    this.scanForIncludeFiles();
+                    this.scanForRecipes();
+                    this.scanRecipesAppends();
 
-                logger.info('scan ready');
-                this.printScanStatistic();
+                    logger.info('scan ready');
+                    this.printScanStatistic();
+                }
             } catch (error) {
-                logger.error(`scanning of project is abborted error: ${error}`)
+                logger.error(`scanning of project is abborted: ${error}`)
+                throw error;
             }
 
             this._scanStatus.scanIsRunning = false;
@@ -162,13 +176,13 @@ export class BitBakeProjectScanner {
                         priority: parseInt(tempElement[2])
                     };
 
-                    if( (layerElement.name !== undefined) && (layerElement.path!==undefined) && layerElement.priority !==undefined ) {
+                    if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && layerElement.priority !== undefined) {
                         this._layers.push(layerElement);
                     }
                 }
             } catch (error) {
                 logger.error(`can not scan available layers error: ${error}`);
-                throw error;
+                this._outputParser.parse(error);
             }
         }
     }
@@ -254,6 +268,27 @@ export class BitBakeProjectScanner {
         this.scanForRecipesPath();
     }
 
+    parseAllRecipes(): boolean {
+        logger.debug('parseAllRecipes');
+        let parsingOutput: string;
+        let parsingSuccess:boolean = true;
+        
+        try {
+            parsingOutput = this.executeCommandInBitBakeEnvironment('bitbake -p', this._settingsMachine);
+        } catch (error) {
+            logger.error(`parsing all recipes is abborted: ${error}`)
+            parsingOutput = error;
+        }
+        
+        this._outputParser.parse(parsingOutput);
+        if (this._outputParser.errorsFound()) {
+            this._outputParser.reportProblems();
+            parsingSuccess = false;
+        }
+
+        return parsingSuccess;
+    }
+
     private scanForRecipesPath() {
 
         let tmpFiles = this.searchFiles(this._recipesFileExtension);
@@ -334,16 +369,10 @@ export class BitBakeProjectScanner {
         }
     }
 
-    private parseAllRecipes() {
-        logger.debug('parseAllRecipes');
-        this.executeCommandInBitBakeEnvironment('bitbake -p', this._settingsMachine);
-    }
-
-
     private executeCommandInBitBakeEnvironment(command: string, machine: string = undefined): string {
         let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command, machine);
         let scriptFileName: string = this._projectPath + '/executeBitBakeCmd.sh';
-        fs.writeFileSync(scriptFileName, scriptContent );
+        fs.writeFileSync(scriptFileName, scriptContent);
         fs.chmodSync(scriptFileName, '0755');
 
         return this.executeCommand(scriptFileName);
@@ -354,16 +383,15 @@ export class BitBakeProjectScanner {
 
         if (this._projectPath !== null) {
             try {
-                logger.debug(`execute command: ${command}`)
                 let returnObject = execa.shellSync(command);
 
                 if (returnObject.status === 0) {
                     stdOutput = returnObject.stdout;
                 } else {
-                    logger.error('error on executing command: ' + command);
+                    let data: Buffer = fs.readFileSync(command);
+                    logger.error('error on executing command: ' + data.toString());
                 }
             } catch (error) {
-                logger.error(`can not execute command: ${command} error: ${error}`);
                 throw error;
             }
         }
@@ -371,20 +399,19 @@ export class BitBakeProjectScanner {
         return stdOutput;
     }
 
-    private generateBitBakeCommandScriptFileContent( bitbakeCommand: string, machine: string = undefined): string {
+    private generateBitBakeCommandScriptFileContent(bitbakeCommand: string, machine: string = undefined): string {
         let scriptFileBuffer: string[] = [];
         let scriptBitbakeCommand: string = bitbakeCommand;
 
-        scriptFileBuffer.push( '#!' + this._settingsScriptInterpreter);
-        scriptFileBuffer.push( this._settingsBitbakeSourceCmd + ' ./oe-init-build-env ' + this._settingsWorkingFolder + ' > /dev/null' );
+        scriptFileBuffer.push('#!' + this._settingsScriptInterpreter);
+        scriptFileBuffer.push(this._settingsBitbakeSourceCmd + ' ./oe-init-build-env ' + this._settingsWorkingFolder + ' > /dev/null');
 
-        if( machine !== undefined ) {
+        if (machine !== undefined) {
             scriptBitbakeCommand = `MACHINE=${machine} ` + scriptBitbakeCommand;
         }
-        
-        scriptFileBuffer.push( scriptBitbakeCommand );
+
+        scriptFileBuffer.push(scriptBitbakeCommand);
 
         return scriptFileBuffer.join('\n');
     }
-
 }

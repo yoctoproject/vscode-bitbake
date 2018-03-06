@@ -35,7 +35,7 @@ var logger = require('winston');
 let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
 let documents: TextDocuments = new TextDocuments();
 let documentMap: Map < string, string[] > = new Map();
-let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner();
+let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection);
 let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
 let workspaceRoot: string;
 let symbolScanner: SymbolScanner = null;
@@ -46,8 +46,11 @@ documents.listen(connection);
 connection.onInitialize((params): InitializeResult => {
 	workspaceRoot = params.rootPath;
 	bitBakeProjectScanner.setProjectPath(workspaceRoot);
-	bitBakeProjectScanner.rescanProject();
 
+	setTimeout( () => {
+		bitBakeProjectScanner.rescanProject();
+	}, 500);
+	
 	return {
 		capabilities: {
 			textDocumentSync: documents.syncKind,
@@ -138,6 +141,12 @@ connection.onDidChangeTextDocument((params) => {
 connection.onDidCloseTextDocument((params) => {
 	documentMap.delete(params.textDocument.uri);
 	setSymbolScanner( null );
+});
+
+connection.onDidSaveTextDocument((params) => {
+	logger.debug(`onDidSaveTextDocument ${JSON.stringify(params)}`);
+
+	bitBakeProjectScanner.parseAllRecipes();
 });
 
 connection.onExecuteCommand((params) => {

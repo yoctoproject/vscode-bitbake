@@ -1,3 +1,8 @@
+# 1.0.0 - 2018.##.##
+
+## Enhancements:
+- [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues19) Add diagnostic messages on parsing errors 
+
 # 0.0.13 - 2018.02.10
 
 ## Fixed Bugs:
