@@ -1,7 +1,7 @@
 {
   "name": "language-server-bitbake",
   "description": "Implementation of a language server for bitbake.",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Eugen Wiens",
   "license": "MIT",
   "engines": {
