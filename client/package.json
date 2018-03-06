@@ -3,7 +3,7 @@
   "description": "BitBake language support",
   "author": "Eugen Wiens",
   "license": "MIT",
-  "version": "0.0.13",
+  "version": "1.0.0",
   "publisher": "EugenWiens",
   "icon": "images/icon.png",
   "bugs": {
