@@ -1,7 +1,10 @@
+# 1.0.1 - 2018.03.06
+fixed typo in changelog for the [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues/19)
+
 # 1.0.0 - 2018.03.06
 
 ## Enhancements:
-- [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues19) Add diagnostic messages on parsing errors 
+- [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues/19) Add diagnostic messages on parsing errors 
 
 # 0.0.13 - 2018.02.10
 
