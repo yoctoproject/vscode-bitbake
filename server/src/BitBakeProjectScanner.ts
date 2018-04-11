@@ -371,7 +371,12 @@ export class BitBakeProjectScanner {
 
     private executeCommandInBitBakeEnvironment(command: string, machine: string = undefined): string {
         let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command, machine);
-        let scriptFileName: string = this._projectPath + '/executeBitBakeCmd.sh';
+        let pathToScriptFile: string = this._projectPath + '/' + this._settingsWorkingFolder;
+        let scriptFileName: string = pathToScriptFile + '/executeBitBakeCmd.sh';
+
+        if( !fs.existsSync(pathToScriptFile) ){
+            fs.mkdirSync(pathToScriptFile)
+        }
         fs.writeFileSync(scriptFileName, scriptContent);
         fs.chmodSync(scriptFileName, '0755');
 
