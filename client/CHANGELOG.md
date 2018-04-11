@@ -1,3 +1,8 @@
+# 1.0.2 - 2018.04.11
+
+## Fixed Bugs:
+[issue 23](https://github.com/EugenWiens/vscode-bitbake/issues/23) moved `executeBitBakeCmd.sh` script to the working folder. e.g. `vscode-bitbake-build` if the setting for the working path is not changed 
+
 # 1.0.1 - 2018.03.06
 fixed typo in changelog for the [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues/19)
 
