@@ -18,7 +18,7 @@
     "vscode": "^1.16.0"
   },
   "categories": [
-    "Languages"
+    "Programming Languages"
   ],
   "activationEvents": [
     "onLanguage:bitbake"
@@ -101,7 +101,7 @@
     "postinstall": "node ./node_modules/vscode/bin/install"
   },
   "dependencies": {
-    "vscode": "^1.1.5",
-    "vscode-languageclient": "^3.4.2"
+    "vscode": "^1.1.18",
+    "vscode-languageclient": "^3.5.1"
   }
 }

@@ -20,8 +20,8 @@
     "find": "^0.2.7",
     "fs": "0.0.1-security",
     "path": "^0.12.7",
-    "vscode-languageserver": "^3.4.2",
-    "winston": "^2.3.1"
+    "vscode-languageserver": "^3.5.1",
+    "winston": "^2.4.3"
   },
   "scripts": {
     "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json",
