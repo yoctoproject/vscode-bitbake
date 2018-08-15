@@ -73,6 +73,11 @@
           "default": "vscode-bitbake-build",
           "description": "Use this setting to specify the build folder. Use other folder than for your regular 'build' to avoid collisions."
         },
+        "bitbake.generateWorkingFolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use this setting to specify whether or not to generate a build folder. Can help prevent git repo headaches."
+        },
         "bitbake.pathToBashScriptInterpreter": {
           "type": "string",
           "default": "/bin/bash",

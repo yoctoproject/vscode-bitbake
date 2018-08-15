@@ -47,9 +47,11 @@ export class BitBakeProjectScanner {
     private _deepExamine: boolean = false;
     private _settingsScriptInterpreter: string = '/bin/bash';
     private _settingsWorkingFolder: string = 'vscode-bitbake-build';
+    private _settingsGenerateWorkingFolder: boolean = true;
     private _settingsBitbakeSourceCmd: string = '.';
     private _settingsMachine: string = undefined;
     private _outputParser: OutputParser;
+    private _oeEnvScript: string = 'oe-init-build-env';
 
     constructor(connection: IConnection) {
         this._outputParser = new OutputParser(connection);
@@ -90,6 +92,10 @@ export class BitBakeProjectScanner {
 
     set workingPath(workingPath: string) {
         this._settingsWorkingFolder = workingPath;
+    }
+
+    set generateWorkingPath(generateWorkingPath: boolean) {
+        this._settingsGenerateWorkingFolder = generateWorkingPath;
     }
 
     set machineName(machine: string) {
@@ -280,12 +286,13 @@ export class BitBakeProjectScanner {
             parsingOutput = error;
         }
         
-        this._outputParser.parse(parsingOutput);
-        if (this._outputParser.errorsFound()) {
-            this._outputParser.reportProblems();
-            parsingSuccess = false;
+        if( parsingOutput.length > 0 ) {
+            this._outputParser.parse(parsingOutput);
+            if (this._outputParser.errorsFound()) {
+                this._outputParser.reportProblems();
+                parsingSuccess = false;
+            }
         }
-
         return parsingSuccess;
     }
 
@@ -317,12 +324,14 @@ export class BitBakeProjectScanner {
                 let regExp: RegExp = /(\s.*\.bb)/g;
                 let match: RegExpExecArray;
 
-                while ((match = regExp.exec(output)) !== null) {
-                    if (match.index === regExp.lastIndex) {
-                        regExp.lastIndex++;
-                    }
+                if( output.length > 0 ) {
+                    while ((match = regExp.exec(output)) !== null) {
+                        if (match.index === regExp.lastIndex) {
+                            regExp.lastIndex++;
+                        }
 
-                    recipeWithOutPath.path = path.parse(match[0].trim());
+                        recipeWithOutPath.path = path.parse(match[0].trim());
+                    }
                 }
             }
         }
@@ -370,17 +379,23 @@ export class BitBakeProjectScanner {
     }
 
     private executeCommandInBitBakeEnvironment(command: string, machine: string = undefined): string {
-        let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command, machine);
-        let pathToScriptFile: string = this._projectPath + '/' + this._settingsWorkingFolder;
-        let scriptFileName: string = pathToScriptFile + '/executeBitBakeCmd.sh';
+        let returnValue: string = '';
 
-        if( !fs.existsSync(pathToScriptFile) ){
-            fs.mkdirSync(pathToScriptFile)
+        if( this.isBitbakeAvailable() === true) {
+            let scriptContent: string = this.generateBitBakeCommandScriptFileContent(command, machine);
+            let pathToScriptFile: string = this._projectPath + '/' + this._settingsWorkingFolder;
+            let scriptFileName: string = pathToScriptFile + '/executeBitBakeCmd.sh';
+
+            if( !fs.existsSync(pathToScriptFile) ){
+                fs.mkdirSync(pathToScriptFile)
+            }
+            fs.writeFileSync(scriptFileName, scriptContent);
+            fs.chmodSync(scriptFileName, '0755');
+
+            returnValue = this.executeCommand(scriptFileName);
         }
-        fs.writeFileSync(scriptFileName, scriptContent);
-        fs.chmodSync(scriptFileName, '0755');
 
-        return this.executeCommand(scriptFileName);
+        return returnValue;
     }
 
     private executeCommand(command: string): string {
@@ -409,7 +424,7 @@ export class BitBakeProjectScanner {
         let scriptBitbakeCommand: string = bitbakeCommand;
 
         scriptFileBuffer.push('#!' + this._settingsScriptInterpreter);
-        scriptFileBuffer.push(this._settingsBitbakeSourceCmd + ' ./oe-init-build-env ' + this._settingsWorkingFolder + ' > /dev/null');
+        scriptFileBuffer.push(this._settingsBitbakeSourceCmd + ' ./' + this._oeEnvScript + ' ' + this._settingsWorkingFolder + ' > /dev/null');
 
         if (machine !== undefined) {
             scriptBitbakeCommand = `MACHINE=${machine} ` + scriptBitbakeCommand;
@@ -418,5 +433,17 @@ export class BitBakeProjectScanner {
         scriptFileBuffer.push(scriptBitbakeCommand);
 
         return scriptFileBuffer.join('\n');
+    }
+
+    private isBitbakeAvailable(): boolean {
+        let settingActive: boolean = this._settingsGenerateWorkingFolder;
+        let oeEnvScriptExists: boolean = fs.existsSync(this._oeEnvScript);
+        let bitbakeAvailable: boolean = false;
+
+        if( settingActive && oeEnvScriptExists ) {
+            bitbakeAvailable = true;
+        }
+
+        return bitbakeAvailable;
     }
 }
