@@ -1,3 +1,12 @@
+# 1.1.0 - 2018.08.15
+
+## Enhancements:
+[issue 25](https://github.com/EugenWiens/vscode-bitbake/issues/25) Add settings parameter to disable the automatic creating an calling of executeBitBakeCmd.sh
+
+## Fixed Bugs:
+[issue 24](https://github.com/EugenWiens/vscode-bitbake/issues/24) When opining a file with out a workspace the plugin generate the execute...sh file
+[issue 26](https://github.com/EugenWiens/vscode-bitbake/issues/26) required update packages to newest version #26
+
 # 1.0.2 - 2018.04.11
 
 ## Fixed Bugs:
