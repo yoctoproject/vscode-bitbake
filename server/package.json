@@ -1,7 +1,7 @@
 {
   "name": "language-server-bitbake",
   "description": "Implementation of a language server for bitbake.",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Eugen Wiens",
   "license": "MIT",
   "engines": {
@@ -21,7 +21,7 @@
     "fs": "0.0.1-security",
     "path": "^0.12.7",
     "vscode-languageserver": "^3.5.1",
-    "winston": "^2.4.3"
+    "winston": "^2.4.4"
   },
   "scripts": {
     "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json",

@@ -1,3 +1,6 @@
+# 1.1.1 - 2019.03.13
+Security updates of dependent packages
+
 # 1.1.0 - 2018.08.15
 
 ## Enhancements:
