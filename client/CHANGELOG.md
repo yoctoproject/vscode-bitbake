@@ -1,3 +1,6 @@
+# 1.1.2 - 2019.03.13
+fixed deployment problems
+
 # 1.1.1 - 2019.03.13
 Security updates of dependent packages
 
