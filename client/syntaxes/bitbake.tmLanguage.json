@@ -140,7 +140,7 @@
                     ]
                 },
                 {
-                    "begin": "^\\s*(fakeroot)?\\s*(python)\\s*([a-zA-Z0-9-_]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\{)",
+                    "begin": "^\\s*(fakeroot)?\\s*(python)\\s*([a-zA-Z0-9-_:]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\{)",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.control.fakeroot.bb"
@@ -168,7 +168,7 @@
                     ]
                 },
                 {
-                    "begin": "^\\s*(fakeroot)?\\s*(def)\\s*([a-zA-Z0-9-_]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\:)",
+                    "begin": "^\\s*(fakeroot)?\\s*(def)\\s*([a-zA-Z0-9-_:]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\:)",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.control.fakeroot.bb"
@@ -191,7 +191,7 @@
                     ]
                 },
                 {
-                    "begin": "^\\s*(fakeroot)?\\s*([a-zA-Z0-9-_]+)\\s*(\\(\\))?\\s*(\\{)",
+                    "begin": "^\\s*(fakeroot)?\\s*([a-zA-Z0-9-_:]+)\\s*(\\(\\))?\\s*(\\{)",
                     "beginCaptures": {
                         "1": {
                             "name": "keyword.control.fakeroot.bb"
@@ -252,7 +252,7 @@
                             "name": "punctuation.definition.variable.bb"
                         }
                     },
-                    "match": "(\\$)([a-zA-Z0-9_])*\\b",
+                    "match": "(\\$)([a-zA-Z0-9_:])*\\b",
                     "name": "variable.language.bb"
                 },
                 {
