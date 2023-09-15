@@ -13,23 +13,28 @@
 		"type": "git",
 		"url": "https://github.com/EugenWiens/vscode-bitbake.git"
 	},
+	"workspaces": [
+		"client",
+		"server"
+	],
 	"scripts": {
-		"postinstall": "cd server && npm install && cd ../client && npm install && cd .. && npm run-script compile",
-		"compile": "npm run-script compile:client && npm run-script compile:server",
+		"compile": "tsc -b",
+		"watch": "tsc -b -w",
 		"compile:client": "tsc -p client/tsconfig.json",
 		"watch:client": "tsc -w -p client/tsconfig.json",
-		"compile:server": "cd server && npm run installServer && cd .. && tsc -p server/tsconfig.json",
-		"watch:server": "cd server && npm run installServer && cd .. && tsc -w -p server/tsconfig.json",
-		"distclean:server": "cd server && rm -fr node_modules && cd ..",
-		"distclean:client": "cd client && rm -fr node_modules && cd ..",
-		"distclean": "npm run-script distclean:server && npm run-script distclean:client && rm -fr node_modules",
-		"upgrade:client": "cd client && npm upgrade",
-		"upgrade:server": "cd server && npm upgrade",
-		"upgrade": "npm run-script upgrade:client && npm run-script upgrade:server && npm upgrade"
+		"compile:server": "tsc -p server/tsconfig.json",
+		"watch:server": "tsc -w -p server/tsconfig.json",
+		"clean:server": "rm -fr ./server/node_modules && rm -fr ./server/out",
+		"clean:client": "rm -fr ./client/node_modules && rm -fr ./client/out",
+		"clean": "npm run clean:server && npm run clean:client && rm -fr node_modules"
 	},
 	"devDependencies": {
-		"@types/mocha": "^2.2.48",
-		"@types/node": "^6.14.4",
-		"typescript": "^2.9.2"
+		"@types/mocha": "^10.0.1",
+		"@types/node": "^20.6.1",
+		"@typescript-eslint/eslint-plugin": "^5.54.0",
+		"@typescript-eslint/parser": "^5.54.0",
+		"eslint": "^8.35.0",
+		"mocha": "^10.2.0",
+		"typescript": "^5.1.3"
 	}
 }
