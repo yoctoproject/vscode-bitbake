@@ -7,14 +7,15 @@
 import * as path from 'path';
 
 import { workspace, ExtensionContext } from 'vscode';
-import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
+import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient/node';
 
+let client: LanguageClient;
 export function activate(context: ExtensionContext) {
-
-	let serverModule = context.asAbsolutePath(path.join('server', 'server.js'));
+	console.log('Congratulations, your extension "BitBake" is now active!');
+	let serverModule = context.asAbsolutePath(path.join('../server', 'out','server.js'));
 	// The debug options for the server
 	let debugOptions = { execArgv: ["--nolazy", "--inspect=6009"] };
-	
+
 	// If the extension is launched in debug mode then the debug server options are used
 	// Otherwise the run options are used
 	let serverOptions: ServerOptions = {
@@ -41,9 +42,16 @@ export function activate(context: ExtensionContext) {
 	}
 	
 	// Create the language client and start the client.
-	let disposable = new LanguageClient('bitbake', 'Language Server Bitbake', serverOptions, clientOptions).start();
+	client = new LanguageClient('bitbake', 'Language Server Bitbake', serverOptions, clientOptions)
 	
-	// Push the disposable to the context's subscriptions so that the 
-	// client can be deactivated on extension deactivation
-	context.subscriptions.push(disposable);
+	// Start the client and launch the server
+	client.start();
 }
+
+export function deactivate(): Thenable<void> | undefined {
+	if (!client) {
+	  return undefined;
+	}
+	return client.stop();
+}
+  
