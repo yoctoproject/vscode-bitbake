@@ -15,15 +15,13 @@
     "url": "https://github.com/EugenWiens/vscode-bitbake.git"
   },
   "engines": {
-    "vscode": "^1.16.0"
+    "vscode": "^1.75.0"
   },
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [
-    "onLanguage:bitbake"
-  ],
-  "main": "./out/src/extension",
+  "activationEvents": [],
+  "main": "./out/extension",
   "contributes": {
     "languages": [
       {
@@ -98,17 +96,12 @@
       }
     ]
   },
-  "scripts": {
-    "vscode:prepublish": "tsc -p ./",
-    "compile": "tsc -p ./",
-    "watch": "tsc -w -p ./",
-    "update-vscode": "node ./node_modules/vscode/bin/install",
-    "postinstall": "node ./node_modules/vscode/bin/install"
-  },
+  "scripts": {},
   "dependencies": {
-    "vscode-languageclient": "^3.5.1"
+    "vscode-languageclient": "^8.1.0"
   },
   "devDependencies": {
-    "vscode": "^1.1.30"
-  }
+		"@types/vscode": "^1.75.1",
+		"@vscode/test-electron": "^2.2.3"
+	}
 }

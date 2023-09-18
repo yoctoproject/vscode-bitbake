@@ -7,7 +7,7 @@
 var logger = require('winston');
 
 import {
-    IConnection,
+    Connection,
 } from "vscode-languageserver";
 
 import {
@@ -17,9 +17,9 @@ import {
 export class OutputParser {
 
     _problems: ProblemsContainer[] = [];
-    _connection: IConnection;
+    _connection: Connection;
 
-    constructor(connection: IConnection) {
+    constructor(connection: Connection) {
         this._connection = connection;
     }
 

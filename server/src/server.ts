@@ -5,16 +5,16 @@
 'use strict';
 
 import {
-	IPCMessageReader,
-	IPCMessageWriter,
 	createConnection,
-	IConnection,
+	Connection,
 	TextDocuments,
 	InitializeResult,
 	TextDocumentPositionParams,
 	CompletionItem,
 	Definition,
-} from 'vscode-languageserver';
+	ProposedFeatures,
+	TextDocumentSyncKind
+} from 'vscode-languageserver/node';
 
 import {
 	BitBakeProjectScanner
@@ -28,12 +28,15 @@ import {
 	SymbolScanner
 } from "./SymbolScanner";
 
+import {
+	TextDocument
+} from 'vscode-languageserver-textdocument';
 
 var logger = require('winston');
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-let connection: IConnection = createConnection(new IPCMessageReader(process), new IPCMessageWriter(process));
-let documents: TextDocuments = new TextDocuments();
+let connection: Connection = createConnection(ProposedFeatures.all);
+let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
 let documentMap: Map < string, string[] > = new Map();
 let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection);
 let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
@@ -53,7 +56,7 @@ connection.onInitialize((params): InitializeResult => {
 	
 	return {
 		capabilities: {
-			textDocumentSync: documents.syncKind,
+			textDocumentSync: TextDocumentSyncKind.Incremental,
 			completionProvider: {
 				resolveProvider: true
 			},

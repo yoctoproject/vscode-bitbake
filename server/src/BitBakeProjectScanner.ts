@@ -12,9 +12,7 @@ const fs = require('fs')
 var logger = require('winston');
 
 import {
-    IConnection
-} from "vscode-languageserver";
-
+    Connection} from "vscode-languageserver";
 import {
     ElementInfo,
     LayerInfo,
@@ -53,7 +51,7 @@ export class BitBakeProjectScanner {
     private _outputParser: OutputParser;
     private _oeEnvScript: string = 'oe-init-build-env';
 
-    constructor(connection: IConnection) {
+    constructor(connection: Connection) {
         this._outputParser = new OutputParser(connection);
     }
 
