@@ -27,7 +27,9 @@
 		"clean:server": "rm -fr ./server/node_modules && rm -fr ./server/out",
 		"clean:client": "rm -fr ./client/node_modules && rm -fr ./client/out",
 		"clean": "npm run clean:server && npm run clean:client && rm -fr node_modules",
-		"lint": "npm run lint --workspace client"
+		"lint": "npm run lint --workspaces",
+		"lint:client": "npm run lint --workspace client",
+		"lint:server": "npm run lint --workspace server"
 	},
 	"devDependencies": {
 		"@types/mocha": "^10.0.1",

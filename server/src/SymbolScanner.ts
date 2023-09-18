@@ -2,192 +2,188 @@
  * Copyright (c) Eugen Wiens. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-'use strict';
 
-const url = require('url')
-const fs = require('fs');
+import fs from 'fs'
 
 import {
-    BasicKeywordMap
-} from "./BasicKeywordMap";
+  BasicKeywordMap
+} from './BasicKeywordMap'
 
-import {
-    CompletionItem,
-    Definition,
-    Location
-} from 'vscode-languageserver';
+import type {
+  CompletionItem,
+  Definition,
+  Location
+} from 'vscode-languageserver'
 
-import {
-    DefinitionProvider
-} from "./DefinitionProvider";
+import type {
+  DefinitionProvider
+} from './DefinitionProvider'
 
-var logger = require('winston');
+import logger from 'winston'
 
-type FileContent = {
-    filePath: string,
-    fileContent: string[]
-};
+interface FileContent {
+  filePath: string
+  fileContent: string[]
+}
 
-export type SymbolContent = {
-    symbolName: string,
-    startPosition: number,
-    endPostion: number,
-    filePath ? : string,
-    lineNumber ? : number
-};
+export interface SymbolContent {
+  symbolName: string
+  startPosition: number
+  endPostion: number
+  filePath?: string
+  lineNumber?: number
+}
 
 export class SymbolScanner {
+  private readonly _fileContent: FileContent[] = new Array < FileContent >()
+  private readonly _definitionProvider: DefinitionProvider
+  private readonly _symbolsDefinition: SymbolContent[] = new Array < SymbolContent >()
 
-    private _fileContent: FileContent[] = new Array < FileContent > ();
-    private _definitionProvider: DefinitionProvider = null;
-    private _symbolsDefinition: SymbolContent[] = new Array < SymbolContent > ();
+  constructor (fileUrlAsString: string, definitionProvider: DefinitionProvider) {
+    logger.debug(`scan for symbols file: ${fileUrlAsString}`)
 
-    constructor(fileUrlAsString: string, definitionProvider: DefinitionProvider) {
-        logger.debug(`scan for symbols file: ${fileUrlAsString}`);
+    this._definitionProvider = definitionProvider
 
-        this._definitionProvider = definitionProvider;
+    this.extendsFile(this.convertUriStringToFilePath(fileUrlAsString))
+    this.scanForSymbols()
+  }
 
-        this.extendsFile(this.convertUriStringToFilePath(fileUrlAsString));
-        this.scanForSymbols();
-    }
+  get symbols (): SymbolContent[] {
+    return this._symbolsDefinition
+  }
 
-    get symbols(): SymbolContent[] {
-        return this._symbolsDefinition;
-    }
+  private extendsFile (filePath: string): void {
+    logger.debug(`extendsFile file: ${filePath}`)
 
-    private extendsFile(filePath: string) {
-        logger.debug(`extendsFile file: ${filePath}`);
+    try {
+      const data: Buffer = fs.readFileSync(filePath)
+      const file: string[] = data.toString().split(/\r?\n/g)
 
-        try {
-            let data: Buffer = fs.readFileSync(filePath);
-            let file: string[] = data.toString().split(/\r?\n/g);
+      this._fileContent.push({
+        filePath,
+        fileContent: file
+      })
 
-            this._fileContent.push({
-                filePath: filePath,
-                fileContent: file
-            });
+      for (const line of file) {
+        const keyword = this.lineContainsKeyword(line)
 
-            for (let line of file) {
-                let keyword = this.lineContainsKeyword(line);
-
-                if (keyword !== undefined) {
-                    logger.debug(`keyword found: ${keyword}`);
-                    this.handleKeyword(keyword, line);
-                }
-            }
-
-        } catch (error) {
-            logger.error(`can not open file error: ${error}`)
+        if (keyword !== undefined) {
+          logger.debug(`keyword found: ${keyword}`)
+          this.handleKeyword(keyword, line)
         }
+      }
+    } catch (error) {
+      if (typeof error !== 'string') {
+        throw error
+      }
+      logger.error(`can not open file error: ${error}`)
+    }
+  }
+
+  private lineContainsKeyword (line: string): string | undefined {
+    const keywords: CompletionItem[] = BasicKeywordMap
+
+    const trimedLine = line.trim()
+
+    for (const keyword of keywords) {
+      if (trimedLine.startsWith(keyword.label)) {
+        return keyword.label
+      }
     }
 
-    private lineContainsKeyword(line: string): string {
-        let foundKeyword: string = undefined;
-        let keywords: CompletionItem[] = BasicKeywordMap;
+    return undefined
+  }
 
-        let trimedLine = line.trim();
+  private handleKeyword (keyword: string, line: string): void {
+    const restOfLine: string[] = line.split(keyword).filter(String)
 
-        for (let keyword of keywords) {
-            if (trimedLine.startsWith(keyword.label) === true) {
-                foundKeyword = keyword.label;
-            }
+    if (restOfLine.length === 1) {
+      const listOfSymbols: string[] = restOfLine[0].split(' ').filter(String)
+      let definition: Definition = new Array < Location >()
+
+      if (listOfSymbols.length === 1) {
+        definition = definition.concat(this._definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0]))
+      } else if (listOfSymbols.length > 1) {
+        for (const symbol of listOfSymbols) {
+          definition = definition.concat(this._definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0], symbol))
         }
+      }
 
-        return foundKeyword;
-    }
-
-    private handleKeyword(keyword: string, line: string) {
-        let restOfLine: string[] = line.split(keyword).filter(String);
-
-        if (restOfLine.length === 1) {
-            let listOfSymbols: string[] = restOfLine[0].split(' ').filter(String);
-            let definition: Definition = new Array < Location > ();
-
-            if (listOfSymbols.length === 1) {
-                definition = definition.concat(this._definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0]));
-            } else if (listOfSymbols.length > 1) {
-                for (let symbol of listOfSymbols) {
-                    definition = definition.concat(this._definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0], symbol));
-                }
-            }
-
-            for (let location of definition) {
-                if (location !== null) {
-                    this.extendsFile(this.convertUriStringToFilePath(location.uri));
-                }
-            }
+      for (const location of definition) {
+        if (location !== null) {
+          this.extendsFile(this.convertUriStringToFilePath(location.uri))
         }
-
+      }
     }
+  }
 
-    private convertUriStringToFilePath(fileUrlAsString: string): string {
-        let fileUrl = url.parse(fileUrlAsString);
-        let filePath: string = decodeURI(fileUrl.pathname);
+  private convertUriStringToFilePath (fileUrlAsString: string): string {
+    const fileUrl = new URL(fileUrlAsString)
+    const filePath: string = decodeURI(fileUrl.pathname)
 
-        return filePath;
-    }
+    return filePath
+  }
 
-    private scanForSymbols() {
-        for (let file of this._fileContent) {
-            for (let line of file.fileContent) {
-                let lineIndex: number = file.fileContent.indexOf(line);
-                const regex = /^\s*(?:export)?\s*(\w*(?:\[\w*\])?)\s*(?:=|:=|\+=|=\+|-=|=-|\?=|\?\?=|\.=|=\.)/g;
-                let symbolContent: SymbolContent = this.investigateLine(line, regex);
+  private scanForSymbols (): void {
+    for (const file of this._fileContent) {
+      for (const line of file.fileContent) {
+        const lineIndex: number = file.fileContent.indexOf(line)
+        const regex = /^\s*(?:export)?\s*(\w*(?:\[\w*\])?)\s*(?:=|:=|\+=|=\+|-=|=-|\?=|\?\?=|\.=|=\.)/g
+        const symbolContent = this.investigateLine(line, regex)
 
-                if (symbolContent !== undefined) {
-                    symbolContent.filePath = file.filePath;
-                    symbolContent.lineNumber = lineIndex;
+        if (symbolContent !== undefined) {
+          symbolContent.filePath = file.filePath
+          symbolContent.lineNumber = lineIndex
 
-                    this._symbolsDefinition.push(symbolContent);
-                }
-            }
+          this._symbolsDefinition.push(symbolContent)
         }
+      }
     }
+  }
 
-    private investigateLine(lineString: string, regex: RegExp): SymbolContent {
-        let symbolContent: SymbolContent = undefined;
+  private investigateLine (lineString: string, regex: RegExp): SymbolContent | undefined {
+    let m
 
-        let m;
+    while ((m = regex.exec(lineString)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === regex.lastIndex) {
+        regex.lastIndex++
+      }
 
-        while ((m = regex.exec(lineString)) !== null) {
-            // This is necessary to avoid infinite loops with zero-width matches
-            if (m.index === regex.lastIndex) {
-                regex.lastIndex++;
-            }
-
-            if (m.length === 2) {
-                let symbol: string = m[1];
-                let symbolStartPosition: number = lineString.indexOf(symbol);
-                let symbolEndPosition: number = symbolStartPosition + symbol.length;
-                let filterdSymbolName: string = this.filterSymbolName(symbol);
-
-                symbolContent = {
-                    symbolName: filterdSymbolName,
-                    startPosition: symbolStartPosition,
-                    endPostion: symbolEndPosition
-                };
-            }
+      if (m.length === 2) {
+        const symbol: string = m[1]
+        const filterdSymbolName = this.filterSymbolName(symbol)
+        if (filterdSymbolName === undefined) {
+          return undefined
         }
+        const symbolStartPosition: number = lineString.indexOf(symbol)
+        const symbolEndPosition: number = symbolStartPosition + symbol.length
 
-        return symbolContent;
-    }
-
-    private filterSymbolName(symbol: string): string {
-        const regex = /^\w*/g;
-        let m;
-        let filterdSymbolName: string = undefined;
-
-        while ((m = regex.exec(symbol)) !== null) {
-            // This is necessary to avoid infinite loops with zero-width matches
-            if (m.index === regex.lastIndex) {
-                regex.lastIndex++;
-            }
-
-            filterdSymbolName = m[0];
+        return {
+          symbolName: filterdSymbolName,
+          startPosition: symbolStartPosition,
+          endPostion: symbolEndPosition
         }
-
-        return filterdSymbolName;
+      }
     }
 
-    
+    return undefined
+  }
+
+  private filterSymbolName (symbol: string): string | undefined {
+    const regex = /^\w*/g
+    let m
+    let filterdSymbolName: string | undefined
+
+    while ((m = regex.exec(symbol)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === regex.lastIndex) {
+        regex.lastIndex++
+      }
+
+      filterdSymbolName = m[0]
+    }
+
+    return filterdSymbolName
+  }
 }
