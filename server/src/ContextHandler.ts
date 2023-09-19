@@ -2,178 +2,170 @@
  * Copyright (c) Eugen Wiens. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-'use strict';
+import type {
+  TextDocumentPositionParams,
+  CompletionItem, Definition
+} from 'vscode-languageserver'
+
+import type {
+  BitBakeProjectScanner
+} from './BitBakeProjectScanner'
 
 import {
-    TextDocumentPositionParams,
-    CompletionItem,
-    Definition
-} from "vscode-languageserver";
+  BasicKeywordMap
+} from './BasicKeywordMap'
 
 import {
-    BitBakeProjectScanner,
-} from "./BitBakeProjectScanner";
+  DefinitionProvider
+} from './DefinitionProvider'
 
 import {
-    BasicKeywordMap
-} from './BasicKeywordMap';
+  CompletionProvider
+} from './CompletionProvider'
 
-import {
-    DefinitionProvider
-} from "./DefinitionProvider";
+import type {
+  SymbolScanner
+} from './SymbolScanner'
 
-import {
-    CompletionProvider
-} from "./CompletionProvider";
-
-import {
-    SymbolScanner
-} from "./SymbolScanner";
-
-var logger = require('winston');
-
+import logger from 'winston'
 
 /**
  * ContextHandler
  */
 export class ContextHandler {
+  private readonly _projectScanner: BitBakeProjectScanner
+  private readonly _definitionProvider: DefinitionProvider
+  private readonly _completionProvider: CompletionProvider
 
-    private _projectScanner: BitBakeProjectScanner = null;
-    private _definitionProvider: DefinitionProvider = null;
-    private _completionProvider: CompletionProvider = null;
+  constructor (projectScanner: BitBakeProjectScanner) {
+    this._projectScanner = projectScanner
+    this._definitionProvider = new DefinitionProvider(this._projectScanner)
+    this._completionProvider = new CompletionProvider(this._projectScanner)
+  }
 
-    constructor(projectScanner: BitBakeProjectScanner) {
-        this._projectScanner = projectScanner;
-        this._definitionProvider = new DefinitionProvider(this._projectScanner);
-        this._completionProvider = new CompletionProvider(this._projectScanner);
+  getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
+    let definition: Definition = []
+
+    if (documentAsText.length > textDocumentPositionParams.position.line) {
+      const keyWord: string = this.getKeyWord(textDocumentPositionParams, documentAsText)
+      const currentLine: string = documentAsText[textDocumentPositionParams.position.line]
+      const symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine)
+
+      if ((keyWord !== undefined) && (keyWord !== '')) {
+        definition = this.getDefinitionForKeyWord(keyWord, currentLine, symbol)
+      } else {
+        definition = this._definitionProvider.createDefinitionForSymbol(symbol)
+      }
     }
+    return definition
+  }
 
-    
-    getDefinition(textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
-        let definition: Definition = null;
+  get definitionProvider (): DefinitionProvider {
+    return this._definitionProvider
+  }
 
-        if (documentAsText.length > textDocumentPositionParams.position.line) {
-            let keyWord: string = this.getKeyWord(textDocumentPositionParams, documentAsText);
-            let currentLine: string = documentAsText[textDocumentPositionParams.position.line];
-            let symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine);
+  // eslint-disable-next-line accessor-pairs -- adding a setter would be pointless and weird
+  set symbolScanner (symbolScanner: SymbolScanner | null) {
+    this._completionProvider.symbolScanner = symbolScanner
+    this._definitionProvider.symbolScanner = symbolScanner
+  }
 
-            if ((keyWord !== undefined) && (keyWord !== '')) {
-                definition = this.getDefinitionForKeyWord(keyWord, currentLine, symbol);
-            } else {
-                definition = this._definitionProvider.createDefinitionForSymbol(symbol);
-            }
+  private getDefinitionForKeyWord (keyWord: string, currentLine: string, selectedSympbol?: string): Definition {
+    let definition: Definition = []
+    const words: string[] = currentLine.split(' ')
+
+    if (words.length >= 2) {
+      if (words[0] === keyWord) {
+        logger.debug(`getDefinitionForKeyWord: ${JSON.stringify(words)}`)
+        if (words.length === 2) {
+          definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1])
+        } else {
+          definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1], selectedSympbol)
         }
-        return definition;
+      }
+    }
+    return definition
+  }
+
+  private extractSymbolFromLine (textDocumentPositionParams: TextDocumentPositionParams, currentLine: string): string {
+    logger.debug(`getDefinitionForSymbol ${currentLine}`)
+    const linePosition: number = textDocumentPositionParams.position.character
+    let symbolEndPosition: number = currentLine.length
+    let symbolStartPosition: number = 0
+    const rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '}', '\'', '\'', ']', '[']
+    const leftBorderCharacter: string[] = [' ', '=', '/', '+', '{', '\'', '\'', '[', ']']
+
+    for (const character of rightBorderCharacter) {
+      let temp: number = currentLine.indexOf(character, linePosition)
+      if (temp === -1) {
+        temp = currentLine.length
+      }
+      symbolEndPosition = Math.min(symbolEndPosition, temp)
     }
 
-    get definitionProvider(): DefinitionProvider {
-        return this._definitionProvider;
+    const symbolRightTrimed = currentLine.substring(0, symbolEndPosition)
+    logger.debug(`symbolRightTrimed ${symbolRightTrimed}`)
+
+    for (const character of leftBorderCharacter) {
+      let temp: number = symbolRightTrimed.lastIndexOf(character, linePosition)
+      if (temp === -1) {
+        temp = 0
+      }
+      symbolStartPosition = Math.max(symbolStartPosition, temp)
     }
 
-    set symbolScanner(symbolScanner: SymbolScanner) {
-        this._completionProvider.symbolScanner = symbolScanner;
-        this._definitionProvider.symbolScanner = symbolScanner;
+    let symbol: string = symbolRightTrimed.substring(symbolStartPosition)
+
+    for (const character of leftBorderCharacter.concat('-')) {
+      if (symbol.startsWith(character)) {
+        symbol = symbol.substring(1)
+        break
+      }
     }
 
-    private getDefinitionForKeyWord(keyWord: string, currentLine: string, selectedSympbol ? : string): Definition {
-        let definition: Definition = null;
-        let words: string[] = currentLine.split(' ');
+    logger.debug(`symbol ${symbol}`)
 
-        if (words.length >= 2) {
-            if (words[0] === keyWord) {
-                logger.debug(`getDefinitionForKeyWord: ${JSON.stringify(words)}`);
-                if (words.length === 2) {
-                    definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1]);
-                } else {
-                    definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1], selectedSympbol);
-                }
-            }
-        }
+    return symbol
+  }
 
+  getComletionItems (textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): CompletionItem[] {
+    let completionItem: CompletionItem[] = []
 
-        return definition;
+    if (documentAsText.length > textDocumentPosition.position.line) {
+      const keyWord: string = this.getKeyWord(textDocumentPosition, documentAsText)
+
+      if ((keyWord === undefined) || (keyWord === '')) {
+        completionItem = this._completionProvider.createCompletionItem('*')
+      } else {
+        completionItem = this._completionProvider.createCompletionItem(keyWord)
+      }
     }
 
-    private extractSymbolFromLine(textDocumentPositionParams: TextDocumentPositionParams, currentLine: string): string {
+    return completionItem
+  }
 
-        logger.debug(`getDefinitionForSymbol ${currentLine}`);
-        let linePosition: number = textDocumentPositionParams.position.character;
-        let symbolEndPosition: number = currentLine.length;
-        let symbolStartPosition: number = 0;
-        let rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '}', '"', "'", ']', '['];
-        let leftBorderCharacter: string[] = [' ', '=', '/', '+', '{', '"', "'", '[', ']'];
+  getInsertStringForTheElement (item: CompletionItem): string {
+    return this._completionProvider.getInsertStringForTheElement(item)
+  }
 
-        for (let character of rightBorderCharacter) {
-            let temp: number = currentLine.indexOf(character, linePosition);
-            if (temp === -1) {
-                temp = currentLine.length;
-            }
-            symbolEndPosition = Math.min(symbolEndPosition, temp);
-        }
+  private getKeyWord (textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): string {
+    const currentLine = documentAsText[textDocumentPosition.position.line]
+    const lineTillCurrentPosition = currentLine.substr(0, textDocumentPosition.position.character)
+    const words: string[] = lineTillCurrentPosition.split(' ')
 
-        let symbolRightTrimed = currentLine.substring(0, symbolEndPosition);
-        logger.debug(`symbolRightTrimed ${symbolRightTrimed}`);
+    const basicKeywordMap: CompletionItem[] = BasicKeywordMap
+    let keyword: string = ''
 
-        for (let character of leftBorderCharacter) {
-            let temp: number = symbolRightTrimed.lastIndexOf(character, linePosition);
-            if (temp === -1) {
-                temp = 0;
-            }
-            symbolStartPosition = Math.max(symbolStartPosition, temp);
-        }
+    if (words.length > 1) {
+      const basicKey: CompletionItem | undefined = basicKeywordMap.find((obj: CompletionItem): boolean => {
+        return obj.label === words[0]
+      })
 
-        let symbol: string = symbolRightTrimed.substring(symbolStartPosition);
-
-        for (let character of leftBorderCharacter.concat('-')) {
-            if (symbol.startsWith(character)) {
-                symbol = symbol.substring(1);
-                break;
-            }
-        }
-
-        logger.debug(`symbol ${symbol}`);
-
-        return symbol;
+      if (basicKey !== undefined) {
+        keyword = basicKey.label
+      }
     }
 
-    getComletionItems(textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): CompletionItem[] {
-        let completionItem: CompletionItem[];
-
-        if (documentAsText.length > textDocumentPosition.position.line) {
-            let keyWord: string = this.getKeyWord(textDocumentPosition, documentAsText);
-
-            if ((keyWord === undefined) || (keyWord === '')) {
-                completionItem = this._completionProvider.createCompletionItem('*');
-            } else {
-                completionItem = this._completionProvider.createCompletionItem(keyWord);
-            }
-        }
-
-        return completionItem;
-    }
-
-    getInsertStringForTheElement(item: CompletionItem): string {
-        return this._completionProvider.getInsertStringForTheElement(item);
-    }
-
-    private getKeyWord(textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): string {
-        let currentLine = documentAsText[textDocumentPosition.position.line];
-        let lineTillCurrentPosition = currentLine.substr(0, textDocumentPosition.position.character);
-        let words: string[] = lineTillCurrentPosition.split(' ');
-
-        let basicKeywordMap: CompletionItem[] = BasicKeywordMap;
-        let keyword: string;
-
-        if (words.length > 1) {
-            let basicKey: CompletionItem = basicKeywordMap.find((obj: CompletionItem): boolean => {
-                return obj.label === words[0];
-            });
-
-            if (basicKey !== undefined) {
-                keyword = basicKey.label;
-            }
-        }
-
-        return keyword;
-    }
+    return keyword
+  }
 }

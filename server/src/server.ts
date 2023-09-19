@@ -2,176 +2,160 @@
  * Copyright (c) Eugen Wiens. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
-'use strict';
 
 import {
-	createConnection,
-	Connection,
-	TextDocuments,
-	InitializeResult,
-	TextDocumentPositionParams,
-	CompletionItem,
-	Definition,
-	ProposedFeatures,
-	TextDocumentSyncKind
-} from 'vscode-languageserver/node';
-
-import {
-	BitBakeProjectScanner
-} from "./BitBakeProjectScanner";
-
-import {
-	ContextHandler
-} from "./ContextHandler";
-
-import {
-	SymbolScanner
-} from "./SymbolScanner";
-
-import {
-	TextDocument
-} from 'vscode-languageserver-textdocument';
-
-var logger = require('winston');
+  createConnection,
+  type Connection,
+  TextDocuments,
+  type InitializeResult,
+  type TextDocumentPositionParams,
+  type CompletionItem,
+  type Definition,
+  ProposedFeatures,
+  TextDocumentSyncKind
+} from 'vscode-languageserver/node'
+import { BitBakeProjectScanner } from './BitBakeProjectScanner'
+import { ContextHandler } from './ContextHandler'
+import { SymbolScanner } from './SymbolScanner'
+import { TextDocument } from 'vscode-languageserver-textdocument'
+import logger from 'winston'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-let connection: Connection = createConnection(ProposedFeatures.all);
-let documents: TextDocuments<TextDocument> = new TextDocuments(TextDocument);
-let documentMap: Map < string, string[] > = new Map();
-let bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection);
-let contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner);
-let workspaceRoot: string;
-let symbolScanner: SymbolScanner = null;
+const connection: Connection = createConnection(ProposedFeatures.all)
+const documents = new TextDocuments<TextDocument>(TextDocument)
+const documentMap = new Map< string, string[] >()
+const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
+const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
 
-documents.listen(connection);
-
+documents.listen(connection)
 
 connection.onInitialize((params): InitializeResult => {
-	workspaceRoot = params.rootPath;
-	bitBakeProjectScanner.setProjectPath(workspaceRoot);
+  const workspaceRoot = params.rootPath ?? ''
+  bitBakeProjectScanner.setProjectPath(workspaceRoot)
 
-	setTimeout( () => {
-		bitBakeProjectScanner.rescanProject();
-	}, 500);
-	
-	return {
-		capabilities: {
-			textDocumentSync: TextDocumentSyncKind.Incremental,
-			completionProvider: {
-				resolveProvider: true
-			},
-			definitionProvider: true,
-			executeCommandProvider: {
-				commands: [
-					'bitbake.rescan-project'
-				]
-			}
-		}
-	}
-});
+  setTimeout(() => {
+    bitBakeProjectScanner.rescanProject()
+  }, 500)
+
+  return {
+    capabilities: {
+      textDocumentSync: TextDocumentSyncKind.Incremental,
+      completionProvider: {
+        resolveProvider: true
+      },
+      definitionProvider: true,
+      executeCommandProvider: {
+        commands: [
+          'bitbake.rescan-project'
+        ]
+      }
+    }
+  }
+})
 
 // The content of a text document has changed. This event is emitted
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
-	//TODO: add symbol parsing here
-	logger.debug(`onDidChangeContent: ${JSON.stringify(change)}`);
-});
+  // TODO: add symbol parsing here
+  logger.debug(`onDidChangeContent: ${JSON.stringify(change)}`)
+})
 
 // The settings interface describe the server relevant settings part
 interface Settings {
-	bitbake: BitbakeSettings;
+  bitbake: BitbakeSettings
 }
 
 interface BitbakeSettings {
-	loggingLevel: string;
-	deepExamine: boolean;
-	workingFolder: string;
-	pathToBashScriptInterpreter: string;
-	machine: string;
-	generateWorkingFolder: boolean;
+  loggingLevel: string
+  deepExamine: boolean
+  workingFolder: string
+  pathToBashScriptInterpreter: string
+  machine: string
+  generateWorkingFolder: boolean
 }
 
-function setSymbolScanner( newSymbolScanner: SymbolScanner ) {
-	logger.debug( 'set new symbol scanner');
-	symbolScanner = newSymbolScanner;
-	contextHandler.symbolScanner = symbolScanner;
+function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
+  logger.debug('set new symbol scanner')
+  contextHandler.symbolScanner = newSymbolScanner
 }
-
 
 connection.onDidChangeConfiguration((change) => {
-	let settings = < Settings > change.settings;
-	bitBakeProjectScanner.deepExamine = settings.bitbake.deepExamine;
-	logger.level = settings.bitbake.loggingLevel;
-	bitBakeProjectScanner.workingPath = settings.bitbake.workingFolder;
-	bitBakeProjectScanner.generateWorkingPath = settings.bitbake.generateWorkingFolder;
-	bitBakeProjectScanner.scriptInterpreter = settings.bitbake.pathToBashScriptInterpreter;
-	bitBakeProjectScanner.machineName = settings.bitbake.machine;
-});
+  const settings = change.settings as Settings
+  bitBakeProjectScanner.deepExamine = settings.bitbake.deepExamine
+  logger.level = settings.bitbake.loggingLevel
+  bitBakeProjectScanner.workingPath = settings.bitbake.workingFolder
+  bitBakeProjectScanner.generateWorkingPath = settings.bitbake.generateWorkingFolder
+  bitBakeProjectScanner.scriptInterpreter = settings.bitbake.pathToBashScriptInterpreter
+  bitBakeProjectScanner.machineName = settings.bitbake.machine
+})
 
 connection.onDidChangeWatchedFiles((change) => {
-	logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`);
-	bitBakeProjectScanner.rescanProject();
-});
+  logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
+  bitBakeProjectScanner.rescanProject()
+})
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
-	logger.debug('onCompletion');
-	let documentAsStringArray: string[] = documentMap.get(textDocumentPosition.textDocument.uri);
-	return contextHandler.getComletionItems(textDocumentPosition, documentAsStringArray);
-});
+  logger.debug('onCompletion')
+  const documentAsStringArray = documentMap.get(textDocumentPosition.textDocument.uri)
+  if (documentAsStringArray === undefined) {
+    return []
+  }
+  return contextHandler.getComletionItems(textDocumentPosition, documentAsStringArray)
+})
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-	logger.debug(`onCompletionResolve ${JSON.stringify(item)}`);
+  logger.debug(`onCompletionResolve ${JSON.stringify(item)}`)
 
-	item.insertText = contextHandler.getInsertStringForTheElement(item);
+  item.insertText = contextHandler.getInsertStringForTheElement(item)
 
-	return item;
-});
+  return item
+})
 
 connection.onDidOpenTextDocument((params) => {
-	if (params.textDocument.text.length > 0) {
-		documentMap.set(params.textDocument.uri, params.textDocument.text.split(/\r?\n/g));
-	}
+  if (params.textDocument.text.length > 0) {
+    documentMap.set(params.textDocument.uri, params.textDocument.text.split(/\r?\n/g))
+  }
 
-	setSymbolScanner( new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider) );
-});
+  setSymbolScanner(new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider))
+})
 
 connection.onDidChangeTextDocument((params) => {
-	if (params.contentChanges.length > 0) {
-		documentMap.set(params.textDocument.uri, params.contentChanges[0].text.split(/\r?\n/g));
-	}
-	
-	setSymbolScanner( new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider) );
-});
+  if (params.contentChanges.length > 0) {
+    documentMap.set(params.textDocument.uri, params.contentChanges[0].text.split(/\r?\n/g))
+  }
+
+  setSymbolScanner(new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider))
+})
 
 connection.onDidCloseTextDocument((params) => {
-	documentMap.delete(params.textDocument.uri);
-	setSymbolScanner( null );
-});
+  documentMap.delete(params.textDocument.uri)
+  setSymbolScanner(null)
+})
 
 connection.onDidSaveTextDocument((params) => {
-	logger.debug(`onDidSaveTextDocument ${JSON.stringify(params)}`);
+  logger.debug(`onDidSaveTextDocument ${JSON.stringify(params)}`)
 
-	bitBakeProjectScanner.parseAllRecipes();
-});
+  bitBakeProjectScanner.parseAllRecipes()
+})
 
 connection.onExecuteCommand((params) => {
-	logger.info(`executeCommand ${JSON.stringify(params)}`);
+  logger.info(`executeCommand ${JSON.stringify(params)}`)
 
-	if (params.command === 'bitbake.rescan-project') {
-		bitBakeProjectScanner.rescanProject();
-	}
-});
+  if (params.command === 'bitbake.rescan-project') {
+    bitBakeProjectScanner.rescanProject()
+  }
+})
 
 connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams): Definition => {
-	logger.debug(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`);
-	let documentAsText: string[] = documentMap.get(textDocumentPositionParams.textDocument.uri);
+  logger.debug(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`)
+  const documentAsText = documentMap.get(textDocumentPositionParams.textDocument.uri)
 
-	let definition: Definition = contextHandler.getDefinition(textDocumentPositionParams, documentAsText);;
+  if (documentAsText === undefined) {
+    return []
+  }
 
-	return definition;
-});
-
-
+  return contextHandler.getDefinition(textDocumentPositionParams, documentAsText)
+})
 
 // Listen on the connection
-connection.listen();
+connection.listen()
