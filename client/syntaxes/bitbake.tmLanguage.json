@@ -28,6 +28,9 @@
             "include": "#functions"
         },
         {
+            "include": "#bitbake-operator"
+        },
+        {
             "include": "#variable-name"
         },
         {
@@ -41,7 +44,7 @@
         "keywords":{
             "patterns": [
                 {
-                    "match": "^\\s*(include|require|inherit|export|echo|if|fi|else|return|EXPORT_FUNCTIONS)(?=\\s+|\\s*:)",
+                    "match": "\\s*(include|from|import|require|inherit|addtask|deltask|after|before|export|echo|if|fi|else|return|unset|print|or|EXPORT_FUNCTIONS|INHERIT)(?=\\s+|\\s*:)",
                     "captures": {
                         "1": {
                             "name": "keyword.control.bb"
@@ -71,6 +74,24 @@
                             "name": "storage.type.function.python.bb"
                         }
                     }
+                },
+                {
+                    "match": "(bbplain|bb)(\\.)?",
+                    "captures": {
+                        "1": {
+                            "name": "support.class.built-in-object.bb"
+                        }
+                    } 
+                },
+                {
+                    "begin": "(?<=import|inherit)(?=\\s+)",
+                    "end": "\\n",
+                    "name": "support.class.bb",
+                    "patterns": [
+                        {
+                            "include": "#variable-reference"
+                        }
+                    ]
                 }
             ]
         },
@@ -116,18 +137,15 @@
             }
         },
         "functions": {
-            "begin": "\\s*(\\s+[a-zA-Z0-9_-][\\w-]*)?(\\.)?([a-zA-Z0-9_-][\\w-]*)(:append|:prepend)?(?=\\s*\\()",
+            "begin": "\\s*([a-zA-Z0-9_-][\\w-]*)(:(append|prepend|remove))?(?=\\s*\\()",
             "beginCaptures": {
                 "1": {
-                    "name": "variable.other.names.bb"
+                    "name": "entity.name.function.python.bb"
                 },
                 "2": {
                     "name": "keyword.operator.bb"
                 },
                 "3": {
-                    "name": "entity.name.function.python.bb"
-                },
-                "4": {
                     "name": "keyword.other.bitbake-operator.bb"
                 }
             },
@@ -143,10 +161,13 @@
             "end": "(?=\\})",
             "patterns": [
                 {
-                    "include": "#variable-assignment"
+                    "include": "#string"
                 },
                 {
-                    "include": "#string"
+                    "include": "#keywords"
+                },
+                {
+                    "include": "#variable-assignment"
                 },
                 {
                     "include": "#variable-reference"
@@ -154,23 +175,26 @@
             ]
         },
         "variable-reference": {
+            "begin": "(\\$\\{)",
+            "end": "(\\})",
+            "name": "variable.language.bb",
             "patterns": [
                 {
-                    "match": "(\\$\\{)([a-zA-Z0-9_]*)(\\})",
-                    "name": "variable.language.bb",
-                    "captures": {
-                        "1": {
-                            "name": "variable.language.bb"
-                        },
-                        "2":{
-                            "name": "variable.other.bb"
-                        }
-                    }
+                   "include": "#keywords"
+                },
+                {
+                    "include": "#functions"
+                },
+                {
+                    "include": "#variable-name"
+                },
+                {
+                    "include": "#string"
                 }
             ]
         },
         "variable-name": {
-            "match": "\\s*([a-zA-Z0-9_-][\\w-]*)(:append|:prepend:remove)?(?!\\s*\\()",
+            "match": "([a-zA-Z0-9_-][\\w-]*)(?!\\s*\\()",
             "captures": {
                 "1": {
                     "name": "variable.other.names.bb"
@@ -185,6 +209,9 @@
             "end": "(?=\\))",
             "patterns": [
                 {
+                    "include": "#functions"
+                },
+                {
                     "include": "#variable-name"
                 },
                 {
@@ -198,6 +225,10 @@
         "operator": {
             "match": "(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.)",
             "name": "keyword.operator.bb"
+        },
+        "bitbake-operator":{
+            "match": "(?<=:)(os|nooverride|qemuarm|qemumips64|qemumips|qemuppc|qemux86-64|qemux86|append|prepend|remove|task-configure|task-compile)",
+            "name": "keyword.other.bitbake-operator.bb"
         }
     }
 }
