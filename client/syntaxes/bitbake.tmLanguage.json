@@ -122,8 +122,8 @@
                 },
                 {
                     "name": "string.quoted.single.bb",
-                    "begin": "'",
-                    "end": "'",
+                    "begin": "(')",
+                    "end": "(')",
                     "patterns": [
                         {
                             "include": "#variable-reference"
