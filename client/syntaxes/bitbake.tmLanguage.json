@@ -13,13 +13,21 @@
             "include": "#string"
         },
         {
+            "begin": "(?<=\\[)",
+            "end": "(?=\\])",
+            "name": "variable.other.bb"
+        },
+        {
+            "include": "#boolean"
+        },
+        {
+            "include": "#numeric"
+        },
+        {
             "include": "#keywords"
         },
         {
             "include": "#comment"
-        },
-        {
-            "include": "#variable-assignment"
         },
         {
             "include": "#variable-reference"
@@ -76,7 +84,7 @@
                     }
                 },
                 {
-                    "match": "(bbplain|bb)(\\.)?",
+                    "match": "(bbplain|bb|self)(?=\\s+|\\.)",
                     "captures": {
                         "1": {
                             "name": "support.class.built-in-object.bb"
@@ -93,7 +101,12 @@
                         }
                     ]
                 }
+                
             ]
+        },
+        "numeric": {
+            "match": "(-|\\.)?[0-9]+(\\.[0-9]+)?",
+            "name": "constant.numeric.bb"
         },
         "string": {
             "patterns": [
@@ -153,7 +166,14 @@
             "patterns": [
                 {
                     "include": "#function-params"
-                }  
+                },
+                {
+                    "include": "#parenthesis-open"
+                },
+                {
+                    "include": "#parenthesis-close"
+                }
+                  
             ]
         },
         "function-content": {
@@ -167,23 +187,42 @@
                     "include": "#keywords"
                 },
                 {
-                    "include": "#variable-assignment"
-                },
-                {
                     "include": "#variable-reference"
                 }
             ]
         },
         "variable-reference": {
             "begin": "(\\$\\{)",
+            "beginCaptures": {
+                "1": {
+                    "name": "variable.language.bb"
+                }
+            },
             "end": "(\\})",
-            "name": "variable.language.bb",
+            "endCaptures": {
+                "1": {
+                    "name": "variable.language.bb"
+                }
+            },
             "patterns": [
+                {
+                    "match": "(@)",
+                    "name": "entity.name.function.decorator.python.bb"
+                },
+                {
+                    "include": "#operator"
+                },
                 {
                    "include": "#keywords"
                 },
                 {
                     "include": "#functions"
+                },
+                {
+                    "include": "#parenthesis-open"
+                },
+                {
+                    "include": "#parenthesis-close"
                 },
                 {
                     "include": "#variable-name"
@@ -209,26 +248,44 @@
             "end": "(?=\\))",
             "patterns": [
                 {
+                    "include": "#boolean"
+                },
+                {
+                    "include": "#numeric"
+                },
+                {
+                    "include": "#string"
+                },
+                {
+                    "include": "#operator"
+                },
+                {
                     "include": "#functions"
                 },
                 {
                     "include": "#variable-name"
-                },
-                {
-                    "include": "#variable-assignment"
-                },
-                {
-                    "include": "#string"
                 }
             ]
         },
         "operator": {
-            "match": "(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.)",
+            "match": "(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.|\\.|,)",
             "name": "keyword.operator.bb"
         },
         "bitbake-operator":{
             "match": "(?<=:)(os|nooverride|qemuarm|qemumips64|qemumips|qemuppc|qemux86-64|qemux86|append|prepend|remove|task-configure|task-compile)",
             "name": "keyword.other.bitbake-operator.bb"
+        },
+        "parenthesis-open": {
+            "match": "([\\w])*\\(",
+            "name": "entity.name.function.parenthesis.open"
+        },
+        "parenthesis-close": {
+            "match": "\\)",
+            "name": "entity.name.function.parenthesis.close"
+        },
+        "boolean": {
+            "match": "(True|False)(?![\\w_-])",
+            "name": "constant.language.python.bb"
         }
     }
 }
