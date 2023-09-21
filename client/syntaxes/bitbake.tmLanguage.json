@@ -52,15 +52,7 @@
         "keywords":{
             "patterns": [
                 {
-                    "match": "\\s*(include|from|import|require|inherit|addtask|deltask|after|before|export|echo|if|fi|else|return|unset|print|or|EXPORT_FUNCTIONS|INHERIT)(?=\\s+|\\s*:)",
-                    "captures": {
-                        "1": {
-                            "name": "keyword.control.bb"
-                        }
-                    }
-                },
-                {
-                    "match": "^\\s*(fakeroot)(?=\\s+)",
+                    "match": "\\s*(include|from|import|require|inherit|addtask|deltask|after|before|export|echo|if|fi|else|return|unset|print|or|fakeroot|EXPORT_FUNCTIONS|INHERIT)(?=\\s+|\\s*:)",
                     "captures": {
                         "1": {
                             "name": "keyword.control.bb"
