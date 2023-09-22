@@ -23,6 +23,9 @@ import logger from 'winston'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
+// It seems our 'documents' variable is failing to handle files properly (documents.all() gives an empty list)
+// Until we manage to fix this, we use this documentMap to store the content of the files
+// Does it have any other purpose?
 const documentMap = new Map< string, string[] >()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
@@ -39,7 +42,9 @@ connection.onInitialize((params): InitializeResult => {
 
   return {
     capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental,
+      // TODO: replace for TextDocumentSyncKind.Incremental (should be more efficient)
+      // Issue is our 'documents' variable is failing to track the files
+      textDocumentSync: TextDocumentSyncKind.Full,
       completionProvider: {
         resolveProvider: true
       },
@@ -57,6 +62,7 @@ connection.onInitialize((params): InitializeResult => {
 // when the text document first opened or when its content has changed.
 documents.onDidChangeContent((change) => {
   // TODO: add symbol parsing here
+  // TODO: This should be called when a file is modified. Understand why it is not.
   logger.debug(`onDidChangeContent: ${JSON.stringify(change)}`)
 })
 
