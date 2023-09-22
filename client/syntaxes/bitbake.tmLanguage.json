@@ -43,9 +43,6 @@
         },
         {
             "include": "#operator"
-        },
-        {
-            "include": "#function-content"
         }
     ],
     "repository": {
@@ -166,21 +163,6 @@
                     "include": "#parenthesis-close"
                 }
                   
-            ]
-        },
-        "function-content": {
-            "begin": "(?<=\\(.*\\)\\{)",
-            "end": "(?=\\})",
-            "patterns": [
-                {
-                    "include": "#string"
-                },
-                {
-                    "include": "#keywords"
-                },
-                {
-                    "include": "#variable-reference"
-                }
             ]
         },
         "variable-reference": {
