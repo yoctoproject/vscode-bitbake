@@ -15,7 +15,7 @@
         {
             "begin": "(?<=\\[)",
             "end": "(?=\\])",
-            "name": "variable.other.bb"
+            "name": "source.python"
         },
         {
             "include": "#boolean"
@@ -276,7 +276,7 @@
             "name": "entity.name.function.parenthesis.close"
         },
         "boolean": {
-            "match": "(True|False)(?![\\w_-])",
+            "match": "(?<![\\w_-])(True|False)(?![\\w_-])",
             "name": "constant.language.python.bb"
         }
     }
