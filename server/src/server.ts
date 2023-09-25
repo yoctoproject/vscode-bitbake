@@ -12,8 +12,10 @@ import {
   type CompletionItem,
   type Definition,
   ProposedFeatures,
-  TextDocumentSyncKind
+  TextDocumentSyncKind,
+  type Hover
 } from 'vscode-languageserver/node'
+import { BitBakeDocScanner } from './BitBakeDocScanner'
 import { BitBakeProjectScanner } from './BitBakeProjectScanner'
 import { ContextHandler } from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
@@ -27,6 +29,7 @@ const documents = new TextDocuments<TextDocument>(TextDocument)
 // Until we manage to fix this, we use this documentMap to store the content of the files
 // Does it have any other purpose?
 const documentMap = new Map< string, string[] >()
+const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
 
@@ -53,7 +56,8 @@ connection.onInitialize((params): InitializeResult => {
         commands: [
           'bitbake.rescan-project'
         ]
-      }
+      },
+      hoverProvider: true
     }
   }
 })
@@ -78,6 +82,7 @@ interface BitbakeSettings {
   pathToBashScriptInterpreter: string
   machine: string
   generateWorkingFolder: boolean
+  pathToBitbakeFolder: string
 }
 
 function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
@@ -93,6 +98,8 @@ connection.onDidChangeConfiguration((change) => {
   bitBakeProjectScanner.generateWorkingPath = settings.bitbake.generateWorkingFolder
   bitBakeProjectScanner.scriptInterpreter = settings.bitbake.pathToBashScriptInterpreter
   bitBakeProjectScanner.machineName = settings.bitbake.machine
+  const bitBakeFolder = settings.bitbake.pathToBitbakeFolder
+  bitBakeDocScanner.parse(bitBakeFolder)
 })
 
 connection.onDidChangeWatchedFiles((change) => {
@@ -161,6 +168,43 @@ connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams)
   }
 
   return contextHandler.getDefinition(textDocumentPositionParams, documentAsText)
+})
+
+connection.onHover(async (params): Promise<Hover | undefined> => {
+  const { position, textDocument } = params
+  const documentAsText = documentMap.get(textDocument.uri)
+  const textLine = documentAsText?.[position.line]
+  if (textLine === undefined) {
+    return undefined
+  }
+  const matches = textLine.matchAll(bitBakeDocScanner.variablesRegex)
+  for (const match of matches) {
+    const name = match[1].toUpperCase()
+    if (name === undefined || match.index === undefined) {
+      continue
+    }
+    const start = match.index
+    const end = start + name.length
+    if ((start > position.character) || (end <= position.character)) {
+      continue
+    }
+
+    const definition = bitBakeDocScanner.variablesInfos[name]?.definition
+    const hover: Hover = {
+      contents: {
+        kind: 'markdown',
+        value: `**${name}**\n___\n${definition}`
+      },
+      range: {
+        start: position,
+        end: {
+          ...position,
+          character: end
+        }
+      }
+    }
+    return hover
+  }
 })
 
 // Listen on the connection

@@ -35,3 +35,8 @@ The go to definition feature currently behaves as follows:
 | class or inc-file | file |
 | recipe | recipe definition and all bbappends |
 | symbol | all symbols within the include hierarchy |
+
+### Show definitions of BitBake's defined variables on hover
+*This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
+
+Place your cursor over a variable. If it is a BitBake defined variable, then its definition from the documentation will be displayed.
