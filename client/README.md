@@ -1,5 +1,10 @@
 # BitBake recipe language support in Visual Studio Code
 
+## Set BitBake's path
+Some features require to know where your BitBake's folder is located. The extension will by default assume it is located at the root of the project in a folder named `bitbake`. If your BitBake folder is located somewhere else, set its path in the settings in order to have full features.
+
+To access BitBake's settings: Files -> Preferences -> Settings [Ctrl+,]. The BitBake's settings are under Extensions.
+
 ## Features
 
 ### Syntax highlighting
@@ -19,6 +24,7 @@ The following suggestions are currently supported:
 * Context-based suggestions for all symbols within the include hierarchy
 
 ### Go to definition
+*This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
 
 *CTRL and click* may be used to open the file associated with a class, inc-file, recipe or variable. If more than one definition exists, a list of definitions is provided.
 
