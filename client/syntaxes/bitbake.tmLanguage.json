@@ -1,270 +1,265 @@
 {
-  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-  "scopeName": "source.bb",
-  "name": "BitBake",
-  "fileTypes": [
-    "bb",
-    "bbappend",
-    "bbclass",
-    "inc"
-  ],
-  "patterns": [
-    {
-      "include": "#comment"
-    },
-    {
-      "include": "#variable-assignment"
-    },
-    {
-      "include": "#variables"
-    },
-    {
-      "include": "#directives"
-    },
-    {
-      "include": "source.python"
-    },
-    {
-      "include": "source.shell"
+    "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+    "scopeName": "source.bb",
+    "name": "BitBake",
+    "fileTypes": [
+        "bb",
+        "bbappend",
+        "bbclass",
+        "inc"
+    ],
+    "patterns": [
+        {
+            "include": "#string"
+        },
+        {
+            "begin": "(?<=\\[)",
+            "end": "(?=\\])",
+            "name": "source.python"
+        },
+        {
+            "include": "#boolean"
+        },
+        {
+            "include": "#numeric"
+        },
+        {
+            "include": "#keywords"
+        },
+        {
+            "include": "#comment"
+        },
+        {
+            "include": "#variable-reference"
+        },
+        {
+            "include": "#functions"
+        },
+        {
+            "include": "#bitbake-operator"
+        },
+        {
+            "include": "#variable-name"
+        },
+        {
+            "include": "#operator"
+        }
+    ],
+    "repository": {
+        "keywords":{
+            "patterns": [
+                {
+                    "match": "\\s*(include|from|import|require|inherit|addtask|deltask|after|before|export|echo|if|fi|else|return|unset|print|or|fakeroot|EXPORT_FUNCTIONS|INHERIT)(?=\\s+|\\s*:)",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.control.bb"
+                        }
+                    }
+                },
+                {
+                    "match": "\\s*(def)(?=\\s+)",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.function.python.bb"
+                        }
+                    }
+                },
+                {
+                    "match": "\\s*(python)(?=\\s+|\\s*\\()",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.function.python.bb"
+                        }
+                    }
+                },
+                {
+                    "match": "(bbplain|bb|self)(?=\\s+|\\.)",
+                    "captures": {
+                        "1": {
+                            "name": "support.class.built-in-object.bb"
+                        }
+                    } 
+                },
+                {
+                    "begin": "(?<=import|inherit)(?=\\s+)",
+                    "end": "\\n",
+                    "name": "support.class.bb",
+                    "patterns": [
+                        {
+                            "include": "#variable-reference"
+                        }
+                    ]
+                }
+                
+            ]
+        },
+        "numeric": {
+            "match": "(-|\\.)?[0-9]+(\\.[0-9]+)?",
+            "name": "constant.numeric.bb"
+        },
+        "string": {
+            "patterns": [
+                {
+                    "name": "string.quoted.double.bb",
+                    "begin": "(\")",
+                    "end": "(\")",
+                    "patterns": [
+                        {
+                            "include": "#variable-reference"
+                        }
+                    ]
+                },
+                {
+                    "name": "string.quoted.single.bb",
+                    "begin": "(')",
+                    "end": "(')",
+                    "patterns": [
+                        {
+                            "include": "#variable-reference"
+                        }
+                    ]
+                }
+            ]
+        },
+        "comment": {
+            "match": "(\\s*)((#)(.*))\\n",
+            "captures": {
+                "1": {
+                    "name": "punctuation.whitespace.comment.leading.bb"
+                },
+                "2": {
+                    "name": "comment.line.bb"
+                },
+                "3": {
+                    "name": "comment.line.number-sign.bb"
+                },
+                "4": {
+                    "name": "comment.line.text.bb"
+                }
+            }
+        },
+        "functions": {
+            "begin": "\\s*([a-zA-Z0-9_-][\\w-]*)(:(append|prepend|remove))?(?=\\s*\\()",
+            "beginCaptures": {
+                "1": {
+                    "name": "entity.name.function.python.bb"
+                },
+                "2": {
+                    "name": "keyword.operator.bb"
+                },
+                "3": {
+                    "name": "keyword.other.bitbake-operator.bb"
+                }
+            },
+            "end": "(?=\\))",
+            "patterns": [
+                {
+                    "include": "#function-params"
+                },
+                {
+                    "include": "#parenthesis-open"
+                },
+                {
+                    "include": "#parenthesis-close"
+                }
+                  
+            ]
+        },
+        "variable-reference": {
+            "begin": "(\\$\\{)",
+            "beginCaptures": {
+                "1": {
+                    "name": "variable.language.bb"
+                }
+            },
+            "end": "(\\})",
+            "endCaptures": {
+                "1": {
+                    "name": "variable.language.bb"
+                }
+            },
+            "patterns": [
+                {
+                    "match": "(@)",
+                    "name": "entity.name.function.decorator.python.bb"
+                },
+                {
+                    "include": "#operator"
+                },
+                {
+                   "include": "#keywords"
+                },
+                {
+                    "include": "#functions"
+                },
+                {
+                    "include": "#parenthesis-open"
+                },
+                {
+                    "include": "#parenthesis-close"
+                },
+                {
+                    "include": "#variable-name"
+                },
+                {
+                    "include": "#string"
+                }
+            ]
+        },
+        "variable-name": {
+            "match": "([a-zA-Z0-9_-][\\w-]*)(?!\\s*\\()",
+            "captures": {
+                "1": {
+                    "name": "variable.other.names.bb"
+                },
+                "2": {
+                    "name": "keyword.other.bitbake-operator.bb"
+                }
+            }
+        },
+        "function-params":{
+            "begin": "(?<=\\()",
+            "end": "(?=\\))",
+            "patterns": [
+                {
+                    "include": "#boolean"
+                },
+                {
+                    "include": "#numeric"
+                },
+                {
+                    "include": "#string"
+                },
+                {
+                    "include": "#operator"
+                },
+                {
+                    "include": "#functions"
+                },
+                {
+                    "include": "#variable-name"
+                }
+            ]
+        },
+        "operator": {
+            "match": "(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.|\\.|,)",
+            "name": "keyword.operator.bb"
+        },
+        "bitbake-operator":{
+            "match": "(?<=:)(os|nooverride|qemuarm|qemumips64|qemumips|qemuppc|qemux86-64|qemux86|append|prepend|remove|task-configure|task-compile)",
+            "name": "keyword.other.bitbake-operator.bb"
+        },
+        "parenthesis-open": {
+            "match": "([\\w])*\\(",
+            "name": "entity.name.function.parenthesis.open"
+        },
+        "parenthesis-close": {
+            "match": "\\)",
+            "name": "entity.name.function.parenthesis.close"
+        },
+        "boolean": {
+            "match": "(?<![\\w_-])(True|False)(?![\\w_-])",
+            "name": "constant.language.python.bb"
+        }
     }
-  ],
-  "repository": {
-    "string": {
-      "patterns": [
-        {
-          "begin": "\"",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.bb"
-            }
-          },
-          "end": "\"",
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.bb"
-            }
-          },
-          "name": "string.quoted.double.bb",
-          "patterns": [
-            {
-              "include": "#variables"
-            }
-          ]
-        },
-        {
-          "begin": "'",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.begin.bb"
-            }
-          },
-          "end": "'",
-          "endCaptures": {
-            "0": {
-              "name": "punctuation.definition.string.end.bb"
-            }
-          },
-          "name": "string.quoted.single.bb"
-        }
-      ]
-    },
-    "comment": {
-      "begin": "(^\\s+)?(?=#)",
-      "beginCaptures": {
-        "1": {
-          "name": "punctuation.whitespace.comment.leading.bb"
-        }
-      },
-      "end": "(?!\\G)",
-      "patterns": [
-        {
-          "begin": "#",
-          "beginCaptures": {
-            "0": {
-              "name": "punctuation.definition.comment.bb"
-            }
-          },
-          "end": "\\n",
-          "name": "comment.line.number-sign.bb",
-          "patterns": [
-            {
-              "match": "\\\\\\n",
-              "name": "constant.character.escape.continuation.bb"
-            }
-          ]
-        }
-      ]
-    },
-    "directives": {
-      "patterns": [
-        {
-          "begin": "^\\s*(include)\\b",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.include.bb"
-            }
-          },
-          "end": "^",
-          "patterns": [
-            {
-              "include": "#comment"
-            }
-          ]
-        },
-        {
-          "begin": "^\\s*(require)\\b",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.require.bb"
-            }
-          },
-          "end": "^",
-          "patterns": [
-            {
-              "include": "#comment"
-            }
-          ]
-        },
-        {
-          "begin": "^\\s*(inherit)\\b",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.inherit.bb"
-            }
-          },
-          "end": "^",
-          "patterns": [
-            {
-              "include": "#comment"
-            }
-          ]
-        },
-        {
-          "begin": "^\\s*(fakeroot)?\\s*(python)\\s*([a-zA-Z0-9-_:]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\{)",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.fakeroot.bb"
-            },
-            "2": {
-              "name": "storage.type.function.python.bb"
-            },
-            "3": {
-              "name": "entity.name.function.python.bb"
-            },
-            "5": {
-              "name": "punctuation.definition.python-function.bb"
-            }
-          },
-          "end": "(\\})",
-          "endCaptures": {
-            "1": {
-              "name": "punctuation.definition.python-function.bb"
-            }
-          },
-          "patterns": [
-            {
-              "include": "source.python"
-            }
-          ]
-        },
-        {
-          "begin": "^\\s*(fakeroot)?\\s*(def)\\s*([a-zA-Z0-9-_:]+)*\\s*(\\([a-zA-Z_\\,\\ ]*\\))?\\s*(\\:)",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.fakeroot.bb"
-            },
-            "2": {
-              "name": "storage.type.function.python.bb"
-            },
-            "3": {
-              "name": "entity.name.function.python.bb"
-            },
-            "5": {
-              "name": "punctuation.definition.python-function.bb"
-            }
-          },
-          "end": "(?=^\\S)",
-          "patterns": [
-            {
-              "include": "source.python"
-            }
-          ]
-        },
-        {
-          "begin": "^\\s*(fakeroot)?\\s*([a-zA-Z0-9-_:]+)\\s*(\\(\\))?\\s*(\\{)",
-          "beginCaptures": {
-            "1": {
-              "name": "keyword.control.fakeroot.bb"
-            },
-            "2": {
-              "name": "entity.name.function.shell.bb"
-            },
-            "4": {
-              "name": "punctuation.definition.shell-function.bb"
-            }
-          },
-          "end": "(\\})",
-          "endCaptures": {
-            "1": {
-              "name": "punctuation.definition.shell-function.bb"
-            }
-          },
-          "patterns": [
-            {
-              "include": "source.shell"
-            }
-          ]
-        }
-      ]
-    },
-    "variable-assignment": {
-      "begin": "(^\\s*|\\G\\s*)([^\\s]+)\\s*(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.)\\s*",
-      "beginCaptures": {
-        "2": {
-          "name": "variable.other.bb"
-        },
-        "3": {
-          "name": "keyword.operator.assignment.bb"
-        }
-      },
-      "end": "\\n",
-      "patterns": [
-        {
-          "match": "\\\\\\n",
-          "name": "constant.character.escape.continuation.bb"
-        },
-        {
-          "include": "#comment"
-        },
-        {
-          "include": "#variables"
-        },
-        {
-          "include": "#string"
-        }
-      ]
-    },
-    "variables": {
-      "patterns": [
-        {
-          "captures": {
-            "1": {
-              "name": "punctuation.definition.variable.bb"
-            }
-          },
-          "match": "(\\$)([a-zA-Z0-9_:])*\\b",
-          "name": "variable.language.bb"
-        },
-        {
-          "captures": {
-            "1": {
-              "name": "punctuation.definition.variable.bb"
-            }
-          },
-          "match": "(\\$\\{)(?:[a-zA-Z0-9_])*(\\})",
-          "name": "variable.language.bb"
-        }
-      ]
-    }
-  }
 }
