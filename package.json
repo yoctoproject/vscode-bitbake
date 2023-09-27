@@ -1,17 +1,17 @@
 {
 	"name": "bitbake",
 	"description": "BitBake language support",
-	"author": "Eugen Wiens",
+	"author": "savoirfairelinux",
 	"license": "MIT",
 	"version": "1.1.2",
-	"publisher": "EugenWiens",
+	"publisher": "savoirfairelinux",
 	"bugs": {
-		"url": "https://github.com/EugenWiens/vscode-bitbake/issues"
+		"url": "https://github.com/savoirfairelinux/vscode-bitbake/issues"
 	},
-	"homepage": "https://github.com/EugenWiens/vscode-bitbake",
+	"homepage": "https://github.com/savoirfairelinux/vscode-bitbake",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/EugenWiens/vscode-bitbake.git"
+		"url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
 	},
 	"workspaces": [
 		"client",

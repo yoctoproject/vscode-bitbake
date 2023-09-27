@@ -8,12 +8,12 @@
     "node": "*"
   },
   "bugs": {
-    "url": "https://github.com/EugenWiens/vscode-bitbake/issues"
+    "url": "https://github.com/savoirfairelinux/vscode-bitbake/issues"
   },
-  "homepage": "https://github.com/EugenWiens/vscode-bitbake",
+  "homepage": "https://github.com/savoirfairelinux/vscode-bitbake",
   "repository": {
     "type": "git",
-    "url": "https://github.com/EugenWiens/vscode-bitbake.git"
+    "url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
   },
   "scripts": {
     "lint": "eslint ."
