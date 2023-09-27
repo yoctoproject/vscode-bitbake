@@ -1,7 +1,10 @@
 {
 	"name": "bitbake",
 	"description": "BitBake language support",
-	"author": "savoirfairelinux",
+	"author": "Eugen Wiens",
+	"contributors": [
+		"Savoir-faire Linux"
+	],
 	"license": "MIT",
 	"version": "1.1.2",
 	"publisher": "savoirfairelinux",
