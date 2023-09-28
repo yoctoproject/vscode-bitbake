@@ -33,7 +33,6 @@ const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
 
-documents.listen(connection)
 
 connection.onInitialize((params): InitializeResult => {
   const workspaceRoot = params.rootPath ?? ''
@@ -206,6 +205,8 @@ connection.onHover(async (params): Promise<Hover | undefined> => {
     return hover
   }
 })
+
+documents.listen(connection)
 
 // Listen on the connection
 connection.listen()
