@@ -72,11 +72,11 @@ export class BitBakeDocumentSemanticTokensProvider implements DocumentSemanticTo
     let declaredFunctions: string[] = []
     let declaredVariables: string[] = []
 
-    const functionStartsWithDefRegex = /(?<!(#.*)|'.*|".*)(?<=def\s+)(?<name>[a-zA-Z0-9_-][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*\()/
-    const functionStartsWithPythonRegex = /(?<!(#.*)|'.*|".*)(?<=python\s+)(?<name>[a-zA-Z0-9_-][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*\()/
-    const shellFunctionsRegex = /(?<!(#.*)|'.*|".*)(?<name>[a-zA-Z0-9_-][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*\(.*\)\s*\{)/
+    const functionStartsWithDefRegex = /(?<!(#.*)|'.*|".*)(?<=def\s+)(?<name>[a-zA-Z0-9_][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*\()/
+    const functionStartsWithPythonRegex = /(?<!(#.*)|'.*|".*)(?<=python\s+)(?<name>[a-zA-Z0-9_][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*\()/
+    const shellFunctionsRegex = /(?<!(#.*)|'.*|".*)(?<name>[a-zA-Z0-9_][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*\(.*\)\s*\{)/
     const anonymousFunctionsRegex = /(\bpython)(?=\s*\(.*\)\s*\{)/
-    const variableDeclarationRegex = /(?<name>[a-zA-Z0-9_-][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*=\s*)(?!\s*\()/
+    const variableDeclarationRegex = /(?<name>[a-zA-Z0-9_][\w-]*)(?<operator>:(append|prepend|remove))?(?=\s*=\s*)(?!\s*\()/
 
     // First traverse: Match functions and variables declarations
     for (let i = 0; i < lines.length; i++) {

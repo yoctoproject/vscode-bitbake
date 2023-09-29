@@ -139,7 +139,7 @@
             }
         },
         "functions": {
-            "begin": "\\s*([a-zA-Z0-9_-][\\w-]*)(:(append|prepend|remove))?(?=\\s*\\()",
+            "begin": "\\s*([a-zA-Z0-9_][\\w-]*)(:(append|prepend|remove))?(?=\\s*\\()",
             "beginCaptures": {
                 "1": {
                     "name": "entity.name.function.python.bb"
@@ -207,7 +207,7 @@
             ]
         },
         "variable-name": {
-            "match": "([a-zA-Z0-9_-][\\w-]*)(?!\\s*\\()",
+            "match": "([a-zA-Z0-9_][\\w-]*)(?!\\s*\\()",
             "captures": {
                 "1": {
                     "name": "variable.other.names.bb"
