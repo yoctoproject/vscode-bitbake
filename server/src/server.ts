@@ -25,14 +25,10 @@ import logger from 'winston'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
-// It seems our 'documents' variable is failing to handle files properly (documents.all() gives an empty list)
-// Until we manage to fix this, we use this documentMap to store the content of the files
-// Does it have any other purpose?
-const documentMap = new Map< string, string[] >()
+const documentAsTextMap = new Map< string, string[] >()
 const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
-
 
 connection.onInitialize((params): InitializeResult => {
   const workspaceRoot = params.rootPath ?? ''
@@ -44,9 +40,7 @@ connection.onInitialize((params): InitializeResult => {
 
   return {
     capabilities: {
-      // TODO: replace for TextDocumentSyncKind.Incremental (should be more efficient)
-      // Issue is our 'documents' variable is failing to track the files
-      textDocumentSync: TextDocumentSyncKind.Full,
+      textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
         resolveProvider: true
       },
@@ -59,14 +53,6 @@ connection.onInitialize((params): InitializeResult => {
       hoverProvider: true
     }
   }
-})
-
-// The content of a text document has changed. This event is emitted
-// when the text document first opened or when its content has changed.
-documents.onDidChangeContent((change) => {
-  // TODO: add symbol parsing here
-  // TODO: This should be called when a file is modified. Understand why it is not.
-  logger.debug(`onDidChangeContent: ${JSON.stringify(change)}`)
 })
 
 // The settings interface describe the server relevant settings part
@@ -108,11 +94,11 @@ connection.onDidChangeWatchedFiles((change) => {
 
 connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
   logger.debug('onCompletion')
-  const documentAsStringArray = documentMap.get(textDocumentPosition.textDocument.uri)
-  if (documentAsStringArray === undefined) {
+  const documentAsText = documentAsTextMap.get(textDocumentPosition.textDocument.uri)
+  if (documentAsText === undefined) {
     return []
   }
-  return contextHandler.getComletionItems(textDocumentPosition, documentAsStringArray)
+  return contextHandler.getComletionItems(textDocumentPosition, documentAsText)
 })
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
@@ -123,29 +109,8 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   return item
 })
 
-connection.onDidOpenTextDocument((params) => {
-  if (params.textDocument.text.length > 0) {
-    documentMap.set(params.textDocument.uri, params.textDocument.text.split(/\r?\n/g))
-  }
-
-  setSymbolScanner(new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider))
-})
-
-connection.onDidChangeTextDocument((params) => {
-  if (params.contentChanges.length > 0) {
-    documentMap.set(params.textDocument.uri, params.contentChanges[0].text.split(/\r?\n/g))
-  }
-
-  setSymbolScanner(new SymbolScanner(params.textDocument.uri, contextHandler.definitionProvider))
-})
-
-connection.onDidCloseTextDocument((params) => {
-  documentMap.delete(params.textDocument.uri)
-  setSymbolScanner(null)
-})
-
-connection.onDidSaveTextDocument((params) => {
-  logger.debug(`onDidSaveTextDocument ${JSON.stringify(params)}`)
+connection.onDidSaveTextDocument((event) => {
+  logger.debug(`onDidSaveTextDocument ${JSON.stringify(event)}`)
 
   bitBakeProjectScanner.parseAllRecipes()
 })
@@ -160,7 +125,7 @@ connection.onExecuteCommand((params) => {
 
 connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams): Definition => {
   logger.debug(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`)
-  const documentAsText = documentMap.get(textDocumentPositionParams.textDocument.uri)
+  const documentAsText = documentAsTextMap.get(textDocumentPositionParams.textDocument.uri)
 
   if (documentAsText === undefined) {
     return []
@@ -171,7 +136,7 @@ connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams)
 
 connection.onHover(async (params): Promise<Hover | undefined> => {
   const { position, textDocument } = params
-  const documentAsText = documentMap.get(textDocument.uri)
+  const documentAsText = documentAsTextMap.get(textDocument.uri)
   const textLine = documentAsText?.[position.line]
   if (textLine === undefined) {
     return undefined
@@ -206,7 +171,27 @@ connection.onHover(async (params): Promise<Hover | undefined> => {
   }
 })
 
-documents.listen(connection)
-
-// Listen on the connection
 connection.listen()
+
+documents.onDidOpen((event) => {
+  const textDocument = event.document
+  if (textDocument.getText().length > 0) {
+    documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
+  }
+
+  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
+})
+
+documents.onDidChangeContent((event) => {
+  const textDocument = event.document
+  documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
+
+  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
+})
+
+documents.onDidClose((event) => {
+  documentAsTextMap.delete(event.document.uri)
+  setSymbolScanner(null)
+})
+
+documents.listen(connection)
