@@ -110,27 +110,6 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   return item
 })
 
-documents.onDidOpen((event) => {
-  const textDocument = event.document
-  if (textDocument.getText().length > 0) {
-    documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
-  }
-
-  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
-})
-
-documents.onDidChangeContent((event) => {
-  const textDocument = event.document
-  documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
-
-  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
-})
-
-documents.onDidClose((event) => {
-  documentAsTextMap.delete(event.document.uri)
-  setSymbolScanner(null)
-})
-
 connection.onDidSaveTextDocument((event) => {
   logger.debug(`onDidSaveTextDocument ${JSON.stringify(event)}`)
 
@@ -193,7 +172,27 @@ connection.onHover(async (params): Promise<Hover | undefined> => {
   }
 })
 
-documents.listen(connection)
-
-// Listen on the connection
 connection.listen()
+
+documents.onDidOpen((event) => {
+  const textDocument = event.document
+  if (textDocument.getText().length > 0) {
+    documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
+  }
+
+  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
+})
+
+documents.onDidChangeContent((event) => {
+  const textDocument = event.document
+  documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
+
+  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
+})
+
+documents.onDidClose((event) => {
+  documentAsTextMap.delete(event.document.uri)
+  setSymbolScanner(null)
+})
+
+documents.listen(connection)
