@@ -139,7 +139,7 @@
             }
         },
         "functions": {
-            "begin": "\\s*([a-zA-Z0-9_-][\\w-]*)(:(append|prepend|remove))?(?=\\s*\\()",
+            "begin": "\\s*([a-zA-Z_][\\w_]*)(:(append|prepend|remove))?(?=\\s*\\()",
             "beginCaptures": {
                 "1": {
                     "name": "entity.name.function.python.bb"
@@ -190,6 +190,17 @@
                    "include": "#keywords"
                 },
                 {
+                    "match": "(\\[)",
+                    "name": "support.function.bracket-open.bb"
+                },
+                {
+                    "match": "(\\])",
+                    "name": "support.function.bracket-close.bb"
+                },
+                {
+                    "include": "#numeric"
+                },
+                {
                     "include": "#functions"
                 },
                 {
@@ -207,7 +218,7 @@
             ]
         },
         "variable-name": {
-            "match": "([a-zA-Z0-9_-][\\w-]*)(?!\\s*\\()",
+            "match": "([a-zA-Z_][\\w_]*)",
             "captures": {
                 "1": {
                     "name": "variable.other.names.bb"
