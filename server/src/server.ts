@@ -40,8 +40,7 @@ connection.onInitialize((params): InitializeResult => {
 
   return {
     capabilities: {
-      // TODO: replace for TextDocumentSyncKind.Incremental (should be more efficient)
-      textDocumentSync: TextDocumentSyncKind.Full,
+      textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
         resolveProvider: true
       },
