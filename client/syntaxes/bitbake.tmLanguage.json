@@ -46,7 +46,7 @@
         }
     ],
     "repository": {
-        "keywords":{
+        "keywords": {
             "patterns": [
                 {
                     "match": "\\s*(include|from|import|require|inherit|addtask|deltask|after|before|export|echo|if|fi|else|return|unset|print|or|fakeroot|EXPORT_FUNCTIONS|INHERIT)(?=\\s+|\\s*:)",
@@ -78,7 +78,7 @@
                         "1": {
                             "name": "support.class.built-in-object.bb"
                         }
-                    } 
+                    }
                 },
                 {
                     "begin": "(?<=import|inherit)(?=\\s+)",
@@ -90,7 +90,6 @@
                         }
                     ]
                 }
-                
             ]
         },
         "numeric": {
@@ -139,8 +138,8 @@
             }
         },
         "functions": {
-            "begin": "\\s*([a-zA-Z_][\\w_]*)(:(append|prepend|remove))?(?=\\s*\\()",
-            "beginCaptures": {
+            "match": "\\s*([a-zA-Z_][\\w_]*)(:(append|prepend|remove))?(?=\\s*\\()",
+            "captures": {
                 "1": {
                     "name": "entity.name.function.python.bb"
                 },
@@ -150,32 +149,19 @@
                 "3": {
                     "name": "keyword.other.bitbake-operator.bb"
                 }
-            },
-            "end": "(?=\\))",
-            "patterns": [
-                {
-                    "include": "#function-params"
-                },
-                {
-                    "include": "#parenthesis-open"
-                },
-                {
-                    "include": "#parenthesis-close"
-                }
-                  
-            ]
+            }
         },
         "variable-reference": {
             "begin": "(\\$\\{)",
             "beginCaptures": {
                 "1": {
-                    "name": "variable.language.bb"
+                    "name": "punctuation.definition.template-expression.begin.bb"
                 }
             },
             "end": "(\\})",
             "endCaptures": {
                 "1": {
-                    "name": "variable.language.bb"
+                    "name": "punctuation.definition.template-expression.end.bb"
                 }
             },
             "patterns": [
@@ -187,15 +173,18 @@
                     "include": "#operator"
                 },
                 {
-                   "include": "#keywords"
+                    "include": "#keywords"
+                },
+                {
+                    "include": "#boolean"
                 },
                 {
                     "match": "(\\[)",
-                    "name": "support.function.bracket-open.bb"
+                    "name": "meta.embedded.brackets.begin.bb"
                 },
                 {
                     "match": "(\\])",
-                    "name": "support.function.bracket-close.bb"
+                    "name": "meta.embedded.brackets.end.bb"
                 },
                 {
                     "include": "#numeric"
@@ -228,45 +217,21 @@
                 }
             }
         },
-        "function-params":{
-            "begin": "(?<=\\()",
-            "end": "(?=\\))",
-            "patterns": [
-                {
-                    "include": "#boolean"
-                },
-                {
-                    "include": "#numeric"
-                },
-                {
-                    "include": "#string"
-                },
-                {
-                    "include": "#operator"
-                },
-                {
-                    "include": "#functions"
-                },
-                {
-                    "include": "#variable-name"
-                }
-            ]
-        },
         "operator": {
             "match": "(=|\\?=|\\?\\?=|:=|\\+=|=\\+|\\.=|=\\.|\\.|,)",
             "name": "keyword.operator.bb"
         },
-        "bitbake-operator":{
+        "bitbake-operator": {
             "match": "(?<=:)(os|nooverride|qemuarm|qemumips64|qemumips|qemuppc|qemux86-64|qemux86|append|prepend|remove|task-configure|task-compile)",
             "name": "keyword.other.bitbake-operator.bb"
         },
         "parenthesis-open": {
             "match": "([\\w])*\\(",
-            "name": "entity.name.function.parenthesis.open"
+            "name": "meta.embedded.parenthesis.open.bb"
         },
         "parenthesis-close": {
             "match": "\\)",
-            "name": "entity.name.function.parenthesis.close"
+            "name": "meta.embedded.parenthesis.close.bb"
         },
         "boolean": {
             "match": "(?<![\\w_-])(True|False)(?![\\w_-])",
