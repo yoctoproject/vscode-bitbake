@@ -1,2 +1,6 @@
 server/
 out/
+
+# Test
+# Grammar scope snaps
+test/**/*.snap
