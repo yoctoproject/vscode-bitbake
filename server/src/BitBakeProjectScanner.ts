@@ -131,7 +131,7 @@ export class BitBakeProjectScanner {
   rescanProject (): void {
     logger.info(`request rescanProject ${this._projectPath}`)
 
-    if (this._scanStatus.scanIsRunning) {
+    if (!this._scanStatus.scanIsRunning) {
       this._scanStatus.scanIsRunning = true
       logger.info('start rescanProject')
 
