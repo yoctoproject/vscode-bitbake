@@ -105,7 +105,9 @@
     ]
   },
   "scripts": {
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
+    "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u"
   },
   "dependencies": {
     "vscode-languageclient": "^8.1.0"
@@ -120,6 +122,7 @@
     "eslint-plugin-import": "^2.28.1",
     "eslint-plugin-n": "^16.1.0",
     "eslint-plugin-promise": "^6.1.1",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "vscode-tmgrammar-test": "^0.1.2"
   }
 }
