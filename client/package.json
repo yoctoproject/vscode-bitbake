@@ -106,7 +106,7 @@
   },
   "scripts": {
     "lint": "eslint .",
-    "test:grammar": "vscode-tmgrammar-test ./test/grammars/testcases/*.bb",
+    "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
     "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u"
   },
   "dependencies": {
