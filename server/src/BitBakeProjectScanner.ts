@@ -3,8 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.Diagnstic
  * ------------------------------------------------------------------------------------------ */
 
-// @ts-expect-error -- execa has no declaration file
-import execa from 'execa'
+import childProcess from 'child_process'
 import find from 'find'
 import path from 'path'
 import fs from 'fs'
@@ -132,10 +131,7 @@ export class BitBakeProjectScanner {
           this.printScanStatistic()
         }
       } catch (error) {
-        if (typeof error === 'string') {
-          logger.error(`scanning of project is abborted: ${error}`)
-        }
-        throw error
+        logger.error(`scanning of project is abborted: ${error as any}`)
       }
 
       this._scanStatus.scanIsRunning = false
@@ -170,7 +166,7 @@ export class BitBakeProjectScanner {
   private scanAvailableLayers (): void {
     this._layers = new Array < LayerInfo >()
 
-    const output: string = this.executeCommandInBitBakeEnvironment('bitbake-layers show-layers')
+    const output: string = this.executeBitBakeCommand('bitbake-layers show-layers')
 
     if (output.length > 0) {
       try {
@@ -229,7 +225,7 @@ export class BitBakeProjectScanner {
   scanForRecipes (): void {
     this._recipes = new Array < ElementInfo >()
 
-    const output: string = this.executeCommandInBitBakeEnvironment('bitbake-layers show-recipes')
+    const output: string = this.executeBitBakeCommand('bitbake-layers show-recipes')
 
     if (output.length > 0) {
       const outerReg: RegExp = /(.+):\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g
@@ -284,7 +280,7 @@ export class BitBakeProjectScanner {
     let parsingSuccess: boolean = true
 
     try {
-      parsingOutput = this.executeCommandInBitBakeEnvironment('bitbake -p')
+      parsingOutput = this.executeBitBakeCommand('bitbake -p')
     } catch (error) {
       if (typeof error !== 'string') {
         throw error
@@ -326,7 +322,7 @@ export class BitBakeProjectScanner {
       logger.info(`${recipesWithOutPath.length} recipes must be examined more deeply.`)
 
       for (const recipeWithOutPath of recipesWithOutPath) {
-        const output: string = this.executeCommandInBitBakeEnvironment(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+        const output: string = this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
         const regExp: RegExp = /(\s.*\.bb)/g
         let match: RegExpExecArray | null
 
@@ -344,7 +340,7 @@ export class BitBakeProjectScanner {
   }
 
   private scanRecipesAppends (): void {
-    const output: string = this.executeCommandInBitBakeEnvironment('bitbake-layers show-appends')
+    const output: string = this.executeBitBakeCommand('bitbake-layers show-appends')
 
     if (output.length > 0) {
       const outerReg: RegExp = /(\S.*\.bb):(?:\s*\/\S*.bbappend)+/g
@@ -385,40 +381,16 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private executeCommandInBitBakeEnvironment (command: string): string {
-    const scriptContent: string = this.generateBitBakeCommandScriptFileContent(command)
-    const pathToScriptFile: string = this._projectPath + '/' + this._pathToBuildFolder
-    const scriptFileName: string = pathToScriptFile + '/executeBitBakeCmd.sh'
-
-    if (!fs.existsSync(pathToScriptFile)) {
-      fs.mkdirSync(pathToScriptFile)
-    }
-    fs.writeFileSync(scriptFileName, scriptContent)
-    fs.chmodSync(scriptFileName, '0755')
-
-    return this.executeCommand(scriptFileName)
+  private executeBitBakeCommand (command: string): string {
+    const scriptContent: string = this.generateBitBakeCommand(command)
+    return this.executeCommand(scriptContent)
   }
 
   private executeCommand (command: string): string {
-    let stdOutput: string = ''
-    try {
-      if (this._projectPath !== null) {
-        const returnObject = execa.shellSync(command)
-        if (returnObject.status === 0) {
-          stdOutput = returnObject.stdout
-        } else {
-          const data: Buffer = fs.readFileSync(command)
-          logger.error('error on executing command: ' + data.toString())
-        }
-      }
-    } catch (error: any) {
-      logger.error(error)
-    }
-
-    return stdOutput
+    return childProcess.execSync(command).toString()
   }
 
-  private generateBitBakeCommandScriptFileContent (bitbakeCommand: string): string {
+  private generateBitBakeCommand (bitbakeCommand: string): string {
     const scriptFileBuffer: string[] = []
 
     if (fs.existsSync(this._pathToEnvScript)) {
