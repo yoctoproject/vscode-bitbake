@@ -5,11 +5,11 @@
 import logger from 'winston'
 
 import {
+  DiagnosticSeverity,
   type Connection
 } from 'vscode-languageserver'
 
 import {
-  type ProblemType,
   ProblemsContainer
 } from './ProblemsContainer'
 
@@ -22,63 +22,39 @@ export class OutputParser {
   }
 
   parse (message: string): void {
-    const regex: RegExp = /\s(WARNING:|ERROR:)\s(.*)/g
-    let m
     this.clearAllProblemsAndReport()
-
-    while ((m = regex.exec(message)) !== null) {
-      // This is necessary to avoid infinite loops with zero-width matches
-      if (m.index === regex.lastIndex) {
-        regex.lastIndex++
+    const severityRegex: RegExp = /\b(WARNING:|ERROR:)/
+    let currentSeverity: DiagnosticSeverity = DiagnosticSeverity.Error // dummy initializer which will never be used
+    let currentMessageLines: string[] = []
+    for (const line of message.split(/\r?\n/g).reverse()) {
+      currentMessageLines.push(line)
+      const unparsedSeverity = line.match(severityRegex)?.[1]
+      if (unparsedSeverity === 'ERROR:') {
+        currentSeverity = DiagnosticSeverity.Error
+      } else if (unparsedSeverity === 'WARNING:') {
+        currentSeverity = DiagnosticSeverity.Warning
       }
-
-      let problemType: ProblemType
-      if (m[1] === 'ERROR:') {
-        problemType = 'error'
-      } else if (m[1] === 'WARNING:') {
-        problemType = 'warning'
-      } else {
-        return
+      if (unparsedSeverity !== undefined) { // if we reached the first line of a problem
+        this.addProblem(currentSeverity, currentMessageLines.reverse().join('\n'))
+        currentMessageLines = []
       }
-
-      const tempProblemContainer: ProblemsContainer[] = ProblemsContainer.createProblemContainer(problemType, m[2])
-
-      tempProblemContainer.forEach((container: ProblemsContainer) => {
-        const element: ProblemsContainer | undefined = this._problems.find((other: ProblemsContainer) => {
-          if (other.url === container.url) {
-            return true
-          } else {
-            return false
-          }
-        })
-
-        if (element !== undefined) {
-          element.problems = element.problems.concat(container.problems)
-        } else {
-          this._problems.push(container)
-        }
-      })
     }
   }
 
-  errorsFound (): boolean {
-    let errorFound: boolean = false
-    const BreakException = new Error()
-
-    try {
-      this._problems.forEach((container: ProblemsContainer) => {
-        if (container.containsErrors()) {
-          errorFound = true
-          throw BreakException
-        }
-      })
-    } catch (error) {
-      if (error !== BreakException) {
-        throw error
+  private addProblem (severity: DiagnosticSeverity, message: string): void {
+    const tempProblemContainer: ProblemsContainer[] = ProblemsContainer.createProblemContainer(severity, message)
+    tempProblemContainer.forEach((container: ProblemsContainer) => {
+      const element = this._problems.find((other) => other.url === container.url)
+      if (element !== undefined) {
+        element.problems = element.problems.concat(container.problems)
+      } else {
+        this._problems.push(container)
       }
-    }
+    })
+  }
 
-    return errorFound
+  errorsFound (): boolean {
+    return this._problems.some((container) => container.containsErrors())
   }
 
   reportProblems (): void {

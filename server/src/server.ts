@@ -104,12 +104,6 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   return item
 })
 
-connection.onDidSaveTextDocument((event) => {
-  logger.debug(`onDidSaveTextDocument ${JSON.stringify(event)}`)
-
-  bitBakeProjectScanner.parseAllRecipes()
-})
-
 connection.onExecuteCommand((params) => {
   logger.info(`executeCommand ${JSON.stringify(params)}`)
 
@@ -187,6 +181,11 @@ documents.onDidChangeContent((event) => {
 documents.onDidClose((event) => {
   documentAsTextMap.delete(event.document.uri)
   setSymbolScanner(null)
+})
+
+documents.onDidSave((event) => {
+  logger.debug(`onDidSave ${JSON.stringify(event)}`)
+  bitBakeProjectScanner.parseAllRecipes()
 })
 
 documents.listen(connection)

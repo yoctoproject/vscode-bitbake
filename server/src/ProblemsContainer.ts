@@ -9,8 +9,6 @@ import {
   type PublishDiagnosticsParams
 } from 'vscode-languageserver'
 
-export type ProblemType = 'error' | 'warning'
-
 export class ProblemsContainer {
   _url: string = 'file://'
   _problems: Diagnostic[] = []
@@ -32,23 +30,7 @@ export class ProblemsContainer {
   }
 
   containsErrors (): boolean {
-    let errorFound: boolean = false
-    const BreakException = new Error()
-
-    try {
-      this._problems.forEach((value: Diagnostic) => {
-        if (value.severity === DiagnosticSeverity.Error) {
-          errorFound = true
-          throw BreakException
-        }
-      })
-    } catch (error) {
-      if (error !== BreakException) {
-        throw error
-      }
-    }
-
-    return errorFound
+    return this.problems.some((problem) => problem.severity === DiagnosticSeverity.Error)
   }
 
   getDignosticData (): PublishDiagnosticsParams {
@@ -72,30 +54,23 @@ export class ProblemsContainer {
       objectAsString += `${problem.message},`
     })
 
-    objectAsString += '}'
+    objectAsString += ']}'
     return objectAsString
   }
 
-  static createProblemContainer (type: ProblemType, message: string): ProblemsContainer[] {
-    const regex = /(ParseError)(?:\s|\w)*\s(\/.*\..*):(\d):\s(.*)/g
-    let m
+  static createProblemContainer (severity: DiagnosticSeverity, message: string): ProblemsContainer[] {
+    const regex = /(ParseError)(?: at )(\/.*):(\d*): (.*)/g
     const problemContainer: ProblemsContainer[] = []
-
-    while ((m = regex.exec(message)) !== null) {
-      // This is necessary to avoid infinite loops with zero-width matches
-      if (m.index === regex.lastIndex) {
-        regex.lastIndex++
-      }
-
+    for (const match of message.matchAll(regex)) {
       const problem = new ProblemsContainer()
-      problem._url = encodeURI('file://' + m[2])
-      problem.appendDiagnostic(this.createProblemElement(type, m[4], Number.parseInt(m[3]), m[1]))
+      problem._url = encodeURI('file://' + match[2])
+      problem.appendDiagnostic(this.createProblemElement(severity, match[4], Number.parseInt(match[3]) - 1, match[1]))
       problemContainer.push(problem)
     }
 
     if (problemContainer.length === 0) {
       const problem = new ProblemsContainer()
-      problem.appendDiagnostic(this.createProblemElement(type, message))
+      problem.appendDiagnostic(this.createProblemElement(severity, message))
       problemContainer.push(problem)
     }
 
@@ -103,38 +78,25 @@ export class ProblemsContainer {
   }
 
   private static createProblemElement (
-    type: ProblemType,
+    severity: DiagnosticSeverity,
     message: string,
-    lineNumber: number = 1,
+    lineNumber: number = 0,
     problemCode: string = 'general'
   ): Diagnostic {
-    let problemSeverity: DiagnosticSeverity
-
-    if (type === 'error') {
-      problemSeverity = DiagnosticSeverity.Error
-    } else if (type === 'warning') {
-      problemSeverity = DiagnosticSeverity.Warning
-    } else {
-      const _exhaustiveCheck: never = type
-      return _exhaustiveCheck
-    }
-
-    const problem: Diagnostic = {
+    return {
       range: {
         start: {
           line: lineNumber,
-          character: lineNumber
+          character: 0
         },
         end: {
           line: lineNumber,
-          character: lineNumber
+          character: Number.MAX_VALUE // whole line
         }
       },
-      severity: problemSeverity,
+      severity,
       message,
       code: problemCode
     }
-
-    return problem
   }
 }

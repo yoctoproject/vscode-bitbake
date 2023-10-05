@@ -166,32 +166,28 @@ export class BitBakeProjectScanner {
   private scanAvailableLayers (): void {
     this._layers = new Array < LayerInfo >()
 
-    const output: string = this.executeBitBakeCommand('bitbake-layers show-layers')
+    const commandResult = this.executeBitBakeCommand('bitbake-layers show-layers')
 
-    if (output.length > 0) {
-      try {
-        let tempStr: string[] = output.split('\n')
-        tempStr = tempStr.slice(2)
+    if (commandResult.status === 0) {
+      const output = commandResult.stdout.toString()
+      const outputLines = output.split('\n')
 
-        for (const element of tempStr) {
-          const tempElement: string[] = element.split(/\s+/)
-          const layerElement = {
-            name: tempElement[0],
-            path: tempElement[1],
-            priority: parseInt(tempElement[2])
-          }
-
-          if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && layerElement.priority !== undefined) {
-            this._layers.push(layerElement)
-          }
+      for (const element of outputLines.slice(2)) {
+        const tempElement: string[] = element.split(/\s+/)
+        const layerElement = {
+          name: tempElement[0],
+          path: tempElement[1],
+          priority: parseInt(tempElement[2])
         }
-      } catch (error) {
-        if (typeof error !== 'string') {
-          throw error
+
+        if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && layerElement.priority !== undefined) {
+          this._layers.push(layerElement)
         }
-        logger.error(`can not scan available layers error: ${error}`)
-        this._outputParser.parse(error)
       }
+    } else {
+      const error = commandResult.stderr.toString()
+      logger.error(`can not scan available layers error: ${error}`)
+      this._outputParser.parse(error)
     }
   }
 
@@ -225,50 +221,39 @@ export class BitBakeProjectScanner {
   scanForRecipes (): void {
     this._recipes = new Array < ElementInfo >()
 
-    const output: string = this.executeBitBakeCommand('bitbake-layers show-recipes')
+    const commandResult = this.executeBitBakeCommand('bitbake-layers show-recipes')
+    const output = commandResult.output.toString()
 
-    if (output.length > 0) {
-      const outerReg: RegExp = /(.+):\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g
-      const innerReg: RegExp = /\s+(\S+)\s+(\S+(?:\s+\(skipped\))?)\n/g
-      let match: RegExpExecArray | null
+    const outerReg: RegExp = /(.+):\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g
+    const innerReg: RegExp = /\s+(\S+)\s+(\S+(?:\s+\(skipped\))?)\n/g
 
-      while ((match = outerReg.exec(output)) !== null) {
-        if (match.index === outerReg.lastIndex) {
-          outerReg.lastIndex++
+    for (const match of output.matchAll(outerReg)) {
+      const extraInfoString: string[] = new Array < string >()
+      let layerName: string
+      let version: string = ''
+
+      for (const matchInner of match[2].matchAll(innerReg)) {
+        if (extraInfoString.length === 0) {
+          layerName = matchInner[1]
+          version = matchInner[2]
         }
 
-        let matchInner: RegExpExecArray | null
-        const extraInfoString: string[] = new Array < string >()
-        let layerName: string
-        let version: string = ''
-
-        while ((matchInner = innerReg.exec(match[2])) !== null) {
-          if (matchInner.index === innerReg.lastIndex) {
-            innerReg.lastIndex++
-          }
-
-          if (extraInfoString.length === 0) {
-            layerName = matchInner[1]
-            version = matchInner[2]
-          }
-
-          extraInfoString.push(`layer: ${matchInner[1]}`)
-          extraInfoString.push(`version: ${matchInner[2]} `)
-        }
-
-        const layer = this._layers.find((obj: LayerInfo): boolean => {
-          return obj.name === layerName
-        })
-
-        const element: ElementInfo = {
-          name: match[1],
-          extraInfo: extraInfoString.join('\n'),
-          layerInfo: layer,
-          version
-        }
-
-        this._recipes.push(element)
+        extraInfoString.push(`layer: ${matchInner[1]}`)
+        extraInfoString.push(`version: ${matchInner[2]} `)
       }
+
+      const layer = this._layers.find((obj: LayerInfo): boolean => {
+        return obj.name === layerName
+      })
+
+      const element: ElementInfo = {
+        name: match[1],
+        extraInfo: extraInfoString.join('\n'),
+        layerInfo: layer,
+        version
+      }
+
+      this._recipes.push(element)
     }
 
     this.scanForRecipesPath()
@@ -276,24 +261,17 @@ export class BitBakeProjectScanner {
 
   parseAllRecipes (): boolean {
     logger.debug('parseAllRecipes')
-    let parsingOutput: string
     let parsingSuccess: boolean = true
 
-    try {
-      parsingOutput = this.executeBitBakeCommand('bitbake -p')
-    } catch (error) {
-      if (typeof error !== 'string') {
-        throw error
-      }
-      logger.error(`parsing all recipes is abborted: ${error}`)
-      parsingOutput = error
-    }
-
-    if (parsingOutput.length > 0) {
-      this._outputParser.parse(parsingOutput)
-      if (this._outputParser.errorsFound()) {
-        this._outputParser.reportProblems()
-        parsingSuccess = false
+    const commandResult = this.executeBitBakeCommand('bitbake -p')
+    const output = commandResult.output.toString()
+    this._outputParser.parse(output)
+    if (this._outputParser.errorsFound()) {
+      this._outputParser.reportProblems()
+      parsingSuccess = false
+    } else {
+      if (commandResult.status !== 0) {
+        logger.warn('Unhandled parsing error:', output)
       }
     }
     return parsingSuccess
@@ -322,72 +300,63 @@ export class BitBakeProjectScanner {
       logger.info(`${recipesWithOutPath.length} recipes must be examined more deeply.`)
 
       for (const recipeWithOutPath of recipesWithOutPath) {
-        const output: string = this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+        const commandResult = this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+        const output = commandResult.output.toString()
         const regExp: RegExp = /(\s.*\.bb)/g
-        let match: RegExpExecArray | null
 
-        if (output.length > 0) {
-          while ((match = regExp.exec(output)) !== null) {
-            if (match.index === regExp.lastIndex) {
-              regExp.lastIndex++
-            }
-
-            recipeWithOutPath.path = path.parse(match[0].trim())
-          }
+        for (const match of output.matchAll(regExp)) {
+          recipeWithOutPath.path = path.parse(match[0].trim())
         }
       }
     }
   }
 
   private scanRecipesAppends (): void {
-    const output: string = this.executeBitBakeCommand('bitbake-layers show-appends')
+    const commandResult = this.executeBitBakeCommand('bitbake-layers show-appends')
+    const output = commandResult.output.toString()
 
-    if (output.length > 0) {
-      const outerReg: RegExp = /(\S.*\.bb):(?:\s*\/\S*.bbappend)+/g
+    const outerReg: RegExp = /(\S.*\.bb):(?:\s*\/\S*.bbappend)+/g
 
-      let match: RegExpExecArray | null
+    for (const match of output.matchAll(outerReg)) {
+      const fullRecipeNameAsArray: string[] = match[1].split('_')
 
-      while ((match = outerReg.exec(output)) !== null) {
-        if (match.index === outerReg.lastIndex) {
-          outerReg.lastIndex++
-        }
-        let matchInner: RegExpExecArray | null
-        const fullRecipeNameAsArray: string[] = match[1].split('_')
+      if (fullRecipeNameAsArray.length > 0) {
+        const recipeName: string = fullRecipeNameAsArray[0]
 
-        if (fullRecipeNameAsArray.length > 0) {
-          const recipeName: string = fullRecipeNameAsArray[0]
+        const recipe: ElementInfo | undefined = this.recipes.find((obj: ElementInfo): boolean => {
+          return obj.name === recipeName
+        })
 
-          const recipe: ElementInfo | undefined = this.recipes.find((obj: ElementInfo): boolean => {
-            return obj.name === recipeName
-          })
+        if (recipe !== undefined) {
+          const innerReg: RegExp = /(\S*\.bbappend)/g
 
-          if (recipe !== undefined) {
-            const innerReg: RegExp = /(\S*\.bbappend)/g
-
-            while ((matchInner = innerReg.exec(match[0])) !== null) {
-              if (matchInner.index === innerReg.lastIndex) {
-                innerReg.lastIndex++
-              }
-
-              if (recipe.appends === undefined) {
-                recipe.appends = new Array < PathInfo >()
-              }
-
-              recipe.appends.push(path.parse(matchInner[0]))
+          for (const matchInner of match[0].matchAll(innerReg)) {
+            if (recipe.appends === undefined) {
+              recipe.appends = new Array < PathInfo >()
             }
+
+            recipe.appends.push(path.parse(matchInner[0]))
           }
         }
       }
     }
   }
 
-  private executeBitBakeCommand (command: string): string {
+  private executeBitBakeCommand (command: string): childProcess.SpawnSyncReturns<Buffer> {
     const scriptContent: string = this.generateBitBakeCommand(command)
-    return this.executeCommand(scriptContent)
+    const commandResult = this.executeCommand(scriptContent)
+
+    if (commandResult.status === 127) {
+      // Likely "bitbake: not found"
+      // TODO: Show a proper error message to help the user configuring the extension
+      throw new Error(commandResult.output.toString())
+    }
+
+    return commandResult
   }
 
-  private executeCommand (command: string): string {
-    return childProcess.execSync(command).toString()
+  private executeCommand (command: string): childProcess.SpawnSyncReturns<Buffer> {
+    return childProcess.spawnSync(command, { shell: true })
   }
 
   private generateBitBakeCommand (bitbakeCommand: string): string {
@@ -395,7 +364,7 @@ export class BitBakeProjectScanner {
 
     if (fs.existsSync(this._pathToEnvScript)) {
       logger.info('using env script')
-      scriptFileBuffer.push('source ./' + this._pathToEnvScript + ' ' + this._pathToBuildFolder + ' > /dev/null')
+      scriptFileBuffer.push(`. ./${this._pathToEnvScript} ${this._pathToBuildFolder} > /dev/null`)
     } else {
       logger.info('not using env script')
       scriptFileBuffer.push(
