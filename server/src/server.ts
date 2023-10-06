@@ -34,10 +34,6 @@ connection.onInitialize((params): InitializeResult => {
   const workspaceRoot = params.rootPath ?? ''
   bitBakeProjectScanner.setProjectPath(workspaceRoot)
 
-  setTimeout(() => {
-    bitBakeProjectScanner.rescanProject()
-  }, 500)
-
   return {
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -80,6 +76,8 @@ connection.onDidChangeConfiguration((change) => {
   bitBakeProjectScanner.pathToBuildFolder = settings.bitbake.pathToBuildFolder
   bitBakeProjectScanner.pathToBitbakeFolder = settings.bitbake.pathToBitbakeFolder
   bitBakeDocScanner.parse(settings.bitbake.pathToBitbakeFolder)
+
+  bitBakeProjectScanner.rescanProject()
 })
 
 connection.onDidChangeWatchedFiles((change) => {
