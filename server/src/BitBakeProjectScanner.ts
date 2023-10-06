@@ -22,6 +22,7 @@ import type {
 import {
   OutputParser
 } from './OutputParser'
+import { ServerNotificationManager } from './ServerNotificationManager'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -42,6 +43,7 @@ export class BitBakeProjectScanner {
   private _includes: ElementInfo[] = new Array < ElementInfo >()
   private _recipes: ElementInfo[] = new Array < ElementInfo >()
   private readonly _outputParser: OutputParser
+  private readonly _notificationManager: ServerNotificationManager
   private _shouldDeepExamine: boolean = false
   private _pathToBuildFolder: string = 'build'
   private _pathToEnvScript: string = 'oe-init-build-env'
@@ -49,6 +51,7 @@ export class BitBakeProjectScanner {
 
   constructor (connection: Connection) {
     this._outputParser = new OutputParser(connection)
+    this._notificationManager = new ServerNotificationManager(connection)
   }
 
   private readonly _scanStatus: ScannStatus = {
@@ -347,9 +350,13 @@ export class BitBakeProjectScanner {
     const commandResult = this.executeCommand(scriptContent)
 
     if (commandResult.status === 127) {
-      // Likely "bitbake: not found"
-      // TODO: Show a proper error message to help the user configuring the extension
-      throw new Error(commandResult.output.toString())
+      const output = commandResult.stderr.toString()
+      if (output.includes('bitbake')) {
+        // Seems like Bitbake could not be found.
+        // Are we sure this is the actual error?
+        this._notificationManager.sendBitBakeNotFound()
+        throw new Error(output)
+      }
     }
 
     return commandResult

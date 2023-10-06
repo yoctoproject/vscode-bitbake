@@ -1,5 +1,6 @@
 import path from 'path'
 import fs from 'fs'
+import logger from 'winston'
 
 type SuffixType = 'layer' | 'providedItem' | undefined
 
@@ -50,7 +51,13 @@ export class BitBakeDocScanner {
   }
 
   parse (pathToBitbakeFolder: string): void {
-    const file = fs.readFileSync(path.join(pathToBitbakeFolder, variablesFolder), 'utf8')
+    let file = ''
+    const docPath = path.join(pathToBitbakeFolder, variablesFolder)
+    try {
+      file = fs.readFileSync(docPath, 'utf8')
+    } catch {
+      logger.warn(`BitBake doc file not found at ${docPath}`)
+    }
     for (const match of file.matchAll(variablesRegexForDoc)) {
       const name = match.groups?.name
       // Naive silly inneficient incomplete conversion to markdown

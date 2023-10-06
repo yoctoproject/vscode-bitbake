@@ -15,6 +15,7 @@ import type { ExtensionContext } from 'vscode'
 import type { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node'
 
 // import { legend, BitBakeDocumentSemanticTokensProvider } from './BitBakeDocumentSemanticTokensProvider'
+import { ClientNotificationManager } from './ClientNotificationManager'
 
 let client: LanguageClient
 export async function activate (context: ExtensionContext): Promise<void> {
@@ -55,6 +56,8 @@ export async function activate (context: ExtensionContext): Promise<void> {
   await client.start()
 
   // context.subscriptions.push(languages.registerDocumentSemanticTokensProvider({ language: 'bitbake', scheme: 'file' }, new BitBakeDocumentSemanticTokensProvider(), legend))
+  const notificationManager = new ClientNotificationManager(client, context.globalState)
+  context.subscriptions.push(...notificationManager.buildHandlers())
 }
 
 export function deactivate (): Thenable<void> | undefined {
