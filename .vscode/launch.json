@@ -10,7 +10,6 @@
 			"args": [
 				"--extensionDevelopmentPath=${workspaceRoot}/client"
 			],
-			"stopOnEntry": false,
 			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/client/out/**/*.js"
