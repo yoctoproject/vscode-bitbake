@@ -23,7 +23,7 @@
 			"port": 6009,
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/client/server/**/*.js"
+				"${workspaceRoot}/server/out/**/*.js"
 			],
 			"preLaunchTask": "watch:server"
 		}
