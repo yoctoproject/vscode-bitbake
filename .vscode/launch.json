@@ -27,5 +27,12 @@
 			],
 			"preLaunchTask": "watch:server"
 		}
+	],
+	"compounds": [
+		{
+			"name": "Server/client",
+			"configurations": ["Launch Client", "Attach to Server"],
+			"stopAll": true
+		}
 	]
 }
