@@ -62,37 +62,27 @@
             "debug"
           ],
           "default": "error",
-          "description": "Adjust the logging level. error: only errors; info: only information that is useful for the user; debug: the same like info, but with additional debug informations"
+          "description": "Adjust the logging level: 'error' for reporting only errors, 'info' for displaying information useful to the user, and 'debug' for the same information as 'info,' but with additional debugging details."
         },
-        "bitbake.deepExamine": {
+        "bitbake.shouldDeepExamine": {
           "type": "boolean",
           "default": false,
-          "description": "Activates an deeply examine. If a recipe export an extra package that have not the same name like the recipe file the normal scan will not find this packages. If you like to find the packages you have to activate this option."
+          "description": "Activate deep examination. If a recipe exports an additional package with a different name than the recipe file, the normal scan will not detect these packages. To find these packages, you need to activate this option."
         },
-        "bitbake.workingFolder": {
+        "bitbake.pathToEnvScript": {  
           "type": "string",
-          "default": "vscode-bitbake-build",
-          "description": "Use this setting to specify the build folder. Use other folder than for your regular 'build' to avoid collisions."
+          "default": "oe-init-build-env",
+          "description": "Set the path to the environment script to configure the BitBake project. If the file does not exist, the extension will attempt to configure the environment variables by itself."
         },
-        "bitbake.generateWorkingFolder": {
-          "type": "boolean",
-          "default": true,
-          "description": "Use this setting to specify whether or not to generate a build folder. Can help prevent git repo headaches."
-        },
-        "bitbake.pathToBashScriptInterpreter": {
+        "bitbake.pathToBuildFolder": {
           "type": "string",
-          "default": "/bin/bash",
-          "description": "This interpreter is used to run bash scripts"
-        },
-        "bitbake.machine": {
-          "type": "string",
-          "default": "",
-          "description": "This setting is used to forward the machine name to bitbake."
+          "default": "build",
+          "description": "Set the build folder for the BitBake project."
         },
         "bitbake.pathToBitbakeFolder": {
           "type": "string",
-          "default": "./bitbake",
-          "description": "This setting is used to specify the path to the bitbake folder."
+          "default": "sources/poky/bitbake",
+          "description": "Set the path to the BitBake folder."
         }
       }
     },
@@ -100,7 +90,7 @@
       {
         "command": "bitbake.rescan-project",
         "title": "BitBake: Rescan Project",
-        "description": "This command rescans the bitbake project."
+        "description": "This command rescans the BitBake project."
       }
     ]
   },

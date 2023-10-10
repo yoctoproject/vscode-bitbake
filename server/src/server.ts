@@ -62,11 +62,9 @@ interface Settings {
 
 interface BitbakeSettings {
   loggingLevel: string
-  deepExamine: boolean
-  workingFolder: string
-  pathToBashScriptInterpreter: string
-  machine: string
-  generateWorkingFolder: boolean
+  shouldDeepExamine: boolean
+  pathToEnvScript: string
+  pathToBuildFolder: string
   pathToBitbakeFolder: string
 }
 
@@ -77,14 +75,11 @@ function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
 
 connection.onDidChangeConfiguration((change) => {
   const settings = change.settings as Settings
-  bitBakeProjectScanner.deepExamine = settings.bitbake.deepExamine
+  bitBakeProjectScanner.shouldDeepExamine = settings.bitbake.shouldDeepExamine
   logger.level = settings.bitbake.loggingLevel
-  bitBakeProjectScanner.workingPath = settings.bitbake.workingFolder
-  bitBakeProjectScanner.generateWorkingPath = settings.bitbake.generateWorkingFolder
-  bitBakeProjectScanner.scriptInterpreter = settings.bitbake.pathToBashScriptInterpreter
-  bitBakeProjectScanner.machineName = settings.bitbake.machine
-  const bitBakeFolder = settings.bitbake.pathToBitbakeFolder
-  bitBakeDocScanner.parse(bitBakeFolder)
+  bitBakeProjectScanner.pathToBuildFolder = settings.bitbake.pathToBuildFolder
+  bitBakeProjectScanner.pathToBitbakeFolder = settings.bitbake.pathToBitbakeFolder
+  bitBakeDocScanner.parse(settings.bitbake.pathToBitbakeFolder)
 })
 
 connection.onDidChangeWatchedFiles((change) => {

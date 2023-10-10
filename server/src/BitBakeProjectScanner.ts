@@ -3,8 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.Diagnstic
  * ------------------------------------------------------------------------------------------ */
 
-// @ts-expect-error -- execa has no declaration file
-import execa from 'execa'
+import childProcess from 'child_process'
 import find from 'find'
 import path from 'path'
 import fs from 'fs'
@@ -42,14 +41,11 @@ export class BitBakeProjectScanner {
   private _classes: ElementInfo[] = new Array < ElementInfo >()
   private _includes: ElementInfo[] = new Array < ElementInfo >()
   private _recipes: ElementInfo[] = new Array < ElementInfo >()
-  private _deepExamine: boolean = false
-  private _settingsScriptInterpreter: string = '/bin/bash'
-  private _settingsWorkingFolder: string = 'vscode-bitbake-build'
-  private _settingsGenerateWorkingFolder: boolean = true
-  private readonly _settingsBitbakeSourceCmd: string = '.'
-  private _settingsMachine: string | undefined = undefined
   private readonly _outputParser: OutputParser
-  private readonly _oeEnvScript: string = 'oe-init-build-env'
+  private _shouldDeepExamine: boolean = false
+  private _pathToBuildFolder: string = 'build'
+  private _pathToEnvScript: string = 'oe-init-build-env'
+  private _pathToBitbakeFolder: string = 'bitbake'
 
   constructor (connection: Connection) {
     this._outputParser = new OutputParser(connection)
@@ -80,48 +76,36 @@ export class BitBakeProjectScanner {
     return this._recipes
   }
 
-  get deepExamine (): boolean {
-    return this._deepExamine
+  get shouldDeepExamine (): boolean {
+    return this._shouldDeepExamine
   }
 
-  set deepExamine (deepExamine: boolean) {
-    this._deepExamine = deepExamine
+  set shouldDeepExamine (shouldDeepExamine: boolean) {
+    this._shouldDeepExamine = shouldDeepExamine
   }
 
-  get scriptInterpreter (): string {
-    return this._settingsScriptInterpreter
+  get pathToBuildFolder (): string {
+    return this._pathToBuildFolder
   }
 
-  set scriptInterpreter (scriptInterpreter: string) {
-    this._settingsScriptInterpreter = scriptInterpreter
+  set pathToBuildFolder (pathToBuildFolder: string) {
+    this._pathToBuildFolder = pathToBuildFolder
   }
 
-  get workingPath (): string {
-    return this._settingsWorkingFolder
+  get pathToEnvScript (): string {
+    return this._pathToEnvScript
   }
 
-  set workingPath (workingPath: string) {
-    this._settingsWorkingFolder = workingPath
+  set pathToEnvScript (pathToEnvScript: string) {
+    this._pathToEnvScript = pathToEnvScript
   }
 
-  get generateWorkingPath (): boolean {
-    return this._settingsGenerateWorkingFolder
+  get pathToBitbakeFolder (): string {
+    return this._pathToBitbakeFolder
   }
 
-  set generateWorkingPath (generateWorkingPath: boolean) {
-    this._settingsGenerateWorkingFolder = generateWorkingPath
-  }
-
-  get machineName (): string | undefined {
-    return this._settingsMachine
-  }
-
-  set machineName (machine: string) {
-    if (machine === '') {
-      this._settingsMachine = undefined
-    } else {
-      this._settingsMachine = machine
-    }
+  set pathToBitbakeFolder (pathToBitbakeFolder: string) {
+    this._pathToBitbakeFolder = pathToBitbakeFolder
   }
 
   setProjectPath (projectPath: string): void {
@@ -147,10 +131,7 @@ export class BitBakeProjectScanner {
           this.printScanStatistic()
         }
       } catch (error) {
-        if (typeof error === 'string') {
-          logger.error(`scanning of project is abborted: ${error}`)
-        }
-        throw error
+        logger.error(`scanning of project is abborted: ${error as any}`)
       }
 
       this._scanStatus.scanIsRunning = false
@@ -185,7 +166,7 @@ export class BitBakeProjectScanner {
   private scanAvailableLayers (): void {
     this._layers = new Array < LayerInfo >()
 
-    const output: string = this.executeCommandInBitBakeEnvironment('bitbake-layers show-layers')
+    const output: string = this.executeBitBakeCommand('bitbake-layers show-layers')
 
     if (output.length > 0) {
       try {
@@ -244,7 +225,7 @@ export class BitBakeProjectScanner {
   scanForRecipes (): void {
     this._recipes = new Array < ElementInfo >()
 
-    const output: string = this.executeCommandInBitBakeEnvironment('bitbake-layers show-recipes')
+    const output: string = this.executeBitBakeCommand('bitbake-layers show-recipes')
 
     if (output.length > 0) {
       const outerReg: RegExp = /(.+):\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g
@@ -299,7 +280,7 @@ export class BitBakeProjectScanner {
     let parsingSuccess: boolean = true
 
     try {
-      parsingOutput = this.executeCommandInBitBakeEnvironment('bitbake -p', this._settingsMachine)
+      parsingOutput = this.executeBitBakeCommand('bitbake -p')
     } catch (error) {
       if (typeof error !== 'string') {
         throw error
@@ -333,7 +314,7 @@ export class BitBakeProjectScanner {
       }
     }
 
-    if (this._deepExamine) {
+    if (this._shouldDeepExamine) {
       const recipesWithOutPath: ElementInfo[] = this._recipes.filter((obj: ElementInfo): boolean => {
         return obj.path === undefined
       })
@@ -341,7 +322,7 @@ export class BitBakeProjectScanner {
       logger.info(`${recipesWithOutPath.length} recipes must be examined more deeply.`)
 
       for (const recipeWithOutPath of recipesWithOutPath) {
-        const output: string = this.executeCommandInBitBakeEnvironment(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+        const output: string = this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
         const regExp: RegExp = /(\s.*\.bb)/g
         let match: RegExpExecArray | null
 
@@ -359,7 +340,7 @@ export class BitBakeProjectScanner {
   }
 
   private scanRecipesAppends (): void {
-    const output: string = this.executeCommandInBitBakeEnvironment('bitbake-layers show-appends')
+    const output: string = this.executeBitBakeCommand('bitbake-layers show-appends')
 
     if (output.length > 0) {
       const outerReg: RegExp = /(\S.*\.bb):(?:\s*\/\S*.bbappend)+/g
@@ -400,68 +381,32 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private executeCommandInBitBakeEnvironment (command: string, machine: string | undefined = undefined): string {
-    let returnValue: string = ''
-
-    if (this.isBitbakeAvailable()) {
-      const scriptContent: string = this.generateBitBakeCommandScriptFileContent(command, machine)
-      const pathToScriptFile: string = this._projectPath + '/' + this._settingsWorkingFolder
-      const scriptFileName: string = pathToScriptFile + '/executeBitBakeCmd.sh'
-
-      if (!fs.existsSync(pathToScriptFile)) {
-        fs.mkdirSync(pathToScriptFile)
-      }
-      fs.writeFileSync(scriptFileName, scriptContent)
-      fs.chmodSync(scriptFileName, '0755')
-
-      returnValue = this.executeCommand(scriptFileName)
-    }
-
-    return returnValue
+  private executeBitBakeCommand (command: string): string {
+    const scriptContent: string = this.generateBitBakeCommand(command)
+    return this.executeCommand(scriptContent)
   }
 
   private executeCommand (command: string): string {
-    let stdOutput: string = ''
-
-    if (this._projectPath !== null) {
-      const returnObject = execa.shellSync(command)
-
-      if (returnObject.status === 0) {
-        stdOutput = returnObject.stdout
-      } else {
-        const data: Buffer = fs.readFileSync(command)
-        logger.error('error on executing command: ' + data.toString())
-      }
-    }
-
-    return stdOutput
+    return childProcess.execSync(command).toString()
   }
 
-  private generateBitBakeCommandScriptFileContent (bitbakeCommand: string, machine: string | undefined = undefined): string {
+  private generateBitBakeCommand (bitbakeCommand: string): string {
     const scriptFileBuffer: string[] = []
-    let scriptBitbakeCommand: string = bitbakeCommand
 
-    scriptFileBuffer.push('#!' + this._settingsScriptInterpreter)
-    scriptFileBuffer.push(this._settingsBitbakeSourceCmd + ' ./' + this._oeEnvScript + ' ' + this._settingsWorkingFolder + ' > /dev/null')
-
-    if (machine !== undefined) {
-      scriptBitbakeCommand = `MACHINE=${machine} ` + scriptBitbakeCommand
+    if (fs.existsSync(this._pathToEnvScript)) {
+      logger.info('using env script')
+      scriptFileBuffer.push('source ./' + this._pathToEnvScript + ' ' + this._pathToBuildFolder + ' > /dev/null')
+    } else {
+      logger.info('not using env script')
+      scriptFileBuffer.push(
+        `export PYTHONPATH=${this._pathToBitbakeFolder}/lib:$PYTHONPATH`,
+        `export PATH=${this._pathToBitbakeFolder}/bin:$PATH`,
+        `cd ${this.pathToBuildFolder}`
+      )
     }
 
-    scriptFileBuffer.push(scriptBitbakeCommand)
+    scriptFileBuffer.push(bitbakeCommand)
 
     return scriptFileBuffer.join('\n')
-  }
-
-  private isBitbakeAvailable (): boolean {
-    const settingActive: boolean = this._settingsGenerateWorkingFolder
-    const oeEnvScriptExists: boolean = fs.existsSync(this._oeEnvScript)
-    let bitbakeAvailable: boolean = false
-
-    if (settingActive && oeEnvScriptExists) {
-      bitbakeAvailable = true
-    }
-
-    return bitbakeAvailable
   }
 }
