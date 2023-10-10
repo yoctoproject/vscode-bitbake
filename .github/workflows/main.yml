@@ -1,0 +1,36 @@
+name: vscode-bitbake CI/CD
+
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Clean install
+      run: npm run clean
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Linter
+      run: npm run lint
+
+    - name: Build Project
+      run: npm run compile
