@@ -14,12 +14,12 @@ import { LanguageClient, TransportKind } from 'vscode-languageclient/node'
 import type { ExtensionContext } from 'vscode'
 import type { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node'
 
-// import { legend, BitBakeDocumentSemanticTokensProvider } from './BitBakeDocumentSemanticTokensProvider'
 import { ClientNotificationManager } from './ui/ClientNotificationManager'
+import { logger } from './ui/OutputLogger';
 
 let client: LanguageClient
 export async function activate (context: ExtensionContext): Promise<void> {
-  console.log('Congratulations, your extension "BitBake" is now active!')
+  logger.info('Congratulations, your extension "BitBake" is now active!')
   const serverModule = context.asAbsolutePath(path.join('../server', 'out', 'server.js'))
   // The debug options for the server
   const debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] }
@@ -50,13 +50,20 @@ export async function activate (context: ExtensionContext): Promise<void> {
   }
 
   // Create the language client and start the client.
-  client = new LanguageClient('bitbake', 'Language Server Bitbake', serverOptions, clientOptions)
+  client = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
 
   // Start the client and launch the server
   await client.start()
 
   const notificationManager = new ClientNotificationManager(client, context.globalState)
   context.subscriptions.push(...notificationManager.buildHandlers())
+
+  // Handle settings change for bitbake driver
+  context.subscriptions.push(workspace.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration('bitbake.loggingLevel')) {
+      logger.loadSettings()
+    }
+  }))
 }
 
 export function deactivate (): Thenable<void> | undefined {
