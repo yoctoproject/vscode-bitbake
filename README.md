@@ -31,3 +31,6 @@ For more commands, refer to the `script` section in the root `package.json`.
 
 ### Debugging
 Press `F5` or navigate to the debug section on the left of the VS Code and select the client or server to to launch the debug client.
+
+### Tree-sitter
+This extension uses tree-sitter to parse the documents. The `.wasm` file used for creating the parser is generated from latest release at [here](https://github.com/amaanq/tree-sitter-bitbake)

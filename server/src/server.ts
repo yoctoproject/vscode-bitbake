@@ -4,35 +4,43 @@
  * ------------------------------------------------------------------------------------------ */
 
 import {
-  createConnection,
   type Connection,
-  TextDocuments,
   type InitializeResult,
   type TextDocumentPositionParams,
   type CompletionItem,
   type Definition,
+  type Hover,
+  type SymbolInformation,
+  createConnection,
+  TextDocuments,
   ProposedFeatures,
-  TextDocumentSyncKind,
-  type Hover
+  TextDocumentSyncKind
 } from 'vscode-languageserver/node'
 import { BitBakeDocScanner } from './BitBakeDocScanner'
 import { BitBakeProjectScanner } from './BitBakeProjectScanner'
 import { ContextHandler } from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
+import Analyzer from './tree-sitter/analyzer'
+import { generateParser } from './tree-sitter/parser'
+import { symbolKindToCompletionKind } from './utils/lsp'
 import logger from 'winston'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
-const documentAsTextMap = new Map< string, string[] >()
+const documentAsTextMap = new Map<string, string[]>()
 const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
+const analyzer: Analyzer = new Analyzer()
 
-connection.onInitialize((params): InitializeResult => {
+connection.onInitialize(async (params): Promise<InitializeResult> => {
   const workspaceRoot = params.rootPath ?? ''
   bitBakeProjectScanner.setProjectPath(workspaceRoot)
+
+  const parser = await generateParser()
+  analyzer.initialize(parser)
 
   return {
     capabilities: {
@@ -85,13 +93,45 @@ connection.onDidChangeWatchedFiles((change) => {
   bitBakeProjectScanner.rescanProject()
 })
 
-connection.onCompletion((textDocumentPosition: TextDocumentPositionParams): CompletionItem[] => {
+connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] => {
   logger.debug('onCompletion')
-  const documentAsText = documentAsTextMap.get(textDocumentPosition.textDocument.uri)
+  const documentAsText = documentAsTextMap.get(textDocumentPositionParams.textDocument.uri)
   if (documentAsText === undefined) {
     return []
   }
-  return contextHandler.getComletionItems(textDocumentPosition, documentAsText)
+
+  const word = analyzer.wordAtPointFromTextPosition({
+    ...textDocumentPositionParams,
+    position: {
+      line: textDocumentPositionParams.position.line,
+      // Go one character back to get completion on the current word. This is used as a parameter in descendantForPosition()
+      character: Math.max(textDocumentPositionParams.position.character - 1, 0)
+    }
+  })
+
+  logger.debug(`onCompletion - current word: ${word}`)
+
+  let symbolCompletions: CompletionItem[] = []
+  if (word !== null) {
+    const symbols = analyzer.getGlobalDeclarationSymbols(textDocumentPositionParams.textDocument.uri)
+
+    // Covert symbols to completion items
+    // TODO: remove duplicate symbols
+    symbolCompletions = symbols.map((symbol: SymbolInformation) => (
+      {
+        label: symbol.name,
+        kind: symbolKindToCompletionKind(symbol.kind),
+        documentation: `${symbol.name}`
+      }
+    ))
+  }
+
+  const allCompletions = [
+    ...contextHandler.getComletionItems(textDocumentPositionParams, documentAsText),
+    ...symbolCompletions
+  ]
+
+  return allCompletions
 })
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
@@ -169,11 +209,15 @@ documents.onDidOpen((event) => {
   setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
 })
 
-documents.onDidChangeContent((event) => {
+documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
   documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
 
   setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
+
+  const diagnostics = await analyzer.analyze({ document: event.document, uri: event.document.uri })
+
+  void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
 })
 
 documents.onDidClose((event) => {
