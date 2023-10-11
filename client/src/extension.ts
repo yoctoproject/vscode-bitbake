@@ -5,13 +5,16 @@
 
 import * as path from 'path'
 
-import { workspace, languages } from 'vscode'
+import {
+  workspace
+//  language
+} from 'vscode'
 import { LanguageClient, TransportKind } from 'vscode-languageclient/node'
 
 import type { ExtensionContext } from 'vscode'
 import type { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node'
 
-import { legend, BitBakeDocumentSemanticTokensProvider } from './BitBakeDocumentSemanticTokensProvider'
+// import { legend, BitBakeDocumentSemanticTokensProvider } from './BitBakeDocumentSemanticTokensProvider'
 
 let client: LanguageClient
 export async function activate (context: ExtensionContext): Promise<void> {
@@ -51,7 +54,7 @@ export async function activate (context: ExtensionContext): Promise<void> {
   // Start the client and launch the server
   await client.start()
 
-  context.subscriptions.push(languages.registerDocumentSemanticTokensProvider({ language: 'bitbake', scheme: 'file' }, new BitBakeDocumentSemanticTokensProvider(), legend))
+  // context.subscriptions.push(languages.registerDocumentSemanticTokensProvider({ language: 'bitbake', scheme: 'file' }, new BitBakeDocumentSemanticTokensProvider(), legend))
 }
 
 export function deactivate (): Thenable<void> | undefined {
