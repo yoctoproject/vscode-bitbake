@@ -71,17 +71,17 @@
         },
         "bitbake.pathToEnvScript": {
           "type": "string",
-          "default": "oe-init-build-env",
+          "default": "${workspaceFolder}/sources/poky/oe-init-build-env",
           "description": "Set the path to the environment script to configure the BitBake project. If the file does not exist, the extension will attempt to configure the environment variables by itself."
         },
         "bitbake.pathToBuildFolder": {
           "type": "string",
-          "default": "build",
+          "default": "${workspaceFolder}/build",
           "description": "Set the build folder for the BitBake project."
         },
         "bitbake.pathToBitbakeFolder": {
           "type": "string",
-          "default": "sources/poky/bitbake",
+          "default": "${workspaceFolder}/sources/poky/bitbake",
           "description": "Set the path to the BitBake folder."
         }
       }
