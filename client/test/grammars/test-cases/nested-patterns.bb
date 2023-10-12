@@ -31,7 +31,7 @@
 #                                                            ^ source.bb string.quoted.double.bb constant.numeric.bb
 #                                                             ^ source.bb string.quoted.double.bb meta.embedded.brackets.end.bb
 #                                                              ^ source.bb string.quoted.double.bb
-#                                                               ^^ source.bb string.quoted.double.bb keyword.control.bb
+#                                                               ^^ source.bb string.quoted.double.bb storage.type.function.python.bb
 #                                                                 ^ source.bb string.quoted.double.bb
 #                                                                  ^ source.bb string.quoted.double.bb string.quoted.single.bb
 #                                                                   ^^^^^^^^^^^^^^ source.bb string.quoted.double.bb string.quoted.single.bb
@@ -77,7 +77,7 @@
 #            ^^^^^ source.bb variable.other.names.bb
 #                 ^ source.bb
 #                  ^^^^^^ source.bb keyword.control.bb
-#                        ^^^^^^^^ source.bb support.class.bb
+#                         ^^^^^^^ source.bb support.class.bb
 >    print("The name of the Event is %s" % getName(e))
 #^^^^ source.bb
 #    ^^^^^ source.bb entity.name.function.python.bb

@@ -112,11 +112,11 @@
 #^ source.bb
  
 >inherit ${@ 'classname' if condition else ''}
-#            ^ source.bb support.class.bb string.quoted.single.bb
-#             ^^^^^^^^^ source.bb support.class.bb string.quoted.single.bb
-#                      ^ source.bb support.class.bb string.quoted.single.bb
-#                                          ^ source.bb support.class.bb string.quoted.single.bb
-#                                           ^ source.bb support.class.bb string.quoted.single.bb
+#            ^ source.bb string.quoted.single.bb
+#             ^^^^^^^^^ source.bb string.quoted.single.bb
+#                      ^ source.bb string.quoted.single.bb
+#                                          ^ source.bb string.quoted.single.bb
+#                                           ^ source.bb string.quoted.single.bb
  
 >INHERIT += "autotools pkgconfig"
 #           ^ source.bb string.quoted.double.bb

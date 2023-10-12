@@ -1,4 +1,82 @@
-from foo1 import bar1
+# Keywords (Should target bitbake keywords only and exclude python and shell keywords)
+
+python do_foo(){
+  from foo1 import bar1
+
+  if
+
+  whatif
+
+  ifnot
+
+  elif
+
+  else
+
+  for
+
+  while
+
+  break
+
+  continue
+
+  return
+
+  yield
+
+  try
+
+  except
+
+  finally
+
+  raise
+
+  assert
+
+  import
+
+  from
+
+  as
+
+  pass
+
+  del
+
+  with
+
+  async
+
+  await
+
+  def
+
+  class
+
+  global
+
+  nonlocal
+
+  and
+
+  or
+
+  not
+
+  in
+
+  is
+
+  lambda
+
+  self
+
+  True
+
+  False
+}
 
 require foo2
 
@@ -16,24 +94,14 @@ EXPORT_FUNCTIONS functionname
 
 INHERIT += "autotools pkgconfig"
 
-fakeroot python foo() {}
-
 bbplain
 
 bb
 
-self
+fakeroot python foo() {}
 
 def bar3():
   pass
 
-python bar4(){}
-  
-
-True
-
-False
-
-def bar2(var1 = True):
-  pass
+python (){}
 
