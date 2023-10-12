@@ -6,3 +6,5 @@ node_modules/
 server/out/
 client/out/
 *.js.map
+
+.eslintcache
