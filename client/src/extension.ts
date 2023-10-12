@@ -55,7 +55,6 @@ export async function activate (context: ExtensionContext): Promise<void> {
   // Start the client and launch the server
   await client.start()
 
-  // context.subscriptions.push(languages.registerDocumentSemanticTokensProvider({ language: 'bitbake', scheme: 'file' }, new BitBakeDocumentSemanticTokensProvider(), legend))
   const notificationManager = new ClientNotificationManager(client, context.globalState)
   context.subscriptions.push(...notificationManager.buildHandlers())
 }
