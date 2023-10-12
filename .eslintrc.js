@@ -10,7 +10,6 @@ module.exports = {
         node: true
       },
       files: [
-        '.eslintrc.{js,cjs}',
         '*.ts'
       ],
       parserOptions: {
@@ -19,7 +18,7 @@ module.exports = {
     }
   ],
   parserOptions: {
-    ecmaVersion: '1',
+    ecmaVersion: 'latest',
     sourceType: 'module'
   },
   rules: {},
