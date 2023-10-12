@@ -18,9 +18,6 @@
             "name": "source.python"
         },
         {
-            "include": "#boolean"
-        },
-        {
             "include": "#numeric"
         },
         {
@@ -49,7 +46,7 @@
         "keywords": {
             "patterns": [
                 {
-                    "match": "\\s*(include|from|import|require|inherit|addtask|deltask|after|before|export|echo|if|fi|else|return|unset|print|or|fakeroot|EXPORT_FUNCTIONS|INHERIT)(?=\\s+|\\s*:)",
+                    "match": "\\b(include|require|inherit|addtask|deltask|after|before|export|echo|if|fi|unset|print|fakeroot|EXPORT_FUNCTIONS|INHERIT)\\b",
                     "captures": {
                         "1": {
                             "name": "keyword.control.bb"
@@ -57,12 +54,7 @@
                     }
                 },
                 {
-                    "match": "\\s*(def)(?=\\s+)",
-                    "captures": {
-                        "1": {
-                            "name": "storage.type.function.python.bb"
-                        }
-                    }
+                    "include": "#python-keywords"
                 },
                 {
                     "match": "\\s*(python)(?=\\s+|\\s*\\()",
@@ -73,7 +65,7 @@
                     }
                 },
                 {
-                    "match": "(bbplain|bb|self)(?=\\s+|\\.)",
+                    "match": "\\b(bbplain|bb|self)\\b(?=\\s+|\\.)",
                     "captures": {
                         "1": {
                             "name": "support.class.built-in-object.bb"
@@ -81,14 +73,32 @@
                     }
                 },
                 {
-                    "begin": "(?<=import|inherit)(?=\\s+)",
-                    "end": "\\n",
-                    "name": "support.class.bb",
-                    "patterns": [
-                        {
-                            "include": "#variable-reference"
+                    "match": "(?<=(import|inherit|from)\\s+)([a-zA-Z_][\\w_]*)(?=\\s+)",
+                    "name": "support.class.bb"
+                }
+            ]
+        },
+        "python-keywords": {
+            "patterns": [
+                {
+                    "match": "\\b(if|elif|else|for|while|break|continue|return|yield|try|except|finally|raise|assert|import|from|as|pass|del|with|async|await)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "keyword.control.bb"
                         }
-                    ]
+                    }
+                },
+                {
+                    "match": "\\b(def|class|global|nonlocal|and|or|not|in|is|lambda)\\b",
+                    "captures": {
+                        "1": {
+                            "name": "storage.type.function.python.bb"
+                        }
+                    }
+                },
+                {
+                    "match": "\\b(True|False)\\b",
+                    "name": "constant.language.python.bb"
                 }
             ]
         },
@@ -176,9 +186,6 @@
                     "include": "#keywords"
                 },
                 {
-                    "include": "#boolean"
-                },
-                {
                     "match": "(\\[)",
                     "name": "meta.embedded.brackets.begin.bb"
                 },
@@ -232,10 +239,6 @@
         "parenthesis-close": {
             "match": "\\)",
             "name": "meta.embedded.parenthesis.close.bb"
-        },
-        "boolean": {
-            "match": "(?<![\\w_-])(True|False)(?![\\w_-])",
-            "name": "constant.language.python.bb"
         }
     }
 }
