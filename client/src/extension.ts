@@ -15,7 +15,7 @@ import type { ExtensionContext } from 'vscode'
 import type { LanguageClientOptions, ServerOptions } from 'vscode-languageclient/node'
 
 // import { legend, BitBakeDocumentSemanticTokensProvider } from './BitBakeDocumentSemanticTokensProvider'
-import { ClientNotificationManager } from './ClientNotificationManager'
+import { ClientNotificationManager } from './ui/ClientNotificationManager'
 
 let client: LanguageClient
 export async function activate (context: ExtensionContext): Promise<void> {
