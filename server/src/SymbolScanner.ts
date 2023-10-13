@@ -73,10 +73,13 @@ export class SymbolScanner {
         }
       }
     } catch (error) {
-      if (typeof error !== 'string') {
-        throw error
+      if (error instanceof Error) { // Check if error is an instance of the native JavaScript Error class
+        logger.error(`Error reading file at ${filePath}: ${error.message}`)
+      } else if (typeof error === 'string') {
+        logger.error(`Error reading file at ${filePath}: ${error}`)
+      } else {
+        logger.error(`An unknown error occurred while reading the file at ${filePath}`)
       }
-      logger.error(`can not open file error: ${error}`)
     }
   }
 
@@ -119,7 +122,14 @@ export class SymbolScanner {
 
   private convertUriStringToFilePath (fileUrlAsString: string): string {
     const fileUrl = new URL(fileUrlAsString)
-    const filePath: string = decodeURI(fileUrl.pathname)
+    // Use decodeURIComponent to properly decode each part of the URL
+    // This correctly decodes url in Windows such as %3A -> :
+    let filePath: string = decodeURIComponent(fileUrl.pathname)
+
+    // For Windows, remove the leading slash if it exists
+    if (process.platform === 'win32' && filePath.startsWith('/')) {
+      filePath = filePath.substring(1)
+    }
 
     return filePath
   }
