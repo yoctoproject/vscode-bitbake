@@ -14,7 +14,8 @@ import {
   createConnection,
   TextDocuments,
   ProposedFeatures,
-  TextDocumentSyncKind
+  TextDocumentSyncKind,
+  CompletionItemKind
 } from 'vscode-languageserver/node'
 import { BitBakeDocScanner } from './BitBakeDocScanner'
 import { BitBakeProjectScanner } from './BitBakeProjectScanner'
@@ -25,6 +26,9 @@ import Analyzer from './tree-sitter/analyzer'
 import { generateParser } from './tree-sitter/parser'
 import { symbolKindToCompletionKind } from './utils/lsp'
 import logger from 'winston'
+import { RESERVED_KEYWORDS } from './completions/reserved-keywords'
+import { RESERVED_VARIABLES } from './completions/reserved-variables'
+import { SNIPPETS } from './completions/snippets'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -113,11 +117,9 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
 
   let symbolCompletions: CompletionItem[] = []
   if (word !== null) {
-    const symbols = analyzer.getGlobalDeclarationSymbols(textDocumentPositionParams.textDocument.uri)
+    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(textDocumentPositionParams.textDocument.uri)
 
-    // Covert symbols to completion items
-    // TODO: remove duplicate symbols
-    symbolCompletions = symbols.map((symbol: SymbolInformation) => (
+    symbolCompletions = globalDeclarationSymbols.map((symbol: SymbolInformation) => (
       {
         label: symbol.name,
         kind: symbolKindToCompletionKind(symbol.kind),
@@ -126,8 +128,24 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
     ))
   }
 
+  const reserverdKeywordCompletionItems: CompletionItem[] = RESERVED_KEYWORDS.map(keyword => {
+    return {
+      label: keyword,
+      kind: CompletionItemKind.Keyword
+    }
+  })
+
+  const reserverdVariableCompletionItems: CompletionItem[] = RESERVED_VARIABLES.map(keyword => {
+    return {
+      label: keyword,
+      kind: CompletionItemKind.Variable
+    }
+  })
+
   const allCompletions = [
-    ...contextHandler.getComletionItems(textDocumentPositionParams, documentAsText),
+    ...reserverdKeywordCompletionItems,
+    ...reserverdVariableCompletionItems,
+    ...SNIPPETS,
     ...symbolCompletions
   ]
 
@@ -135,10 +153,8 @@ connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams)
 })
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-  logger.debug(`onCompletionResolve ${JSON.stringify(item)}`)
-
-  item.insertText = contextHandler.getInsertStringForTheElement(item)
-
+  logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)
+  // TODO: get docs for reserved variables here
   return item
 })
 
