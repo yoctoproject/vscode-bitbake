@@ -12,16 +12,19 @@ import { logger } from './ui/OutputLogger';
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient';
 import { BitbakeDriver } from './driver/BitbakeDriver';
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider';
+import { buildRecipeCommand } from './ui/BitbakeCommands'
+import { BitbakeWorkspace } from './ui/BitbakeWorkspace';
 
 let client: LanguageClient
 let bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let taskProvider: vscode.Disposable;
+let bitbakeWorkspace: BitbakeWorkspace = { activeRecipes: ["core-image-minimal"] };
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   bitbakeDriver.loadSettings()
   client = await activateLanguageServer(context)
 
-  taskProvider = vscode.tasks.registerTaskProvider('bitbake', new BitbakeTaskProvider())
+  taskProvider = vscode.tasks.registerTaskProvider('bitbake', new BitbakeTaskProvider(bitbakeDriver))
 
   const notificationManager = new ClientNotificationManager(client, context.globalState)
   context.subscriptions.push(...notificationManager.buildHandlers())
@@ -36,6 +39,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
       logger.loadSettings()
     }
   }) )
+
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', () => buildRecipeCommand(bitbakeWorkspace)))
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 }

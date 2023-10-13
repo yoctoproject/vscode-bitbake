@@ -125,7 +125,12 @@
       {
         "command": "bitbake.rescan-project",
         "title": "BitBake: Rescan Project",
-        "description": "This command rescans the BitBake project."
+        "description": "This command rescans the bitbake project."
+      },
+      {
+        "command": "bitbake.build-recipe",
+        "title": "BitBake: Build recipe",
+        "description": "Build a recipe or an image."
       }
     ]
   },
