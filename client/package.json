@@ -86,6 +86,41 @@
         }
       }
     },
+    "taskDefinitions": [
+      {
+        "type": "bitbake",
+        "required": [
+          "recipes"
+        ],
+        "properties": {
+          "recipes": {
+            "description": "Bitbake recipe(s)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "task": {
+            "type": "string",
+            "description": "Bitbake task to run (build by default)"
+          },
+          "options": {
+            "type": "object",
+            "description": "Additional options to pass to the bitbake command",
+            "properties": {
+              "continue": {
+                "type": "boolean",
+                "description": "Continue as much as possible after an error (-k)"
+              },
+              "force": {
+                "type": "boolean",
+                "description": "Force the specified targets/task to run (-f)."
+              }
+            }
+          }
+        }
+      }
+    ],
     "commands": [
       {
         "command": "bitbake.rescan-project",

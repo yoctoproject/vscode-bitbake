@@ -11,13 +11,17 @@ import { ClientNotificationManager } from './ui/ClientNotificationManager'
 import { logger } from './ui/OutputLogger';
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient';
 import { BitbakeDriver } from './driver/BitbakeDriver';
+import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider';
 
 let client: LanguageClient
 let bitbakeDriver: BitbakeDriver = new BitbakeDriver()
+let taskProvider: vscode.Disposable;
 
 export async function activate(context: vscode.ExtensionContext): Promise<void> {
   bitbakeDriver.loadSettings()
   client = await activateLanguageServer(context)
+
+  taskProvider = vscode.tasks.registerTaskProvider('bitbake', new BitbakeTaskProvider())
 
   const notificationManager = new ClientNotificationManager(client, context.globalState)
   context.subscriptions.push(...notificationManager.buildHandlers())
@@ -37,5 +41,8 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
 }
 
 export function deactivate (): Thenable<void> | undefined {
+  if (taskProvider) {
+    taskProvider.dispose();
+}
   return deactivateLanguageServer(client)
 }
