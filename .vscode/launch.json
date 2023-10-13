@@ -32,7 +32,8 @@
 		{
 			"name": "Server/client",
 			"configurations": ["Launch Client", "Attach to Server"],
-			"stopAll": true
+			"stopAll": true,
+			"preLaunchTask": "compile"
 		}
 	]
 }
