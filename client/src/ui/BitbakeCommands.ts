@@ -5,11 +5,24 @@ import * as vscode from 'vscode'
 import { logger } from './OutputLogger';
 import { BitbakeWorkspace } from './BitbakeWorkspace';
 
-export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace): Promise<void> {
+export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider : vscode.TaskProvider): Promise<void> {
     const chosenRecipe = await selectRecipe(bitbakeWorkspace);
     logger.info(`Command: build.recipe: ${chosenRecipe}`);
     if(chosenRecipe) {
-      let exec = new vscode.ShellExecution(`bitbake ${chosenRecipe}`)
+      const task = new vscode.Task(
+        {type: 'bitbake', recipes: [chosenRecipe]},
+        `Run bitbake ${chosenRecipe}`,
+        'bitbake'
+      );
+      let resolvedTask = taskProvider.resolveTask(task, new vscode.CancellationTokenSource().token);
+      if (resolvedTask instanceof Promise) {
+        resolvedTask = await resolvedTask;
+      }
+      if(resolvedTask instanceof vscode.Task) {
+        await vscode.tasks.executeTask(resolvedTask);
+      } else {
+        await vscode.window.showErrorMessage(`Failed to resolve task for recipe ${chosenRecipe}`);
+      }
     }
 }
 
