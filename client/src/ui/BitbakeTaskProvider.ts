@@ -1,13 +1,12 @@
-import * as child_process from 'child_process';
-import { UnderlyingByteSource } from 'node:stream/web';
-import * as vscode from 'vscode';
-import { BitbakeDriver } from '../driver/BitbakeDriver';
+import type * as child_process from 'child_process'
+import * as vscode from 'vscode'
+import { type BitbakeDriver } from '../driver/BitbakeDriver'
 
-const endOfLine: string = "\r\n";
+const endOfLine: string = '\r\n'
 
 /// Reflects the task definition in package.json
 interface BitbakeTaskDefinition extends vscode.TaskDefinition {
-	recipes: string[]
+  recipes: string[]
   task?: string
   options?: {
     continue: boolean
@@ -16,89 +15,87 @@ interface BitbakeTaskDefinition extends vscode.TaskDefinition {
 }
 
 export class BitbakeTaskProvider implements vscode.TaskProvider {
-  private bitbakeDriver: BitbakeDriver
+  private readonly bitbakeDriver: BitbakeDriver
 
-  constructor(bitbakeDriver: BitbakeDriver) {
+  constructor (bitbakeDriver: BitbakeDriver) {
     this.bitbakeDriver = bitbakeDriver
   }
 
-  provideTasks(token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task[]> {
-    return [];
+  provideTasks (token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task[]> {
+    return []
   }
 
-  resolveTask(task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
-    if(task.definition) {
-      const bitbakeTaskDefinition : BitbakeTaskDefinition = <any>task.definition
-      if(bitbakeTaskDefinition.recipes?.[0]) {
-        return new vscode.Task(
-          bitbakeTaskDefinition,
-          task.scope ?? vscode.TaskScope.Workspace,
-          `Run bitbake ${bitbakeTaskDefinition.recipes} task ${bitbakeTaskDefinition?.task}`,
-          'bitbake',
-          new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> =>
-                new CustomBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
-          ['$bitbake']
-        );
-      }
+  resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
+    const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
+    if (bitbakeTaskDefinition.recipes?.[0] !== undefined) {
+      return new vscode.Task(
+        bitbakeTaskDefinition,
+        task.scope ?? vscode.TaskScope.Workspace,
+        `Run bitbake ${bitbakeTaskDefinition.recipes[0]} task ${bitbakeTaskDefinition?.task}`,
+        'bitbake',
+        new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> =>
+          new CustomBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
+        ['$bitbake']
+      )
     }
     return undefined
   }
 
-  private composeBitbakeCommand(bitbakeTaskDefinition: BitbakeTaskDefinition) : string {
+  private composeBitbakeCommand (bitbakeTaskDefinition: BitbakeTaskDefinition): string {
     let command = 'bitbake'
 
-    for(var recipe of bitbakeTaskDefinition.recipes) {
+    for (const recipe of bitbakeTaskDefinition.recipes) {
       command = this.appendCommandParam(command, `${recipe}`)
     }
-    if(bitbakeTaskDefinition.task) {
+    if (bitbakeTaskDefinition.task !== undefined) {
       command = this.appendCommandParam(command, `-c ${bitbakeTaskDefinition.task}`)
     }
-    if(bitbakeTaskDefinition.options?.continue) {
+    if (bitbakeTaskDefinition.options?.continue !== undefined) {
       command = this.appendCommandParam(command, '-k')
     }
-    if(bitbakeTaskDefinition.options?.force) {
+    if (bitbakeTaskDefinition.options?.force !== undefined) {
       command = this.appendCommandParam(command, '-f')
     }
 
     return command
   }
 
-  private appendCommandParam(command: string, param: string) : string {
+  private appendCommandParam (command: string, param: string): string {
     return command + ' ' + param
   }
 }
 
 class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
-  private writeEmitter = new vscode.EventEmitter<string>();
-  private closeEmitter = new vscode.EventEmitter<number>();
-  private child: child_process.ChildProcess | undefined = undefined;
-  private command: string = ""
-  private bitbakeDriver: BitbakeDriver
+  private readonly writeEmitter = new vscode.EventEmitter<string>()
+  private readonly closeEmitter = new vscode.EventEmitter<number>()
+  private child: child_process.ChildProcess | undefined = undefined
+  private readonly command: string = ''
+  private readonly bitbakeDriver: BitbakeDriver
 
-  public get onDidWrite(): vscode.Event<string> {
-    return this.writeEmitter.event;
+  public get onDidWrite (): vscode.Event<string> {
+    return this.writeEmitter.event
   }
 
-  public get onDidClose(): vscode.Event<number> {
-      return this.closeEmitter.event;
+  public get onDidClose (): vscode.Event<number> {
+    return this.closeEmitter.event
   }
 
-  constructor(command: string, bitbakeDriver: BitbakeDriver) {
+  constructor (command: string, bitbakeDriver: BitbakeDriver) {
     this.command = command
     this.bitbakeDriver = bitbakeDriver
   }
 
-  output(line: string): void {
-      this.writeEmitter.fire(line + endOfLine);
+  output (line: string): void {
+    this.writeEmitter.fire(line + endOfLine)
   }
 
-  error(error: string): void {
-      this.writeEmitter.fire(error + endOfLine);
+  error (error: string): void {
+    this.writeEmitter.fire(error + endOfLine)
   }
 
-  async open(_initialDimensions: vscode.TerminalDimensions | undefined): Promise<void> {
-    return new Promise<void>((resolve) => {
-      this.writeEmitter.fire('Starting bitbake...\r\n');
+  async open (_initialDimensions: vscode.TerminalDimensions | undefined): Promise<void> {
+    await new Promise<void>((resolve) => {
+      this.writeEmitter.fire('Starting bitbake...\r\n')
       this.child = this.bitbakeDriver.spawnBitbakeProcess(this.command)
       this.child.stdout?.on('data', (data) => {
         this.output(data.toString())
@@ -117,9 +114,9 @@ class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
     })
   }
 
-  async close(): Promise<void> {
-      if (this.child) {
-          this.child.kill();
-      }
+  async close (): Promise<void> {
+    if (this.child !== undefined) {
+      this.child.kill()
+    }
   }
 }

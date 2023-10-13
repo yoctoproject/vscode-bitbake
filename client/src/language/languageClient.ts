@@ -2,17 +2,17 @@ import * as path from 'path'
 
 import {
   workspace,
-  ExtensionContext
+  type ExtensionContext
 } from 'vscode'
 
 import {
   LanguageClient,
-  LanguageClientOptions,
+  type LanguageClientOptions,
   TransportKind,
-  ServerOptions
+  type ServerOptions
 } from 'vscode-languageclient/node'
 
-export async function activateLanguageServer(context: ExtensionContext) : Promise<LanguageClient> {
+export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('../server', 'out', 'server.js'))
   // The debug options for the server
   const debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] }
@@ -43,7 +43,7 @@ export async function activateLanguageServer(context: ExtensionContext) : Promis
   }
 
   // Create the language client and start the client.
-  let client : LanguageClient = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
+  const client: LanguageClient = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
 
   // Start the client and launch the server
   await client.start()
@@ -51,9 +51,9 @@ export async function activateLanguageServer(context: ExtensionContext) : Promis
   return client
 }
 
-export async function deactivateLanguageServer(client: LanguageClient): Promise<void> {
+export async function deactivateLanguageServer (client: LanguageClient): Promise<void> {
   if (client === undefined) {
     return undefined
   }
-  return client.stop()
+  await client.stop()
 }

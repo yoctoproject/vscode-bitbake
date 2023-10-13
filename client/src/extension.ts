@@ -3,25 +3,24 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-
 import * as vscode from 'vscode'
-import { LanguageClient } from 'vscode-languageclient/node'
+import { type LanguageClient } from 'vscode-languageclient/node'
 
 import { ClientNotificationManager } from './ui/ClientNotificationManager'
-import { logger } from './ui/OutputLogger';
-import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient';
-import { BitbakeDriver } from './driver/BitbakeDriver';
-import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider';
+import { logger } from './ui/OutputLogger'
+import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
+import { BitbakeDriver } from './driver/BitbakeDriver'
+import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { buildRecipeCommand } from './ui/BitbakeCommands'
-import { BitbakeWorkspace } from './ui/BitbakeWorkspace';
+import { type BitbakeWorkspace } from './ui/BitbakeWorkspace'
 
 let client: LanguageClient
-let bitbakeDriver: BitbakeDriver = new BitbakeDriver()
+const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let bitbakeTaskProvider: BitbakeTaskProvider
-let taskProvider: vscode.Disposable;
-let bitbakeWorkspace: BitbakeWorkspace = { activeRecipes: ["core-image-minimal"] };
+let taskProvider: vscode.Disposable
+const bitbakeWorkspace: BitbakeWorkspace = { activeRecipes: ['core-image-minimal'] }
 
-export async function activate(context: vscode.ExtensionContext): Promise<void> {
+export async function activate (context: vscode.ExtensionContext): Promise<void> {
   bitbakeDriver.loadSettings()
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
@@ -40,16 +39,14 @@ export async function activate(context: vscode.ExtensionContext): Promise<void> 
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       logger.loadSettings()
     }
-  }) )
+  }))
 
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', () => buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider)))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async () => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider) }))
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 }
 
 export function deactivate (): Thenable<void> | undefined {
-  if (taskProvider) {
-    taskProvider.dispose();
-}
+  taskProvider.dispose()
   return deactivateLanguageServer(client)
 }
