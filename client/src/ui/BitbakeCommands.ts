@@ -1,3 +1,8 @@
+/* --------------------------------------------------------------------------------------------
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
+
 /// This files contains the VSCode commands exposed by the extension
 
 import * as vscode from 'vscode'

@@ -1,3 +1,8 @@
+/* --------------------------------------------------------------------------------------------
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
+
 import type * as child_process from 'child_process'
 import * as vscode from 'vscode'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
