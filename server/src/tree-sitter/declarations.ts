@@ -7,6 +7,7 @@ import * as LSP from 'vscode-languageserver/node'
 import type * as Parser from 'web-tree-sitter'
 
 import * as TreeSitterUtil from './utils'
+import { RESERVED_VARIABLES } from '../completions/reserved-variables'
 
 const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> = {
   environment_variable_assignment: LSP.SymbolKind.Variable,
@@ -49,7 +50,8 @@ export function getGlobalDeclarations ({
     const followChildren = !GLOBAL_DECLARATION_NODE_TYPES.has(node.type)
 
     const symbol = getDeclarationSymbolFromNode({ node, uri })
-    if (symbol !== null) {
+    // skip if it is a reserved variable as it is added in RESERVED_VARIABLES
+    if (symbol !== null && !(new Set(RESERVED_VARIABLES).has(symbol.name))) {
       const word = symbol.name
       globalDeclarations[word] = symbol
     }
@@ -73,7 +75,7 @@ function nodeToSymbolInformation ({
   }
 
   const containerName =
-    TreeSitterUtil.findParent(node, (p) => p.type === 'function_definition')
+    TreeSitterUtil.findParent(node, (p) => GLOBAL_DECLARATION_NODE_TYPES.has(p.type))
       ?.firstNamedChild?.text ?? ''
 
   const kind = TREE_SITTER_TYPE_TO_LSP_KIND[node.type]
