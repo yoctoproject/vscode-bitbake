@@ -121,6 +121,55 @@
         }
       }
     ],
+    "problemMatchers": [
+      {
+        "name": "bitbake-ParseError",
+          "source": "bitbake",
+          "owner": "bitbake",
+          "fileLocation": [
+              "autoDetect",
+              "${cwd}"
+          ],
+          "pattern": {
+              "regexp": "^Parsing recipes...(ERROR): ParseError (at|in) (.+?):(\\d+)?:? (.+)$",
+              "file": 3,
+              "line": 4,
+              "severity": 1,
+              "message": 5
+          }
+      },
+      {
+        "name": "bitbake-Variable",
+          "source": "bitbake",
+          "owner": "bitbake",
+          "fileLocation": [
+              "autoDetect",
+              "${cwd}"
+          ],
+          "pattern": {
+              "regexp": "^Parsing recipes...(ERROR): (.+?): (.*?) file: (.+) line: (\\d+) (.*)$",
+              "file": 2,
+              "line": 5,
+              "severity": 1,
+              "message": 6
+          }
+      },
+      {
+        "name": "bitbake-generic",
+          "source": "bitbake",
+          "owner": "bitbake",
+          "fileLocation": [
+              "autoDetect",
+              "${cwd}"
+          ],
+          "pattern": {
+              "regexp": "^Parsing recipes...(ERROR): (.+?): (.*)$",
+              "file": 2,
+              "severity": 1,
+              "message": 3
+          }
+      }
+    ],
     "commands": [
       {
         "command": "bitbake.rescan-project",
