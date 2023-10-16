@@ -148,3 +148,5 @@ export default class Analyzer {
     return tree.rootNode.descendantForPosition({ row: line, column })
   }
 }
+
+export const analyzer: Analyzer = new Analyzer()

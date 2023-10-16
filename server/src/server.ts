@@ -10,25 +10,20 @@ import {
   type CompletionItem,
   type Definition,
   type Hover,
-  type SymbolInformation,
   createConnection,
   TextDocuments,
   ProposedFeatures,
-  TextDocumentSyncKind,
-  CompletionItemKind
+  TextDocumentSyncKind
 } from 'vscode-languageserver/node'
 import { BitBakeDocScanner } from './BitBakeDocScanner'
 import { BitBakeProjectScanner } from './BitBakeProjectScanner'
 import { ContextHandler } from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import Analyzer from './tree-sitter/analyzer'
+import { analyzer } from './tree-sitter/analyzer'
 import { generateParser } from './tree-sitter/parser'
-import { symbolKindToCompletionKind } from './utils/lsp'
 import logger from 'winston'
-import { RESERVED_KEYWORDS } from './completions/reserved-keywords'
-import { RESERVED_VARIABLES } from './completions/reserved-variables'
-import { SNIPPETS } from './completions/snippets'
+import { onCompletionHandler } from './connectionHandlers/onCompletion'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -37,7 +32,6 @@ const documentAsTextMap = new Map<string, string[]>()
 const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
-const analyzer: Analyzer = new Analyzer()
 
 connection.onInitialize(async (params): Promise<InitializeResult> => {
   const workspaceRoot = params.rootPath ?? ''
@@ -97,64 +91,10 @@ connection.onDidChangeWatchedFiles((change) => {
   bitBakeProjectScanner.rescanProject()
 })
 
-connection.onCompletion((textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] => {
-  logger.debug('onCompletion')
-  const documentAsText = documentAsTextMap.get(textDocumentPositionParams.textDocument.uri)
-  if (documentAsText === undefined) {
-    return []
-  }
-
-  const word = analyzer.wordAtPointFromTextPosition({
-    ...textDocumentPositionParams,
-    position: {
-      line: textDocumentPositionParams.position.line,
-      // Go one character back to get completion on the current word. This is used as a parameter in descendantForPosition()
-      character: Math.max(textDocumentPositionParams.position.character - 1, 0)
-    }
-  })
-
-  logger.debug(`onCompletion - current word: ${word}`)
-
-  let symbolCompletions: CompletionItem[] = []
-  if (word !== null) {
-    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(textDocumentPositionParams.textDocument.uri)
-
-    symbolCompletions = globalDeclarationSymbols.map((symbol: SymbolInformation) => (
-      {
-        label: symbol.name,
-        kind: symbolKindToCompletionKind(symbol.kind),
-        documentation: `${symbol.name}`
-      }
-    ))
-  }
-
-  const reserverdKeywordCompletionItems: CompletionItem[] = RESERVED_KEYWORDS.map(keyword => {
-    return {
-      label: keyword,
-      kind: CompletionItemKind.Keyword
-    }
-  })
-
-  const reserverdVariableCompletionItems: CompletionItem[] = RESERVED_VARIABLES.map(keyword => {
-    return {
-      label: keyword,
-      kind: CompletionItemKind.Variable
-    }
-  })
-
-  const allCompletions = [
-    ...reserverdKeywordCompletionItems,
-    ...reserverdVariableCompletionItems,
-    ...SNIPPETS,
-    ...symbolCompletions
-  ]
-
-  return allCompletions
-})
+connection.onCompletion(onCompletionHandler.bind(this))
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)
-  // TODO: get docs for reserved variables here
   return item
 })
 
