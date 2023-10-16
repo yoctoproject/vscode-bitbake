@@ -31,17 +31,18 @@ export class BitbakeDriver {
 
   private composeBitbakeScript (command: string): string {
     let script = ''
-    command = this.sanitizeCommand(command)
+    command = sanitizeForShell(command)
 
     script += 'set -e && '
-    script += `. ${this.bitbakeSettings.pathToEnvScript} ${this.bitbakeSettings.pathToBuildFolder} && `
+    script += `. ${sanitizeForShell(this.bitbakeSettings.pathToEnvScript)} ${sanitizeForShell(this.bitbakeSettings.pathToBuildFolder)} && `
     script += command
 
     script = `echo 'Executing script: ${script}' && ${script}`
     return script
   }
+}
 
-  private sanitizeCommand (command: string): string {
-    return command.replace(/[;`&|<>\\$(){}]/g, '')
-  }
+/// Santitize a string to be passed in a shell command (remove special characters)
+export function sanitizeForShell (command: string): string {
+  return command.replace(/[;`&|<>\\$(){}!#*?"']/g, '')
 }
