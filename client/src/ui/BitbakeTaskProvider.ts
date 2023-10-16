@@ -77,13 +77,8 @@ class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
   private readonly command: string = ''
   private readonly bitbakeDriver: BitbakeDriver
 
-  public get onDidWrite (): vscode.Event<string> {
-    return this.writeEmitter.event
-  }
-
-  public get onDidClose (): vscode.Event<number> {
-    return this.closeEmitter.event
-  }
+  onDidWrite: vscode.Event<string> = this.writeEmitter.event
+  onDidClose?: vscode.Event<number> = this.closeEmitter.event
 
   constructor (command: string, bitbakeDriver: BitbakeDriver) {
     this.command = command
@@ -91,16 +86,18 @@ class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
   }
 
   output (line: string): void {
-    this.writeEmitter.fire(line + endOfLine)
+    line = line.replace(/\n/g, endOfLine)
+    this.writeEmitter.fire(line)
   }
 
   error (error: string): void {
-    this.writeEmitter.fire(error + endOfLine)
+    error = error.replace(/\n/g, endOfLine)
+    this.writeEmitter.fire(error)
   }
 
   async open (_initialDimensions: vscode.TerminalDimensions | undefined): Promise<void> {
     await new Promise<void>((resolve) => {
-      this.writeEmitter.fire('Starting bitbake...\r\n')
+      this.writeEmitter.fire('Starting bitbake command: ' + this.command + endOfLine)
       this.child = this.bitbakeDriver.spawnBitbakeProcess(this.command)
       this.child.stdout?.on('data', (data) => {
         this.output(data.toString())

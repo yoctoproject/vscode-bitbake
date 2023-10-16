@@ -21,14 +21,15 @@ export class BitbakeDriver {
   spawnBitbakeProcess (command: string): childProcess.ChildProcess {
     const shell = process.env.SHELL ?? '/bin/sh'
 
-    command = this.composeBitbakeCommand(command)
+    command = this.composeBitbakeScript(command)
     logger.debug(`Executing Bitbake command: ${shell} -c ${command}\nSee output in terminal view`)
-    return childProcess.spawn(shell, ['-c', command], {
-      cwd: this.bitbakeSettings.pathToBuildFolder
+    return childProcess.spawn(command, {
+      cwd: this.bitbakeSettings.pathToBuildFolder,
+      shell
     })
   }
 
-  private composeBitbakeCommand (command: string): string {
+  private composeBitbakeScript (command: string): string {
     let script = ''
     command = this.sanitizeCommand(command)
 
