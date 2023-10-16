@@ -33,7 +33,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
   resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
     if (bitbakeTaskDefinition.recipes?.[0] !== undefined) {
-      return new vscode.Task(
+      const resolvedTask = new vscode.Task(
         bitbakeTaskDefinition,
         task.scope ?? vscode.TaskScope.Workspace,
         `Run bitbake ${bitbakeTaskDefinition.recipes[0]} task ${bitbakeTaskDefinition?.task}`,
@@ -42,6 +42,13 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
           new CustomBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
         ['$bitbake']
       )
+      if (bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) {
+        resolvedTask.group = vscode.TaskGroup.Build
+      }
+      if (bitbakeTaskDefinition.task !== undefined && bitbakeTaskDefinition.task.includes('clean')) {
+        resolvedTask.group = vscode.TaskGroup.Clean
+      }
+      return resolvedTask
     }
     return undefined
   }
