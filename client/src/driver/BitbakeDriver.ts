@@ -34,8 +34,7 @@ export class BitbakeDriver {
     command = this.sanitizeCommand(command)
 
     script += 'set -e && '
-    script += `. ${this.bitbakeSettings.pathToEnvScript} && `
-    script += `cd ${this.bitbakeSettings.pathToBuildFolder} && `
+    script += `. ${this.bitbakeSettings.pathToEnvScript} ${this.bitbakeSettings.pathToBuildFolder} && `
     script += command
 
     script = `echo 'Executing script: ${script}' && ${script}`
