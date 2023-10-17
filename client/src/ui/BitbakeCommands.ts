@@ -9,6 +9,7 @@ import * as vscode from 'vscode'
 
 import { logger } from './OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
+import { bitbakeExtensionContext } from '../extension'
 
 export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace)
@@ -42,7 +43,8 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<string
 async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<string | undefined> {
   const chosenRecipe = await vscode.window.showInputBox({ placeHolder: 'Recipe name to add' })
   if (chosenRecipe !== undefined) {
-    bitbakeWorkspace.activeRecipes.push(chosenRecipe)
+    bitbakeWorkspace.addActiveRecipe(chosenRecipe)
+    await bitbakeWorkspace.saveBitbakeWorkspace(bitbakeExtensionContext.workspaceState)
   }
   return chosenRecipe
 }

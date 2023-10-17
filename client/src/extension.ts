@@ -12,16 +12,19 @@ import { activateLanguageServer, deactivateLanguageServer } from './language/lan
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { buildRecipeCommand } from './ui/BitbakeCommands'
-import { type BitbakeWorkspace } from './ui/BitbakeWorkspace'
+import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
-const bitbakeWorkspace: BitbakeWorkspace = { activeRecipes: ['core-image-minimal'] }
+const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
+export let bitbakeExtensionContext: vscode.ExtensionContext
 
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
+  bitbakeExtensionContext = context
   bitbakeDriver.loadSettings()
+  bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
 
