@@ -1,8 +1,7 @@
-export const RESERVED_KEYWORDS = [
+const BITBAKE_KEYWORDS = [
   'python',
   'def',
   'include',
-  'from',
   'import',
   'require',
   'inherit',
@@ -11,17 +10,19 @@ export const RESERVED_KEYWORDS = [
   'after',
   'before',
   'export',
-  'echo',
-  'if',
-  'fi',
-  'else',
-  'return',
-  'unset',
-  'print',
-  'or',
   'fakeroot',
   'EXPORT_FUNCTIONS',
-  'INHERIT',
+  'INHERIT'
+]
+
+const PYTHON_VARIABLES = [
+  'def',
+  'from',
+  'import',
+  'if',
+  'else',
+  'return',
+  'or',
   'elif',
   'for',
   'while',
@@ -40,3 +41,41 @@ export const RESERVED_KEYWORDS = [
   'async',
   'await'
 ]
+
+const SHELL_KEYWORDS = [
+  'if',
+  'then',
+  'else',
+  'elif',
+  'fi',
+  'case',
+  'esac',
+  'for',
+  'while',
+  'until',
+  'do',
+  'done',
+  'in',
+  'function',
+  'select',
+  'time',
+  'coproc',
+  'break',
+  'continue',
+  'return',
+  'exit',
+  'unset',
+  'export',
+  'readonly',
+  'declare',
+  'local',
+  'eval',
+  'exec',
+  'trap'
+]
+
+export const RESERVED_KEYWORDS = [...new Set([
+  ...BITBAKE_KEYWORDS,
+  ...PYTHON_VARIABLES,
+  ...SHELL_KEYWORDS
+])]
