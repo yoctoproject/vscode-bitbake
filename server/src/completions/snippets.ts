@@ -7,7 +7,6 @@ import { InsertTextFormat, type CompletionItem, CompletionItemKind, MarkupKind }
 
 export const SNIPPETS: CompletionItem[] = [
   {
-    documentation: 'Fetch something',
     label: 'do_fetch',
     insertText: [
       'def do_fetch():',
@@ -17,7 +16,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Unpack something',
     label: 'do_unpack',
     insertText: [
       'def do_unpack():',
@@ -27,7 +25,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Patch something',
     label: 'do_patch',
     insertText: [
       'def do_patch():',
@@ -37,7 +34,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Configure something',
     label: 'do_configure',
     insertText: [
       'def do_configure():',
@@ -47,7 +43,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Compile something',
     label: 'do_compile',
     insertText: [
       'def do_compile():',
@@ -57,7 +52,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Install something',
     label: 'do_install',
     insertText: [
       'def do_install():',
@@ -67,7 +61,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Package something',
     label: 'do_package',
     insertText: [
       'def do_package():',
@@ -77,7 +70,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Rootfs',
     label: 'do_rootfs',
     insertText: [
       'def do_rootfs():',
@@ -87,7 +79,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Populate sysroot',
     label: 'do_populate_sysroot',
     insertText: [
       'def do_populate_sysroot():',
@@ -97,7 +88,6 @@ export const SNIPPETS: CompletionItem[] = [
     ].join('\n')
   },
   {
-    documentation: 'Deploy something',
     label: 'do_deploy',
     insertText: [
       'def do_deploy():',
@@ -113,7 +103,7 @@ export const SNIPPETS: CompletionItem[] = [
     documentation: {
       value: [
         markdownBlock(
-            `${item.documentation ?? item.label} (bitbake-language-server)\n\n`,
+            `${item.label} (bitbake-language-server)\n\n`,
             'man'
         ),
         markdownBlock(item.insertText, 'bitbake')
