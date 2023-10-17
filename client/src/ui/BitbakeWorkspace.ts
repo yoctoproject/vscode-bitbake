@@ -10,9 +10,19 @@ export class BitbakeWorkspace {
   activeRecipes: string[] = []
 
   addActiveRecipe (recipe: string): void {
+    if (this.activeRecipes.includes(recipe)) {
+      return
+    }
     this.activeRecipes.unshift(recipe)
     if (this.activeRecipes.length > 20) {
       this.activeRecipes.shift()
+    }
+  }
+
+  dropActiveRecipe (chosenRecipe: string): void {
+    const index = this.activeRecipes.indexOf(chosenRecipe)
+    if (index > -1) {
+      this.activeRecipes.splice(index, 1)
     }
   }
 

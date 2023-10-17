@@ -190,6 +190,11 @@
         "command": "bitbake.run-task",
         "title": "BitBake: Run task for recipe",
         "description": "Run a specific task for a bitbake recipe."
+      },
+      {
+        "command": "bitbake.drop-recipe",
+        "title": "BitBake: Drop a recipe from the active workspace",
+        "description": "Stop watching or suggesting a recipe in bitbake commands."
       }
     ],
     "menus": {
