@@ -180,6 +180,11 @@
         "command": "bitbake.build-recipe",
         "title": "BitBake: Build recipe",
         "description": "Build a recipe or an image."
+      },
+      {
+        "command": "bitbake.clean-recipe",
+        "title": "BitBake: Clean recipe",
+        "description": "Clean a recipe or an image (bitbake -c clean)."
       }
     ]
   },

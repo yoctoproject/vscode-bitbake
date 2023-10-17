@@ -20,15 +20,20 @@ export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, ta
         `Run bitbake ${chosenRecipe}`,
         'bitbake'
     )
-    let resolvedTask = taskProvider.resolveTask(task, new vscode.CancellationTokenSource().token)
-    if (resolvedTask instanceof Promise) {
-      resolvedTask = await resolvedTask
-    }
-    if (resolvedTask instanceof vscode.Task) {
-      await vscode.tasks.executeTask(resolvedTask)
-    } else {
-      await vscode.window.showErrorMessage(`Failed to resolve task for recipe ${chosenRecipe}`)
-    }
+    await runBitbakeTask(task, taskProvider)
+  }
+}
+
+export async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace)
+  logger.info(`Command: clean.recipe: ${chosenRecipe}`)
+  if (chosenRecipe !== undefined) {
+    const task = new vscode.Task(
+      { type: 'bitbake', recipes: [chosenRecipe], task: 'clean' },
+        `Run bitbake ${chosenRecipe}`,
+        'bitbake'
+    )
+    await runBitbakeTask(task, taskProvider)
   }
 }
 
@@ -47,4 +52,16 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<str
     await bitbakeWorkspace.saveBitbakeWorkspace(bitbakeExtensionContext.workspaceState)
   }
   return chosenRecipe
+}
+
+async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {
+  let resolvedTask = taskProvider.resolveTask(task, new vscode.CancellationTokenSource().token)
+  if (resolvedTask instanceof Promise) {
+    resolvedTask = await resolvedTask
+  }
+  if (resolvedTask instanceof vscode.Task) {
+    await vscode.tasks.executeTask(resolvedTask)
+  } else {
+    await vscode.window.showErrorMessage(`Failed to resolve task for recipe ${task.definition.recipes[0]}`)
+  }
 }
