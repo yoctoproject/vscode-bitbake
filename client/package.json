@@ -185,6 +185,11 @@
         "command": "bitbake.clean-recipe",
         "title": "BitBake: Clean recipe",
         "description": "Clean a recipe or an image (bitbake -c clean)."
+      },
+      {
+        "command": "bitbake.run-task",
+        "title": "BitBake: Run task for recipe",
+        "description": "Run a specific task for a bitbake recipe."
       }
     ]
   },

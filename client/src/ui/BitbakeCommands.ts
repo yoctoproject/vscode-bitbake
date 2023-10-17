@@ -13,7 +13,7 @@ import { bitbakeExtensionContext } from '../extension'
 
 export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace)
-  logger.info(`Command: build.recipe: ${chosenRecipe}`)
+  logger.debug(`Command: build-recipe: ${chosenRecipe}`)
   if (chosenRecipe !== undefined) {
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe] },
@@ -26,7 +26,7 @@ export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, ta
 
 export async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace)
-  logger.info(`Command: clean.recipe: ${chosenRecipe}`)
+  logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
   if (chosenRecipe !== undefined) {
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], task: 'clean' },
@@ -35,6 +35,27 @@ export async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, ta
     )
     await runBitbakeTask(task, taskProvider)
   }
+}
+
+export async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace)
+  if (chosenRecipe !== undefined) {
+    const chosenTask = await selectTask()
+    if (chosenTask !== undefined) {
+      logger.debug(`Command: run-task: ${chosenRecipe} -c ${chosenTask}`)
+      const task = new vscode.Task(
+        { type: 'bitbake', recipes: [chosenRecipe], task: chosenTask },
+          `Run bitbake ${chosenRecipe} -c ${chosenTask}`,
+          'bitbake'
+      )
+      await runBitbakeTask(task, taskProvider)
+    }
+  }
+}
+
+async function selectTask (): Promise<string | undefined> {
+  const chosenTask = await vscode.window.showInputBox({ placeHolder: 'Bitbake task to run (bitbake -c)' })
+  return chosenTask
 }
 
 async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<string | undefined> {
