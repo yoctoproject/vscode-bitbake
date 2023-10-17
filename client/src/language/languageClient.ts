@@ -7,7 +7,8 @@ import * as path from 'path'
 
 import {
   workspace,
-  type ExtensionContext
+  type ExtensionContext,
+  window
 } from 'vscode'
 
 import {
@@ -49,6 +50,19 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   // Create the language client and start the client.
   const client: LanguageClient = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
+
+  client.onRequest('custom/verifyConfigurationFileAssociation', async (param) => {
+    if (param.filePath?.endsWith('.conf') === true) {
+      const doc = await workspace.openTextDocument(param.filePath)
+      const { languageId } = doc
+      //  The modifications from other extensions may happen later than this handler, hence the setTimtOut
+      setTimeout(() => {
+        if (languageId !== 'bitbake') {
+          void window.showErrorMessage(`Failed to associate this file (${param.filePath}) with BitBake Language mode. Current language mode: ${languageId}. Please make sure there is no other extension that is causing the conflict. (e.g. Txt Syntax)`)
+        }
+      }, 1000)
+    }
+  })
 
   // Start the client and launch the server
   await client.start()

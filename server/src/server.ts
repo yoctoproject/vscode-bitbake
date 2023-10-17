@@ -218,6 +218,11 @@ documents.onDidChangeContent(async (event) => {
   const diagnostics = await analyzer.analyze({ document: event.document, uri: event.document.uri })
 
   void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+
+  if (textDocument.uri.endsWith('.conf')) {
+    logger.debug('verifyConfigurationFileAssociation')
+    await connection.sendRequest('custom/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
+  }
 })
 
 documents.onDidClose((event) => {
