@@ -191,7 +191,60 @@
         "title": "BitBake: Run task for recipe",
         "description": "Run a specific task for a bitbake recipe."
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "bitbake.clean-recipe",
+          "group": "bitbake",
+          "when": "resourceLangId == bitbake"
+        },
+        {
+          "command": "bitbake.build-recipe",
+          "group": "bitbake",
+          "when": "resourceLangId == bitbake"
+        },
+        {
+          "command": "bitbake.run-task",
+          "group": "bitbake",
+          "when": "resourceLangId == bitbake"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "bitbake.clean-recipe",
+          "group": "bitbake",
+          "when": "editorLangId == bitbake"
+        },
+        {
+          "command": "bitbake.build-recipe",
+          "group": "bitbake",
+          "when": "editorLangId == bitbake"
+        },
+        {
+          "command": "bitbake.run-task",
+          "group": "bitbake",
+          "when": "editorLangId == bitbake"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "command": "bitbake.clean-recipe",
+          "group": "bitbake",
+          "when": "resourceLangId == bitbake"
+        },
+        {
+          "command": "bitbake.build-recipe",
+          "group": "bitbake",
+          "when": "resourceLangId == bitbake"
+        },
+        {
+          "command": "bitbake.run-task",
+          "group": "bitbake",
+          "when": "resourceLangId == bitbake"
+        }
+      ]
+    }
   },
   "scripts": {
     "test": "npm run test:grammar",

@@ -10,11 +10,19 @@ import * as vscode from 'vscode'
 import { logger } from './OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { bitbakeExtensionContext } from '../extension'
+import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
+import path from 'path'
 
-export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace)
-  logger.debug(`Command: build-recipe: ${chosenRecipe}`)
+export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
+}
+
+async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
+    logger.debug(`Command: build-recipe: ${chosenRecipe}`)
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe] },
         `Run bitbake ${chosenRecipe}`,
@@ -24,10 +32,10 @@ export async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, ta
   }
 }
 
-export async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace)
-  logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
+async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
+    logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], task: 'clean' },
         `Run bitbake ${chosenRecipe}`,
@@ -37,8 +45,8 @@ export async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, ta
   }
 }
 
-export async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace)
+async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     const chosenTask = await selectTask()
     if (chosenTask !== undefined) {
@@ -58,10 +66,21 @@ async function selectTask (): Promise<string | undefined> {
   return chosenTask
 }
 
-async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<string | undefined> {
-  let chosenRecipe = await vscode.window.showQuickPick([...bitbakeWorkspace.activeRecipes, 'Add another recipe...'], { placeHolder: 'Select recipe to build' })
-  if (chosenRecipe === 'Add another recipe...') {
-    chosenRecipe = await addActiveRecipe(bitbakeWorkspace)
+async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any): Promise<string | undefined> {
+  let chosenRecipe: string | undefined
+  if (uri !== undefined) {
+    const extension = path.extname(uri.fsPath)
+    if (['.bb', '.bbappend', '.inc'].includes(extension)) {
+      chosenRecipe = path.basename(uri.fsPath, extension)
+      // Remove PV from recipe name
+      chosenRecipe = chosenRecipe.split('_')[0]
+    }
+  }
+  if (chosenRecipe === undefined) {
+    chosenRecipe = await vscode.window.showQuickPick([...bitbakeWorkspace.activeRecipes, 'Add another recipe...'], { placeHolder: 'Select recipe to build' })
+    if (chosenRecipe === 'Add another recipe...') {
+      chosenRecipe = await addActiveRecipe(bitbakeWorkspace)
+    }
   }
   return chosenRecipe
 }
