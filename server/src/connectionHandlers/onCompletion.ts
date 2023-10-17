@@ -8,10 +8,6 @@ import { SNIPPETS } from '../completions/snippets'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   logger.debug('onCompletion')
-  //   const documentAsText = documentAsTextMap.get(textDocumentPositionParams.textDocument.uri)
-  //   if (documentAsText === undefined) {
-  //     return []
-  //   }
 
   const word = analyzer.wordAtPointFromTextPosition({
     ...textDocumentPositionParams,

@@ -7,12 +7,10 @@ import {
   type TextDocumentPositionParams,
   type Diagnostic,
   type SymbolInformation
-  // DiagnosticSeverity
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { getGlobalDeclarations, type GlobalDeclarations } from './declarations'
-// import { getAllErrorNodes } from './errors'
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
 
@@ -66,28 +64,7 @@ export default class Analyzer {
   private executeAnalyzation (document: TextDocument, uri: string, tree: Tree): Diagnostic[] {
     const diagnostics: Diagnostic[] = []
 
-    // Temporarily disable checking the error from tree-sitter as it is not yet reliable
-
-    // const errorNodes = getAllErrorNodes(tree)
-
-    // errorNodes.forEach(node => {
-    //   const diagnostic: Diagnostic = {
-    //     severity: DiagnosticSeverity.Error,
-    //     range: {
-    //       start: {
-    //         line: node.startPosition.row,
-    //         character: node.startPosition.column
-    //       },
-    //       end: {
-    //         line: node.endPosition.row,
-    //         character: node.endPosition.column
-    //       }
-    //     },
-    //     message: `Invalid syntax "${node.text.trim()}" `,
-    //     source: 'ex'
-    //   }
-    //   diagnostics.push(diagnostic)
-    // })
+    // It was used to provide diagnostics from tree-sitter, but it is not yet reliable.
 
     return diagnostics
   }
