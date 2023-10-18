@@ -1,7 +1,7 @@
 import logger from 'winston'
 import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind } from 'vscode-languageserver/node'
 import { symbolKindToCompletionKind } from '../utils/lsp'
-import { RESERVED_VARIABLES } from '../completions/reserved-variables'
+import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
 import { analyzer } from '../tree-sitter/analyzer'
 import { SNIPPETS } from '../completions/snippets'
@@ -40,7 +40,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     }
   })
 
-  const reserverdVariableCompletionItems: CompletionItem[] = RESERVED_VARIABLES.map(keyword => {
+  const reserverdVariableCompletionItems: CompletionItem[] = BITBAKE_VARIABLES.map(keyword => {
     return {
       label: keyword,
       kind: CompletionItemKind.Variable

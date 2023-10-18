@@ -1,4 +1,4 @@
-export const RESERVED_VARIABLES = [
+export const BITBAKE_VARIABLES = [
   'ASSUME_PROVIDED',
   'AZ_SAS',
   'B',
