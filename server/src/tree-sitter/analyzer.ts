@@ -103,6 +103,18 @@ export default class Analyzer {
     )
   }
 
+  public shouldProvideCompletionItems (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    if (n !== null && (n.type === 'string_content' || n.type === 'ERROR')) {
+      return false
+    }
+    return true
+  }
+
   /**
    * Find the node at the given point.
    */

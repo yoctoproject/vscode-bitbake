@@ -9,16 +9,25 @@ import { SNIPPETS } from '../completions/snippets'
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   logger.debug('onCompletion')
 
+  const wordPosition = {
+    line: textDocumentPositionParams.position.line,
+    // Go one character back to get completion on the current word. This is used as a parameter in descendantForPosition()
+    character: Math.max(textDocumentPositionParams.position.character - 1, 0)
+  }
+
   const word = analyzer.wordAtPointFromTextPosition({
     ...textDocumentPositionParams,
-    position: {
-      line: textDocumentPositionParams.position.line,
-      // Go one character back to get completion on the current word. This is used as a parameter in descendantForPosition()
-      character: Math.max(textDocumentPositionParams.position.character - 1, 0)
-    }
+    position: wordPosition
   })
 
   logger.debug(`onCompletion - current word: ${word}`)
+
+  const shouldComplete = analyzer.shouldProvideCompletionItems(textDocumentPositionParams.textDocument.uri, wordPosition.line, wordPosition.character)
+  logger.debug(`isString: ${shouldComplete}`)
+  // Do not provide completions if it is inside a string but not inside a variable expansion
+  if (!shouldComplete) {
+    return []
+  }
 
   let symbolCompletions: CompletionItem[] = []
   if (word !== null) {
