@@ -35,21 +35,20 @@ describe('On Completion', () => {
     )
 
     expect(result).toEqual(
+      /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
           documentation: {
-            /* eslint-disable no-template-curly-in-string */
-            value: '```man\nDeploy something (bitbake-language-server)\n\n\n```\n```bitbake\ndef do_deploy():\n\t# Your code here\n\t${1:pass}\n```',
+            value: '```man\ndo_bootimg (bitbake-language-server)\n\n\n```\n```bitbake\ndef do_bootimg():\n\t# Your code here\n\t${1:pass}\n```\n---\nCreates a bootable live image. See the IMAGE_FSTYPES variable for additionalinformation on live image types.\n\n[Reference](https://docs.yoctoproject.org/singleindex.html#do-bootimg)',
             kind: 'markdown'
           },
           insertText: [
-            'def do_deploy():',
+            'def do_bootimg():',
             '\t# Your code here',
-            /* eslint-disable no-template-curly-in-string */
             '\t${1:pass}'
           ].join('\n'),
           insertTextFormat: 2,
-          label: 'do_deploy',
+          label: 'do_bootimg',
           kind: 15
         }
       ])
