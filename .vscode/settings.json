@@ -9,5 +9,6 @@
 	"typescript.tsc.autoDetect": "off",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": true
-	}
+	},
+	"jest.jestCommandLine": "node_modules/.bin/jest"
 }
