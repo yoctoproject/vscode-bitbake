@@ -3,7 +3,10 @@ module.exports = {
     browser: true,
     es2021: true
   },
-  extends: 'standard-with-typescript',
+  extends: [
+    'standard-with-typescript',
+    'plugin:deprecation/recommended'
+  ],
   overrides: [
     {
       env: {
