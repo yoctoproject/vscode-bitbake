@@ -21,11 +21,11 @@ module.exports = {
     ]
   },
   testMatch: [
-    "<rootDir>/**/__tests__/*.ts"
+    "<rootDir>/**/__tests__/**/*.test.ts"
   ],
   collectCoverageFrom: [
     "**/*.ts",
-    "!**/__test__/*",
+    "!**/__test__/**/*.ts",
     "!testing/*"
   ],
 };
