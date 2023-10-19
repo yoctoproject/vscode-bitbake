@@ -115,6 +115,14 @@ export default class Analyzer {
     return true
   }
 
+  public hasParser (): boolean {
+    return this.parser !== undefined
+  }
+
+  public resetAnalyzedDocuments (): void {
+    this.uriToAnalyzedDocument = {}
+  }
+
   /**
    * Find the node at the given point.
    */
