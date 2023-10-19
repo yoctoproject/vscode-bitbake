@@ -1,7 +1,8 @@
 /* --------------------------------------------------------------------------------------------
-* Copyright (c) Eugen Wiens. All rights reserved.
-* Licensed under the MIT License. See License.txt in the project root for license information.
-* ------------------------------------------------------------------------------------------ */
+ * Copyright (c) Eugen Wiens. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
+
 export interface LayerInfo {
   name: string
   path: string

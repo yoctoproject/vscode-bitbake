@@ -1,3 +1,8 @@
+/* --------------------------------------------------------------------------------------------
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
+
 import { generateParser } from '../tree-sitter/parser'
 import Analyzer from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'

@@ -1,8 +1,12 @@
+/* --------------------------------------------------------------------------------------------
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ */
+
 /**
  * Inspired by bash-language-sever
  * Repo: https://github.com/bash-lsp/bash-language-server
  */
-
 import * as LSP from 'vscode-languageserver/node'
 import type * as Parser from 'web-tree-sitter'
 
