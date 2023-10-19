@@ -109,7 +109,7 @@ export default class Analyzer {
     column: number
   ): boolean {
     const n = this.nodeAtPoint(uri, line, column)
-    if (n !== null && (n.type === 'string_content' || n.type === 'ERROR')) {
+    if (n?.type === 'string_content' || n?.type === 'ERROR') {
       return false
     }
     return true

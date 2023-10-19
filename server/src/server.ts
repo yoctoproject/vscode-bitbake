@@ -91,7 +91,7 @@ connection.onDidChangeWatchedFiles((change) => {
   bitBakeProjectScanner.rescanProject()
 })
 
-connection.onCompletion(onCompletionHandler.bind(this))
+connection.onCompletion(onCompletionHandler)
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)

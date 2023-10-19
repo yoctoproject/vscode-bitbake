@@ -23,7 +23,6 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   logger.debug(`onCompletion - current word: ${word}`)
 
   const shouldComplete = analyzer.shouldProvideCompletionItems(textDocumentPositionParams.textDocument.uri, wordPosition.line, wordPosition.character)
-  logger.debug(`isString: ${shouldComplete}`)
   // Do not provide completions if it is inside a string but not inside a variable expansion
   if (!shouldComplete) {
     return []

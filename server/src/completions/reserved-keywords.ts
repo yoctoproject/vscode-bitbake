@@ -15,7 +15,7 @@ const BITBAKE_KEYWORDS = [
   'INHERIT'
 ]
 
-const PYTHON_VARIABLES = [
+const PYTHON_KEYWORDS = [
   'def',
   'from',
   'import',
@@ -76,6 +76,6 @@ const SHELL_KEYWORDS = [
 
 export const RESERVED_KEYWORDS = [...new Set([
   ...BITBAKE_KEYWORDS,
-  ...PYTHON_VARIABLES,
+  ...PYTHON_KEYWORDS,
   ...SHELL_KEYWORDS
 ])]
