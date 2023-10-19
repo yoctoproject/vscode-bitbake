@@ -22,5 +22,8 @@ module.exports = {
     sourceType: 'module'
   },
   rules: {},
-  ignorePatterns: ['out']
+  ignorePatterns: [
+    'out',
+    '__mocks__/vscode.ts'
+  ]
 }
