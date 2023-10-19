@@ -26,6 +26,19 @@
 				"${workspaceRoot}/server/out/**/*.js"
 			],
 			"preLaunchTask": "watch:server"
+		},
+		{
+			"name": "Jest tests",
+			"type": "node",
+			"request": "launch",
+			"program": "${workspaceRoot}/node_modules/jest/bin/jest",
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/*/out/**/*.js"
+			],
+			"preLaunchTask": "compile",
+			"console": "integratedTerminal"
+
 		}
 	],
 	"compounds": [
