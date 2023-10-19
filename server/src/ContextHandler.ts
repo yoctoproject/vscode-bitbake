@@ -151,7 +151,7 @@ export class ContextHandler {
 
   private getKeyWord (textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): string {
     const currentLine = documentAsText[textDocumentPosition.position.line]
-    const lineTillCurrentPosition = currentLine.substr(0, textDocumentPosition.position.character)
+    const lineTillCurrentPosition = currentLine.substring(0, textDocumentPosition.position.character)
     const words: string[] = lineTillCurrentPosition.split(' ')
 
     const basicKeywordMap: CompletionItem[] = BasicKeywordMap

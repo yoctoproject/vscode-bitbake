@@ -13,7 +13,8 @@ import {
   createConnection,
   TextDocuments,
   ProposedFeatures,
-  TextDocumentSyncKind
+  TextDocumentSyncKind,
+  type InitializeParams
 } from 'vscode-languageserver/node'
 import { BitBakeDocScanner } from './BitBakeDocScanner'
 import { BitBakeProjectScanner } from './BitBakeProjectScanner'
@@ -33,8 +34,8 @@ const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
 
-connection.onInitialize(async (params): Promise<InitializeResult> => {
-  const workspaceRoot = params.rootPath ?? ''
+connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
+  const workspaceRoot = params.workspaceFolders?.[0]?.uri ?? ''
   bitBakeProjectScanner.setProjectPath(workspaceRoot)
 
   const parser = await generateParser()
