@@ -6,21 +6,21 @@
 import * as vscode from 'vscode'
 
 export class OutputLogger {
-  private static instance: OutputLogger | undefined
-  private static readonly outputChannelName = 'BitBake'
+  private static instance: OutputLogger
 
-  private readonly outputChannel: vscode.OutputChannel
+  private outputChannel: vscode.OutputChannel | undefined
   // default value in package.json
   private loggingLevel: string = ''
 
-  private constructor () {
-    this.outputChannel = vscode.window.createOutputChannel(OutputLogger.outputChannelName)
-    this.loadSettings()
-  }
+  private constructor () { }
 
   public loadSettings (): void {
     this.loggingLevel = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
     this.info('Bitbake logging level: ' + this.loggingLevel)
+  }
+
+  public setOutputChannel (outputChannel: vscode.OutputChannel): void {
+    this.outputChannel = outputChannel
   }
 
   public static getInstance (): OutputLogger {
@@ -32,8 +32,8 @@ export class OutputLogger {
 
   public log (message: string, level: string = 'info'): void {
     if (this.shouldLog(level)) {
-      this.outputChannel.appendLine(message)
-      this.outputChannel.show()
+      this.outputChannel?.appendLine(message)
+      this.outputChannel?.show()
 
       // Also log to the console (debug view)
       console.log(message)
@@ -57,7 +57,7 @@ export class OutputLogger {
   }
 
   public clear (): void {
-    this.outputChannel.clear()
+    this.outputChannel?.clear()
   }
 
   private shouldLog (level: string): boolean {
@@ -71,4 +71,4 @@ export class OutputLogger {
 }
 
 // Create and export the singleton logger instance
-export const logger = OutputLogger.getInstance()
+export const logger: OutputLogger = OutputLogger.getInstance()

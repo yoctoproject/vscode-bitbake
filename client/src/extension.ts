@@ -22,6 +22,8 @@ const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 export let bitbakeExtensionContext: vscode.ExtensionContext
 
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
+  logger.setOutputChannel(vscode.window.createOutputChannel('BitBake'))
+  logger.loadSettings()
   bitbakeExtensionContext = context
   bitbakeDriver.loadSettings()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
