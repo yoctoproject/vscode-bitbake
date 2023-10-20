@@ -7,6 +7,7 @@ import { onCompletionHandler } from '../connectionHandlers/onCompletion'
 import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { generateParser } from '../tree-sitter/parser'
+import { bitBakeDocScanner } from '../BitBakeDocScanner'
 
 const DUMMY_URI = 'dummy_uri'
 
@@ -29,6 +30,8 @@ describe('On Completion', () => {
   })
 
   it('expects reserved variables, keywords and snippets in completion item lists', async () => {
+    bitBakeDocScanner.parseYoctoTaskFile()
+
     // nothing is analyzed yet, only the static completion items are provided
     const result = onCompletionHandler({
       textDocument: {
@@ -65,16 +68,12 @@ describe('On Completion', () => {
       expect.arrayContaining([
         {
           documentation: {
-            value: '```man\ndo_bootimg (bitbake-language-server)\n\n\n```\n```bitbake\ndef do_bootimg():\n\t# Your code here\n\t${1:pass}\n```\n---\nCreates a bootable live image. See the IMAGE_FSTYPES variable for additionalinformation on live image types.\n\n[Reference](https://docs.yoctoproject.org/singleindex.html#do-bootimg)',
+            value: '```man\ndo_build (bitbake-language-server)\n\n\n```\n```bitbake\ndo_build(){\n\t# Your code here\n}\n```\n---\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n\n[Reference](https://docs.yoctoproject.org/singleindex.html#do-build)',
             kind: 'markdown'
           },
-          insertText: [
-            'def do_bootimg():',
-            '\t# Your code here',
-            '\t${1:pass}'
-          ].join('\n'),
+          insertText: 'do_build(){\n\t${1:# Your code here}\n}',
           insertTextFormat: 2,
-          label: 'do_bootimg',
+          label: 'do_build',
           kind: 15
         }
       ])

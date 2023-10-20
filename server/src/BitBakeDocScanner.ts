@@ -6,6 +6,7 @@
 import path from 'path'
 import fs from 'fs'
 import logger from 'winston'
+import { type CompletionItem } from 'vscode-languageserver'
 
 type SuffixType = 'layer' | 'providedItem' | undefined
 
@@ -43,9 +44,12 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
 const variablesFolder = 'doc/bitbake-user-manual/bitbake-user-manual-ref-variables.rst'
 const variablesRegexForDoc = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)(?=^ {3}:term:|$(?!\n))/gsm
 
+const yoctoTaskFilePath = path.join(__dirname, '../src/yocto-docs/tasks.rst')
+const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*?))\n(?=(\.\. _ref)|((.*)\n(=+)))/g
 export class BitBakeDocScanner {
   private _variablesInfos: Record<string, VariableInfos> = {}
   private _variablesRegex = /(?!)/g // Initialize with dummy regex that won't match anything so we don't have to check for undefined
+  private _yoctoTasks: CompletionItem[] = []
 
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
@@ -53,6 +57,10 @@ export class BitBakeDocScanner {
 
   get variablesRegex (): RegExp {
     return this._variablesRegex
+  }
+
+  get yoctoTasks (): CompletionItem[] {
+    return this._yoctoTasks
   }
 
   parse (pathToBitbakeFolder: string): void {
@@ -88,4 +96,46 @@ export class BitBakeDocScanner {
     const variablesRegExpString = `(${variablesNames.join('|')})`
     this._variablesRegex = new RegExp(variablesRegExpString, 'gi')
   }
+
+  public parseYoctoTaskFile (): void {
+    let file = ''
+    try {
+      file = fs.readFileSync(yoctoTaskFilePath, 'utf8')
+    } catch {
+      logger.warn(`Failed to read Yocto task file at ${yoctoTaskFilePath}`)
+    }
+
+    const tasks: CompletionItem[] = []
+    for (const yoctoTaskMatch of file.matchAll(yoctoTaskPattern)) {
+      const taskName = yoctoTaskMatch.groups?.name
+      const taskDescription = yoctoTaskMatch.groups?.description
+        .replace(/\\n(?=")/g, '')
+        .replace(/:term:|:ref:/g, '')
+        .replace(/\.\. (note|important)::/g, (_match, p1) => { return `**${p1}**` })
+        .replace(/::/g, ':')
+        .replace(/``/g, '`')
+        .replace(/`\$\{`[\\]+\s(.*)[\\]+\s`\}`/g, (_match, p1) => p1)
+        .replace(/^\n(\s{5,})/gm, '\n\t') // when 5 or more spaces are present as indentation, the texts following are likely code. Replace the indentation with one tab to trigger highlighting in this documentation
+
+      if (taskName !== undefined) {
+        tasks.push({
+          label: taskName,
+          documentation: taskDescription
+        })
+      }
+    }
+
+    tasks.forEach((task) => {
+      task.insertText = [
+        `${task.label}(){`,
+        /* eslint-disable no-template-curly-in-string */
+        '\t${1:# Your code here}',
+        '}'
+      ].join('\n')
+    })
+
+    this._yoctoTasks = tasks
+  }
 }
+
+export const bitBakeDocScanner = new BitBakeDocScanner()

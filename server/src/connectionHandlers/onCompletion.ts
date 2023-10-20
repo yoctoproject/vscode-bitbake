@@ -9,7 +9,8 @@ import { symbolKindToCompletionKind } from '../utils/lsp'
 import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
 import { analyzer } from '../tree-sitter/analyzer'
-import { SNIPPETS } from '../completions/snippets'
+import { formatYoctoTaskSnippets } from '../completions/snippet-utils'
+import { bitBakeDocScanner } from '../BitBakeDocScanner'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   logger.debug('onCompletion')
@@ -60,10 +61,12 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     }
   })
 
+  const yoctoTaskSnippets: CompletionItem[] = formatYoctoTaskSnippets(bitBakeDocScanner.yoctoTasks)
+
   const allCompletions = [
     ...reserverdKeywordCompletionItems,
     ...reserverdVariableCompletionItems,
-    ...SNIPPETS,
+    ...yoctoTaskSnippets,
     ...symbolCompletions
   ]
 

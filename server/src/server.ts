@@ -16,7 +16,7 @@ import {
   TextDocumentSyncKind,
   type InitializeParams
 } from 'vscode-languageserver/node'
-import { BitBakeDocScanner } from './BitBakeDocScanner'
+import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { BitBakeProjectScanner } from './BitBakeProjectScanner'
 import { ContextHandler } from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
@@ -30,7 +30,6 @@ import { onCompletionHandler } from './connectionHandlers/onCompletion'
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 const documentAsTextMap = new Map<string, string[]>()
-const bitBakeDocScanner = new BitBakeDocScanner()
 const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
 const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
 
@@ -40,6 +39,8 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   const parser = await generateParser()
   analyzer.initialize(parser)
+
+  bitBakeDocScanner.parseYoctoTaskFile()
 
   return {
     capabilities: {
