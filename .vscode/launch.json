@@ -39,14 +39,32 @@
 			"preLaunchTask": "compile",
 			"console": "integratedTerminal"
 
-		}
+		},
+		{
+			"name": "Integration Tests",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+			  "--extensionDevelopmentPath=${workspaceRoot}",
+			  "--extensionTestsPath=${workspaceRoot}/out/integration-tests/index",
+			  "${workspaceRoot}/src/integration-tests/project-folder"
+			],
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceRoot}/out/**/*.js",
+				"${workspaceRoot}/*/out/**/*.js"
+			],
+			"preLaunchTask": "compile",
+		  }
 	],
 	"compounds": [
 		{
 			"name": "Server/client",
 			"configurations": ["Launch Client", "Attach to Server"],
 			"stopAll": true,
-			"preLaunchTask": "compile"
+			"preLaunchTask": "compile",
+			"default": true
 		}
 	]
 }

@@ -3,11 +3,16 @@
 	"tasks": [
 		{
 			"label": "compile",
-			"dependsOn": [
-				"compile:client",
-				"compile:server"
+			"type": "npm",
+			"script": "compile",
+			"group": "build",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
+			},
+			"problemMatcher": [
+				"$tsc"
 			],
-			"problemMatcher": []
 		},
 		{
 			"label": "compile:client",
@@ -37,15 +42,17 @@
 		},
 		{
 			"label": "watch",
-			"dependsOn": [
-				"watch:client",
-				"watch:server"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
+			"type": "npm",
+			"script": "watch",
+			"isBackground": true,
+			"group": "build",
+			"presentation": {
+				"panel": "dedicated",
+				"reveal": "never"
 			},
-			"problemMatcher": []
+			"problemMatcher": [
+				"$tsc-watch"
+			]
 		},
 		{
 			"label": "watch:client",
