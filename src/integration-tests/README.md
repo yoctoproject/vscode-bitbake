@@ -8,6 +8,9 @@ environment.
 First, follow the build instructions from the main README.md.
 The npm script `test:integration` will run the integration tests.
 
+It will run VSCode in headless mode. Make sure to have installed the dependency:
+ $ apt install xvfb
+
 ## Debugging the integration tests
 
 A VSCode launch task is provided to debug the integration tests: "Integration tests"

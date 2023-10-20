@@ -33,7 +33,7 @@
 		"lint": "eslint . --ext js,ts --cache",
 		"jest": "jest",
 		"test": "npm run jest && npm run test:integration && npm run test:grammar --workspace client",
-		"test:integration": "node ./out/integration-tests/runTest.js",
+		"test:integration": "xvfb-run node ./out/integration-tests/runTest.js",
 		"test:watch": "jest --watchAll"
 	},
 	"devDependencies": {
