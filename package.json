@@ -27,11 +27,12 @@
 		"watch:client": "tsc -w -p client/tsconfig.json",
 		"compile:server": "tsc -p server/tsconfig.json",
 		"watch:server": "tsc -w -p server/tsconfig.json",
-		"clean:server": "rm -fr ./server/node_modules && rm -fr ./server/out",
-		"clean:client": "rm -fr ./client/node_modules && rm -fr ./client/out",
-		"clean": "npm run clean:server && npm run clean:client && rm -fr node_modules",
+		"clean:server": "rm -fr ./server/node_modules ./server/out server/tsconfig.tsbuildinfo server/.vscode-test",
+		"clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test",
+		"clean": "npm run clean:server && npm run clean:client && rm -fr node_modules ./out .vscode-test .eslintcache",
 		"lint": "eslint . --ext js,ts --cache",
-		"test": "jest && npm run test --workspace client",
+		"test": "jest && npm run test:integration && npm run test --workspace client",
+		"test:integration": "node ./out/integration-tests/runTest.js",
 		"test:watch": "jest --watchAll"
 	},
 	"devDependencies": {

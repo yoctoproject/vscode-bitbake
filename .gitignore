@@ -5,6 +5,9 @@ node_modules/
 # Compiled files
 server/out/
 client/out/
+out/
 *.js.map
+**/tsconfig.tsbuildinfo
 
 .eslintcache
+**/.vscode-test
