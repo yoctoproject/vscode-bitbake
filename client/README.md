@@ -46,3 +46,10 @@ The go to definition feature currently behaves as follows:
 *This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
 
 Place your cursor over a variable. If it is a BitBake defined variable, then its definition from the documentation will be displayed.
+
+### Bitbake commands
+
+The extension provides commands and shortcuts to run bitbake tasks. These commands are available in the command palette (CTRL+SHIFT+P) and in the editor's context menu. Before using these commands, you must provide the following settings:
+- Build folder
+- Path to an environment script to configure the BitBake project (optional)
+See the section on [setting up the extension](#setup-the-extension) for more information.

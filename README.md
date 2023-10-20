@@ -29,8 +29,47 @@ npm run clean
 ```
 For more commands, refer to the `script` section in the root `package.json`.
 
-### Debugging
+## Debugging
 Press `F5` or navigate to the debug section on the left of the VS Code and select the client or server to to launch the debug client.
 
-### Tree-sitter
+## Testing
+
+A wrapper npm script allows running several kinds of tests. To run all tests, use:
+
+ $ npm test
+
+All the tests mentionned are run in our GitHub CI.
+
+### Linter tests
+
+One can check coding style using `npm run lint`.
+Install the recommended extensions to automatically fix linting errors when possible.
+
+### Unit tests
+
+Unit tests are powered by Jest. They allow mocking the behavior of VSCode
+and other external libraries. They can individually be run with:
+
+ $ npm run jest
+
+Unit tests are defined in the `__tests__` folders.
+
+If you have installed the recommended extensions, you'll find launch and debug
+tasks for the unit tests in the debug section of VSCode.
+
+### Grammar tests
+
+See [the individual grammar tests README](client/test/grammars/README.md).
+
+### Integration tests
+
+These tests allow running the bitbake extension in a live VSCode environment.
+See [the individual integration tests README](src/integration-tests/README.md).
+
+## Tree-sitter
 This extension uses tree-sitter to parse the documents. The `.wasm` file used for creating the parser is generated from latest release at [here](https://github.com/amaanq/tree-sitter-bitbake)
+
+## Contributing
+
+Development of this extension happens on [GitHub](https://github.com/savoirfairelinux/vscode-bitbake).
+Issues and pull requests are welcome.
