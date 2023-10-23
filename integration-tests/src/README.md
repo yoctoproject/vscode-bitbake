@@ -6,6 +6,10 @@ environment.
 ## Running the integration tests
 
 First, follow the build instructions from the main README.md.
+You also need to setup the Yocto project folder by downloading poky.
+This can be done by running our `npm fetch:poky` script. It requires `curl` and
+`tar` to be installed.
+
 The npm script `test:integration` will run the integration tests.
 
 It will run VSCode in headless mode. Make sure to have installed the dependency:

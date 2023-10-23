@@ -27,7 +27,7 @@ jobs:
       run: npm run clean
 
     - name: Install Dependencies
-      run: npm install && sudo apt-get install -y xvfb
+      run: npm install && npm run fetch
 
     - name: Run Linter
       run: npm run lint

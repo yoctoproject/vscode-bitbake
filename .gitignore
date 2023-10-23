@@ -11,3 +11,5 @@ out/
 
 .eslintcache
 **/.vscode-test
+
+resources/poky*
