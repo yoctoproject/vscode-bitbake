@@ -13,3 +13,5 @@ out/
 **/.vscode-test
 
 resources/poky*
+
+integration-tests/project-folder/build

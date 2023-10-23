@@ -16,7 +16,6 @@ suite('VSCode integration Test Suite', () => {
     this.timeout(10000)
     while (vscode.workspace.workspaceFolders === undefined || vscode.workspace.workspaceFolders?.length === 0) {
       await delay(100)
-      console.log(vscode.workspace.workspaceFolders)
     }
   })
 

@@ -27,7 +27,7 @@ jobs:
       run: npm run clean
 
     - name: Install Dependencies
-      run: npm install && npm run fetch
+      run: npm install && npm run fetch && sudo apt install chrpath diffstat
 
     - name: Run Linter
       run: npm run lint
