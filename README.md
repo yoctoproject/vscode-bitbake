@@ -64,7 +64,7 @@ See [the individual grammar tests README](client/test/grammars/README.md).
 ### Integration tests
 
 These tests allow running the bitbake extension in a live VSCode environment.
-See [the individual integration tests README](src/integration-tests/README.md).
+See [the individual integration tests README](integration-tests/README.md).
 
 ## Tree-sitter
 This extension uses tree-sitter to parse the documents. The `.wasm` file used for creating the parser is generated from latest release at [here](https://github.com/amaanq/tree-sitter-bitbake)
