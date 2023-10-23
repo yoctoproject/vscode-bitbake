@@ -13,11 +13,6 @@
             "include": "#string"
         },
         {
-            "begin": "(?<=\\[)",
-            "end": "(?=\\])",
-            "name": "source.python"
-        },
-        {
             "include": "#numeric"
         },
         {
@@ -113,6 +108,10 @@
                     "begin": "(\")",
                     "end": "(\")",
                     "patterns": [
+                        {
+                            "match": "\\\\\"",
+                            "name": "constant.character.escape.bb"
+                        },
                         {
                             "include": "#variable-reference"
                         }

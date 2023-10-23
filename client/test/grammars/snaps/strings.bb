@@ -44,3 +44,5 @@ python () {
 inherit ${@ 'classname' if condition else ''}
 
 INHERIT += "autotools pkgconfig"
+
+MYVAR = "This string contains literal \" and it should work"

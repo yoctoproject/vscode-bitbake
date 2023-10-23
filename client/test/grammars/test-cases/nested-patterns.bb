@@ -60,7 +60,7 @@
 #                                               ^ source.bb keyword.operator.bb
 #                                                ^ source.bb variable.other.names.bb
 #                                                 ^^ source.bb
-#                                                   ^ source.bb source.python
+#                                                   ^ source.bb constant.numeric.bb
 #                                                    ^^ source.bb
  
 >python myclass_eventhandler() {

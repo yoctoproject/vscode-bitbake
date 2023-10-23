@@ -122,3 +122,7 @@
 #           ^ source.bb string.quoted.double.bb
 #            ^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb
 #                               ^ source.bb string.quoted.double.bb
+
+>MYVAR = "This string contains literal \" and it should work"
+#        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb
+#                                      ^^ source.bb string.quoted.double.bb constant.character.escape.bb 
