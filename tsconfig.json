@@ -4,8 +4,8 @@
 		"moduleResolution": "node",
 		"target": "es2020",
 		"lib": ["es2020"],
-		"outDir": "out",
-		"rootDir": "src",
+		"outDir": "integration-tests/out",
+		"rootDir": "integration-tests/src",
 		"sourceMap": true,
 		"strict": true,
 		"esModuleInterop": true,
@@ -13,7 +13,7 @@
 		"forceConsistentCasingInFileNames": true
 	},
 	"include": [
-		"src"
+		"integration-tests"
 	],
 	"exclude": [
 		"node_modules",

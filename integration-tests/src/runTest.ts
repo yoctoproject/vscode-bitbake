@@ -17,7 +17,7 @@ async function main (): Promise<void> {
     // Passed to --extensionTestsPath
     const extensionTestsPath = path.resolve(__dirname, './index')
 
-    const testWorkspace = path.resolve(extensionDevelopmentPath, 'src/integration-tests/project-folder')
+    const testWorkspace = path.resolve(extensionDevelopmentPath, 'integration-tests/project-folder')
 
     const launchArgs = ['--disable-extensions', '--disable-workspace-trust', testWorkspace]
 
