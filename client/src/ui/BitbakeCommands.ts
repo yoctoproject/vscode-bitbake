@@ -16,7 +16,7 @@ import path from 'path'
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace) }))
 }
 
@@ -48,10 +48,15 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvi
   }
 }
 
-async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
+async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any, task?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
-    const chosenTask = await selectTask()
+    let chosenTask: string | undefined
+    if (typeof task === 'string') {
+      chosenTask = task
+    } else {
+      chosenTask = await selectTask()
+    }
     if (chosenTask !== undefined) {
       logger.debug(`Command: run-task: ${chosenRecipe} -c ${chosenTask}`)
       const task = new vscode.Task(
@@ -72,6 +77,11 @@ async function selectTask (): Promise<string | undefined> {
 
 async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canCreate: boolean = true): Promise<string | undefined> {
   let chosenRecipe: string | undefined
+  // A string is provided when the command is called programmatically in tests with an argument
+  if (typeof uri === 'string') {
+    return uri
+  }
+  // A vscode.Uri is provided when the command is called through the context menu of a .bb file
   if (uri !== undefined) {
     const extension = path.extname(uri.fsPath)
     if (['.bb', '.bbappend', '.inc'].includes(extension)) {
@@ -81,6 +91,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
       bitbakeWorkspace.addActiveRecipe(chosenRecipe)
     }
   }
+  // No recipe is provided when calling the command through the command pallette
   if (chosenRecipe === undefined) {
     if (canCreate) {
       chosenRecipe = await vscode.window.showQuickPick([...bitbakeWorkspace.activeRecipes, 'Add another recipe...'], { placeHolder: 'Select recipe to build' })
