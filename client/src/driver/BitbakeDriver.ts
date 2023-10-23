@@ -24,7 +24,6 @@ export class BitbakeDriver {
     command = this.composeBitbakeScript(command)
     logger.debug(`Executing Bitbake command: ${shell} -c ${command}\nSee output in terminal view`)
     return childProcess.spawn(command, {
-      cwd: this.bitbakeSettings.pathToBuildFolder,
       shell
     })
   }
