@@ -13,7 +13,6 @@ export async function run (): Promise<void> {
     color: true
   })
   const testsRoot = path.resolve(__dirname, '../..')
-  console.log(testsRoot)
 
   await new Promise((_resolve, _reject) => {
     glob('**/integration-tests/**/**.test.js', { cwd: testsRoot }, (err, files) => {
