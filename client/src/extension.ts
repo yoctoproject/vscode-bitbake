@@ -45,6 +45,12 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       logger.loadSettings()
     }
   }))
+  context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
+    logger.debug('Bitbake workspace changed: ' + JSON.stringify(event))
+    logger.loadSettings()
+    bitbakeDriver.loadSettings()
+    bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
+  }))
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider)
 
