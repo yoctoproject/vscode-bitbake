@@ -73,7 +73,30 @@ suite('Bitbake Commands Test Suite', () => {
     assert.strictEqual(files.length, 0)
   }).timeout(300000)
 
+  test('Bitbake can run from task.json', async () => {
+    let taskExecuted = false
+
+    disposables.push(vscode.tasks.onDidEndTask(async (e) => {
+      assert.strictEqual(e.execution.task.definition.recipes[0], 'base-files')
+      assert.strictEqual(e.execution.task.definition.task, 'fetch')
+      taskExecuted = true
+    }))
+
+    const availableTasks = await vscode.tasks.fetchTasks()
+    for (const task of availableTasks) {
+      if (task.name === 'Fetch base-files') {
+        await vscode.tasks.executeTask(task)
+      }
+    }
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (!taskExecuted) {
+      await delay(100)
+    }
+
+    const files = await vscode.workspace.findFiles('build/tmp/work/*/base-files/*/temp/log.do_fetch')
+    assert.strictEqual(files.length, 1)
+  }).timeout(300000)
+
   // TODO test different bitbake settings
-  // TODO test bitbake tasks.json
-  // TODO test quick picker
+  // TODO mock quik picker for the workspace active recipes commands (use sinon stubs like the cmake extensions)
 })

@@ -1,0 +1,12 @@
+{
+    "tasks": [
+        {
+            "label": "Fetch base-files",
+            "type": "bitbake",
+            "recipes": [
+                "base-files"
+            ],
+            "task": "fetch"
+        }
+    ]
+}
