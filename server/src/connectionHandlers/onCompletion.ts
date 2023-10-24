@@ -11,6 +11,8 @@ import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
 import { analyzer } from '../tree-sitter/analyzer'
 import { formatYoctoTaskSnippets } from '../completions/snippet-utils'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
+import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
+import { VARIABLE_FLAGS } from '../completions/variable-flags'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   logger.debug('onCompletion')
@@ -32,6 +34,55 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   // Do not provide completions if it is inside a string but not inside a variable expansion
   if (!shouldComplete) {
     return []
+  }
+
+  // bitbake operators
+  if (word === ':') {
+    const wordBeforeIsIdentifier = analyzer.isIdentifier({
+      ...textDocumentPositionParams,
+      position: {
+        line: textDocumentPositionParams.position.line,
+        // Go two character back as one character back is ':'
+        character: Math.max(textDocumentPositionParams.position.character - 2, 0)
+      }
+    })
+    if (wordBeforeIsIdentifier) {
+      const bitBakeOperatorCompletionItems: CompletionItem[] = BITBAKE_OPERATOR.map(keyword => {
+        return {
+          label: keyword,
+          kind: CompletionItemKind.Operator
+        }
+      })
+
+      return bitBakeOperatorCompletionItems
+    } else {
+      return []
+    }
+  }
+  // TODO: add dynamic overrides, completion type: Property
+
+  // variable flags
+  if (word === '[') {
+    const wordBeforeIsIdentifier = analyzer.isIdentifier({
+      ...textDocumentPositionParams,
+      position: {
+        line: textDocumentPositionParams.position.line,
+        // Go two character back as one character back is ':'
+        character: Math.max(textDocumentPositionParams.position.character - 2, 0)
+      }
+    })
+    if (wordBeforeIsIdentifier) {
+      const variableFlagCompletionItems: CompletionItem[] = VARIABLE_FLAGS.map(keyword => {
+        return {
+          label: keyword,
+          kind: CompletionItemKind.Keyword
+        }
+      })
+
+      return variableFlagCompletionItems
+    } else {
+      return []
+    }
   }
 
   let symbolCompletions: CompletionItem[] = []

@@ -46,7 +46,8 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
     capabilities: {
       textDocumentSync: TextDocumentSyncKind.Incremental,
       completionProvider: {
-        resolveProvider: true
+        resolveProvider: true,
+        triggerCharacters: [':', '[']
       },
       definitionProvider: true,
       executeCommandProvider: {

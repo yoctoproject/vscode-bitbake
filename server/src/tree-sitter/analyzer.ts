@@ -132,6 +132,17 @@ export default class Analyzer {
     this.uriToAnalyzedDocument = {}
   }
 
+  public isIdentifier (
+    params: TextDocumentPositionParams
+  ): boolean {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+    return n?.type === 'identifier'
+  }
+
   /**
    * Find the node at the given point.
    */
