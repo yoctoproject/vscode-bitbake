@@ -10,6 +10,14 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
+      SHELL: /usr/bin/bash
+
     strategy:
       matrix:
         node-version: [20]
