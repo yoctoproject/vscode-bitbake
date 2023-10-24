@@ -22,7 +22,7 @@ export class BitbakeDriver {
     const shell = process.env.SHELL ?? '/bin/sh'
 
     command = this.composeBitbakeScript(command)
-    logger.debug(`Executing Bitbake command: ${shell} -c ${command}\nSee output in terminal view`)
+    logger.debug(`Executing Bitbake command: ${shell} -c ${command}`)
     return childProcess.spawn(command, {
       shell
     })

@@ -6,6 +6,7 @@
 import type * as child_process from 'child_process'
 import * as vscode from 'vscode'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
+import { logger } from './OutputLogger'
 
 const endOfLine: string = '\r\n'
 
@@ -108,12 +109,15 @@ class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
       this.child = this.bitbakeDriver.spawnBitbakeProcess(this.command)
       this.child.stdout?.on('data', (data) => {
         this.output(data.toString())
+        logger.debug(data.toString())
       })
       this.child.stderr?.on('data', (data) => {
         this.error(data.toString())
+        logger.debug(data.toString())
       })
       this.child.on('error', (error) => {
         this.error(error.toString())
+        logger.error(error.toString())
         resolve()
       })
       this.child.on('exit', (code) => {
