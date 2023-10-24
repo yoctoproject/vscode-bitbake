@@ -13,8 +13,7 @@
 		"forceConsistentCasingInFileNames": true
 	},
 	"include": [
-		"integration-tests"
-	],
+		"integration-tests/src"],
 	"exclude": [
 		"node_modules",
 		"poky",
