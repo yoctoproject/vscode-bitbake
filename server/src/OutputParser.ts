@@ -14,13 +14,17 @@ import {
   ProblemsContainer
 } from './ProblemsContainer'
 
+let _connection: Connection | null = null
+
+/**
+ * Set the connection. Should be done at startup.
+ */
+export function setOutputParserConnection (connection: Connection): void {
+  _connection = connection
+}
+
 export class OutputParser {
   _problems: ProblemsContainer[] = []
-  _connection: Connection
-
-  constructor (connection: Connection) {
-    this._connection = connection
-  }
 
   parse (message: string): void {
     this.clearAllProblemsAndReport()
@@ -59,20 +63,33 @@ export class OutputParser {
   }
 
   reportProblems (): void {
+    if (_connection === null) {
+      logger.warn('The LSP Connection is not set. Dropping messages')
+      return
+    }
+    const connection = _connection
     logger.debug(`reportProblems: ${this._problems.length}`)
     this._problems.forEach((container: ProblemsContainer) => {
       logger.debug(`send Diagnostic ${container.toString()}`)
-      void this._connection.sendDiagnostics(container.getDignosticData())
+      void connection.sendDiagnostics(container.getDignosticData())
     })
   }
 
   clearAllProblemsAndReport (): void {
+    if (_connection === null) {
+      logger.warn('The LSP Connection is not set. Dropping messages')
+      return
+    }
+    const connection = _connection
     logger.debug(`clearAllProblems: ${this._problems.length}`)
     this._problems.forEach((container: ProblemsContainer) => {
       logger.debug(`send Diagnostic ${container.toString()}`)
-      void this._connection.sendDiagnostics(container.getClearedDiagnosticData())
+      void connection.sendDiagnostics(container.getClearedDiagnosticData())
     })
 
     this._problems = []
   }
 }
+
+const outputParser = new OutputParser()
+export default outputParser

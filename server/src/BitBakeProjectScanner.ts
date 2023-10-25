@@ -11,19 +11,15 @@ import fs from 'fs'
 import logger from 'winston'
 
 import type {
-  Connection
-} from 'vscode-languageserver'
-import type {
   ElementInfo,
   LayerInfo,
   PathInfo
 } from './ElementInfo'
 
-import {
-  OutputParser
-} from './OutputParser'
-import { ServerNotificationManager } from './ServerNotificationManager'
-
+import
+outputParser
+  from './OutputParser'
+import { serverNotificationManager } from './ServerNotificationManager'
 interface ScannStatus {
   scanIsRunning: boolean
   scanIsPending: boolean
@@ -42,17 +38,10 @@ export class BitBakeProjectScanner {
   private _classes: ElementInfo[] = new Array < ElementInfo >()
   private _includes: ElementInfo[] = new Array < ElementInfo >()
   private _recipes: ElementInfo[] = new Array < ElementInfo >()
-  private readonly _outputParser: OutputParser
-  private readonly _notificationManager: ServerNotificationManager
   private _shouldDeepExamine: boolean = false
   private _pathToBuildFolder: string = 'build'
   private _pathToEnvScript: string = 'oe-init-build-env'
   private _pathToBitbakeFolder: string = 'bitbake'
-
-  constructor (connection: Connection) {
-    this._outputParser = new OutputParser(connection)
-    this._notificationManager = new ServerNotificationManager(connection)
-  }
 
   private readonly _scanStatus: ScannStatus = {
     scanIsRunning: false,
@@ -190,7 +179,7 @@ export class BitBakeProjectScanner {
     } else {
       const error = commandResult.stderr.toString()
       logger.error(`can not scan available layers error: ${error}`)
-      this._outputParser.parse(error)
+      outputParser.parse(error)
     }
   }
 
@@ -268,9 +257,9 @@ export class BitBakeProjectScanner {
 
     const commandResult = this.executeBitBakeCommand('bitbake -p')
     const output = commandResult.output.toString()
-    this._outputParser.parse(output)
-    if (this._outputParser.errorsFound()) {
-      this._outputParser.reportProblems()
+    outputParser.parse(output)
+    if (outputParser.errorsFound()) {
+      outputParser.reportProblems()
       parsingSuccess = false
     } else {
       if (commandResult.status !== 0) {
@@ -354,7 +343,7 @@ export class BitBakeProjectScanner {
       if (output.includes('bitbake')) {
         // Seems like Bitbake could not be found.
         // Are we sure this is the actual error?
-        this._notificationManager.sendBitBakeNotFound()
+        serverNotificationManager.sendBitBakeNotFound()
         throw new Error(output)
       }
     }
@@ -386,3 +375,6 @@ export class BitBakeProjectScanner {
     return scriptFileBuffer.join('\n')
   }
 }
+
+const bitBakeProjectScanner = new BitBakeProjectScanner()
+export default bitBakeProjectScanner

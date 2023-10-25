@@ -6,9 +6,7 @@
 import {
   type Connection,
   type InitializeResult,
-  type TextDocumentPositionParams,
   type CompletionItem,
-  type Definition,
   type Hover,
   createConnection,
   TextDocuments,
@@ -17,25 +15,27 @@ import {
   type InitializeParams
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
-import { BitBakeProjectScanner } from './BitBakeProjectScanner'
-import { ContextHandler } from './ContextHandler'
+import bitBakeProjectScanner from './BitBakeProjectScanner'
+import contextHandler from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
 import { generateParser } from './tree-sitter/parser'
 import logger from 'winston'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
-
+import { onDefinitionHandler } from './connectionHandlers/onDefinition'
+import { setOutputParserConnection } from './OutputParser'
+import { setNotificationManagerConnection } from './ServerNotificationManager'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
-const documentAsTextMap = new Map<string, string[]>()
-const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(connection)
-const contextHandler: ContextHandler = new ContextHandler(bitBakeProjectScanner)
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   const workspaceRoot = params.workspaceFolders?.[0]?.uri ?? ''
   bitBakeProjectScanner.setProjectPath(workspaceRoot)
+
+  setOutputParserConnection(connection)
+  setNotificationManagerConnection(connection)
 
   const parser = await generateParser()
   analyzer.initialize(parser)
@@ -108,20 +108,11 @@ connection.onExecuteCommand((params) => {
   }
 })
 
-connection.onDefinition((textDocumentPositionParams: TextDocumentPositionParams): Definition => {
-  logger.debug(`onDefinition ${JSON.stringify(textDocumentPositionParams)}`)
-  const documentAsText = documentAsTextMap.get(textDocumentPositionParams.textDocument.uri)
-
-  if (documentAsText === undefined) {
-    return []
-  }
-
-  return contextHandler.getDefinition(textDocumentPositionParams, documentAsText)
-})
+connection.onDefinition(onDefinitionHandler)
 
 connection.onHover(async (params): Promise<Hover | undefined> => {
   const { position, textDocument } = params
-  const documentAsText = documentAsTextMap.get(textDocument.uri)
+  const documentAsText = analyzer.getDocumentTexts(textDocument.uri)
   const textLine = documentAsText?.[position.line]
   if (textLine === undefined) {
     return undefined
@@ -158,25 +149,17 @@ connection.onHover(async (params): Promise<Hover | undefined> => {
 
 connection.listen()
 
-documents.onDidOpen((event) => {
-  const textDocument = event.document
-  if (textDocument.getText().length > 0) {
-    documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
-  }
-
-  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
-})
-
 documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
-  documentAsTextMap.set(textDocument.uri, textDocument.getText().split(/\r?\n/g))
 
   setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
 
-  const diagnostics = await analyzer.analyze({ document: event.document, uri: event.document.uri })
+  if (textDocument.getText().length > 0) {
+    const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
+    void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+  }
 
-  void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
-
+  // Other language extensions might also associate .conf files with their langauge modes
   if (textDocument.uri.endsWith('.conf')) {
     logger.debug('verifyConfigurationFileAssociation')
     await connection.sendRequest('custom/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
@@ -184,7 +167,6 @@ documents.onDidChangeContent(async (event) => {
 })
 
 documents.onDidClose((event) => {
-  documentAsTextMap.delete(event.document.uri)
   setSymbolScanner(null)
 })
 

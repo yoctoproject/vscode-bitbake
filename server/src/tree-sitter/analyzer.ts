@@ -31,6 +31,10 @@ export default class Analyzer {
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
   private debouncedExecuteAnalyzation?: ReturnType<typeof debounce>
 
+  public getDocumentTexts (uri: string): string[] | undefined {
+    return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
+  }
+
   public initialize (parser: Parser): void {
     this.parser = parser
   }
@@ -42,12 +46,13 @@ export default class Analyzer {
     document: TextDocument
     uri: string
   }): Promise<Diagnostic[]> {
-    const fileContent = document.getText()
-
     if (this.parser === undefined) {
       console.log('The analyzer is not initialized with a parser')
       return await Promise.resolve([])
     }
+
+    const fileContent = document.getText()
+
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
 

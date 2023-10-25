@@ -29,6 +29,7 @@ import type {
 } from './SymbolScanner'
 
 import logger from 'winston'
+import bitBakeProjectScanner from './BitBakeProjectScanner'
 
 /**
  * ContextHandler
@@ -170,3 +171,6 @@ export class ContextHandler {
     return keyword
   }
 }
+
+const contextHandler = new ContextHandler(bitBakeProjectScanner)
+export default contextHandler

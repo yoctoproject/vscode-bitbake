@@ -5,21 +5,31 @@
 
 import { type Connection } from 'vscode-languageserver'
 
+let _connection: Connection | null = null
+
+/**
+ * Set the connection. Should be done at startup.
+ */
+export function setNotificationManagerConnection (connection: Connection): void {
+  _connection = connection
+}
+
 export type NotificationType =
   'custom/bitBakeNotFound'
 
-export class ServerNotificationManager {
-  private readonly _connection: Connection
-
-  constructor (connection: Connection) {
-    this._connection = connection
-  }
-
+class ServerNotificationManager {
   send (type: NotificationType, message?: string): void {
-    void this._connection.sendNotification(type, message)
+    if (_connection === null) {
+      // eslint-disable-next-line no-console
+      console.warn('The LSP Connection is not set. Dropping messages')
+      return
+    }
+    void _connection.sendNotification(type, message)
   }
 
   sendBitBakeNotFound (): void {
     this.send('custom/bitBakeNotFound')
   }
 }
+
+export const serverNotificationManager = new ServerNotificationManager()
