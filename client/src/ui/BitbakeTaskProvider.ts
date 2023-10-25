@@ -40,7 +40,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
         `Run bitbake -c ${bitbakeTaskDefinition.task ?? 'build'} ${bitbakeTaskDefinition.recipes.join(' ')}`,
         'bitbake',
         new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> =>
-          new CustomBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
+          new BitbakeBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
         ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic']
       )
       if (bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) {
@@ -78,7 +78,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
   }
 }
 
-class CustomBuildTaskTerminal implements vscode.Pseudoterminal {
+class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
   private readonly writeEmitter = new vscode.EventEmitter<string>()
   private readonly closeEmitter = new vscode.EventEmitter<number>()
   private child: child_process.ChildProcess | undefined = undefined
