@@ -42,6 +42,6 @@ export class BitbakeDriver {
 }
 
 /// Santitize a string to be passed in a shell command (remove special characters)
-export function sanitizeForShell (command: string): string {
+function sanitizeForShell (command: string): string {
   return command.replace(/[;`&|<>\\$(){}!#*?"']/g, '')
 }
