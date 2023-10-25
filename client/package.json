@@ -195,6 +195,12 @@
         "command": "bitbake.drop-recipe",
         "title": "BitBake: Drop a recipe from the active workspace",
         "description": "Stop watching or suggesting a recipe in bitbake commands."
+      },
+      {
+        "command": "bitbake.watch-recipe",
+        "title": "BitBake: Add a recipe to the active workspace",
+        "description": "Start watching or suggesting a recipe in bitbake commands.",
+        "enablement": "false"
       }
     ],
     "menus": {

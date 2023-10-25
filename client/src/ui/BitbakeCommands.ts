@@ -17,6 +17,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
 }
 
 async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
@@ -104,7 +105,11 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   return chosenRecipe
 }
 
-async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<string | undefined> {
+async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, recipe?: string): Promise<string | undefined> {
+  if (typeof recipe === 'string') {
+    bitbakeWorkspace.addActiveRecipe(recipe)
+    return recipe
+  }
   const chosenRecipe = await vscode.window.showInputBox({ placeHolder: 'Recipe name to add' })
   if (chosenRecipe !== undefined) {
     bitbakeWorkspace.addActiveRecipe(chosenRecipe)
