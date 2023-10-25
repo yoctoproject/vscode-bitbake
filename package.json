@@ -31,7 +31,7 @@
 		"watch:server": "tsc -w -p server/tsconfig.json",
 		"clean:server": "rm -fr ./server/node_modules ./server/out server/tsconfig.tsbuildinfo server/.vscode-test",
 		"clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test",
-		"clean": "npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out .vscode-test .eslintcache resources/poky*",
+		"clean": "npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out .vscode-test .eslintcache resources/poky* coverage",
 		"lint": "eslint . --ext js,ts --cache",
 		"jest": "jest",
 		"test": "npm run jest && npm run test:integration && npm run test:grammar --workspace client",
