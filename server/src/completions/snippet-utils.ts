@@ -12,9 +12,9 @@ import { InsertTextFormat, type CompletionItem, CompletionItemKind, MarkupKind }
 
 /* eslint-disable no-template-curly-in-string */
 
-export function formatYoctoTaskSnippets (completions: CompletionItem[]): CompletionItem[] {
+export function formatCompletionItems (completions: CompletionItem[]): CompletionItem[] {
   return completions.map((item) => {
-    return {
+    const formatted = {
       ...item,
       insertTextFormat: InsertTextFormat.Snippet,
       documentation: {
@@ -26,13 +26,17 @@ export function formatYoctoTaskSnippets (completions: CompletionItem[]): Complet
           markdownBlock(item.insertText?.replace(/\$\{\d+:(?<code>.*)\}/g, (m, p1) => p1), 'bitbake'),
           '---',
           `${JSON.parse(JSON.stringify(item.documentation))}`,
-          `[Reference](https://docs.yoctoproject.org/singleindex.html#${item.label.replace(/_/g, '-')})`
+          item.data?.referenceUrl !== '' ? `[Reference](${item.data?.referenceUrl})` : ''
         ].join('\n'),
         kind: MarkupKind.Markdown
       },
 
       kind: CompletionItemKind.Snippet
     }
+
+    const { data, ...filtered } = formatted
+
+    return filtered
   })
 }
 
