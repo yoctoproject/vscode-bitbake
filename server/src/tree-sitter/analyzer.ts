@@ -16,7 +16,7 @@ import {
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
-import { getGlobalDeclarations, type GlobalDeclarations } from './declarations'
+import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarations, type GlobalDeclarations } from './declarations'
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
 import { range } from './utils'
@@ -25,6 +25,7 @@ const DEBOUNCE_TIME_MS = 500
 interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
+  embeddedRegions: EmbeddedRegions
   tree: Parser.Tree
 }
 
@@ -57,10 +58,12 @@ export default class Analyzer {
 
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
+    const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
 
     this.uriToAnalyzedDocument[uri] = {
       document,
       globalDeclarations,
+      embeddedRegions,
       tree
     }
     let debouncedExecuteAnalyzation = this.debouncedExecuteAnalyzation
@@ -87,6 +90,24 @@ export default class Analyzer {
       const { globalDeclarations } = analyzedDocument
       Object.values(globalDeclarations).forEach((symbol) => symbols.push(symbol))
       return symbols
+    }
+    return []
+  }
+
+  public getBashRegions (uri: string): SymbolInformation[] {
+    const analyzedDocument = this.uriToAnalyzedDocument[uri]
+    if (analyzedDocument !== undefined) {
+      const { embeddedRegions } = analyzedDocument
+      return embeddedRegions.bash
+    }
+    return []
+  }
+
+  public getPythonRegions (uri: string): SymbolInformation[] {
+    const analyzedDocument = this.uriToAnalyzedDocument[uri]
+    if (analyzedDocument !== undefined) {
+      const { embeddedRegions } = analyzedDocument
+      return embeddedRegions.python
     }
     return []
   }

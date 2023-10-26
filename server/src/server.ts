@@ -12,7 +12,9 @@ import {
   TextDocuments,
   ProposedFeatures,
   TextDocumentSyncKind,
-  type InitializeParams
+  type InitializeParams,
+  type Position,
+  FileChangeType
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import bitBakeProjectScanner from './BitBakeProjectScanner'
@@ -27,6 +29,8 @@ import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { setOutputParserConnection } from './OutputParser'
 import { setNotificationManagerConnection, serverNotificationManager } from './ServerNotificationManager'
 import { onHoverHandler } from './connectionHandlers/onHover'
+import { generateEmbeddedDocuments, getEmbeddedDocumentUriStringOnPosition } from './embedded-languages/general-support'
+import { embeddedDocumentsManager } from './embedded-languages/documents-manager'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -35,6 +39,7 @@ let workspaceRoot: string = ''
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   workspaceRoot = new URL(params.workspaceFolders?.[0]?.uri ?? '').pathname
+  embeddedDocumentsManager.workspaceFolder = workspaceRoot
 
   setOutputParserConnection(connection)
   setNotificationManagerConnection(connection)
@@ -82,11 +87,19 @@ connection.onDidChangeConfiguration((change) => {
   bitBakeDocScanner.parseVariablesFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   bitBakeDocScanner.parseVariableFlagFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   checkBitbakePresence()
+  // eslint-disable-next-line no-template-curly-in-string
+  const pathToBuildFolder = change.settings.bitbake.pathToBuildFolder.replace('${workspaceFolder}', workspaceRoot)
+  embeddedDocumentsManager.pathToBuildFolder = pathToBuildFolder
   bitBakeProjectScanner.rescanProject()
 })
 
 connection.onDidChangeWatchedFiles((change) => {
   logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
+  change.changes?.forEach((change) => {
+    if (change.type === FileChangeType.Deleted) {
+      embeddedDocumentsManager.deleteEmbeddedDocuments(change.uri)
+    }
+  })
   bitBakeProjectScanner.rescanProject()
 })
 
@@ -110,6 +123,10 @@ connection.onDefinition(onDefinitionHandler)
 
 connection.onHover(onHoverHandler)
 
+connection.onRequest('custom/getEmbeddedDocumentUri', async ({ uriString, position }: { uriString: string, position: Position }): Promise<string | undefined> => {
+  return getEmbeddedDocumentUriStringOnPosition(uriString, position)
+})
+
 connection.listen()
 
 documents.onDidChangeContent(async (event) => {
@@ -119,6 +136,7 @@ documents.onDidChangeContent(async (event) => {
 
   if (textDocument.getText().length > 0) {
     const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
+    generateEmbeddedDocuments(event.document)
     void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 

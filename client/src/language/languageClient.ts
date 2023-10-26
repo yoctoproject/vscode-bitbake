@@ -9,7 +9,12 @@ import {
   workspace,
   type ExtensionContext,
   window,
-  ConfigurationTarget
+  ConfigurationTarget,
+  Uri,
+  commands,
+  type CompletionList,
+  type Hover,
+  type Position
 } from 'vscode'
 
 import {
@@ -18,6 +23,10 @@ import {
   TransportKind,
   type ServerOptions
 } from 'vscode-languageclient/node'
+
+const getEmbeddedDocumentUri = async (client: LanguageClient, uriString: string, position: Position): Promise<string> => {
+  return await client.sendRequest('custom/getEmbeddedDocumentUri', { uriString, position })
+}
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -46,6 +55,35 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
         workspace.createFileSystemWatcher('**/*.bb', false, true, false),
         workspace.createFileSystemWatcher('**/*.conf', false, true, false)
       ]
+    },
+    middleware: {
+      provideCompletionItem: async (document, position, context, token, next) => {
+        const embeddedDocumentUriString = await getEmbeddedDocumentUri(client, document.uri.toString(), position)
+        if (embeddedDocumentUriString === undefined) {
+          return await next(document, position, context, token)
+        }
+        const vdocUri = Uri.parse(embeddedDocumentUriString)
+        const result = await commands.executeCommand<CompletionList>(
+          'vscode.executeCompletionItemProvider',
+          vdocUri,
+          position,
+          context.triggerCharacter
+        )
+        return result
+      },
+      provideHover: async (document, position, token, next) => {
+        const embeddedDocumentUriString = await getEmbeddedDocumentUri(client, document.uri.toString(), position)
+        if (embeddedDocumentUriString === undefined) {
+          return await next(document, position, token)
+        }
+        const vdocUri = Uri.parse(embeddedDocumentUriString)
+        const result = await commands.executeCommand<Hover[]>(
+          'vscode.executeHoverProvider',
+          vdocUri,
+          position
+        )
+        return result[0]
+      }
     }
   }
 

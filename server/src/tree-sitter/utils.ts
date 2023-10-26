@@ -44,6 +44,14 @@ export function isDefinition (n: SyntaxNode): boolean {
   }
 }
 
+export function isPythonDefinition (n: SyntaxNode): boolean {
+  return n.type === 'anonymous_python_function' || n.type === 'python_function_definition'
+}
+
+export function isShellDefinition (n: SyntaxNode): boolean {
+  return n.type === 'function_definition'
+}
+
 export function isReference (n: SyntaxNode): boolean {
   switch (n.type) {
     case 'variable_assignment': // Currently, the tree doesn't have a unique type for variable reference neither for function reference
