@@ -85,7 +85,7 @@ connection.onDidChangeConfiguration((change) => {
   bitBakeProjectScanner.pathToBuildFolder = settings.bitbake.pathToBuildFolder
   bitBakeProjectScanner.pathToBitbakeFolder = settings.bitbake.pathToBitbakeFolder
   bitBakeDocScanner.parse(settings.bitbake.pathToBitbakeFolder)
-
+  bitBakeDocScanner.parseVariableFlag(settings.bitbake.pathToBitbakeFolder)
   bitBakeProjectScanner.rescanProject()
 })
 

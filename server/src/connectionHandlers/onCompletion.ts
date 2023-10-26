@@ -9,7 +9,7 @@ import { symbolKindToCompletionKind } from '../utils/lsp'
 import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
 import { analyzer } from '../tree-sitter/analyzer'
-import { formatYoctoTaskSnippets } from '../completions/snippet-utils'
+import { formatCompletionItems } from '../completions/snippet-utils'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
@@ -72,6 +72,8 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       }
     })
     if (wordBeforeIsIdentifier) {
+      const variableFlagsFromScanner: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.variablFlags)
+
       const variableFlagCompletionItems: CompletionItem[] = VARIABLE_FLAGS.map(keyword => {
         return {
           label: keyword,
@@ -79,7 +81,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
         }
       })
 
-      return variableFlagCompletionItems
+      return variableFlagsFromScanner.length > 0 ? variableFlagsFromScanner : variableFlagCompletionItems
     } else {
       return []
     }
@@ -112,7 +114,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     }
   })
 
-  const yoctoTaskSnippets: CompletionItem[] = formatYoctoTaskSnippets(bitBakeDocScanner.yoctoTasks)
+  const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.yoctoTasks)
 
   const allCompletions = [
     ...reserverdKeywordCompletionItems,

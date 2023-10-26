@@ -6,7 +6,7 @@
 import path from 'path'
 import fs from 'fs'
 import logger from 'winston'
-import { type CompletionItem } from 'vscode-languageserver'
+import { CompletionItemKind, type CompletionItem } from 'vscode-languageserver'
 
 type SuffixType = 'layer' | 'providedItem' | undefined
 
@@ -46,11 +46,12 @@ const variablesRegexForDoc = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)
 
 const yoctoTaskFilePath = path.join(__dirname, '../src/yocto-docs/tasks.rst')
 const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*?))\n(?=(\.\. _ref)|((.*)\n(=+)))/g
+
 export class BitBakeDocScanner {
   private _variablesInfos: Record<string, VariableInfos> = {}
   private _variablesRegex = /(?!)/g // Initialize with dummy regex that won't match anything so we don't have to check for undefined
   private _yoctoTasks: CompletionItem[] = []
-
+  private _variableFlags: CompletionItem[] = []
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
   }
@@ -61,6 +62,10 @@ export class BitBakeDocScanner {
 
   get yoctoTasks (): CompletionItem[] {
     return this._yoctoTasks
+  }
+
+  get variablFlags (): CompletionItem[] {
+    return this._variableFlags
   }
 
   parse (pathToBitbakeFolder: string): void {
@@ -120,7 +125,10 @@ export class BitBakeDocScanner {
       if (taskName !== undefined) {
         tasks.push({
           label: taskName,
-          documentation: taskDescription
+          documentation: taskDescription,
+          data: {
+            referenceUrl: `https://docs.yoctoproject.org/singleindex.html#${taskName.replace(/_/g, '-')}`
+          }
         })
       }
     }
@@ -135,6 +143,55 @@ export class BitBakeDocScanner {
     })
 
     this._yoctoTasks = tasks
+  }
+
+  public parseVariableFlag (pathToBitbakeFolder: string): void {
+    const variableFlagFilePath = 'doc/bitbake-user-manual/bitbake-user-manual-metadata.rst'
+    const variableFlagSectionRegex = /(?<=Variable Flags\n=*\n\n)(?<variable_flag_section>.*\n)*(?<event_section_title>Events\n=*)/g
+    const variableFlagRegex = /(?<=-\s*``\[)(?<name>.*)(?:\]``:)(?<description>(.*\n)*?)(?=\n-\s*``|\nEvents)/g
+
+    const completeVariableFlagFilePath = path.join(pathToBitbakeFolder, variableFlagFilePath)
+    let file = ''
+    try {
+      file = fs.readFileSync(completeVariableFlagFilePath, 'utf8')
+    } catch {
+      logger.error(`Failed to read file at ${completeVariableFlagFilePath}`)
+    }
+
+    const variableFlagSection = file.match(variableFlagSectionRegex)
+    if (variableFlagSection === null) {
+      logger.warn(`No variable flag section found at ${completeVariableFlagFilePath}. Is the regex correct?`)
+      return
+    }
+
+    const variableFlags: CompletionItem[] = []
+    for (const match of variableFlagSection[0].matchAll(variableFlagRegex)) {
+      const name = match.groups?.name
+      const description = match.groups?.description
+        .replace(/:term:|:ref:/g, '')
+        .replace(/::/g, ':')
+        .replace(/``\[/g, '`')
+        .replace(/\]``/g, '`')
+        .replace(/\.\.\s/g, '')
+        .replace(/-\s\s/g, '')
+        .replace(/^\n(\s{2,})/gm, '')
+      if (name === undefined || description === undefined) {
+        return
+      }
+
+      if (name !== undefined) {
+        variableFlags.push({
+          label: name,
+          documentation: description,
+          kind: CompletionItemKind.Keyword,
+          data: {
+            referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#variable-flags'
+          }
+        })
+      }
+    }
+
+    this._variableFlags = variableFlags
   }
 }
 
