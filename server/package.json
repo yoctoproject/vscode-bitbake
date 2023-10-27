@@ -23,10 +23,7 @@
     "vscode-languageserver": "^8.1.0",
     "vscode-languageserver-textdocument": "^1.0.8",
     "web-tree-sitter": "^0.20.8",
-    "winston": "^2.4.4"
-  },
-  "devDependencies": {
-    "@types/find": "^0.2.2",
-    "typescript": "^5.2.2"
+    "winston": "^2.4.4",
+    "@types/find": "^0.2.2"
   }
 }

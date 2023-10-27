@@ -263,13 +263,8 @@
     "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u"
   },
   "dependencies": {
-    "vscode-languageclient": "^8.1.0"
-  },
-  "devDependencies": {
     "@types/node": "^20.6.2",
     "@types/vscode": "^1.75.1",
-    "@vscode/test-electron": "^2.2.3",
-    "typescript": "^5.2.2",
-    "vscode-tmgrammar-test": "^0.1.2"
+    "vscode-languageclient": "^8.1.0"
   }
 }

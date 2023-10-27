@@ -16,10 +16,6 @@
 		"type": "git",
 		"url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
 	},
-	"workspaces": [
-		"client",
-		"server"
-	],
 	"scripts": {
 		"fetch": "npm run fetch:poky",
 		"fetch:poky": "mkdir -p resources/poky && curl -L -o resources/poky.tar.bz2 https://downloads.yoctoproject.org/releases/yocto/yocto-4.2.3/poky-aa63b25cbe25d89ab07ca11ee72c17cab68df8de.tar.bz2 && tar -xvjf resources/poky.tar.bz2 -C resources",
@@ -43,7 +39,10 @@
 		"@types/jest": "^29.5.5",
 		"@types/mocha": "^10.0.1",
 		"@types/node": "^20.6.1",
+    	"@types/vscode": "^1.75.1",
+		"@vscode/vsce": "^2.3.5",
 		"@vscode/test-electron": "^2.3.5",
+		"vscode-tmgrammar-test": "^0.1.2",
 		"eslint": "^8.51.0",
 		"eslint-config-standard-with-typescript": "^39.1.1",
 		"eslint-plugin-deprecation": "^2.0.0",
