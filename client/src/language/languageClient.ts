@@ -20,7 +20,7 @@ import {
 } from 'vscode-languageclient/node'
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
-  const serverModule = context.asAbsolutePath(path.join('../server', 'out', 'server.js'))
+  const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
   // The debug options for the server
   const debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] }
 

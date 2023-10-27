@@ -3,7 +3,7 @@ debug.log
 # node
 node_modules/
 # Compiled files
-server/out/
+client/server/
 client/out/
 out/
 *.js.map
