@@ -9,7 +9,8 @@ module.exports = {
     "ts"
   ],
   modulePathIgnorePatterns: [
-    "<rootDir>/server/out",
+    "<rootDir>/client/server",
+    "<rootDir>/integration-tests",
     "<rootDir>/client/out"
   ],
   transform: {
@@ -26,6 +27,7 @@ module.exports = {
   collectCoverageFrom: [
     "**/*.ts",
     "!**/__test__/**/*.ts",
+    "!integration-tests",
     "!testing/*"
   ],
 };

@@ -36,6 +36,8 @@ module.exports = {
   ignorePatterns: [
     'out',
     'poky',
+    '.vscode-test',
+    'client/server',
     '__mocks__/vscode.ts'
   ],
 }

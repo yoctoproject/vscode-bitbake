@@ -17,6 +17,7 @@
 	"exclude": [
 		"node_modules",
 		"poky",
+		".vscode-test"
 	],
 	"references": [
 		{ "path": "./client" },

@@ -8,6 +8,7 @@ client/out/
 out/
 *.js.map
 **/tsconfig.tsbuildinfo
+client/*.vsix
 
 .eslintcache
 coverage/
