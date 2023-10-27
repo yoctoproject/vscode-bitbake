@@ -7,6 +7,8 @@ import { randomUUID } from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
+import logger from 'winston'
+
 import { type EmbeddedDocumentInfos, type EmbeddedLanguageType } from './utils'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
@@ -46,8 +48,12 @@ export default class EmbeddedDocumentsManager {
     const embeddedDocumentFilename = randomName + fileExtension
     const pathToEmbeddedDocumentsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
     const pathToEmbeddedDocument = `${pathToEmbeddedDocumentsFolder}/${embeddedDocumentFilename}`
-    fs.mkdirSync(pathToEmbeddedDocumentsFolder, { recursive: true })
-    fs.writeFileSync(pathToEmbeddedDocument, embeddedDocumentContent)
+    try {
+      fs.mkdirSync(pathToEmbeddedDocumentsFolder, { recursive: true })
+      fs.writeFileSync(pathToEmbeddedDocument, embeddedDocumentContent)
+    } catch (error) {
+      logger.error('Failed to create embedded document:', error)
+    }
     const documentInfos = {
       ...partialEmbeddedDocumentInfos,
       uri: `file://${pathToEmbeddedDocument}`
@@ -59,7 +65,11 @@ export default class EmbeddedDocumentsManager {
     const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString) ?? {}
     Object.values(embeddedDocuments).forEach(({ uri }) => {
       const pathToEmbeddedDocument = uri.replace('file://', '')
-      fs.unlink(pathToEmbeddedDocument, () => {})
+      try {
+        fs.unlink(pathToEmbeddedDocument, () => {})
+      } catch (error) {
+        logger.error('Failed to delete embedded document:', error)
+      }
     })
     this.embeddedDocumentsInfos.delete(originalUriString)
   }
