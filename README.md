@@ -1,5 +1,7 @@
 # BitBake recipe language support plugin for Visual Studio Code
 
+[![vscode-bitbake CI/CD](https://github.com/savoirfairelinux/vscode-bitbake/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/savoirfairelinux/vscode-bitbake/actions/workflows/main.yml?query=branch%3Amaster)
+
 This Visual Studio Code plugin is based on [Example - Language Server](https://code.visualstudio.com/docs/extensions/example-language-server).
 
 For a description of the extension itself, please see [the client's README](./client/README.md). The changelog for the extension may be found [here](./client/CHANGELOG.md).
