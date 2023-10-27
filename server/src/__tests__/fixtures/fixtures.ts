@@ -4,8 +4,8 @@
  * ------------------------------------------------------------------------------------------ */
 
 /**
- * Inspired by bash-language-sever
- * Repo: https://github.com/bash-lsp/bash-language-server
+ * Inspired by bash-language-server under MIT
+ * Reference: https://github.com/bash-lsp/bash-language-server/blob/main/testing/fixtures.ts
  */
 
 import path from 'path'

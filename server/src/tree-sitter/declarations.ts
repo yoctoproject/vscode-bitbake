@@ -4,8 +4,8 @@
  * ------------------------------------------------------------------------------------------ */
 
 /**
- * Inspired by bash-language-sever
- * Repo: https://github.com/bash-lsp/bash-language-server
+ * Inspired by bash-language-server under MIT
+ * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/util/declarations.ts
  */
 import * as LSP from 'vscode-languageserver/node'
 import type * as Parser from 'web-tree-sitter'

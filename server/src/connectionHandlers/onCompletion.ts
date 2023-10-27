@@ -3,6 +3,11 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+/**
+ * Inspired by bash-language-server under MIT
+ * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/server.ts#L408
+ */
+
 import logger from 'winston'
 import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind } from 'vscode-languageserver/node'
 import { symbolKindToCompletionKind } from '../utils/lsp'
