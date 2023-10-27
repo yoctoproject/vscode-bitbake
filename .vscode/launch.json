@@ -23,7 +23,7 @@
 			"port": 6009,
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/server/out/**/*.js"
+				"${workspaceRoot}/client/server/**/*.js"
 			],
 			"preLaunchTask": "watch:server"
 		},
@@ -34,7 +34,8 @@
 			"program": "${workspaceRoot}/node_modules/jest/bin/jest",
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/*/out/**/*.js"
+				"${workspaceRoot}/client/out/**/*.js",
+				"${workspaceRoot}/client/server/**/*.js"
 			],
 			"preLaunchTask": "compile",
 			"console": "integratedTerminal"
@@ -54,7 +55,8 @@
 			],
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/*/out/**/*.js"
+				"${workspaceRoot}/*/out/**/*.js",
+				"${workspaceRoot}/client/server/**/*.js"
 			],
 			"preLaunchTask": "compile",
 		  }
