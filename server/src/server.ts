@@ -84,8 +84,8 @@ connection.onDidChangeConfiguration((change) => {
   logger.level = settings.bitbake.loggingLevel
   bitBakeProjectScanner.pathToBuildFolder = settings.bitbake.pathToBuildFolder
   bitBakeProjectScanner.pathToBitbakeFolder = settings.bitbake.pathToBitbakeFolder
-  bitBakeDocScanner.parse(settings.bitbake.pathToBitbakeFolder)
-  bitBakeDocScanner.parseVariableFlag(settings.bitbake.pathToBitbakeFolder)
+  bitBakeDocScanner.parseVariablesFile(settings.bitbake.pathToBitbakeFolder)
+  bitBakeDocScanner.parseVariableFlagFile(settings.bitbake.pathToBitbakeFolder)
   bitBakeProjectScanner.rescanProject()
 })
 

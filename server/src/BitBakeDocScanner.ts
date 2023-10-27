@@ -41,7 +41,7 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
   }
 }
 
-const variablesFolder = 'doc/bitbake-user-manual/bitbake-user-manual-ref-variables.rst'
+const variablesFilePath = 'doc/bitbake-user-manual/bitbake-user-manual-ref-variables.rst'
 const variablesRegexForDoc = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)(?=^ {3}:term:|$(?!\n))/gsm
 
 const yoctoTaskFilePath = path.join(__dirname, '../src/yocto-docs/tasks.rst')
@@ -50,8 +50,10 @@ const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*
 export class BitBakeDocScanner {
   private _variablesInfos: Record<string, VariableInfos> = {}
   private _variablesRegex = /(?!)/g // Initialize with dummy regex that won't match anything so we don't have to check for undefined
-  private _yoctoTasks: CompletionItem[] = []
-  private _variableFlags: CompletionItem[] = []
+  private _yoctoTaskCompletionItems: CompletionItem[] = []
+  private _variableFlagCompletionItems: CompletionItem[] = []
+  private _variableCompletionItems: CompletionItem[] = []
+
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
   }
@@ -60,22 +62,27 @@ export class BitBakeDocScanner {
     return this._variablesRegex
   }
 
-  get yoctoTasks (): CompletionItem[] {
-    return this._yoctoTasks
+  get yoctoTaskCompletionItems (): CompletionItem[] {
+    return this._yoctoTaskCompletionItems
   }
 
-  get variablFlags (): CompletionItem[] {
-    return this._variableFlags
+  get variableFlagCompletionItems (): CompletionItem[] {
+    return this._variableFlagCompletionItems
   }
 
-  parse (pathToBitbakeFolder: string): void {
+  get variableCompletionItems (): CompletionItem[] {
+    return this._variableCompletionItems
+  }
+
+  parseVariablesFile (pathToBitbakeFolder: string): void {
     let file = ''
-    const docPath = path.join(pathToBitbakeFolder, variablesFolder)
+    const docPath = path.join(pathToBitbakeFolder, variablesFilePath)
     try {
       file = fs.readFileSync(docPath, 'utf8')
     } catch {
       logger.warn(`BitBake doc file not found at ${docPath}`)
     }
+    const variableCompletionItems: CompletionItem[] = []
     for (const match of file.matchAll(variablesRegexForDoc)) {
       const name = match.groups?.name
       // Naive silly inneficient incomplete conversion to markdown
@@ -93,7 +100,16 @@ export class BitBakeDocScanner {
         definition,
         ...variableInfosOverrides[name]
       }
+
+      variableCompletionItems.push({
+        label: name,
+        documentation: definition,
+        data: {
+          referenceUrl: `https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-ref-variables.html#term-${name}`
+        }
+      })
     }
+    this._variableCompletionItems = variableCompletionItems
     const variablesNames = Object.keys(this._variablesInfos)
     // Sort from longuest to shortest in order to make the regex greedy
     // Otherwise it would match B before BB_PRESERVE_ENV
@@ -126,6 +142,12 @@ export class BitBakeDocScanner {
         tasks.push({
           label: taskName,
           documentation: taskDescription,
+          insertText: [
+            `${taskName}(){`,
+            /* eslint-disable no-template-curly-in-string */
+            '\t${1:# Your code here}',
+            '}'
+          ].join('\n'),
           data: {
             referenceUrl: `https://docs.yoctoproject.org/singleindex.html#${taskName.replace(/_/g, '-')}`
           }
@@ -133,19 +155,10 @@ export class BitBakeDocScanner {
       }
     }
 
-    tasks.forEach((task) => {
-      task.insertText = [
-        `${task.label}(){`,
-        /* eslint-disable no-template-curly-in-string */
-        '\t${1:# Your code here}',
-        '}'
-      ].join('\n')
-    })
-
-    this._yoctoTasks = tasks
+    this._yoctoTaskCompletionItems = tasks
   }
 
-  public parseVariableFlag (pathToBitbakeFolder: string): void {
+  public parseVariableFlagFile (pathToBitbakeFolder: string): void {
     const variableFlagFilePath = 'doc/bitbake-user-manual/bitbake-user-manual-metadata.rst'
     const variableFlagSectionRegex = /(?<=Variable Flags\n=*\n\n)(?<variable_flag_section>.*\n)*(?<event_section_title>Events\n=*)/g
     const variableFlagRegex = /(?<=-\s*``\[)(?<name>.*)(?:\]``:)(?<description>(.*\n)*?)(?=\n-\s*``|\nEvents)/g
@@ -191,7 +204,7 @@ export class BitBakeDocScanner {
       }
     }
 
-    this._variableFlags = variableFlags
+    this._variableFlagCompletionItems = variableFlags
   }
 }
 
