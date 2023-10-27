@@ -43,6 +43,9 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   setOutputParserConnection(connection)
   setNotificationManagerConnection(connection)
 
+  const storagePath = params.initializationOptions.storagePath as string
+  embeddedDocumentsManager.storagePath = storagePath
+
   const parser = await generateParser()
   analyzer.initialize(parser)
 
@@ -86,9 +89,6 @@ connection.onDidChangeConfiguration((change) => {
   bitBakeDocScanner.parseVariablesFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   bitBakeDocScanner.parseVariableFlagFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   checkBitbakePresence()
-  // eslint-disable-next-line no-template-curly-in-string
-  const pathToBuildFolder = change.settings.bitbake.pathToBuildFolder.replace('${workspaceFolder}', workspaceRoot)
-  embeddedDocumentsManager.pathToBuildFolder = pathToBuildFolder
   bitBakeProjectScanner.rescanProject()
 })
 

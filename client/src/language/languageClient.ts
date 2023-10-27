@@ -56,6 +56,9 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
         workspace.createFileSystemWatcher('**/*.conf', false, true, false)
       ]
     },
+    initializationOptions: {
+      storagePath: context.storageUri?.fsPath
+    },
     middleware: {
       provideCompletionItem: async (document, position, context, token, next) => {
         const embeddedDocumentUriString = await getEmbeddedDocumentUri(client, document.uri.toString(), position)

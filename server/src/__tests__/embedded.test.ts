@@ -18,7 +18,7 @@ describe('Embedded Documents', () => {
       analyzer.initialize(parser)
     }
     analyzer.resetAnalyzedDocuments()
-    embeddedDocumentsManager.pathToBuildFolder = __dirname
+    embeddedDocumentsManager.storagePath = __dirname
   })
 
   beforeEach(() => {

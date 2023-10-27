@@ -3,11 +3,11 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { randomUUID } from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
 import { type EmbeddedDocumentInfos, type EmbeddedLanguageType } from './utils'
-import { randomUUID } from 'crypto'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
@@ -20,7 +20,7 @@ type EmbeddedDocumentsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedDocu
 
 export default class EmbeddedDocumentsManager {
   private readonly embeddedDocumentsInfos = new Map<string, EmbeddedDocumentsRecord>() // map of original uri to embedded documents infos
-  pathToBuildFolder: string = ''
+  storagePath: string = ''
 
   private registerEmbeddedDocumentInfos (originalUriString: string, embeddedDocumentInfos: EmbeddedDocumentInfos): void {
     const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString) ?? {}
@@ -44,7 +44,7 @@ export default class EmbeddedDocumentsManager {
     const randomName = randomUUID()
     const fileExtension = fileExtensionsMap[partialEmbeddedDocumentInfos.language]
     const embeddedDocumentFilename = randomName + fileExtension
-    const pathToEmbeddedDocumentsFolder = path.join(this.pathToBuildFolder, EMBEDDED_DOCUMENTS_FOLDER)
+    const pathToEmbeddedDocumentsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
     const pathToEmbeddedDocument = `${pathToEmbeddedDocumentsFolder}/${embeddedDocumentFilename}`
     fs.mkdirSync(pathToEmbeddedDocumentsFolder, { recursive: true })
     fs.writeFileSync(pathToEmbeddedDocument, embeddedDocumentContent)
