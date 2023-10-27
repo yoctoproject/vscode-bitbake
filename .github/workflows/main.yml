@@ -45,3 +45,12 @@ jobs:
 
     - name: Test Project
       run: npm run test
+
+    - name: Build the VSIX
+      run: npm run package
+
+    - name: Archive VSIX
+      uses: actions/upload-artifact@v3
+      with:
+        name: vscode-bitbake
+        path: client/bitbake*.vsix
