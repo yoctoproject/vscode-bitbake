@@ -28,7 +28,6 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 export type GlobalDeclarations = Record<string, LSP.SymbolInformation>
 
 const GLOBAL_DECLARATION_NODE_TYPES = new Set([
-  'if_statement',
   'function_definition',
   'python_function_definition',
   'anonymous_python_function'
