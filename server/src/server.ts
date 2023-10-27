@@ -7,7 +7,6 @@ import {
   type Connection,
   type InitializeResult,
   type CompletionItem,
-  type Hover,
   createConnection,
   TextDocuments,
   ProposedFeatures,
@@ -26,6 +25,7 @@ import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { setOutputParserConnection } from './OutputParser'
 import { setNotificationManagerConnection } from './ServerNotificationManager'
+import { onHoverHandler } from './connectionHandlers/onHover'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
@@ -98,6 +98,7 @@ connection.onCompletion(onCompletionHandler)
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)
+  // Alternative: Currently it just returns the completion items created when onCompletion fires. Maybe here can be good place to get the documentation for completion items instead of getting all of the documentation at startup.
   return item
 })
 
@@ -111,42 +112,7 @@ connection.onExecuteCommand((params) => {
 
 connection.onDefinition(onDefinitionHandler)
 
-connection.onHover(async (params): Promise<Hover | undefined> => {
-  const { position, textDocument } = params
-  const documentAsText = analyzer.getDocumentTexts(textDocument.uri)
-  const textLine = documentAsText?.[position.line]
-  if (textLine === undefined) {
-    return undefined
-  }
-  const matches = textLine.matchAll(bitBakeDocScanner.variablesRegex)
-  for (const match of matches) {
-    const name = match[1].toUpperCase()
-    if (name === undefined || match.index === undefined) {
-      continue
-    }
-    const start = match.index
-    const end = start + name.length
-    if ((start > position.character) || (end <= position.character)) {
-      continue
-    }
-
-    const definition = bitBakeDocScanner.variablesInfos[name]?.definition
-    const hover: Hover = {
-      contents: {
-        kind: 'markdown',
-        value: `**${name}**\n___\n${definition}`
-      },
-      range: {
-        start: position,
-        end: {
-          ...position,
-          character: end
-        }
-      }
-    }
-    return hover
-  }
-})
+connection.onHover(onHoverHandler)
 
 connection.listen()
 
