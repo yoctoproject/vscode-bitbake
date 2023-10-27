@@ -43,6 +43,7 @@ export default class EmbeddedDocumentsManager {
     embeddedDocumentContent: string,
     partialEmbeddedDocumentInfos: Omit<EmbeddedDocumentInfos, 'uri'>
   ): void {
+    logger.debug(`Save embedded document (${partialEmbeddedDocumentInfos.language}) for`, originalUriString)
     const randomName = randomUUID()
     const fileExtension = fileExtensionsMap[partialEmbeddedDocumentInfos.language]
     const embeddedDocumentFilename = randomName + fileExtension
@@ -62,6 +63,7 @@ export default class EmbeddedDocumentsManager {
   }
 
   deleteEmbeddedDocuments (originalUriString: string): void {
+    logger.debug('Delete embedded documents for', originalUriString)
     const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString) ?? {}
     Object.values(embeddedDocuments).forEach(({ uri }) => {
       const pathToEmbeddedDocument = uri.replace('file://', '')
