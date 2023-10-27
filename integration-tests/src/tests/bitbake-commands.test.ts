@@ -96,7 +96,4 @@ suite('Bitbake Commands Test Suite', () => {
     const files = await vscode.workspace.findFiles('build/tmp/work/*/base-files/*/temp/log.do_fetch')
     assert.strictEqual(files.length, 1)
   }).timeout(300000)
-
-  // TODO test different bitbake settings
-  // TODO mock quik picker for the workspace active recipes commands (use sinon stubs like the cmake extensions)
 })
