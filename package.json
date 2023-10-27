@@ -25,6 +25,7 @@
 		"compile:client": "tsc -p client/tsconfig.json",
 		"watch:client": "tsc -w -p client/tsconfig.json",
 		"compile:server": "cd server && npm run installServer && tsc -p tsconfig.json",
+		"package": "cd client && npm run package",
 		"watch:server": "cd server && npm run installServer && tsc -w -p tsconfig.json",
 		"clean:server": "rm -fr ./server/node_modules ./client/server server/tsconfig.tsbuildinfo server/.vscode-test",
 		"clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test client/*.vsix",

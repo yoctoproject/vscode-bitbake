@@ -260,7 +260,9 @@
   "scripts": {
     "test": "npm run test:grammar",
     "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
-    "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u"
+    "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u",
+    "vscode:prepublish": "npm install --omit=dev",
+    "package": "npm run vscode:prepublish && vsce package --target linux-x64"
   },
   "dependencies": {
     "@types/node": "^20.6.2",
