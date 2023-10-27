@@ -7,6 +7,7 @@ import path from 'path'
 import fs from 'fs'
 
 import { type EmbeddedDocumentInfos, type EmbeddedLanguageType } from './utils'
+import { randomUUID } from 'crypto'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
@@ -19,19 +20,12 @@ type EmbeddedDocumentsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedDocu
 
 export default class EmbeddedDocumentsManager {
   private readonly embeddedDocumentsInfos = new Map<string, EmbeddedDocumentsRecord>() // map of original uri to embedded documents infos
-  workspaceFolder: string = ''
   pathToBuildFolder: string = ''
 
   private registerEmbeddedDocumentInfos (originalUriString: string, embeddedDocumentInfos: EmbeddedDocumentInfos): void {
     const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString) ?? {}
     embeddedDocuments[embeddedDocumentInfos.language] = embeddedDocumentInfos
     this.embeddedDocumentsInfos.set(originalUriString, embeddedDocuments)
-  }
-
-  private getPathToEmbeddedDocumentFolder (originalPath: string): string {
-    const relativePath = path.relative(this.workspaceFolder, originalPath)
-    const relativeFolder = path.dirname(relativePath)
-    return path.join(this.pathToBuildFolder, EMBEDDED_DOCUMENTS_FOLDER, relativeFolder)
   }
 
   getEmbeddedDocumentInfos (
@@ -47,12 +41,12 @@ export default class EmbeddedDocumentsManager {
     embeddedDocumentContent: string,
     partialEmbeddedDocumentInfos: Omit<EmbeddedDocumentInfos, 'uri'>
   ): void {
-    const originalPath = originalUriString.replace('file://', '')
-    const pathToEmbeddedDocumentsFolder = this.getPathToEmbeddedDocumentFolder(originalPath)
-    fs.mkdirSync(pathToEmbeddedDocumentsFolder, { recursive: true })
+    const randomName = randomUUID()
     const fileExtension = fileExtensionsMap[partialEmbeddedDocumentInfos.language]
-    const embeddedDocumentFilename = path.basename(originalPath) + fileExtension
+    const embeddedDocumentFilename = randomName + fileExtension
+    const pathToEmbeddedDocumentsFolder = path.join(this.pathToBuildFolder, EMBEDDED_DOCUMENTS_FOLDER)
     const pathToEmbeddedDocument = `${pathToEmbeddedDocumentsFolder}/${embeddedDocumentFilename}`
+    fs.mkdirSync(pathToEmbeddedDocumentsFolder, { recursive: true })
     fs.writeFileSync(pathToEmbeddedDocument, embeddedDocumentContent)
     const documentInfos = {
       ...partialEmbeddedDocumentInfos,

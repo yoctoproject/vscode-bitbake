@@ -39,7 +39,6 @@ let workspaceRoot: string = ''
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   workspaceRoot = new URL(params.workspaceFolders?.[0]?.uri ?? '').pathname
-  embeddedDocumentsManager.workspaceFolder = workspaceRoot
 
   setOutputParserConnection(connection)
   setNotificationManagerConnection(connection)

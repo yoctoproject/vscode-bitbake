@@ -4,7 +4,6 @@
  * ------------------------------------------------------------------------------------------ */
 
 import fs from 'fs'
-import path from 'path'
 
 import { embeddedDocumentsManager } from '../embedded-languages/documents-manager'
 import { generateEmbeddedDocuments, getEmbeddedDocumentUriStringOnPosition } from '../embedded-languages/general-support'
@@ -19,7 +18,6 @@ describe('Embedded Documents', () => {
       analyzer.initialize(parser)
     }
     analyzer.resetAnalyzedDocuments()
-    embeddedDocumentsManager.workspaceFolder = __dirname
     embeddedDocumentsManager.pathToBuildFolder = __dirname
   })
 
@@ -28,6 +26,7 @@ describe('Embedded Documents', () => {
   })
 
   it('generate and delete embedded documents for bash and python', async () => {
+    // Setup
     await analyzer.analyze({
       uri: FIXTURE_DOCUMENT.EMBEDDED.uri,
       document: FIXTURE_DOCUMENT.EMBEDDED
@@ -35,49 +34,52 @@ describe('Embedded Documents', () => {
 
     generateEmbeddedDocuments(FIXTURE_DOCUMENT.EMBEDDED)
 
-    const bashEmbeddedDocumentPath = path.join(__dirname, '/embedded-documents/fixtures/embedded.bb.sh')
-    const bashEmbeddedDocumentUri = `file://${bashEmbeddedDocumentPath}`
-    const pythonEmbeddedDocumentPath = path.join(__dirname, '/embedded-documents/fixtures/embedded.bb.py')
-    const pythonEmbeddedDocumentUri = `file://${pythonEmbeddedDocumentPath}`
-
+    // Test embedded documents infos
     const bashEmbeddedDocumentInfos = embeddedDocumentsManager.getEmbeddedDocumentInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'bash')
-    expect(bashEmbeddedDocumentInfos).toEqual({
-      uri: bashEmbeddedDocumentUri,
-      language: 'bash',
-      lineOffset: 0
-    })
+    if (bashEmbeddedDocumentInfos === undefined) {
+      expect(bashEmbeddedDocumentInfos).not.toBeUndefined()
+      return
+    }
+    expect(bashEmbeddedDocumentInfos.language).toEqual('bash')
+    expect(bashEmbeddedDocumentInfos?.lineOffset).toEqual(0)
 
     const pythonEmbeddedDocumentInfos = embeddedDocumentsManager.getEmbeddedDocumentInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'python')
-    expect(pythonEmbeddedDocumentInfos).toEqual({
-      uri: pythonEmbeddedDocumentUri,
-      language: 'python',
-      lineOffset: 0
-    })
+    if (pythonEmbeddedDocumentInfos === undefined) {
+      expect(bashEmbeddedDocumentInfos).not.toBeUndefined()
+      return
+    }
+    expect(pythonEmbeddedDocumentInfos?.language).toEqual('python')
+    expect(pythonEmbeddedDocumentInfos?.lineOffset).toEqual(0)
 
-    const pythonEmbeddedDocument = fs.readFileSync(pythonEmbeddedDocumentPath, 'utf8')
-    expect(pythonEmbeddedDocument).toEqual(expectedPythonEmbeddedDocument)
-
+    // Test embedded documents contents
+    const bashEmbeddedDocumentPath = bashEmbeddedDocumentInfos.uri.replace('file://', '')
     const bashEmbeddedDocument = fs.readFileSync(bashEmbeddedDocumentPath, 'utf8')
     expect(bashEmbeddedDocument).toEqual(expectedBashEmbeddedDocument)
 
-    const undefinedDocumentInfos = getEmbeddedDocumentUriStringOnPosition(
+    const pythonEmbeddedDocumentPath = pythonEmbeddedDocumentInfos.uri.replace('file://', '')
+    const pythonEmbeddedDocument = fs.readFileSync(pythonEmbeddedDocumentPath, 'utf8')
+    expect(pythonEmbeddedDocument).toEqual(expectedPythonEmbeddedDocument)
+
+    // Test returned embedded documents for positions
+    const undefinedDocumentUri = getEmbeddedDocumentUriStringOnPosition(
       FIXTURE_DOCUMENT.EMBEDDED.uri,
       { line: 0, character: 0 }
     )
-    expect(undefinedDocumentInfos).toBeUndefined()
+    expect(undefinedDocumentUri).toBeUndefined()
 
-    const sameBashEmbeddedDocumentUri = getEmbeddedDocumentUriStringOnPosition(
+    const bashEmbeddedDocumentUri = getEmbeddedDocumentUriStringOnPosition(
       FIXTURE_DOCUMENT.EMBEDDED.uri,
       { line: 8, character: 0 }
     )
-    expect(sameBashEmbeddedDocumentUri).toEqual(bashEmbeddedDocumentUri)
+    expect(bashEmbeddedDocumentUri).toEqual(bashEmbeddedDocumentInfos.uri)
 
-    const samePythonEmbeddedDocumentUri = getEmbeddedDocumentUriStringOnPosition(
+    const pythonEmbeddedDocumentUri = getEmbeddedDocumentUriStringOnPosition(
       FIXTURE_DOCUMENT.EMBEDDED.uri,
       { line: 3, character: 0 }
     )
-    expect(samePythonEmbeddedDocumentUri).toEqual(pythonEmbeddedDocumentUri)
+    expect(pythonEmbeddedDocumentUri).toEqual(pythonEmbeddedDocumentInfos.uri)
 
+    // Test deletion
     embeddedDocumentsManager.deleteEmbeddedDocuments(FIXTURE_DOCUMENT.EMBEDDED.uri)
     expect(() => fs.readFileSync(bashEmbeddedDocumentPath)).toThrowError()
     expect(() => fs.readFileSync(pythonEmbeddedDocumentPath)).toThrowError()
