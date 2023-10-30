@@ -4,21 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as fs from 'fs'
-import * as vscode from 'vscode'
-import { BitbakeDriver } from '../../driver/BitbakeDriver'
-
-jest.mock('vscode')
-
-const mockBitbakeConfiguration = (values: Record<string, string>): void => {
-  vscode.workspace.getConfiguration = jest.fn().mockImplementation(() => ({
-    get: (key: string): string | undefined => {
-      if (key === undefined || values[key] === undefined) {
-        return ''
-      }
-      return values[key]
-    }
-  }))
-}
+import { BitbakeDriver } from '../../BitbakeDriver'
 
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
@@ -39,12 +25,12 @@ describe('BitbakeDriver Tests', () => {
     const fakeEnvScriptPath = '/tmp/bitbake-vscode-test/envsetup.sh'
     const fakeBuildPath = '/tmp/bitbake-vscode-test'
 
-    mockBitbakeConfiguration({
-      pathToEnvScript: fakeEnvScriptPath,
-      pathToBuildFolder: fakeBuildPath
-    })
     const driver = new BitbakeDriver()
-    driver.loadSettings()
+    driver.loadSettings({
+      pathToEnvScript: fakeEnvScriptPath,
+      pathToBuildFolder: fakeBuildPath,
+      pathToBitbakeFolder: ''
+    })
 
     fs.mkdirSync(fakeBuildPath, { recursive: true })
     const content = 'cd ' + fakeBuildPath + '; echo FINDME'

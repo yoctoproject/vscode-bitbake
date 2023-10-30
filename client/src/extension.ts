@@ -9,7 +9,7 @@ import { type LanguageClient } from 'vscode-languageclient/node'
 import { ClientNotificationManager } from './ui/ClientNotificationManager'
 import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
-import { BitbakeDriver } from './driver/BitbakeDriver'
+import { BitbakeDriver } from './lib/src/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { registerBitbakeCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
@@ -30,7 +30,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
   loadLoggerSettings()
   bitbakeExtensionContext = context
-  bitbakeDriver.loadSettings()
+  bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
@@ -43,7 +43,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration('bitbake')) {
-      bitbakeDriver.loadSettings()
+      bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
       logger.debug('Bitbake settings changed')
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
@@ -53,7 +53,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
     logger.debug('Bitbake workspace changed: ' + JSON.stringify(event))
     loadLoggerSettings()
-    bitbakeDriver.loadSettings()
+    bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   }))
 

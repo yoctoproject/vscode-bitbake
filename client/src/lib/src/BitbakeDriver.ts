@@ -5,15 +5,15 @@
 
 import childProcess from 'child_process'
 
-import { logger } from '../lib/src/utils/OutputLogger'
+import { logger } from './utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings } from './BitbakeSettings'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '' }
 
-  loadSettings (): void {
-    this.bitbakeSettings = loadBitbakeSettings()
+  loadSettings (settings: any, workspaceFolder: string = ''): void {
+    this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
     logger.debug('BitbakeDriver settings updated: ' + JSON.stringify(this.bitbakeSettings))
   }
 
