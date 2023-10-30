@@ -11,14 +11,15 @@
 import {
   type TextDocumentPositionParams,
   type Diagnostic,
-  type SymbolInformation
+  type SymbolInformation,
+  type Range
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
 import { getGlobalDeclarations, type GlobalDeclarations } from './declarations'
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
-
+import { range } from './utils'
 const DEBOUNCE_TIME_MS = 500
 
 interface AnalyzedDocument {
@@ -142,6 +143,36 @@ export default class Analyzer {
       params.position.character
     )
     return n?.type === 'identifier'
+  }
+
+  /**
+   * Check if the node is the identifier in a variable assignment syntax (identifiers are only on the left hand side)
+   */
+  public isIdentifierOfVariableAssignment (
+    params: TextDocumentPositionParams
+  ): boolean {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+    return n?.type === 'identifier' && n?.parent?.type === 'variable_assignment'
+  }
+
+  public rangeForWordAtPoint (
+    params: TextDocumentPositionParams
+  ): Range | undefined {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+
+    if (n === null || n.childCount > 0 || n.text.trim() === '') {
+      return undefined
+    }
+
+    return range(n)
   }
 
   /**
