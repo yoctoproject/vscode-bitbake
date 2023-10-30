@@ -17,7 +17,7 @@
 		"url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
 	},
 	"scripts": {
-		"postinstall": "cd server && npm install --omit=dev && cd ../client && npm install --omit=dev",
+		"postinstall": "cd server && npm install && cd ../client && npm install",
 		"fetch": "npm run fetch:poky",
 		"fetch:poky": "mkdir -p resources/poky && curl -L -o resources/poky.tar.bz2 https://downloads.yoctoproject.org/releases/yocto/yocto-4.2.3/poky-aa63b25cbe25d89ab07ca11ee72c17cab68df8de.tar.bz2 && tar -xvjf resources/poky.tar.bz2 -C resources",
 		"compile": "tsc -b && npm run compile:server && npm run compile:client",
