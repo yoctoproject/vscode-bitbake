@@ -81,8 +81,8 @@ describe('Embedded Language Documents', () => {
 
     // Test deletion
     embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED.uri)
-    expect(() => fs.readFileSync(bashEmbeddedLanguageDocPath)).toThrowError()
-    expect(() => fs.readFileSync(pythonEmbeddedLanguageDocPath)).toThrowError()
+    expect(() => fs.readFileSync(bashEmbeddedLanguageDocPath)).toThrow()
+    expect(() => fs.readFileSync(pythonEmbeddedLanguageDocPath)).toThrow()
   })
 })
 
