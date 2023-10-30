@@ -24,8 +24,8 @@ import {
   type ServerOptions
 } from 'vscode-languageclient/node'
 
-const getEmbeddedLanguageDocUri = async (client: LanguageClient, uriString: string, position: Position): Promise<string> => {
-  return await client.sendRequest('custom/getEmbeddedLanguageDocUri', { uriString, position })
+const getEmbeddedLanguageDocInfos = async (client: LanguageClient, uriString: string, position: Position): Promise<{ uri: string, lineOffset: number }> => {
+  return await client.sendRequest('custom/getEmbeddedLanguageDocInfos', { uriString, position })
 }
 
 const notifyFileRenameChanged = async (client: LanguageClient, oldUriString: string, newUriString: string): Promise<void> => {
@@ -71,29 +71,37 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     },
     middleware: {
       provideCompletionItem: async (document, position, context, token, next) => {
-        const embeddedLanguageDocUriString = await getEmbeddedLanguageDocUri(client, document.uri.toString(), position)
-        if (embeddedLanguageDocUriString === undefined) {
+        const embeddedLanguageDocInfos = await getEmbeddedLanguageDocInfos(client, document.uri.toString(), position)
+        if (embeddedLanguageDocInfos === undefined) {
           return await next(document, position, context, token)
         }
-        const vdocUri = Uri.parse(embeddedLanguageDocUriString)
+        const adjustedPosition = {
+          ...position,
+          line: position.line + embeddedLanguageDocInfos.lineOffset
+        }
+        const vdocUri = Uri.parse(embeddedLanguageDocInfos.uri)
         const result = await commands.executeCommand<CompletionList>(
           'vscode.executeCompletionItemProvider',
           vdocUri,
-          position,
+          adjustedPosition,
           context.triggerCharacter
         )
         return result
       },
       provideHover: async (document, position, token, next) => {
-        const embeddedLanguageDocUriString = await getEmbeddedLanguageDocUri(client, document.uri.toString(), position)
-        if (embeddedLanguageDocUriString === undefined) {
+        const embeddedLanguageDocInfos = await getEmbeddedLanguageDocInfos(client, document.uri.toString(), position)
+        if (embeddedLanguageDocInfos === undefined) {
           return await next(document, position, token)
         }
-        const vdocUri = Uri.parse(embeddedLanguageDocUriString)
+        const adjustedPosition = {
+          character: position.character,
+          line: position.line + embeddedLanguageDocInfos.lineOffset
+        }
+        const vdocUri = Uri.parse(embeddedLanguageDocInfos.uri)
         const result = await commands.executeCommand<Hover[]>(
           'vscode.executeHoverProvider',
           vdocUri,
-          position
+          adjustedPosition
         )
         return result[0]
       }

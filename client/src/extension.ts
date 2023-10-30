@@ -26,11 +26,23 @@ function loadLoggerSettings (): void {
   logger.info('Bitbake logging level: ' + logger.level)
 }
 
+function updatePythonPath (pathToBitbakeFolder: string): void {
+  const pythonConfig = vscode.workspace.getConfiguration('python')
+  const extraPaths = pythonConfig.get<string[]>('autoComplete.extraPaths') ?? []
+  const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
+  if (!extraPaths.includes(pathToBitbakeLib)) {
+    extraPaths.push(`${pathToBitbakeFolder}/lib`)
+  }
+  void pythonConfig.update('autoComplete.extraPaths', extraPaths, vscode.ConfigurationTarget.Workspace)
+  void pythonConfig.update('analysis.extraPaths', extraPaths, vscode.ConfigurationTarget.Workspace)
+}
+
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
   loadLoggerSettings()
   bitbakeExtensionContext = context
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
+  updatePythonPath(bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)

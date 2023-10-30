@@ -29,7 +29,7 @@ import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { setOutputParserConnection } from './OutputParser'
 import { setNotificationManagerConnection, serverNotificationManager } from './ServerNotificationManager'
 import { onHoverHandler } from './connectionHandlers/onHover'
-import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocUriStringOnPosition } from './embedded-languages/general-support'
+import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from './embedded-languages/general-support'
 import { embeddedLanguageDocsManager } from './embedded-languages/documents-manager'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -121,8 +121,8 @@ connection.onDefinition(onDefinitionHandler)
 
 connection.onHover(onHoverHandler)
 
-connection.onRequest('custom/getEmbeddedLanguageDocUri', async ({ uriString, position }: { uriString: string, position: Position }): Promise<string | undefined> => {
-  return getEmbeddedLanguageDocUriStringOnPosition(uriString, position)
+connection.onRequest('custom/getEmbeddedLanguageDocInfos', async ({ uriString, position }: { uriString: string, position: Position }): Promise<{ uri: string, lineOffset: number } | undefined> => {
+  return getEmbeddedLanguageDocInfosOnPosition(uriString, position)
 })
 
 connection.onNotification('custom/fileNameChanged', ({ oldUriString, newUriString }: { oldUriString: string, newUriString: string }): void => {

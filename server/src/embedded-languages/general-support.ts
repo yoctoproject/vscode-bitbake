@@ -16,14 +16,14 @@ export const generateEmbeddedLanguageDocs = (textDocument: TextDocument): void =
   generatePythonEmbeddedLanguageDoc(textDocument)
 }
 
-export const getEmbeddedLanguageDocUriStringOnPosition = (uriString: string, position: Position): string | undefined => {
+export const getEmbeddedLanguageDocInfosOnPosition = (uriString: string, position: Position): { uri: string, lineOffset: number } | undefined => {
   if (isInsideBashRegion(uriString, position)) {
     const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'bash')
-    return documentInfos?.uri
+    return documentInfos
   }
   if (isInsidePythonRegion(uriString, position)) {
     const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'python')
-    return documentInfos?.uri
+    return documentInfos
   }
   return undefined
 }

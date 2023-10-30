@@ -25,10 +25,11 @@ export const generatePythonEmbeddedLanguageDoc = (textDocument: TextDocument): v
       embeddedLanguageDocAsText[i] = documentAsText[i]
     }
   })
+  embeddedLanguageDocAsText.unshift('import bb')
   const content = embeddedLanguageDocAsText.join('\n')
   const partialInfos: Omit<EmbeddedLanguageDocInfos, 'uri'> = {
     language: 'python',
-    lineOffset: 0
+    lineOffset: 1
   }
   embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
 }

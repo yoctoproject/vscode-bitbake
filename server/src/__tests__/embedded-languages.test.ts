@@ -6,7 +6,7 @@
 import fs from 'fs'
 
 import { embeddedLanguageDocsManager } from '../embedded-languages/documents-manager'
-import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocUriStringOnPosition } from '../embedded-languages/general-support'
+import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from '../embedded-languages/general-support'
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
@@ -49,7 +49,7 @@ describe('Embedded Language Documents', () => {
       return
     }
     expect(pythonEmbeddedLanguageDocInfos?.language).toEqual('python')
-    expect(pythonEmbeddedLanguageDocInfos?.lineOffset).toEqual(0)
+    expect(pythonEmbeddedLanguageDocInfos?.lineOffset).toEqual(1)
 
     // Test embedded documents contents
     const bashEmbeddedLanguageDocPath = bashEmbeddedLanguageDocInfos.uri.replace('file://', '')
@@ -61,23 +61,23 @@ describe('Embedded Language Documents', () => {
     expect(pythonEmbeddedLanguageDoc).toEqual(expectedPythonEmbeddedLanguageDoc)
 
     // Test returned embedded documents for positions
-    const undefinedDocumentUri = getEmbeddedLanguageDocUriStringOnPosition(
+    const undefinedDocumentUri = getEmbeddedLanguageDocInfosOnPosition(
       FIXTURE_DOCUMENT.EMBEDDED.uri,
       { line: 0, character: 0 }
     )
     expect(undefinedDocumentUri).toBeUndefined()
 
-    const bashEmbeddedLanguageDocUri = getEmbeddedLanguageDocUriStringOnPosition(
+    const bashEmbeddedLanguageDocInfosOnPosition = getEmbeddedLanguageDocInfosOnPosition(
       FIXTURE_DOCUMENT.EMBEDDED.uri,
       { line: 8, character: 0 }
     )
-    expect(bashEmbeddedLanguageDocUri).toEqual(bashEmbeddedLanguageDocInfos.uri)
+    expect(bashEmbeddedLanguageDocInfosOnPosition).toEqual(bashEmbeddedLanguageDocInfos)
 
-    const pythonEmbeddedLanguageDocUri = getEmbeddedLanguageDocUriStringOnPosition(
+    const pythonEmbeddedLanguageDocInfosOnPosition = getEmbeddedLanguageDocInfosOnPosition(
       FIXTURE_DOCUMENT.EMBEDDED.uri,
       { line: 3, character: 0 }
     )
-    expect(pythonEmbeddedLanguageDocUri).toEqual(pythonEmbeddedLanguageDocInfos.uri)
+    expect(pythonEmbeddedLanguageDocInfosOnPosition).toEqual(pythonEmbeddedLanguageDocInfos)
 
     // Test moving embedded documents
     const newUri = 'dummy'
@@ -95,7 +95,8 @@ describe('Embedded Language Documents', () => {
 })
 
 const expectedPythonEmbeddedLanguageDoc =
-`                                    
+`import bb
+                                    
 
 def do_foo():
     print('123')
