@@ -6,23 +6,23 @@
 import { type TextDocument } from 'vscode-languageserver-textdocument'
 import { type Position } from 'vscode-languageserver'
 
-import { generateBashEmbeddedDocument } from './bash-support'
-import { generatePythonEmbeddedDocument } from './python-support'
-import { embeddedDocumentsManager } from './documents-manager'
+import { generateBashEmbeddedLanguageDoc } from './bash-support'
+import { generatePythonEmbeddedLanguageDoc } from './python-support'
+import { embeddedLanguageDocsManager } from './documents-manager'
 import { isInsideBashRegion, isInsidePythonRegion } from './utils'
 
-export const generateEmbeddedDocuments = (textDocument: TextDocument): void => {
-  generateBashEmbeddedDocument(textDocument)
-  generatePythonEmbeddedDocument(textDocument)
+export const generateEmbeddedLanguageDocs = (textDocument: TextDocument): void => {
+  generateBashEmbeddedLanguageDoc(textDocument)
+  generatePythonEmbeddedLanguageDoc(textDocument)
 }
 
-export const getEmbeddedDocumentUriStringOnPosition = (uriString: string, position: Position): string | undefined => {
+export const getEmbeddedLanguageDocUriStringOnPosition = (uriString: string, position: Position): string | undefined => {
   if (isInsideBashRegion(uriString, position)) {
-    const documentInfos = embeddedDocumentsManager.getEmbeddedDocumentInfos(uriString, 'bash')
+    const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'bash')
     return documentInfos?.uri
   }
   if (isInsidePythonRegion(uriString, position)) {
-    const documentInfos = embeddedDocumentsManager.getEmbeddedDocumentInfos(uriString, 'python')
+    const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'python')
     return documentInfos?.uri
   }
   return undefined

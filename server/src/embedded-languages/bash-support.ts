@@ -7,24 +7,24 @@ import { type TextDocument } from 'vscode-languageserver-textdocument'
 import { replaceTextForSpaces } from './utils'
 
 import { analyzer } from '../tree-sitter/analyzer'
-import { type EmbeddedDocumentInfos } from './utils'
-import { embeddedDocumentsManager } from './documents-manager'
+import { type EmbeddedLanguageDocInfos } from './utils'
+import { embeddedLanguageDocsManager } from './documents-manager'
 
-export const generateBashEmbeddedDocument = (textDocument: TextDocument): void => {
+export const generateBashEmbeddedLanguageDoc = (textDocument: TextDocument): void => {
   const bashRegions = analyzer.getBashRegions(textDocument.uri)
   const documentAsText = textDocument.getText().split(/\r?\n/g)
-  const embeddedDocumentAsText = replaceTextForSpaces(documentAsText)
+  const embeddedLanguageDocAsText = replaceTextForSpaces(documentAsText)
   bashRegions.forEach((region) => {
     const { start, end } = region.location.range
     for (let i = start.line; i <= end.line; i++) {
-      embeddedDocumentAsText[i] = documentAsText[i]
+      embeddedLanguageDocAsText[i] = documentAsText[i]
     }
   })
 
-  const content = embeddedDocumentAsText.join('\n')
-  const partialInfos: Omit<EmbeddedDocumentInfos, 'uri'> = {
+  const content = embeddedLanguageDocAsText.join('\n')
+  const partialInfos: Omit<EmbeddedLanguageDocInfos, 'uri'> = {
     language: 'bash',
     lineOffset: 0
   }
-  embeddedDocumentsManager.saveEmbeddedDocument(textDocument.uri, content, partialInfos)
+  embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
 }

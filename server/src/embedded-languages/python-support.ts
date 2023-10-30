@@ -7,28 +7,28 @@ import { type TextDocument } from 'vscode-languageserver-textdocument'
 import { replaceTextForSpaces } from './utils'
 
 import { analyzer } from '../tree-sitter/analyzer'
-import { embeddedDocumentsManager } from './documents-manager'
-import { type EmbeddedDocumentInfos } from './utils'
+import { embeddedLanguageDocsManager } from './documents-manager'
+import { type EmbeddedLanguageDocInfos } from './utils'
 
-export const generatePythonEmbeddedDocument = (textDocument: TextDocument): void => {
+export const generatePythonEmbeddedLanguageDoc = (textDocument: TextDocument): void => {
   const pythonRegions = analyzer.getPythonRegions(textDocument.uri)
   const documentAsText = textDocument.getText().split(/\r?\n/g)
-  const embeddedDocumentAsText = replaceTextForSpaces(documentAsText)
+  const embeddedLanguageDocAsText = replaceTextForSpaces(documentAsText)
   pythonRegions.forEach((region) => {
     const { start, end } = region.location.range
     const declarationLine = documentAsText[start.line]
       .replace(/^(\s*fakeroot)?\s*python/, 'def')
       .replace(/:(append|prepend|remove)/, (_match, p1) => { return `_${p1}` })
       .replace('{', ':')
-    embeddedDocumentAsText[start.line] = declarationLine
+    embeddedLanguageDocAsText[start.line] = declarationLine
     for (let i = start.line + 1; i < end.line; i++) {
-      embeddedDocumentAsText[i] = documentAsText[i]
+      embeddedLanguageDocAsText[i] = documentAsText[i]
     }
   })
-  const content = embeddedDocumentAsText.join('\n')
-  const partialInfos: Omit<EmbeddedDocumentInfos, 'uri'> = {
+  const content = embeddedLanguageDocAsText.join('\n')
+  const partialInfos: Omit<EmbeddedLanguageDocInfos, 'uri'> = {
     language: 'python',
     lineOffset: 0
   }
-  embeddedDocumentsManager.saveEmbeddedDocument(textDocument.uri, content, partialInfos)
+  embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
 }

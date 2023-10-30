@@ -9,7 +9,7 @@ import fs from 'fs'
 
 import logger from 'winston'
 
-import { type EmbeddedDocumentInfos, type EmbeddedLanguageType } from './utils'
+import { type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from './utils'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
@@ -18,67 +18,67 @@ const fileExtensionsMap = {
   python: '.py'
 }
 
-type EmbeddedDocumentsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedDocumentInfos>>
+type EmbeddedLanguageDocsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedLanguageDocInfos>>
 
-export default class EmbeddedDocumentsManager {
-  private readonly embeddedDocumentsInfos = new Map<string, EmbeddedDocumentsRecord>() // map of original uri to embedded documents infos
+export default class EmbeddedLanguageDocsManager {
+  private readonly embeddedLanguageDocsInfos = new Map<string, EmbeddedLanguageDocsRecord>() // map of original uri to embedded documents infos
   storagePath: string = ''
 
-  private registerEmbeddedDocumentInfos (originalUriString: string, embeddedDocumentInfos: EmbeddedDocumentInfos): void {
-    const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString) ?? {}
-    embeddedDocuments[embeddedDocumentInfos.language] = embeddedDocumentInfos
-    this.embeddedDocumentsInfos.set(originalUriString, embeddedDocuments)
+  private registerEmbeddedLanguageDocInfos (originalUriString: string, embeddedLanguageDocInfos: EmbeddedLanguageDocInfos): void {
+    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
+    embeddedLanguageDocs[embeddedLanguageDocInfos.language] = embeddedLanguageDocInfos
+    this.embeddedLanguageDocsInfos.set(originalUriString, embeddedLanguageDocs)
   }
 
-  getEmbeddedDocumentInfos (
+  getEmbeddedLanguageDocInfos (
     originalUriString: string,
     languageType: EmbeddedLanguageType
-  ): EmbeddedDocumentInfos | undefined {
-    const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString)
-    return embeddedDocuments?.[languageType]
+  ): EmbeddedLanguageDocInfos | undefined {
+    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString)
+    return embeddedLanguageDocs?.[languageType]
   }
 
-  saveEmbeddedDocument (
+  saveEmbeddedLanguageDoc (
     originalUriString: string,
-    embeddedDocumentContent: string,
-    partialEmbeddedDocumentInfos: Omit<EmbeddedDocumentInfos, 'uri'>
+    embeddedLanguageDocContent: string,
+    partialEmbeddedLanguageDocInfos: Omit<EmbeddedLanguageDocInfos, 'uri'>
   ): void {
-    logger.debug(`Save embedded document (${partialEmbeddedDocumentInfos.language}) for`, originalUriString)
+    logger.debug(`Save embedded document (${partialEmbeddedLanguageDocInfos.language}) for`, originalUriString)
     const randomName = randomUUID()
-    const fileExtension = fileExtensionsMap[partialEmbeddedDocumentInfos.language]
-    const embeddedDocumentFilename = randomName + fileExtension
-    const pathToEmbeddedDocumentsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
-    const pathToEmbeddedDocument = `${pathToEmbeddedDocumentsFolder}/${embeddedDocumentFilename}`
+    const fileExtension = fileExtensionsMap[partialEmbeddedLanguageDocInfos.language]
+    const embeddedLanguageDocFilename = randomName + fileExtension
+    const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+    const pathToEmbeddedLanguageDoc = `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
     try {
-      fs.mkdirSync(pathToEmbeddedDocumentsFolder, { recursive: true })
-      fs.writeFileSync(pathToEmbeddedDocument, embeddedDocumentContent)
+      fs.mkdirSync(pathToEmbeddedLanguageDocsFolder, { recursive: true })
+      fs.writeFileSync(pathToEmbeddedLanguageDoc, embeddedLanguageDocContent)
     } catch (error) {
       logger.error('Failed to create embedded document:', error)
     }
     const documentInfos = {
-      ...partialEmbeddedDocumentInfos,
-      uri: `file://${pathToEmbeddedDocument}`
+      ...partialEmbeddedLanguageDocInfos,
+      uri: `file://${pathToEmbeddedLanguageDoc}`
     }
-    this.registerEmbeddedDocumentInfos(originalUriString, documentInfos)
+    this.registerEmbeddedLanguageDocInfos(originalUriString, documentInfos)
   }
 
-  deleteEmbeddedDocuments (originalUriString: string): void {
+  deleteEmbeddedLanguageDocs (originalUriString: string): void {
     logger.debug('Delete embedded documents for', originalUriString)
-    const embeddedDocuments = this.embeddedDocumentsInfos.get(originalUriString) ?? {}
-    Object.values(embeddedDocuments).forEach(({ uri }) => {
-      const pathToEmbeddedDocument = uri.replace('file://', '')
+    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
+    Object.values(embeddedLanguageDocs).forEach(({ uri }) => {
+      const pathToEmbeddedLanguageDoc = uri.replace('file://', '')
       try {
-        fs.unlink(pathToEmbeddedDocument, () => {})
+        fs.unlink(pathToEmbeddedLanguageDoc, () => {})
       } catch (error) {
         logger.error('Failed to delete embedded document:', error)
       }
     })
-    this.embeddedDocumentsInfos.delete(originalUriString)
+    this.embeddedLanguageDocsInfos.delete(originalUriString)
   }
 
-  moveEmbeddedDocuments (): void {
+  moveEmbeddedLanguageDocs (): void {
     // TODO: Handle the case where the file has been moved or renamed. How?
   }
 }
 
-export const embeddedDocumentsManager = new EmbeddedDocumentsManager()
+export const embeddedLanguageDocsManager = new EmbeddedLanguageDocsManager()

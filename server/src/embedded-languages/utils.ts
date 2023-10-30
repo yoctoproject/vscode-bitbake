@@ -11,7 +11,7 @@ import { positionIsWithinRange } from '../utils/range'
 
 export type EmbeddedLanguageType = 'bash' | 'python'
 
-export interface EmbeddedDocumentInfos {
+export interface EmbeddedLanguageDocInfos {
   uri: string
   language: EmbeddedLanguageType
   lineOffset: number
