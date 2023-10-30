@@ -26,13 +26,10 @@ import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { setOutputParserConnection } from './OutputParser'
 import { setNotificationManagerConnection } from './ServerNotificationManager'
 import { onHoverHandler } from './connectionHandlers/onHover'
-import { printHelloWorld } from './lib/src/index'
-// Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
-  printHelloWorld()
   const workspaceRoot = params.workspaceFolders?.[0]?.uri ?? ''
   bitBakeProjectScanner.setProjectPath(workspaceRoot)
 
