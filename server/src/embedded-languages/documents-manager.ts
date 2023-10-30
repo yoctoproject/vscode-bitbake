@@ -76,8 +76,14 @@ export default class EmbeddedLanguageDocsManager {
     this.embeddedLanguageDocsInfos.delete(originalUriString)
   }
 
-  moveEmbeddedLanguageDocs (): void {
-    // TODO: Handle the case where the file has been moved or renamed. How?
+  moveEmbeddedLanguageDocs (oldUriString: string, newUriString: string): void {
+    logger.debug(`Move embedded documents from ${oldUriString} to ${newUriString}`)
+    const oldInfos = this.embeddedLanguageDocsInfos.get(oldUriString)
+    if (oldInfos === undefined) {
+      return
+    }
+    this.embeddedLanguageDocsInfos.delete(oldUriString)
+    this.embeddedLanguageDocsInfos.set(newUriString, oldInfos)
   }
 }
 

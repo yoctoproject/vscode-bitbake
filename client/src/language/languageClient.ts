@@ -28,6 +28,10 @@ const getEmbeddedLanguageDocUri = async (client: LanguageClient, uriString: stri
   return await client.sendRequest('custom/getEmbeddedLanguageDocUri', { uriString, position })
 }
 
+const notifyFileRenameChanged = async (client: LanguageClient, oldUriString: string, newUriString: string): Promise<void> => {
+  await client.sendNotification('custom/fileNameChanged', { oldUriString, newUriString })
+}
+
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
   // The debug options for the server
@@ -39,6 +43,12 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     run: { module: serverModule, transport: TransportKind.ipc },
     debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
   }
+
+  workspace.onDidRenameFiles((params) => {
+    params.files.forEach((file) => {
+      void notifyFileRenameChanged(client, file.oldUri.toString(), file.newUri.toString())
+    })
+  })
 
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {

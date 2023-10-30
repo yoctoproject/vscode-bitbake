@@ -79,8 +79,16 @@ describe('Embedded Language Documents', () => {
     )
     expect(pythonEmbeddedLanguageDocUri).toEqual(pythonEmbeddedLanguageDocInfos.uri)
 
+    // Test moving embedded documents
+    const newUri = 'dummy'
+    embeddedLanguageDocsManager.moveEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED.uri, newUri)
+    expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'bash')).toBeUndefined()
+    expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'python')).toBeUndefined()
+    expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(newUri, 'bash')).toEqual(bashEmbeddedLanguageDocInfos)
+    expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(newUri, 'python')).toEqual(pythonEmbeddedLanguageDocInfos)
+
     // Test deletion
-    embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED.uri)
+    embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(newUri)
     expect(() => fs.readFileSync(bashEmbeddedLanguageDocPath)).toThrow()
     expect(() => fs.readFileSync(pythonEmbeddedLanguageDocPath)).toThrow()
   })
