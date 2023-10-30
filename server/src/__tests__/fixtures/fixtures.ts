@@ -28,7 +28,8 @@ function getDocument (uri: string): TextDocument {
 export const FIXTURE_URI = {
   CORRECT: `file://${path.join(FIXTURE_FOLDER, 'correct.bb')}`,
   DECLARATION: `file://${path.join(FIXTURE_FOLDER, 'declarations.bb')}`,
-  COMPLETION: `file://${path.join(FIXTURE_FOLDER, 'completion.bb')}`
+  COMPLETION: `file://${path.join(FIXTURE_FOLDER, 'completion.bb')}`,
+  HOVER: `file://${path.join(FIXTURE_FOLDER, 'hover.bb')}`
 
 }
 
