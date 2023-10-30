@@ -30,5 +30,8 @@
   },
   "scripts": {
     "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json"
-  }
+  },
+  "workspaces": [
+    "../client/src/lib"
+  ]
 }

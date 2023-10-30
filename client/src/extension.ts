@@ -6,6 +6,8 @@
 import * as vscode from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 
+import { printHelloWorld } from './lib/src/index'
+
 import { ClientNotificationManager } from './ui/ClientNotificationManager'
 import { logger } from './ui/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
@@ -22,6 +24,7 @@ const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 export let bitbakeExtensionContext: vscode.ExtensionContext
 
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
+  printHelloWorld()
   logger.setOutputChannel(vscode.window.createOutputChannel('BitBake'))
   logger.loadSettings()
   bitbakeExtensionContext = context

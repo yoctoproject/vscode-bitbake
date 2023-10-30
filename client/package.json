@@ -270,5 +270,8 @@
   "devDependencies": {
     "@types/node": "^20.6.2",
     "@types/vscode": "^1.75.1"
-  }
+  },
+  "workspaces": [
+    "src/lib"
+  ]
 }

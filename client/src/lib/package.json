@@ -1,0 +1,22 @@
+{
+  "name": "vscode-bitbake-lib",
+  "description": "vscode-bitbake common library.",
+  "version": "1.1.2",
+  "author": "Savoir-faire Linux",
+  "license": "MIT",
+  "engines": {
+    "node": "*"
+  },
+  "bugs": {
+    "url": "https://github.com/savoirfairelinux/vscode-bitbake/issues"
+  },
+  "homepage": "https://github.com/savoirfairelinux/vscode-bitbake",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
+  },
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "scripts": {}
+}

@@ -12,7 +12,7 @@
 			],
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/client/out/**/*.js"
+				"${workspaceRoot}/client/out/**/*.js",
 			],
 			"preLaunchTask": "watch:client"
 		},
@@ -23,7 +23,7 @@
 			"port": 6009,
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/client/server/**/*.js"
+				"${workspaceRoot}/client/server/**/*.js",
 			],
 			"preLaunchTask": "watch:server"
 		},
