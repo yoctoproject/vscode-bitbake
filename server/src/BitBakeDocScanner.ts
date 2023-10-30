@@ -49,17 +49,12 @@ const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*
 
 export class BitBakeDocScanner {
   private _variablesInfos: Record<string, VariableInfos> = {}
-  private _variablesRegex = /(?!)/g // Initialize with dummy regex that won't match anything so we don't have to check for undefined
   private _yoctoTaskCompletionItems: CompletionItem[] = []
   private _variableFlagCompletionItems: CompletionItem[] = []
   private _variableCompletionItems: CompletionItem[] = []
 
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
-  }
-
-  get variablesRegex (): RegExp {
-    return this._variablesRegex
   }
 
   get yoctoTaskCompletionItems (): CompletionItem[] {
@@ -110,12 +105,6 @@ export class BitBakeDocScanner {
       })
     }
     this._variableCompletionItems = variableCompletionItems
-    const variablesNames = Object.keys(this._variablesInfos)
-    // Sort from longuest to shortest in order to make the regex greedy
-    // Otherwise it would match B before BB_PRESERVE_ENV
-    variablesNames.sort((a, b) => b.length - a.length)
-    const variablesRegExpString = `(${variablesNames.join('|')})`
-    this._variablesRegex = new RegExp(variablesRegExpString, 'gi')
   }
 
   public parseYoctoTaskFile (): void {
