@@ -3,25 +3,20 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import * as vscode from 'vscode'
+export interface OutputChannel {
+  appendLine: (message: string) => void
+  show: () => void
+  clear: () => void
+}
 
 export class OutputLogger {
   private static instance: OutputLogger
 
-  private outputChannel: vscode.OutputChannel | undefined
   // default value in package.json
-  private loggingLevel: string = ''
+  level: string = ''
+  outputChannel: OutputChannel | undefined
 
   private constructor () { }
-
-  public loadSettings (): void {
-    this.loggingLevel = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
-    this.info('Bitbake logging level: ' + this.loggingLevel)
-  }
-
-  public setOutputChannel (outputChannel: vscode.OutputChannel): void {
-    this.outputChannel = outputChannel
-  }
 
   public static getInstance (): OutputLogger {
     if (OutputLogger.instance === undefined) {
@@ -33,9 +28,6 @@ export class OutputLogger {
   public log (message: string, level: string = 'info'): void {
     if (this.shouldLog(level)) {
       this.outputChannel?.appendLine(message)
-      this.outputChannel?.show()
-
-      // Also log to the console (debug view)
       console.log(message)
     }
   }
@@ -48,7 +40,7 @@ export class OutputLogger {
     this.log(message, 'debug')
   }
 
-  public warning (message: string): void {
+  public warn (message: string): void {
     this.log(message, 'warning')
   }
 
@@ -57,13 +49,14 @@ export class OutputLogger {
   }
 
   public clear (): void {
+    console.clear()
     this.outputChannel?.clear()
   }
 
   private shouldLog (level: string): boolean {
     // Determine if the log level should be printed
     const logLevels = ['none', 'error', 'warning', 'info', 'debug']
-    const currentLevelIndex = logLevels.indexOf(this.loggingLevel)
+    const currentLevelIndex = logLevels.indexOf(this.level)
     const messageLevelIndex = logLevels.indexOf(level)
 
     return currentLevelIndex >= messageLevelIndex

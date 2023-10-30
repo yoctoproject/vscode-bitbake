@@ -7,7 +7,7 @@ import * as vscode from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 
 import { ClientNotificationManager } from './ui/ClientNotificationManager'
-import { logger } from './ui/OutputLogger'
+import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
@@ -21,9 +21,14 @@ let taskProvider: vscode.Disposable
 const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 export let bitbakeExtensionContext: vscode.ExtensionContext
 
+function loadLoggerSettings (): void {
+  logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
+  logger.info('Bitbake logging level: ' + logger.level)
+}
+
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
-  logger.setOutputChannel(vscode.window.createOutputChannel('BitBake'))
-  logger.loadSettings()
+  logger.outputChannel = vscode.window.createOutputChannel('BitBake')
+  loadLoggerSettings()
   bitbakeExtensionContext = context
   bitbakeDriver.loadSettings()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
@@ -42,12 +47,12 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       logger.debug('Bitbake settings changed')
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
-      logger.loadSettings()
+      loadLoggerSettings()
     }
   }))
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
     logger.debug('Bitbake workspace changed: ' + JSON.stringify(event))
-    logger.loadSettings()
+    loadLoggerSettings()
     bitbakeDriver.loadSettings()
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   }))
@@ -58,6 +63,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 }
 
 export function deactivate (): Thenable<void> | undefined {
-  taskProvider.dispose()
+  taskProvider.dispose();
+  (logger.outputChannel as vscode.OutputChannel).dispose()
   return deactivateLanguageServer(client)
 }

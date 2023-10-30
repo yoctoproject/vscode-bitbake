@@ -4,15 +4,9 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
-import { logger } from '../../ui/OutputLogger'
+import { logger } from '../../utils/OutputLogger'
 
 jest.mock('vscode')
-
-const mockLoggerConfiguration = (loggingLevel: string): void => {
-  vscode.workspace.getConfiguration = jest.fn().mockImplementation(() => ({
-    get: () => loggingLevel
-  }))
-}
 
 const mockChannel = (): jest.Mocked<any> => {
   const mockOutputChannel = {
@@ -37,16 +31,15 @@ describe('OutputLogger Tests', () => {
 
   it('should correctly log messages with appropriate log level', () => {
     const mockOutputChannel = mockChannel()
-    mockLoggerConfiguration('warning')
 
-    logger.setOutputChannel(vscode.window.createOutputChannel('Bitbake'))
-    logger.loadSettings()
+    logger.outputChannel = vscode.window.createOutputChannel('Bitbake')
+    logger.level = 'warning'
 
     const logSpy = jest.spyOn(mockOutputChannel, 'appendLine')
 
     logger.debug('Debug message')
     logger.info('Info message')
-    logger.warning('Warning message')
+    logger.warn('Warning message')
     logger.error('Error message')
 
     expect(logSpy).toHaveBeenCalledTimes(2)
