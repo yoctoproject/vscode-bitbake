@@ -48,17 +48,20 @@ export class ContextHandler {
   getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
     let definition: Definition = []
 
-    if (documentAsText.length > textDocumentPositionParams.position.line) {
-      const keyWord: string = this.getKeyWord(textDocumentPositionParams, documentAsText)
-      const currentLine: string = documentAsText[textDocumentPositionParams.position.line]
-      const symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine)
+    const currentLine: string = documentAsText[textDocumentPositionParams.position.line]
+    const symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine)
 
-      if ((keyWord !== undefined) && (keyWord !== '')) {
-        definition = this.getDefinitionForKeyWord(keyWord, currentLine, symbol)
-      } else {
-        definition = this._definitionProvider.createDefinitionForSymbol(symbol)
-      }
-    }
+    definition = this._definitionProvider.createDefinitionForSymbol(symbol)
+    return definition
+  }
+
+  getDefinitionForDirectives (directiveStatementKeyword: string, textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
+    let definition: Definition = []
+
+    const currentLine: string = documentAsText[textDocumentPositionParams.position.line]
+    const symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine)
+
+    definition = this.getDefinitionForKeyWord(directiveStatementKeyword, currentLine, symbol)
     return definition
   }
 
