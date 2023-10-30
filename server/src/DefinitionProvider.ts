@@ -23,7 +23,7 @@ import {
   type SymbolContent
 } from './SymbolScanner'
 
-import logger from 'winston'
+import { logger } from './lib/src/utils/OutputLogger'
 
 import path from 'path'
 

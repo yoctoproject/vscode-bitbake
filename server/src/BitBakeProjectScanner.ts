@@ -8,7 +8,7 @@ import find from 'find'
 import path from 'path'
 import fs from 'fs'
 
-import logger from 'winston'
+import { logger } from './lib/src/utils/OutputLogger'
 
 import type {
   ElementInfo,
@@ -263,7 +263,7 @@ export class BitBakeProjectScanner {
       parsingSuccess = false
     } else {
       if (commandResult.status !== 0) {
-        logger.warn('Unhandled parsing error:', output)
+        logger.warn('Unhandled parsing error:' + output)
       }
     }
     return parsingSuccess

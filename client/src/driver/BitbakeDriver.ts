@@ -5,7 +5,7 @@
 
 import childProcess from 'child_process'
 
-import { logger } from '../ui/OutputLogger'
+import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings } from './BitbakeSettings'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension

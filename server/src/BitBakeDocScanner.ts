@@ -5,7 +5,7 @@
 
 import path from 'path'
 import fs from 'fs'
-import logger from 'winston'
+import { logger } from './lib/src/utils/OutputLogger'
 import { CompletionItemKind, type CompletionItem } from 'vscode-languageserver'
 
 type SuffixType = 'layer' | 'providedItem' | undefined

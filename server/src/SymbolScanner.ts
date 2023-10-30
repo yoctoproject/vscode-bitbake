@@ -19,7 +19,7 @@ import type {
   DefinitionProvider
 } from './DefinitionProvider'
 
-import logger from 'winston'
+import { logger } from './lib/src/utils/OutputLogger'
 
 interface FileContent {
   filePath: string
