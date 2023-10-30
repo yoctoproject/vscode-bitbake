@@ -134,6 +134,39 @@ export default class Analyzer {
     this.uriToAnalyzedDocument = {}
   }
 
+  /**
+   * Get the directive keyword when the statement is either include, require or inherit directive
+   */
+  public getDirectiveStatementKeyword (
+    params: TextDocumentPositionParams
+  ): string | undefined {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+
+    const type = n?.type
+    const parentType = n?.parent?.type
+    switch (type) {
+      // Caveat: In some cases, the current tree-sitter can't correctly parse the classes in inherit directive. For example, a bbclass file with a name update-rc.d.bbclass and the statement for inherting it is 'inherit update-rc.d', the tree-sitter will treat '.d' as ERROR.
+      case 'identifier':
+        if (parentType === 'inherit_directive') {
+          return 'inherit'
+        }
+        return undefined
+      case 'include_path':
+        if (parentType === 'require_directive') {
+          return 'require'
+        } else if (parentType === 'include_directive') {
+          return 'include'
+        }
+        return undefined
+      default:
+        return undefined
+    }
+  }
+
   public isIdentifier (
     params: TextDocumentPositionParams
   ): boolean {
