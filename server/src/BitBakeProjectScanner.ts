@@ -3,10 +3,9 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import childProcess from 'child_process'
+import type childProcess from 'child_process'
 import find from 'find'
 import path from 'path'
-import fs from 'fs'
 
 import { logger } from './lib/src/utils/OutputLogger'
 
@@ -19,7 +18,7 @@ import type {
 import
 outputParser
   from './OutputParser'
-import { serverNotificationManager } from './ServerNotificationManager'
+import { BitbakeDriver } from './lib/src/BitbakeDriver'
 interface ScannStatus {
   scanIsRunning: boolean
   scanIsPending: boolean
@@ -33,23 +32,24 @@ export class BitBakeProjectScanner {
   private readonly _includeFileExtension: string = 'inc'
   private readonly _recipesFileExtension: string = 'bb'
 
-  private _projectPath: string = ''
   private _layers: LayerInfo[] = new Array < LayerInfo >()
   private _classes: ElementInfo[] = new Array < ElementInfo >()
   private _includes: ElementInfo[] = new Array < ElementInfo >()
   private _recipes: ElementInfo[] = new Array < ElementInfo >()
   private _shouldDeepExamine: boolean = false
-  private _pathToBuildFolder: string = 'build'
-  private _pathToEnvScript: string = 'oe-init-build-env'
-  private _pathToBitbakeFolder: string = 'bitbake'
+  private readonly _bitbakeDriver: BitbakeDriver = new BitbakeDriver()
+
+  loadSettings (settings: any, workspaceFolder: string = ''): void {
+    this._bitbakeDriver.loadSettings(settings, workspaceFolder)
+  }
 
   private readonly _scanStatus: ScannStatus = {
     scanIsRunning: false,
     scanIsPending: false
   }
 
-  get projectPath (): string {
-    return this._projectPath
+  get bitbakeDriver (): BitbakeDriver {
+    return this._bitbakeDriver
   }
 
   get layers (): LayerInfo[] {
@@ -76,36 +76,8 @@ export class BitBakeProjectScanner {
     this._shouldDeepExamine = shouldDeepExamine
   }
 
-  get pathToBuildFolder (): string {
-    return this._pathToBuildFolder
-  }
-
-  set pathToBuildFolder (pathToBuildFolder: string) {
-    this._pathToBuildFolder = pathToBuildFolder
-  }
-
-  get pathToEnvScript (): string {
-    return this._pathToEnvScript
-  }
-
-  set pathToEnvScript (pathToEnvScript: string) {
-    this._pathToEnvScript = pathToEnvScript
-  }
-
-  get pathToBitbakeFolder (): string {
-    return this._pathToBitbakeFolder
-  }
-
-  set pathToBitbakeFolder (pathToBitbakeFolder: string) {
-    this._pathToBitbakeFolder = pathToBitbakeFolder
-  }
-
-  setProjectPath (projectPath: string): void {
-    this._projectPath = projectPath
-  }
-
   rescanProject (): void {
-    logger.info(`request rescanProject ${this._projectPath}`)
+    logger.info(`request rescanProject ${this._bitbakeDriver.bitbakeSettings.pathToBuildFolder}`)
 
     if (!this._scanStatus.scanIsRunning) {
       this._scanStatus.scanIsRunning = true
@@ -139,7 +111,7 @@ export class BitBakeProjectScanner {
   }
 
   private printScanStatistic (): void {
-    logger.info(`Scan results for path: ${this._projectPath}`)
+    logger.info(`Scan results for path: ${this._bitbakeDriver.bitbakeSettings.pathToBuildFolder}`)
     logger.info('******************************************************************')
     logger.info(`Layer:     ${this._layers.length}`)
     logger.info(`Recipes:   ${this._recipes.length}`)
@@ -164,7 +136,15 @@ export class BitBakeProjectScanner {
       const output = commandResult.stdout.toString()
       const outputLines = output.split('\n')
 
-      for (const element of outputLines.slice(2)) {
+      const layersStartRegex = /^layer *path *priority$/
+      let layersFirstLine = 0
+      for (; layersFirstLine < outputLines.length; layersFirstLine++) {
+        if (layersStartRegex.test(outputLines[layersFirstLine])) {
+          break
+        }
+      }
+
+      for (const element of outputLines.slice(layersFirstLine + 2)) {
         const tempElement: string[] = element.split(/\s+/)
         const layerElement = {
           name: tempElement[0],
@@ -335,44 +315,7 @@ export class BitBakeProjectScanner {
   }
 
   private executeBitBakeCommand (command: string): childProcess.SpawnSyncReturns<Buffer> {
-    const scriptContent: string = this.generateBitBakeCommand(command)
-    const commandResult = this.executeCommand(scriptContent)
-
-    if (commandResult.status === 127) {
-      const output = commandResult.stderr.toString()
-      if (output.includes('bitbake')) {
-        // Seems like Bitbake could not be found.
-        // Are we sure this is the actual error?
-        serverNotificationManager.sendBitBakeNotFound()
-        throw new Error(output)
-      }
-    }
-
-    return commandResult
-  }
-
-  private executeCommand (command: string): childProcess.SpawnSyncReturns<Buffer> {
-    return childProcess.spawnSync(command, { shell: true })
-  }
-
-  private generateBitBakeCommand (bitbakeCommand: string): string {
-    const scriptFileBuffer: string[] = []
-
-    if (fs.existsSync(this._pathToEnvScript)) {
-      logger.info('using env script')
-      scriptFileBuffer.push(`. ./${this._pathToEnvScript} ${this._pathToBuildFolder} > /dev/null`)
-    } else {
-      logger.info('not using env script')
-      scriptFileBuffer.push(
-        `export PYTHONPATH=${this._pathToBitbakeFolder}/lib:$PYTHONPATH`,
-        `export PATH=${this._pathToBitbakeFolder}/bin:$PATH`,
-        `cd ${this.pathToBuildFolder}`
-      )
-    }
-
-    scriptFileBuffer.push(bitbakeCommand)
-
-    return scriptFileBuffer.join('\n')
+    return this._bitbakeDriver.spawnBitbakeProcessSync(command)
   }
 }
 

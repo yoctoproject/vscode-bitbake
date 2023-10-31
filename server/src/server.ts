@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import fs from 'fs'
 import {
   type Connection,
   type InitializeResult,
@@ -24,14 +25,16 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { setOutputParserConnection } from './OutputParser'
-import { setNotificationManagerConnection } from './ServerNotificationManager'
+import { setNotificationManagerConnection, serverNotificationManager } from './ServerNotificationManager'
 import { onHoverHandler } from './connectionHandlers/onHover'
+
+// Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
+let workspaceRoot: string = ''
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
-  const workspaceRoot = params.workspaceFolders?.[0]?.uri ?? ''
-  bitBakeProjectScanner.setProjectPath(workspaceRoot)
+  workspaceRoot = new URL(params.workspaceFolders?.[0]?.uri ?? '').pathname
 
   setOutputParserConnection(connection)
   setNotificationManagerConnection(connection)
@@ -59,32 +62,26 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   }
 })
 
-// The settings interface describe the server relevant settings part
-interface Settings {
-  bitbake: BitbakeSettings
-}
-
-interface BitbakeSettings {
-  loggingLevel: string
-  shouldDeepExamine: boolean
-  pathToEnvScript: string
-  pathToBuildFolder: string
-  pathToBitbakeFolder: string
-}
-
 function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
   logger.debug('set new symbol scanner')
   contextHandler.symbolScanner = newSymbolScanner
 }
 
+function checkBitbakePresence (): void {
+  const bitbakeFolder = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder
+  const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
+
+  if (!fs.existsSync(bitbakeBinPath)) {
+    serverNotificationManager.sendBitBakeNotFound()
+  }
+}
+
 connection.onDidChangeConfiguration((change) => {
-  const settings = change.settings as Settings
-  bitBakeProjectScanner.shouldDeepExamine = settings.bitbake.shouldDeepExamine
-  logger.level = settings.bitbake.loggingLevel
-  bitBakeProjectScanner.pathToBuildFolder = settings.bitbake.pathToBuildFolder
-  bitBakeProjectScanner.pathToBitbakeFolder = settings.bitbake.pathToBitbakeFolder
-  bitBakeDocScanner.parseVariablesFile(settings.bitbake.pathToBitbakeFolder)
-  bitBakeDocScanner.parseVariableFlagFile(settings.bitbake.pathToBitbakeFolder)
+  logger.level = change.settings.bitbake.loggingLevel
+  bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
+  bitBakeDocScanner.parseVariablesFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
+  bitBakeDocScanner.parseVariableFlagFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
+  checkBitbakePresence()
   bitBakeProjectScanner.rescanProject()
 })
 
