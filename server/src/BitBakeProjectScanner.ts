@@ -36,6 +36,7 @@ export class BitBakeProjectScanner {
   private _classes: ElementInfo[] = new Array < ElementInfo >()
   private _includes: ElementInfo[] = new Array < ElementInfo >()
   private _recipes: ElementInfo[] = new Array < ElementInfo >()
+  private _overrides: string[] = []
   private _shouldDeepExamine: boolean = false
   private readonly _bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 
@@ -46,6 +47,10 @@ export class BitBakeProjectScanner {
   private readonly _scanStatus: ScannStatus = {
     scanIsRunning: false,
     scanIsPending: false
+  }
+
+  get overrides (): string[] {
+    return this._overrides
   }
 
   get bitbakeDriver (): BitbakeDriver {
@@ -90,6 +95,7 @@ export class BitBakeProjectScanner {
           this.scanForIncludeFiles()
           this.scanForRecipes()
           this.scanRecipesAppends()
+          this.scanOverrides()
 
           logger.info('scan ready')
           this.printScanStatistic()
@@ -117,6 +123,7 @@ export class BitBakeProjectScanner {
     logger.info(`Recipes:   ${this._recipes.length}`)
     logger.info(`Inc-Files: ${this._includes.length}`)
     logger.info(`bbclass:   ${this._classes.length}`)
+    logger.info(`overrides:   ${this._overrides.length}`)
   }
 
   private scanForClasses (): void {
@@ -229,6 +236,13 @@ export class BitBakeProjectScanner {
     }
 
     this.scanForRecipesPath()
+  }
+
+  scanOverrides (): void {
+    const commandResult = this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
+    const output = commandResult.output.toString()
+    const outerReg = /\nOVERRIDES="(.*)"\n/
+    this._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
   parseAllRecipes (): boolean {

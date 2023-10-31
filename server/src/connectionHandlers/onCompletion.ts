@@ -19,6 +19,7 @@ import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import contextHandler from '../ContextHandler'
+import bitBakeProjectScanner from '../BitBakeProjectScanner'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   const wordPosition = {
@@ -58,7 +59,16 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
         }
       })
 
-      return bitBakeOperatorCompletionItems
+      const bitbakeOverridesCompletionItems: CompletionItem[] = bitBakeProjectScanner.overrides.map((override, index) => {
+        return {
+          label: override,
+          kind: CompletionItemKind.Property,
+          // Present overrides after operators, in order of priority
+          sortText: '~' + String.fromCharCode(21 + index) + override
+        }
+      })
+
+      return [...bitBakeOperatorCompletionItems, ...bitbakeOverridesCompletionItems]
     } else {
       return []
     }
