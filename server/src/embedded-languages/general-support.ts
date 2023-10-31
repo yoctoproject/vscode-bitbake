@@ -11,9 +11,11 @@ import { generatePythonEmbeddedLanguageDoc } from './python-support'
 import { embeddedLanguageDocsManager } from './documents-manager'
 import { isInsideBashRegion, isInsidePythonRegion } from './utils'
 
-export const generateEmbeddedLanguageDocs = (textDocument: TextDocument): void => {
-  generateBashEmbeddedLanguageDoc(textDocument)
-  generatePythonEmbeddedLanguageDoc(textDocument)
+export const generateEmbeddedLanguageDocs = async (textDocument: TextDocument): Promise<void> => {
+  await Promise.all([
+    generateBashEmbeddedLanguageDoc(textDocument),
+    generatePythonEmbeddedLanguageDoc(textDocument)
+  ])
 }
 
 export const getEmbeddedLanguageDocInfosOnPosition = (uriString: string, position: Position): { uri: string, lineOffset: number } | undefined => {

@@ -1,3 +1,6 @@
 {
     "bitbake.loggingLevel": "debug",
+    "editor.quickSuggestions": {
+        "strings": false
+    },
 }

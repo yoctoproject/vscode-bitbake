@@ -10,7 +10,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { embeddedLanguageDocsManager } from './documents-manager'
 import { type EmbeddedLanguageDocInfos } from './utils'
 
-export const generatePythonEmbeddedLanguageDoc = (textDocument: TextDocument): void => {
+export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
   const pythonRegions = analyzer.getPythonRegions(textDocument.uri)
   const documentAsText = textDocument.getText().split(/\r?\n/g)
   const embeddedLanguageDocAsText = replaceTextForSpaces(documentAsText)
@@ -31,5 +31,5 @@ export const generatePythonEmbeddedLanguageDoc = (textDocument: TextDocument): v
     language: 'python',
     lineOffset: 1
   }
-  embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
+  await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
 }

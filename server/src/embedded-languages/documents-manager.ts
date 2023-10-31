@@ -22,32 +22,48 @@ type EmbeddedLanguageDocsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedL
 
 export default class EmbeddedLanguageDocsManager {
   private readonly embeddedLanguageDocsInfos = new Map<string, EmbeddedLanguageDocsRecord>() // map of original uri to embedded documents infos
-  private _storagePath: string = ''
+  private _storagePath: string | undefined
 
-  get storagePath (): string {
+  get storagePath (): string | undefined {
     return this._storagePath
   }
 
-  set storagePath (storagePath: string) {
-    logger.debug(`Set embedded language documents storage path. New: ${storagePath}. Old: ${this._storagePath}`)
-    if (this._storagePath === storagePath) {
+  async setStoragePath (newStoragePath: string | undefined): Promise<void> {
+    logger.debug(`Set embedded language documents storage path. New: ${newStoragePath}. Old: ${this._storagePath}`)
+    if (this._storagePath === newStoragePath) {
       return
     }
-    const oldPathToEmbeddedLanguageDocsFolder = path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
-    const newPathToEmbeddedLanguageDocsFolder = path.join(storagePath, EMBEDDED_DOCUMENTS_FOLDER)
     // Writing the code to move the existing files into the new folder is pointless optimization (and efforts):
     // In practice, storagePath is not intended to change.
-    try {
-      fs.mkdirSync(newPathToEmbeddedLanguageDocsFolder, { recursive: true })
-    } catch (error) {
-      logger.error('Failed to create embedded language documents folder:', error)
-    }
-    try {
-      fs.rmdirSync(oldPathToEmbeddedLanguageDocsFolder, { recursive: true })
-    } catch (error) {
-      logger.error('Failed to remove embedded language documents folder:', error)
-    }
-    this._storagePath = storagePath
+    await Promise.all([
+      new Promise<void>((resolve) => {
+        if (newStoragePath === undefined) {
+          resolve()
+          return
+        }
+        const newPathToEmbeddedLanguageDocsFolder = path.join(newStoragePath, EMBEDDED_DOCUMENTS_FOLDER)
+        fs.mkdir(newPathToEmbeddedLanguageDocsFolder, { recursive: true }, (err) => {
+          if (err !== null) {
+            logger.error('Failed to create embedded language documents folder:', err)
+          }
+          resolve()
+        })
+      }),
+      new Promise<void>((resolve) => {
+        if (this._storagePath === undefined) {
+          resolve()
+          return
+        }
+        const oldPathToEmbeddedLanguageDocsFolder = path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+        fs.rmdir(oldPathToEmbeddedLanguageDocsFolder, { recursive: true }, (err) => {
+          if (err !== null) {
+            logger.error('Failed to remove embedded language documents folder:', err)
+          }
+          resolve()
+        })
+      })
+    ])
+    this._storagePath = newStoragePath
   }
 
   private registerEmbeddedLanguageDocInfos (originalUriString: string, embeddedLanguageDocInfos: EmbeddedLanguageDocInfos): void {
@@ -64,7 +80,10 @@ export default class EmbeddedLanguageDocsManager {
     return embeddedLanguageDocs?.[languageType]
   }
 
-  private getPathToEmbeddedLanguageDoc (originalUriString: string, languageType: EmbeddedLanguageType): string {
+  private getPathToEmbeddedLanguageDoc (originalUriString: string, languageType: EmbeddedLanguageType): string | undefined {
+    if (this.storagePath === undefined) {
+      return undefined
+    }
     const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(originalUriString, languageType)
     if (embeddedLanguageDocInfos !== undefined) {
       return embeddedLanguageDocInfos.uri.replace('file://', '')
@@ -76,40 +95,49 @@ export default class EmbeddedLanguageDocsManager {
     return `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
   }
 
-  saveEmbeddedLanguageDoc (
+  async saveEmbeddedLanguageDoc (
     originalUriString: string,
     embeddedLanguageDocContent: string,
     partialEmbeddedLanguageDocInfos: Omit<EmbeddedLanguageDocInfos, 'uri'>
-  ): void {
+  ): Promise<void> {
     logger.debug(`Save embedded document (${partialEmbeddedLanguageDocInfos.language}) for`, originalUriString)
     const pathToEmbeddedLanguageDoc = this.getPathToEmbeddedLanguageDoc(
       originalUriString,
       partialEmbeddedLanguageDocInfos.language
     )
-    try {
-      fs.writeFileSync(pathToEmbeddedLanguageDoc, embeddedLanguageDocContent)
-    } catch (error) {
-      logger.error('Failed to create embedded document:', error)
+    if (pathToEmbeddedLanguageDoc === undefined) {
+      return
     }
-    const documentInfos = {
-      ...partialEmbeddedLanguageDocInfos,
-      uri: `file://${pathToEmbeddedLanguageDoc}`
-    }
-    this.registerEmbeddedLanguageDocInfos(originalUriString, documentInfos)
+    await new Promise<void>((resolve, reject) => {
+      fs.writeFile(pathToEmbeddedLanguageDoc, embeddedLanguageDocContent, (err) => {
+        err !== null ? reject(err) : resolve()
+      })
+    }).then(() => {
+      const documentInfos = {
+        ...partialEmbeddedLanguageDocInfos,
+        uri: `file://${pathToEmbeddedLanguageDoc}`
+      }
+      this.registerEmbeddedLanguageDocInfos(originalUriString, documentInfos)
+    }).catch((err) => {
+      logger.error('Failed to create embedded document:', err)
+    })
   }
 
-  deleteEmbeddedLanguageDocs (originalUriString: string): void {
+  async deleteEmbeddedLanguageDocs (originalUriString: string): Promise<void> {
     logger.debug('Delete embedded documents for', originalUriString)
     const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
-    Object.values(embeddedLanguageDocs).forEach(({ uri }) => {
-      const pathToEmbeddedLanguageDoc = uri.replace('file://', '')
-      try {
-        fs.unlink(pathToEmbeddedLanguageDoc, () => {})
-      } catch (error) {
-        logger.error('Failed to delete embedded document:', error)
-      }
+    await Promise.all(Object.values(embeddedLanguageDocs).map(async ({ uri }) => {
+      await new Promise<void>((resolve, reject) => {
+        const pathToEmbeddedLanguageDoc = uri.replace('file://', '')
+        fs.unlink(pathToEmbeddedLanguageDoc, (err) => {
+          err !== null ? reject(err) : resolve()
+        })
+      })
+    })).then(() => {
+      this.embeddedLanguageDocsInfos.delete(originalUriString)
+    }).catch((err) => {
+      logger.error('Failed to delete embedded document:', err)
     })
-    this.embeddedLanguageDocsInfos.delete(originalUriString)
   }
 
   renameEmbeddedLanguageDocs (oldUriString: string, newUriString: string): void {

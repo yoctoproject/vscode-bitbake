@@ -10,7 +10,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { type EmbeddedLanguageDocInfos } from './utils'
 import { embeddedLanguageDocsManager } from './documents-manager'
 
-export const generateBashEmbeddedLanguageDoc = (textDocument: TextDocument): void => {
+export const generateBashEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
   const bashRegions = analyzer.getBashRegions(textDocument.uri)
   const documentAsText = textDocument.getText().split(/\r?\n/g)
   const embeddedLanguageDocAsText = replaceTextForSpaces(documentAsText)
@@ -26,5 +26,5 @@ export const generateBashEmbeddedLanguageDoc = (textDocument: TextDocument): voi
     language: 'bash',
     lineOffset: 0
   }
-  embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
+  await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
 }

@@ -18,7 +18,7 @@ describe('Embedded Language Documents', () => {
       analyzer.initialize(parser)
     }
     analyzer.resetAnalyzedDocuments()
-    embeddedLanguageDocsManager.storagePath = __dirname
+    await embeddedLanguageDocsManager.setStoragePath(__dirname)
   })
 
   beforeEach(() => {
@@ -32,7 +32,7 @@ describe('Embedded Language Documents', () => {
       document: FIXTURE_DOCUMENT.EMBEDDED
     })
 
-    generateEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED)
+    await generateEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED)
 
     // Test embedded documents infos
     const bashEmbeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'bash')
@@ -80,7 +80,7 @@ describe('Embedded Language Documents', () => {
     expect(pythonEmbeddedLanguageDocInfosOnPosition).toEqual(pythonEmbeddedLanguageDocInfos)
 
     // Test saving the document a second time does not create a new file
-    generateEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED)
+    await generateEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED)
     const bashEmbeddedLanguageDocInfos2 = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'bash')
     expect(bashEmbeddedLanguageDocInfos2?.uri).toEqual(bashEmbeddedLanguageDocInfos.uri)
 
@@ -96,9 +96,9 @@ describe('Embedded Language Documents', () => {
     expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(newUri, 'python')).toEqual(pythonEmbeddedLanguageDocInfos)
 
     // Test deletion
-    embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(newUri)
-    expect(() => fs.readFileSync(bashEmbeddedLanguageDocPath)).toThrow()
-    expect(() => fs.readFileSync(pythonEmbeddedLanguageDocPath)).toThrow()
+    await embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(newUri)
+    expect(fs.existsSync(bashEmbeddedLanguageDocPath)).toBeFalsy()
+    expect(fs.existsSync(pythonEmbeddedLanguageDocPath)).toBeFalsy()
   })
 })
 

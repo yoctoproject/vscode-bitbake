@@ -43,7 +43,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   setNotificationManagerConnection(connection)
 
   const storagePath = params.initializationOptions.storagePath as string
-  embeddedLanguageDocsManager.storagePath = storagePath
+  await embeddedLanguageDocsManager.setStoragePath(storagePath)
 
   const parser = await generateParser()
   analyzer.initialize(parser)
@@ -95,7 +95,7 @@ connection.onDidChangeWatchedFiles((change) => {
   logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
   change.changes?.forEach((change) => {
     if (change.type === FileChangeType.Deleted) {
-      embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
+      void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
     }
   })
   bitBakeProjectScanner.rescanProject()
@@ -138,7 +138,7 @@ documents.onDidChangeContent(async (event) => {
 
   if (textDocument.getText().length > 0) {
     const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
-    generateEmbeddedLanguageDocs(event.document)
+    void generateEmbeddedLanguageDocs(event.document)
     void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 
