@@ -126,7 +126,7 @@ connection.onRequest('custom/getEmbeddedLanguageDocInfos', async ({ uriString, p
 })
 
 connection.onNotification('custom/fileNameChanged', ({ oldUriString, newUriString }: { oldUriString: string, newUriString: string }): void => {
-  embeddedLanguageDocsManager.moveEmbeddedLanguageDocs(oldUriString, newUriString)
+  embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(oldUriString, newUriString)
 })
 
 connection.listen()

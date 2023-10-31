@@ -22,7 +22,33 @@ type EmbeddedLanguageDocsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedL
 
 export default class EmbeddedLanguageDocsManager {
   private readonly embeddedLanguageDocsInfos = new Map<string, EmbeddedLanguageDocsRecord>() // map of original uri to embedded documents infos
-  storagePath: string = ''
+  private _storagePath: string = ''
+
+  get storagePath (): string {
+    return this._storagePath
+  }
+
+  set storagePath (storagePath: string) {
+    logger.debug(`Set embedded language documents storage path. New: ${storagePath}. Old: ${this._storagePath}`)
+    if (this._storagePath === storagePath) {
+      return
+    }
+    const oldPathToEmbeddedLanguageDocsFolder = path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+    const newPathToEmbeddedLanguageDocsFolder = path.join(storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+    // Writing the code to move the existing files into the new folder is pointless optimization (and efforts):
+    // In practice, storagePath is not intended to change.
+    try {
+      fs.mkdirSync(newPathToEmbeddedLanguageDocsFolder, { recursive: true })
+    } catch (error) {
+      logger.error('Failed to create embedded language documents folder:', error)
+    }
+    try {
+      fs.rmdirSync(oldPathToEmbeddedLanguageDocsFolder, { recursive: true })
+    } catch (error) {
+      logger.error('Failed to remove embedded language documents folder:', error)
+    }
+    this._storagePath = storagePath
+  }
 
   private registerEmbeddedLanguageDocInfos (originalUriString: string, embeddedLanguageDocInfos: EmbeddedLanguageDocInfos): void {
     const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
@@ -50,7 +76,6 @@ export default class EmbeddedLanguageDocsManager {
     const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
     const pathToEmbeddedLanguageDoc = `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
     try {
-      fs.mkdirSync(pathToEmbeddedLanguageDocsFolder, { recursive: true })
       fs.writeFileSync(pathToEmbeddedLanguageDoc, embeddedLanguageDocContent)
     } catch (error) {
       logger.error('Failed to create embedded document:', error)
@@ -76,8 +101,8 @@ export default class EmbeddedLanguageDocsManager {
     this.embeddedLanguageDocsInfos.delete(originalUriString)
   }
 
-  moveEmbeddedLanguageDocs (oldUriString: string, newUriString: string): void {
-    logger.debug(`Move embedded documents from ${oldUriString} to ${newUriString}`)
+  renameEmbeddedLanguageDocs (oldUriString: string, newUriString: string): void {
+    logger.debug(`Rename embedded documents from ${oldUriString} to ${newUriString}`)
     const oldInfos = this.embeddedLanguageDocsInfos.get(oldUriString)
     if (oldInfos === undefined) {
       return
