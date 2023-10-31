@@ -64,17 +64,28 @@ export default class EmbeddedLanguageDocsManager {
     return embeddedLanguageDocs?.[languageType]
   }
 
+  private getPathToEmbeddedLanguageDoc (originalUriString: string, languageType: EmbeddedLanguageType): string {
+    const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(originalUriString, languageType)
+    if (embeddedLanguageDocInfos !== undefined) {
+      return embeddedLanguageDocInfos.uri.replace('file://', '')
+    }
+    const randomName = randomUUID()
+    const fileExtension = fileExtensionsMap[languageType]
+    const embeddedLanguageDocFilename = randomName + fileExtension
+    const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+    return `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
+  }
+
   saveEmbeddedLanguageDoc (
     originalUriString: string,
     embeddedLanguageDocContent: string,
     partialEmbeddedLanguageDocInfos: Omit<EmbeddedLanguageDocInfos, 'uri'>
   ): void {
     logger.debug(`Save embedded document (${partialEmbeddedLanguageDocInfos.language}) for`, originalUriString)
-    const randomName = randomUUID()
-    const fileExtension = fileExtensionsMap[partialEmbeddedLanguageDocInfos.language]
-    const embeddedLanguageDocFilename = randomName + fileExtension
-    const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
-    const pathToEmbeddedLanguageDoc = `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
+    const pathToEmbeddedLanguageDoc = this.getPathToEmbeddedLanguageDoc(
+      originalUriString,
+      partialEmbeddedLanguageDocInfos.language
+    )
     try {
       fs.writeFileSync(pathToEmbeddedLanguageDoc, embeddedLanguageDocContent)
     } catch (error) {

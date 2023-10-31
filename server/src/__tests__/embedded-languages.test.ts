@@ -79,9 +79,17 @@ describe('Embedded Language Documents', () => {
     )
     expect(pythonEmbeddedLanguageDocInfosOnPosition).toEqual(pythonEmbeddedLanguageDocInfos)
 
+    // Test saving the document a second time does not create a new file
+    generateEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED)
+    const bashEmbeddedLanguageDocInfos2 = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'bash')
+    expect(bashEmbeddedLanguageDocInfos2?.uri).toEqual(bashEmbeddedLanguageDocInfos.uri)
+
+    const pythonEmbeddedLanguageDocInfos2 = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'python')
+    expect(pythonEmbeddedLanguageDocInfos2?.uri).toEqual(pythonEmbeddedLanguageDocInfos.uri)
+
     // Test moving embedded documents
     const newUri = 'dummy'
-    embeddedLanguageDocsManager.moveEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED.uri, newUri)
+    embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(FIXTURE_DOCUMENT.EMBEDDED.uri, newUri)
     expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'bash')).toBeUndefined()
     expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'python')).toBeUndefined()
     expect(embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(newUri, 'bash')).toEqual(bashEmbeddedLanguageDocInfos)
