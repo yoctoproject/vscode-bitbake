@@ -95,7 +95,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   let symbolCompletions: CompletionItem[] = []
   if (word !== null) {
     const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(textDocumentPositionParams.textDocument.uri)
-    // Filter out duplicate BITBAKE_VARIABLES as they are included as global declaration on document analyzation
+    // Filter out duplicate BITBAKE_VARIABLES as they will be included as global declaration after running analyzer.analyze() in documents.onDidChangeContent() in server.ts
     symbolCompletions = globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
       {
         label: symbol.name,
