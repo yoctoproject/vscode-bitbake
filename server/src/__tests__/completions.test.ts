@@ -8,6 +8,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { generateParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
+import bitBakeProjectScanner from '../BitBakeProjectScanner'
 
 const DUMMY_URI = 'dummy_uri'
 
@@ -118,7 +119,7 @@ describe('On Completion', () => {
     expect(result).not.toEqual([])
   })
 
-  it('provides suggestions for overrides when a ":" is typed and it follows an identifier', async () => {
+  it('provides suggestions for operators when a ":" is typed and it follows an identifier', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -140,7 +141,38 @@ describe('On Completion', () => {
           label: 'append',
           kind: 24
         }
-        // TODO: add an override item
+      ])
+    )
+  })
+
+  it('provides suggestions for overrides when a ":" is typed and it follows an identifier', async () => {
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const spy = jest.spyOn(bitBakeProjectScanner, 'overrides', 'get').mockReturnValue(['class-target'])
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 2,
+        character: 6
+      }
+    })
+
+    spy.mockRestore()
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'class-target',
+            kind: 10
+          }
+        )
       ])
     )
   })
