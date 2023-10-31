@@ -98,7 +98,7 @@ connection.onCompletion(onCompletionHandler)
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)
-  // Alternative: Currently it just returns the completion items created when onCompletion fires. Maybe here can be good place to get the documentation for completion items instead of getting all of the documentation at startup.
+  // TODO: An alternative: Currently it just returns the completion items created when onCompletion fires. Maybe here can be good place to get the documentation for completion items instead of getting all of the documentation at startup.
   return item
 })
 
