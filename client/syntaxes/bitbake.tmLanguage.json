@@ -22,7 +22,7 @@
             "include": "#comment"
         },
         {
-            "include": "#variable-reference"
+            "include": "#variable-expansion"
         },
         {
             "include": "#functions"
@@ -109,7 +109,7 @@
                             "name": "constant.character.escape.bb"
                         },
                         {
-                            "include": "#variable-reference"
+                            "include": "#variable-expansion"
                         }
                     ]
                 },
@@ -119,7 +119,7 @@
                     "end": "(')",
                     "patterns": [
                         {
-                            "include": "#variable-reference"
+                            "include": "#variable-expansion"
                         }
                     ]
                 }
@@ -156,7 +156,7 @@
                 }
             }
         },
-        "variable-reference": {
+        "variable-expansion": {
             "begin": "(\\$\\{)",
             "beginCaptures": {
                 "1": {
