@@ -66,10 +66,6 @@
                             "name": "support.class.built-in-object.bb"
                         }
                     }
-                },
-                {
-                    "match": "(?<=(import|inherit|from)\\s+)([a-zA-Z_][\\w_]*)(?=\\s+)",
-                    "name": "support.class.bb"
                 }
             ]
         },
