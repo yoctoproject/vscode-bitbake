@@ -80,7 +80,7 @@
                     }
                 },
                 {
-                    "match": "\\b(def|class|global|nonlocal|and|or|not|in|is|lambda)\\b",
+                    "match": "\\b(def|class|global|nonlocal|and|or|not|in|is|lambda)\\b\\s+",
                     "captures": {
                         "1": {
                             "name": "storage.type.function.python.bb"
@@ -143,7 +143,7 @@
             }
         },
         "functions": {
-            "match": "\\s*([a-zA-Z_][\\w_]*)(:(append|prepend|remove))?(?=\\s*\\()",
+            "match": "\\s*([a-zA-Z_][\\w_]*)(:([a-zA-Z_][\\w_]*))?(?=\\s*\\()",
             "captures": {
                 "1": {
                     "name": "entity.name.function.python.bb"
@@ -213,9 +213,6 @@
             "captures": {
                 "1": {
                     "name": "variable.other.names.bb"
-                },
-                "2": {
-                    "name": "keyword.other.bitbake-operator.bb"
                 }
             }
         },
@@ -224,7 +221,7 @@
             "name": "keyword.operator.bb"
         },
         "bitbake-operator": {
-            "match": "(?<=:)(os|nooverride|qemuarm|qemumips64|qemumips|qemuppc|qemux86-64|qemux86|append|prepend|remove|task-configure|task-compile)",
+            "match": "(?<=:)(append|prepend|remove)",
             "name": "keyword.other.bitbake-operator.bb"
         },
         "parenthesis-open": {
