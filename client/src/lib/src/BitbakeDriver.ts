@@ -19,13 +19,29 @@ export class BitbakeDriver {
 
   /// Execute a command in the bitbake environment
   spawnBitbakeProcess (command: string): childProcess.ChildProcess {
-    const shell = process.env.SHELL ?? '/bin/sh'
-
-    command = this.composeBitbakeScript(command)
-    logger.debug(`Executing Bitbake command: ${shell} -c ${command}`)
-    return childProcess.spawn(command, {
+    const { shell, script } = this.prepareCommand(command)
+    logger.debug(`Executing Bitbake command: ${shell} -c ${script}`)
+    return childProcess.spawn(script, {
       shell
     })
+  }
+
+  /// Execute a command in the bitbake environment and wait for completion
+  spawnBitbakeProcessSync (command: string): childProcess.SpawnSyncReturns<Buffer> {
+    const { shell, script } = this.prepareCommand(command)
+    logger.debug(`Executing Bitbake command (sync): ${shell} -c ${command}`)
+    return childProcess.spawnSync(script, {
+      shell
+    })
+  }
+
+  private prepareCommand (command: string): {
+    shell: string
+    script: string
+  } {
+    const shell = process.env.SHELL ?? '/bin/sh'
+    const script = this.composeBitbakeScript(command)
+    return { shell, script }
   }
 
   private composeBitbakeScript (command: string): string {
