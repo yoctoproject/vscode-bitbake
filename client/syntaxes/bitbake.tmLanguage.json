@@ -135,7 +135,7 @@
             }
         },
         "functions": {
-            "match": "\\s*([a-zA-Z_][\\w_]*)(:([a-zA-Z_][\\w_]*))?(?=\\s*\\()",
+            "match": "([a-zA-Z_][\\w_]*)(:([a-zA-Z_][\\w_]*))?(?=\\s*\\()",
             "captures": {
                 "1": {
                     "name": "entity.name.function.python.bb"
