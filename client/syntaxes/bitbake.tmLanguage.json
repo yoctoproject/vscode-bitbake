@@ -58,14 +58,6 @@
                             "name": "storage.type.function.python.bb"
                         }
                     }
-                },
-                {
-                    "match": "\\b(bbplain|bb|self)\\b(?=\\s+|\\.)",
-                    "captures": {
-                        "1": {
-                            "name": "support.class.built-in-object.bb"
-                        }
-                    }
                 }
             ]
         },
