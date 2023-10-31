@@ -84,9 +84,11 @@ export class BitBakeDocScanner {
       const definition = match.groups?.definition
         .replace(/^ {3}/gm, '')
         .replace(/:term:|:ref:/g, '')
-        .replace(/\.\. (note|important)::/g, (_match, p1) => { return `**${p1}**` })
+        .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
         .replace(/::/g, ':')
         .replace(/``/g, '`')
+        .replace(/^\n(\s{5,})/gm, ' ')
+        .replace(/^(\s{5,})/gm, ' ')
       if (name === undefined || definition === undefined) {
         return
       }
