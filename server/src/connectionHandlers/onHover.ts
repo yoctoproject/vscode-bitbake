@@ -48,5 +48,23 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     return hover
   }
 
+  // Variable flag
+  if (analyzer.isVariableFlag(params)) {
+    const found = bitBakeDocScanner.variableFlagInfos.find(item => item.name === word)
+
+    if (found === undefined) {
+      return null
+    }
+    logger.debug(`[onHover] Found variable flag: ${found.name}`)
+    const hover: Hover = {
+      contents: {
+        kind: 'markdown',
+        value: `**${word}**\n___\n${found.definition}`
+      }
+    }
+    logger.debug(`[onHover] Hover item: ${JSON.stringify(hover)}`)
+    return hover
+  }
+
   return null
 }
