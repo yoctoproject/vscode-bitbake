@@ -18,6 +18,7 @@ export interface VariableInfos {
 }
 
 type VariableInfosOverride = Partial<VariableInfos>
+type VariableFlagInfo = Omit<VariableInfos, 'validFiles' | 'suffixType'>
 
 // Infos that can't be parsed properly from the doc
 const variableInfosOverrides: Record<string, VariableInfosOverride> = {
@@ -49,12 +50,17 @@ const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*
 
 export class BitBakeDocScanner {
   private _variablesInfos: Record<string, VariableInfos> = {}
+  private _variableFlagInfos: VariableFlagInfo[] = []
   private _yoctoTaskCompletionItems: CompletionItem[] = []
   private _variableFlagCompletionItems: CompletionItem[] = []
   private _variableCompletionItems: CompletionItem[] = []
 
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
+  }
+
+  get variableFlagInfos (): VariableFlagInfo[] {
+    return this._variableFlagInfos
   }
 
   get yoctoTaskCompletionItems (): CompletionItem[] {
@@ -168,7 +174,8 @@ export class BitBakeDocScanner {
       return
     }
 
-    const variableFlags: CompletionItem[] = []
+    const variableFlagCompletionItems: CompletionItem[] = []
+    const variableFlagInfos: VariableFlagInfo[] = []
     for (const match of variableFlagSection[0].matchAll(variableFlagRegex)) {
       const name = match.groups?.name
       const description = match.groups?.description
@@ -184,7 +191,13 @@ export class BitBakeDocScanner {
       }
 
       if (name !== undefined) {
-        variableFlags.push({
+        variableFlagInfos.push({
+          name,
+          definition: description
+        })
+
+        // TODO: Use the variableFlagInfo to create completion items outside this class instead of storing the same info twice. Same for variableCompletionItems
+        variableFlagCompletionItems.push({
           label: name,
           documentation: description,
           kind: CompletionItemKind.Keyword,
@@ -194,8 +207,8 @@ export class BitBakeDocScanner {
         })
       }
     }
-
-    this._variableFlagCompletionItems = variableFlags
+    this._variableFlagInfos = variableFlagInfos
+    this._variableFlagCompletionItems = variableFlagCompletionItems
   }
 }
 
