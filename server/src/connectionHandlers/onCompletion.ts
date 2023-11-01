@@ -18,10 +18,9 @@ import { formatCompletionItems } from '../completions/snippet-utils'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
+import contextHandler from '../ContextHandler'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
-  logger.debug('onCompletion')
-
   const wordPosition = {
     line: textDocumentPositionParams.position.line,
     // Go one character back to get completion on the current word. This is used as a parameter in descendantForPosition()
@@ -33,7 +32,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     position: wordPosition
   })
 
-  logger.debug(`onCompletion - current word: ${word}`)
+  logger.debug(`[onCompletion] current word: ${word}`)
 
   const shouldComplete = analyzer.shouldProvideCompletionItems(textDocumentPositionParams.textDocument.uri, wordPosition.line, wordPosition.character)
   // Do not provide completions if it is inside a string but not inside a variable expansion
@@ -104,6 +103,15 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       }
     ))
   }
+
+  // Directive statements completion items. bbclass files, include files, recipe files etc
+  const directiveStatementKeyword = analyzer.getDirectiveStatementKeywordByLine(textDocumentPositionParams)
+  if (directiveStatementKeyword !== undefined) {
+    logger.debug(`[onCompletion] Found directive statement: ${directiveStatementKeyword}`)
+    return contextHandler.getCompletionItemForDirectiveStatementKeyword(directiveStatementKeyword)
+  }
+
+  // TODO: Add completions from contextHandler.getCompletionItemForRecipesAndSymbols() after refactor the CompletionProviders & SymbolScanner & ProjectScanner
 
   const reserverdKeywordCompletionItems: CompletionItem[] = RESERVED_KEYWORDS.map(keyword => {
     return {
