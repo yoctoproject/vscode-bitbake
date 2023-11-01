@@ -209,6 +209,30 @@ export default class Analyzer {
   }
 
   /**
+   * Check if the current line starts with any directive statement keyword. The keyword is one of `include`, `inherit` and `require`
+   *
+   * Tree-sitter functionalities are not used here since the current version @1.0.1 doesn't treat a line as directive statement if the keyword presents but nothing follows.
+   */
+  public getDirectiveStatementKeywordByLine (textDocumentPositionParams: TextDocumentPositionParams): string | undefined {
+    const { textDocument, position } = textDocumentPositionParams
+    const documentAsText = this.getDocumentTexts(textDocument.uri)
+    if (documentAsText === undefined) {
+      return undefined
+    }
+    const currentLine = documentAsText[position.line]
+    const lineTillCurrentPosition = currentLine.substring(0, position.character)
+    const words = lineTillCurrentPosition.split(' ')
+
+    const directiveStatementKeywords = new Set(['include', 'inherit', 'require'])
+
+    if (directiveStatementKeywords.has(words[0])) {
+      return words[0]
+    }
+
+    return undefined
+  }
+
+  /**
    * Find the node at the given point.
    */
   private nodeAtPoint (
