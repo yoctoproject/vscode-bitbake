@@ -213,6 +213,18 @@ export default class Analyzer {
     return n?.type === 'identifier' && n?.parent?.type === 'variable_assignment'
   }
 
+  public isVariableFlag (
+    params: TextDocumentPositionParams
+  ): boolean {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+
+    return n?.type === 'flag' && n?.parent?.type === 'variable_flag'
+  }
+
   public rangeForWordAtPoint (
     params: TextDocumentPositionParams
   ): Range | undefined {
