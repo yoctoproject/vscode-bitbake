@@ -18,7 +18,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   }
 
   // require, inherit & include directives
-  const directiveStatementKeyword = analyzer.getDirectiveStatementKeyword(textDocumentPositionParams)
+  const directiveStatementKeyword = analyzer.getDirectiveStatementKeywordByNodeType(textDocumentPositionParams)
   if (directiveStatementKeyword !== undefined) {
     logger.debug(`[onDefinition] Found directive: ${directiveStatementKeyword}`)
     const definition = contextHandler.getDefinitionForDirectives(directiveStatementKeyword, textDocumentPositionParams, documentAsText)

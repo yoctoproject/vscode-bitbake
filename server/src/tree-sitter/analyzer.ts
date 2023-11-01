@@ -135,9 +135,9 @@ export default class Analyzer {
   }
 
   /**
-   * Get the directive keyword when the statement is either include, require or inherit directive
+   * Get the directive keyword when the statement is either include, require or inherit directive by looking up the tree nodes
    */
-  public getDirectiveStatementKeyword (
+  public getDirectiveStatementKeywordByNodeType (
     params: TextDocumentPositionParams
   ): string | undefined {
     const n = this.nodeAtPoint(
