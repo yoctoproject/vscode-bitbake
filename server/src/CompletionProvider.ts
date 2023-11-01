@@ -18,10 +18,6 @@ import {
 } from './ElementInfo'
 
 import {
-  BasicKeywordMap
-} from './BasicKeywordMap'
-
-import {
   type SymbolScanner,
   type SymbolContent
 } from './SymbolScanner'
@@ -63,50 +59,46 @@ export class CompletionProvider {
     return insertString
   }
 
-  createCompletionItem (keyword: string): CompletionItem[] {
-    let completionItem: CompletionItem[] = new Array < CompletionItem >()
+  createCompletionItemForDirectiveStatementKeyword (keyword: string): CompletionItem[] {
+    let completionItem: CompletionItem[] = []
 
     switch (keyword) {
       case 'inherit':
-        completionItem = this.convertElementInfoListToCompletionItemList(
-          this._projectScanner.classes,
-          this._classCompletionItemKind
-        )
+        completionItem = [
+          ...this.convertElementInfoListToCompletionItemList(
+            this._projectScanner.classes,
+            this._classCompletionItemKind
+          )]
         break
 
       case 'require':
       case 'include':
-        completionItem = completionItem.concat(
-          this.convertElementInfoListToCompletionItemList(
+        completionItem = [
+          ...this.convertElementInfoListToCompletionItemList(
             this._projectScanner.includes,
             this._includeCompletionItemKind
           )
-        )
+        ]
         break
-
       default:
-        completionItem = completionItem.concat(
-          this.convertElementInfoListToCompletionItemList(
-            this._projectScanner.classes,
-            this._classCompletionItemKind
-          ),
-          this.convertElementInfoListToCompletionItemList(
-            this._projectScanner.includes,
-            this._includeCompletionItemKind
-          ),
-          this.convertElementInfoListToCompletionItemList(
-            this._projectScanner.recipes,
-            this._recipesCompletionItemKind
-          ),
-          this.convertSymbolContentListToCompletionItemList(
-            this._symbolScanner?.symbols ?? [],
-            this._symbolComletionItemKind
-          ),
-          BasicKeywordMap
-        )
-
         break
     }
+
+    return completionItem
+  }
+
+  createCompletionItemForRecipesAndSymbols (): CompletionItem[] {
+    let completionItem: CompletionItem[] = []
+    completionItem = [
+      ...this.convertElementInfoListToCompletionItemList(
+        this._projectScanner.recipes,
+        this._recipesCompletionItemKind
+      ),
+      ...this.convertSymbolContentListToCompletionItemList(
+        this._symbolScanner?.symbols ?? [],
+        this._symbolComletionItemKind
+      )
+    ]
 
     return completionItem
   }

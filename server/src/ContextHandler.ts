@@ -13,10 +13,6 @@ import type {
 } from './BitBakeProjectScanner'
 
 import {
-  BasicKeywordMap
-} from './BasicKeywordMap'
-
-import {
   DefinitionProvider
 } from './DefinitionProvider'
 
@@ -133,45 +129,16 @@ export class ContextHandler {
     return symbol
   }
 
-  getComletionItems (textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): CompletionItem[] {
-    let completionItem: CompletionItem[] = []
+  getCompletionItemForDirectiveStatementKeyword (keyword: string): CompletionItem[] {
+    return this._completionProvider.createCompletionItemForDirectiveStatementKeyword(keyword)
+  }
 
-    if (documentAsText.length > textDocumentPosition.position.line) {
-      const keyWord: string = this.getKeyWord(textDocumentPosition, documentAsText)
-
-      if ((keyWord === undefined) || (keyWord === '')) {
-        completionItem = this._completionProvider.createCompletionItem('*')
-      } else {
-        completionItem = this._completionProvider.createCompletionItem(keyWord)
-      }
-    }
-
-    return completionItem
+  getCompletionItemForRecipesAndSymbols (): CompletionItem[] {
+    return this._completionProvider.createCompletionItemForRecipesAndSymbols()
   }
 
   getInsertStringForTheElement (item: CompletionItem): string {
     return this._completionProvider.getInsertStringForTheElement(item)
-  }
-
-  private getKeyWord (textDocumentPosition: TextDocumentPositionParams, documentAsText: string[]): string {
-    const currentLine = documentAsText[textDocumentPosition.position.line]
-    const lineTillCurrentPosition = currentLine.substring(0, textDocumentPosition.position.character)
-    const words: string[] = lineTillCurrentPosition.split(' ')
-
-    const basicKeywordMap: CompletionItem[] = BasicKeywordMap
-    let keyword: string = ''
-
-    if (words.length > 1) {
-      const basicKey: CompletionItem | undefined = basicKeywordMap.find((obj: CompletionItem): boolean => {
-        return obj.label === words[0]
-      })
-
-      if (basicKey !== undefined) {
-        keyword = basicKey.label
-      }
-    }
-
-    return keyword
   }
 }
 
