@@ -8,7 +8,7 @@ import { replaceTextForSpaces } from './utils'
 
 import { analyzer } from '../tree-sitter/analyzer'
 import { embeddedLanguageDocsManager } from './documents-manager'
-import { type EmbeddedLanguageDocInfos } from './utils'
+import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
 
 export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
   const pythonRegions = analyzer.getPythonRegions(textDocument.uri)

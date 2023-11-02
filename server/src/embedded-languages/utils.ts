@@ -9,14 +9,6 @@ import type * as LSP from 'vscode-languageserver/node'
 import { analyzer } from '../tree-sitter/analyzer'
 import { positionIsWithinRange } from '../utils/range'
 
-export type EmbeddedLanguageType = 'bash' | 'python'
-
-export interface EmbeddedLanguageDocInfos {
-  uri: string
-  language: EmbeddedLanguageType
-  lineOffset: number
-}
-
 const isInsideRegion = (position: Position, region: LSP.SymbolInformation): boolean => {
   return positionIsWithinRange(position, region.location.range)
 }

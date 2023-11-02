@@ -13,7 +13,6 @@ import {
   ProposedFeatures,
   TextDocumentSyncKind,
   type InitializeParams,
-  type Position,
   FileChangeType
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
@@ -31,6 +30,8 @@ import { setNotificationManagerConnection, serverNotificationManager } from './S
 import { onHoverHandler } from './connectionHandlers/onHover'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from './embedded-languages/general-support'
 import { embeddedLanguageDocsManager } from './embedded-languages/documents-manager'
+import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
+import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
@@ -121,13 +122,19 @@ connection.onDefinition(onDefinitionHandler)
 
 connection.onHover(onHoverHandler)
 
-connection.onRequest('custom/getEmbeddedLanguageDocInfos', async ({ uriString, position }: { uriString: string, position: Position }): Promise<{ uri: string, lineOffset: number } | undefined> => {
-  return getEmbeddedLanguageDocInfosOnPosition(uriString, position)
-})
+connection.onRequest(
+  RequestMethod.EmbeddedLanguageDocInfos,
+  async ({ uriString, position }: RequestParams['EmbeddedLanguageDocInfos']): RequestResult['EmbeddedLanguageDocInfos'] => {
+    return getEmbeddedLanguageDocInfosOnPosition(uriString, position)
+  }
+)
 
-connection.onNotification('custom/fileNameChanged', ({ oldUriString, newUriString }: { oldUriString: string, newUriString: string }): void => {
-  embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(oldUriString, newUriString)
-})
+connection.onNotification(
+  NotificationMethod.FilenameChanged,
+  ({ oldUriString, newUriString }: NotificationParams['FilenameChanged']): void => {
+    embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(oldUriString, newUriString)
+  }
+)
 
 connection.listen()
 

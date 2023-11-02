@@ -9,7 +9,7 @@ import fs from 'fs'
 
 import logger from 'winston'
 
-import { type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from './utils'
+import { type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 

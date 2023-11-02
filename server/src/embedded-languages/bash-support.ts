@@ -7,7 +7,7 @@ import { type TextDocument } from 'vscode-languageserver-textdocument'
 import { replaceTextForSpaces } from './utils'
 
 import { analyzer } from '../tree-sitter/analyzer'
-import { type EmbeddedLanguageDocInfos } from './utils'
+import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
 import { embeddedLanguageDocsManager } from './documents-manager'
 
 export const generateBashEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {

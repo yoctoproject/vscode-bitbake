@@ -23,13 +23,25 @@ import {
   TransportKind,
   type ServerOptions
 } from 'vscode-languageclient/node'
+import { RequestMethod, type RequestParams, type RequestResult } from '../lib/src/types/requests'
+import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
 
-const getEmbeddedLanguageDocInfos = async (client: LanguageClient, uriString: string, position: Position): Promise<{ uri: string, lineOffset: number }> => {
-  return await client.sendRequest('custom/getEmbeddedLanguageDocInfos', { uriString, position })
+const getEmbeddedLanguageDocInfos = async (
+  client: LanguageClient,
+  uriString: string,
+  position: Position
+): RequestResult['EmbeddedLanguageDocInfos'] => {
+  const params: RequestParams['EmbeddedLanguageDocInfos'] = { uriString, position }
+  return await client.sendRequest(RequestMethod.EmbeddedLanguageDocInfos, params)
 }
 
-const notifyFileRenameChanged = async (client: LanguageClient, oldUriString: string, newUriString: string): Promise<void> => {
-  await client.sendNotification('custom/fileNameChanged', { oldUriString, newUriString })
+const notifyFileRenameChanged = async (
+  client: LanguageClient,
+  oldUriString: string,
+  newUriString: string
+): Promise<void> => {
+  const params: NotificationParams['FilenameChanged'] = { oldUriString, newUriString }
+  await client.sendNotification(NotificationMethod.FilenameChanged, params)
 }
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {

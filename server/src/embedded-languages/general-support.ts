@@ -10,6 +10,7 @@ import { generateBashEmbeddedLanguageDoc } from './bash-support'
 import { generatePythonEmbeddedLanguageDoc } from './python-support'
 import { embeddedLanguageDocsManager } from './documents-manager'
 import { isInsideBashRegion, isInsidePythonRegion } from './utils'
+import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
 
 export const generateEmbeddedLanguageDocs = async (textDocument: TextDocument): Promise<void> => {
   await Promise.all([
@@ -18,7 +19,7 @@ export const generateEmbeddedLanguageDocs = async (textDocument: TextDocument): 
   ])
 }
 
-export const getEmbeddedLanguageDocInfosOnPosition = (uriString: string, position: Position): { uri: string, lineOffset: number } | undefined => {
+export const getEmbeddedLanguageDocInfosOnPosition = (uriString: string, position: Position): EmbeddedLanguageDocInfos | undefined => {
   if (isInsideBashRegion(uriString, position)) {
     const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'bash')
     return documentInfos
