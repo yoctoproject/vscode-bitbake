@@ -15,7 +15,7 @@ export function setNotificationManagerConnection (connection: Connection): void 
 }
 
 export type NotificationType =
-  'custom/bitBakeNotFound'
+  'custom/bitbakeSettingsError'
 
 class ServerNotificationManager {
   send (type: NotificationType, message?: string): void {
@@ -27,8 +27,8 @@ class ServerNotificationManager {
     void _connection.sendNotification(type, message)
   }
 
-  sendBitBakeNotFound (): void {
-    this.send('custom/bitBakeNotFound')
+  sendBitBakeSettingsError (message?: string): void {
+    this.send('custom/bitbakeSettingsError', message)
   }
 }
 

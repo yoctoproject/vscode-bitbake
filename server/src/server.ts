@@ -74,21 +74,30 @@ function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
   contextHandler.symbolScanner = newSymbolScanner
 }
 
-function checkBitbakePresence (): void {
+function checkBitbakeSettingsSanity (): boolean {
   const bitbakeFolder = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder
   const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
 
   if (!fs.existsSync(bitbakeBinPath)) {
-    serverNotificationManager.sendBitBakeNotFound()
+    serverNotificationManager.sendBitBakeSettingsError("Bitbake binary doesn't exist: " + bitbakeBinPath)
+    return false
   }
+
+  const pathToEnvScript = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToEnvScript
+  if (!fs.existsSync(pathToEnvScript)) {
+    serverNotificationManager.sendBitBakeSettingsError("Bitbake environment script doesn't exist: " + pathToEnvScript)
+    return false
+  }
+
+  return true
 }
 
 connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake.loggingLevel
   bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
+  checkBitbakeSettingsSanity()
   bitBakeDocScanner.parseVariablesFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   bitBakeDocScanner.parseVariableFlagFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
-  checkBitbakePresence()
   bitBakeProjectScanner.rescanProject()
 })
 

@@ -17,29 +17,29 @@ export class ClientNotificationManager {
 
   buildHandlers (): Disposable[] {
     const handlers = [
-      this.buildBitBakeNotFoundHandler()
+      this.bitBakeSettingsErrorHandler()
     ]
 
     return handlers
   }
 
-  private buildBitBakeNotFoundHandler (): Disposable {
-    const isNeverShowAgain = this.checkIsNeverShowAgain('custom/bitBakeNotFound')
+  private bitBakeSettingsErrorHandler (): Disposable {
+    const isNeverShowAgain = this.checkIsNeverShowAgain('custom/bitbakeSettingsError')
     if (isNeverShowAgain) {
       return { dispose: () => {} }
     }
-    return this._client.onNotification('custom/bitBakeNotFound', () => {
+    return this._client.onNotification('custom/bitbakeSettingsError', (message?: string) => {
       void window.showErrorMessage(
-        'BitBake folder could not be found. Please set its path in the settings. Optionally, also set an environment script.',
+        'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,
         'Open Settings',
         'Close',
         'Never Show Again'
       )
         .then((item) => {
           if (item === 'Open Settings') {
-            void commands.executeCommand('workbench.action.openSettings', 'bitbake')
+            void commands.executeCommand('workbench.action.openWorkspaceSettings', '@ext:savoirfairelinux.bitbake')
           } else if (item === 'Never Show Again') {
-            void this.neverShowAgain('custom/bitBakeNotFound')
+            void this.neverShowAgain('custom/bitbakeSettingsError')
           }
         })
     })
