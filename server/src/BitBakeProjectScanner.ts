@@ -258,6 +258,7 @@ export class BitBakeProjectScanner {
     } else {
       if (commandResult.status !== 0) {
         logger.warn('Unhandled parsing error:' + output)
+        parsingSuccess = false
       }
     }
     return parsingSuccess

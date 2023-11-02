@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import bitBakeProjectScanner from '../BitBakeProjectScanner'
+import bitBakeProjectScanner, { BitBakeProjectScanner } from '../BitBakeProjectScanner'
 import path from 'path'
 
 const pathToBitbakeFolder = path.join(__dirname, '../../../integration-tests/project-folder/sources/poky/bitbake')
@@ -27,6 +27,20 @@ describe('BitBakeProjectScanner', () => {
   it('can run a bitbake parse', async () => {
     const parseSuccesful = bitBakeProjectScanner.parseAllRecipes()
     expect(parseSuccesful).toBe(true)
+  })
+
+  it('can detect incorrect bitbake settings', async () => {
+    const bitbakeScannerWithIncorrectSettings = new BitBakeProjectScanner()
+    bitbakeScannerWithIncorrectSettings.loadSettings(
+      {
+        pathToBitbakeFolder,
+        pathToBuildFolder,
+        pathToEnvScript: 'nonexistent-script'
+      },
+      workspaceFolder
+    )
+    const parseSuccesful = bitbakeScannerWithIncorrectSettings.parseAllRecipes()
+    expect(parseSuccesful).toBe(false)
   })
 
   it('can get a list of layers', async () => {
