@@ -42,18 +42,13 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
   }
 }
 
-const variablesFilePath = 'doc/bitbake-user-manual/bitbake-user-manual-ref-variables.rst'
-const variablesRegexForDoc = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)(?=^ {3}:term:|$(?!\n))/gsm
-
-const yoctoTaskFilePath = path.join(__dirname, '../src/yocto-docs/tasks.rst')
-const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*?))\n(?=(\.\. _ref)|((.*)\n(=+)))/g
-
 export class BitBakeDocScanner {
   private _variablesInfos: Record<string, VariableInfos> = {}
   private _variableFlagInfos: VariableFlagInfo[] = []
   private _yoctoTaskCompletionItems: CompletionItem[] = []
   private _variableFlagCompletionItems: CompletionItem[] = []
   private _variableCompletionItems: CompletionItem[] = []
+  private _docPath: string = path.join(__dirname, '../../yocto-docs') // This default path is for the test. The path after the compilation can be different
 
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
@@ -75,13 +70,21 @@ export class BitBakeDocScanner {
     return this._variableCompletionItems
   }
 
-  parseVariablesFile (pathToBitbakeFolder: string): void {
+  public setDocPathAndParse (extensionPath: string): void {
+    this._docPath = path.join(extensionPath, '../yocto-docs')
+    this.parseVariableFlagFile()
+    this.parseVariablesFile()
+    this.parseYoctoTaskFile()
+  }
+
+  public parseVariablesFile (): void {
+    const variablesFilePath = path.join(this._docPath, 'bitbake-user-manual/bitbake-user-manual-ref-variables.rst')
+    const variablesRegexForDoc = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)(?=^ {3}:term:|$(?!\n))/gsm
     let file = ''
-    const docPath = path.join(pathToBitbakeFolder, variablesFilePath)
     try {
-      file = fs.readFileSync(docPath, 'utf8')
+      file = fs.readFileSync(variablesFilePath, 'utf8')
     } catch {
-      logger.warn(`BitBake doc file not found at ${docPath}`)
+      logger.error(`Failed to read Bitbake variables at ${variablesFilePath}`)
     }
     const variableCompletionItems: CompletionItem[] = []
     for (const match of file.matchAll(variablesRegexForDoc)) {
@@ -116,6 +119,9 @@ export class BitBakeDocScanner {
   }
 
   public parseYoctoTaskFile (): void {
+    const yoctoTaskFilePath = path.join(this._docPath, 'tasks.rst')
+    const yoctoTaskPattern = /(?<=``)((?<name>do_.*)``\n-*\n\n(?<description>(.*\n)*?))\n(?=(\.\. _ref)|((.*)\n(=+)))/g
+
     let file = ''
     try {
       file = fs.readFileSync(yoctoTaskFilePath, 'utf8')
@@ -155,22 +161,20 @@ export class BitBakeDocScanner {
     this._yoctoTaskCompletionItems = tasks
   }
 
-  public parseVariableFlagFile (pathToBitbakeFolder: string): void {
-    const variableFlagFilePath = 'doc/bitbake-user-manual/bitbake-user-manual-metadata.rst'
+  public parseVariableFlagFile (): void {
+    const variableFlagFilePath = path.join(this._docPath, 'bitbake-user-manual/bitbake-user-manual-metadata.rst')
     const variableFlagSectionRegex = /(?<=Variable Flags\n=*\n\n)(?<variable_flag_section>.*\n)*(?<event_section_title>Events\n=*)/g
     const variableFlagRegex = /(?<=-\s*``\[)(?<name>.*)(?:\]``:)(?<description>(.*\n)*?)(?=\n-\s*``|\nEvents)/g
-
-    const completeVariableFlagFilePath = path.join(pathToBitbakeFolder, variableFlagFilePath)
     let file = ''
     try {
-      file = fs.readFileSync(completeVariableFlagFilePath, 'utf8')
+      file = fs.readFileSync(variableFlagFilePath, 'utf8')
     } catch {
-      logger.error(`Failed to read file at ${completeVariableFlagFilePath}`)
+      logger.error(`Failed to read file at ${variableFlagFilePath}`)
     }
 
     const variableFlagSection = file.match(variableFlagSectionRegex)
     if (variableFlagSection === null) {
-      logger.warn(`No variable flag section found at ${completeVariableFlagFilePath}. Is the regex correct?`)
+      logger.warn(`No variable flag section found at ${variableFlagFilePath}. Is the regex correct?`)
       return
     }
 
