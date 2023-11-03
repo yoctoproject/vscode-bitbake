@@ -38,8 +38,9 @@ const documents = new TextDocuments<TextDocument>(TextDocument)
 let workspaceRoot: string = ''
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
+  logger.level = 'debug'
+  logger.info('[onInitialize] Initializing connection')
   workspaceRoot = new URL(params.workspaceFolders?.[0]?.uri ?? '').pathname
-
   setOutputParserConnection(connection)
   setNotificationManagerConnection(connection)
 
