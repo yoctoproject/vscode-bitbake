@@ -45,12 +45,15 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   setNotificationManagerConnection(connection)
 
   const storagePath = params.initializationOptions.storagePath as string
+  const extensionPath = params.initializationOptions.extensionPath as string
+
   await embeddedLanguageDocsManager.setStoragePath(storagePath)
+
+  logger.info('[onInitialize] Setting yocto doc path and parsing doc files')
+  bitBakeDocScanner.setDocPathAndParse(extensionPath)
 
   const parser = await generateParser()
   analyzer.initialize(parser)
-
-  bitBakeDocScanner.parseYoctoTaskFile()
 
   return {
     capabilities: {
@@ -97,8 +100,6 @@ connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake.loggingLevel
   bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
   checkBitbakeSettingsSanity()
-  bitBakeDocScanner.parseVariablesFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
-  bitBakeDocScanner.parseVariableFlagFile(bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   bitBakeProjectScanner.rescanProject()
 })
 
