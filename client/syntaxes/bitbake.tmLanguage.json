@@ -41,7 +41,7 @@
         "keywords": {
             "patterns": [
                 {
-                    "match": "\\b(include|require|inherit|addtask|deltask|after|before|export|echo|if|fi|unset|print|fakeroot|EXPORT_FUNCTIONS|INHERIT)\\b",
+                    "match": "(?<![[:punct:]])\\b(include|require|inherit|addtask|deltask|after|before|export|echo|if|fi|unset|print|fakeroot|EXPORT_FUNCTIONS|INHERIT)\\b(?![[:punct:]])",
                     "captures": {
                         "1": {
                             "name": "keyword.control.bb"
@@ -52,7 +52,7 @@
                     "include": "#python-keywords"
                 },
                 {
-                    "match": "\\s*(python)(?=\\s+|\\s*\\()",
+                    "match": "\\b(python|def)\\b(?![[:punct:]])",
                     "captures": {
                         "1": {
                             "name": "storage.type.function.python.bb"
