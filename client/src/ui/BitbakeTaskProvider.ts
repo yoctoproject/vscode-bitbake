@@ -35,10 +35,10 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
     if (bitbakeTaskDefinition.recipes?.[0] !== undefined) {
       const resolvedTask = new vscode.Task(
-        bitbakeTaskDefinition,
+        task.definition,
         task.scope ?? vscode.TaskScope.Workspace,
-        `Run bitbake -c ${bitbakeTaskDefinition.task ?? 'build'} ${bitbakeTaskDefinition.recipes.join(' ')}`,
-        'bitbake',
+        task.name,
+        task.source ?? 'bitbake',
         new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> =>
           new BitbakeBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
         ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic']

@@ -27,7 +27,7 @@ async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvi
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe] },
       vscode.TaskScope.Workspace,
-      `Run bitbake ${chosenRecipe}`,
+      `Build recipe: ${chosenRecipe}`,
       'bitbake'
     )
     await runBitbakeTask(task, taskProvider)
@@ -41,7 +41,7 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvi
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], task: 'clean' },
       vscode.TaskScope.Workspace,
-      `Run bitbake ${chosenRecipe}`,
+      `Clean recipe: ${chosenRecipe}`,
       'bitbake'
     )
     await runBitbakeTask(task, taskProvider)
@@ -62,7 +62,7 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider:
       const task = new vscode.Task(
         { type: 'bitbake', recipes: [chosenRecipe], task: chosenTask },
         vscode.TaskScope.Workspace,
-        `Run bitbake ${chosenRecipe} -c ${chosenTask}`,
+        `Run task ${chosenTask} for ${chosenRecipe}`,
         'bitbake'
       )
       await runBitbakeTask(task, taskProvider)
