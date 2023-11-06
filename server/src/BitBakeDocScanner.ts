@@ -48,7 +48,7 @@ export class BitBakeDocScanner {
   private _yoctoTaskCompletionItems: CompletionItem[] = []
   private _variableFlagCompletionItems: CompletionItem[] = []
   private _variableCompletionItems: CompletionItem[] = []
-  private _docPath: string = path.join(__dirname, '../../yocto-docs') // This default path is for the test. The path after the compilation can be different
+  private _docPath: string = path.join(__dirname, '../../resources/docs') // This default path is for the test. The path after the compilation can be different
 
   get variablesInfos (): Record<string, VariableInfos> {
     return this._variablesInfos
@@ -71,7 +71,7 @@ export class BitBakeDocScanner {
   }
 
   public setDocPathAndParse (extensionPath: string): void {
-    this._docPath = path.join(extensionPath, '../yocto-docs')
+    this._docPath = path.join(extensionPath, '../resources/docs')
     this.parseVariableFlagFile()
     this.parseVariablesFile()
     this.parseYoctoTaskFile()
