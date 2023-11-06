@@ -25,7 +25,7 @@ import type {
 } from './SymbolScanner'
 
 import { logger } from './lib/src/utils/OutputLogger'
-import bitBakeProjectScanner from './BitBakeProjectScanner'
+import { bitBakeProjectScanner } from './BitBakeProjectScanner'
 
 /**
  * ContextHandler

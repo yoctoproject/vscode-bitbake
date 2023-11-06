@@ -16,7 +16,7 @@ import {
   FileChangeType
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
-import bitBakeProjectScanner from './BitBakeProjectScanner'
+import { bitBakeProjectScanner } from './BitBakeProjectScanner'
 import contextHandler from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'

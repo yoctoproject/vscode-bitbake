@@ -19,7 +19,7 @@ import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import contextHandler from '../ContextHandler'
-import bitBakeProjectScanner from '../BitBakeProjectScanner'
+import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   const wordPosition = {

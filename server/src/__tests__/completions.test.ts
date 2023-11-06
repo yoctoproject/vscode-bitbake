@@ -8,7 +8,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { generateParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
-import bitBakeProjectScanner from '../BitBakeProjectScanner'
+import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
 
 const DUMMY_URI = 'dummy_uri'
 

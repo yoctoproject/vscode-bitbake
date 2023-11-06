@@ -334,5 +334,4 @@ export class BitBakeProjectScanner {
   }
 }
 
-const bitBakeProjectScanner = new BitBakeProjectScanner()
-export default bitBakeProjectScanner
+export const bitBakeProjectScanner = new BitBakeProjectScanner()
