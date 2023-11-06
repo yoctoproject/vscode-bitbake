@@ -8,7 +8,8 @@ import * as path from 'path'
 import {
   workspace,
   type ExtensionContext,
-  window
+  window,
+  commands
 } from 'vscode'
 
 import {
@@ -88,6 +89,10 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
         }
       }, 1000)
     }
+  })
+
+  client.onRequest('bitbake/parseAllRecipes', async () => {
+    return await commands.executeCommand('bitbake.parse-recipes')
   })
 
   // Start the client and launch the server

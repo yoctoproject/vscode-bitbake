@@ -16,7 +16,7 @@ import {
   FileChangeType
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
-import { bitBakeProjectScanner } from './BitBakeProjectScanner'
+import { bitBakeProjectScanner, setBitBakeProjectScannerConnection } from './BitBakeProjectScanner'
 import contextHandler from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -25,7 +25,6 @@ import { generateParser } from './tree-sitter/parser'
 import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
-import { setOutputParserConnection } from './OutputParser'
 import { setNotificationManagerConnection, serverNotificationManager } from './ServerNotificationManager'
 import { onHoverHandler } from './connectionHandlers/onHover'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from './embedded-languages/general-support'
@@ -41,8 +40,8 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   logger.level = 'debug'
   logger.info('[onInitialize] Initializing connection')
   workspaceRoot = new URL(params.workspaceFolders?.[0]?.uri ?? '').pathname
-  setOutputParserConnection(connection)
   setNotificationManagerConnection(connection)
+  setBitBakeProjectScannerConnection(connection)
 
   const storagePath = params.initializationOptions.storagePath as string
   const extensionPath = params.initializationOptions.extensionPath as string
@@ -125,7 +124,7 @@ connection.onExecuteCommand((params) => {
   logger.info(`executeCommand ${JSON.stringify(params)}`)
 
   if (params.command === 'bitbake.rescan-project') {
-    bitBakeProjectScanner.rescanProject()
+    void bitBakeProjectScanner.rescanProject()
   }
 })
 

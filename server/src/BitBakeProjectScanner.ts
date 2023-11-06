@@ -7,6 +7,8 @@ import type childProcess from 'child_process'
 import find from 'find'
 import path from 'path'
 
+import { type Connection } from 'vscode-languageserver'
+
 import { logger } from './lib/src/utils/OutputLogger'
 
 import type {
@@ -15,13 +17,19 @@ import type {
   PathInfo
 } from './ElementInfo'
 
-import
-outputParser
-  from './OutputParser'
 import { BitbakeDriver } from './lib/src/BitbakeDriver'
 interface ScannStatus {
   scanIsRunning: boolean
   scanIsPending: boolean
+}
+
+let _connection: Connection | null = null
+
+/**
+ * Set the connection. Should be done at startup.
+ */
+export function setBitBakeProjectScannerConnection (connection: Connection): void {
+  _connection = connection
 }
 
 /**
@@ -89,17 +97,16 @@ export class BitBakeProjectScanner {
       logger.info('start rescanProject')
 
       try {
-        if (this.parseAllRecipes()) {
-          this.scanAvailableLayers()
-          this.scanForClasses()
-          this.scanForIncludeFiles()
-          this.scanForRecipes()
-          this.scanRecipesAppends()
-          this.scanOverrides()
+        this.parseAllRecipes()
+        this.scanAvailableLayers()
+        this.scanForClasses()
+        this.scanForIncludeFiles()
+        this.scanForRecipes()
+        this.scanRecipesAppends()
+        this.scanOverrides()
 
-          logger.info('scan ready')
-          this.printScanStatistic()
-        }
+        logger.info('scan ready')
+        this.printScanStatistic()
       } catch (error) {
         logger.error(`scanning of project is abborted: ${error as any}`)
       }
@@ -166,7 +173,6 @@ export class BitBakeProjectScanner {
     } else {
       const error = commandResult.stderr.toString()
       logger.error(`can not scan available layers error: ${error}`)
-      outputParser.parse(error)
     }
   }
 
@@ -201,6 +207,11 @@ export class BitBakeProjectScanner {
     this._recipes = new Array < ElementInfo >()
 
     const commandResult = this.executeBitBakeCommand('bitbake-layers show-recipes')
+    if (commandResult.status !== 0) {
+      logger.error(`Failed to scan recipes: ${commandResult.stderr.toString()}`)
+      return
+    }
+
     const output = commandResult.output.toString()
 
     const outerReg: RegExp = /(.+):\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g
@@ -240,28 +251,17 @@ export class BitBakeProjectScanner {
 
   scanOverrides (): void {
     const commandResult = this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
+    if (commandResult.status !== 0) {
+      logger.error(`Failed to scan overrides: ${commandResult.stderr.toString()}`)
+      return
+    }
     const output = commandResult.output.toString()
     const outerReg = /\nOVERRIDES="(.*)"\n/
     this._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
-  parseAllRecipes (): boolean {
-    logger.debug('parseAllRecipes')
-    let parsingSuccess: boolean = true
-
-    const commandResult = this.executeBitBakeCommand('bitbake -p')
-    const output = commandResult.output.toString()
-    outputParser.parse(output)
-    if (outputParser.errorsFound()) {
-      outputParser.reportProblems()
-      parsingSuccess = false
-    } else {
-      if (commandResult.status !== 0) {
-        logger.warn('Unhandled parsing error:' + output)
-        parsingSuccess = false
-      }
-    }
-    return parsingSuccess
+  parseAllRecipes (): void {
+    void _connection?.sendRequest('bitbake/parseAllRecipes')
   }
 
   private scanForRecipesPath (): void {
@@ -288,6 +288,10 @@ export class BitBakeProjectScanner {
 
       for (const recipeWithOutPath of recipesWithOutPath) {
         const commandResult = this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+        if (commandResult.status !== 0) {
+          logger.error(`Failed to scan recipes path: ${commandResult.stderr.toString()}`)
+          continue
+        }
         const output = commandResult.output.toString()
         const regExp: RegExp = /(\s.*\.bb)/g
 
@@ -300,6 +304,12 @@ export class BitBakeProjectScanner {
 
   private scanRecipesAppends (): void {
     const commandResult = this.executeBitBakeCommand('bitbake-layers show-appends')
+
+    if (commandResult.status !== 0) {
+      logger.error(`Failed to scan appends: ${commandResult.stderr.toString()}`)
+      return
+    }
+
     const output = commandResult.output.toString()
 
     const outerReg: RegExp = /(\S.*\.bb):(?:\s*\/\S*.bbappend)+/g
