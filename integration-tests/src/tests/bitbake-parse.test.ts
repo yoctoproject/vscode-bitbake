@@ -46,6 +46,9 @@ suite('Bitbake Commands Test Suite', () => {
       taskExecuted = true
     }))
 
+    // Wait for the diagnostics to be updated.
+    await delay(500)
+
     await vscode.commands.executeCommand('bitbake.parse-recipes')
     // eslint-disable-next-line no-unmodified-loop-condition
     while (!taskExecuted) {
@@ -76,6 +79,11 @@ suite('Bitbake Commands Test Suite', () => {
     }
 
     await resetLayer(path.resolve(__dirname, '../../project-folder/sources/meta-error'), workspacePath)
+
+    // Wait for the diagnostics to be updated. Another method would be to use
+    // the onDidChangeDiagnostics event, but it is not useful with the other test
+    // that checks for no diagnostics.
+    await delay(500)
 
     const diagnostics = vscode.languages.getDiagnostics()
     assert.strictEqual(diagnostics.length, 1)
