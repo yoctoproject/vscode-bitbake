@@ -100,7 +100,7 @@ describe('On Completion', () => {
     expect(result).toEqual([])
   })
 
-  it('provides suggestions when it is in variable expansion', async () => {
+  it('provides necessary suggestions when it is in variable expansion', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -117,6 +117,14 @@ describe('On Completion', () => {
     })
 
     expect(result).not.toEqual([])
+    expect(result).not.toEqual(
+      expect.arrayContaining([
+        {
+          kind: 14,
+          label: 'python'
+        }
+      ])
+    )
   })
 
   it('provides suggestions for operators when a ":" is typed and it follows an identifier or in the middle of typing such syntax', async () => {
