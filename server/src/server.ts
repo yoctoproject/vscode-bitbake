@@ -35,6 +35,7 @@ import { NotificationMethod, type NotificationParams } from './lib/src/types/not
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let workspaceRoot: string = ''
+let parseOnSave = true
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   logger.level = 'debug'
@@ -100,6 +101,7 @@ connection.onDidChangeConfiguration((change) => {
   bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
   checkBitbakeSettingsSanity()
   bitBakeProjectScanner.rescanProject()
+  parseOnSave = change.settings.bitbake.parseOnSave
 })
 
 connection.onDidChangeWatchedFiles((change) => {
@@ -171,8 +173,10 @@ documents.onDidClose((event) => {
 })
 
 documents.onDidSave((event) => {
-  logger.debug(`onDidSave ${JSON.stringify(event)}`)
-  bitBakeProjectScanner.parseAllRecipes()
+  if (parseOnSave) {
+    logger.debug(`onDidSave ${JSON.stringify(event)}`)
+    bitBakeProjectScanner.parseAllRecipes()
+  }
 })
 
 documents.listen(connection)

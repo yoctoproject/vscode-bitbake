@@ -69,6 +69,11 @@
           "default": false,
           "description": "Activate deep examination. If a recipe exports an additional package with a different name than the recipe file, the normal scan will not detect these packages. To find these packages, you need to activate this option."
         },
+        "bitbake.parseOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Activate parsing on save. When a recipe is saved, bitbake will automatically be run to parse it."
+        },
         "bitbake.pathToEnvScript": {
           "type": "string",
           "default": "${workspaceFolder}/sources/poky/oe-init-build-env",
