@@ -169,6 +169,21 @@
           "severity": 1,
           "message": 3
         }
+      },
+      {
+        "name": "bitbake-task-error",
+        "source": "bitbake",
+        "owner": "bitbake",
+        "fileLocation": [
+          "autoDetect",
+          "${cwd}"
+        ],
+        "pattern": {
+          "regexp": "^(ERROR): Task \\((.*):(.*\\) .*)$",
+          "file": 2,
+          "message": 3,
+          "severity": 1
+        }
       }
     ],
     "commands": [
