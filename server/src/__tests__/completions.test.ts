@@ -119,7 +119,7 @@ describe('On Completion', () => {
     expect(result).not.toEqual([])
   })
 
-  it('provides suggestions for operators when a ":" is typed and it follows an identifier', async () => {
+  it('provides suggestions for operators when a ":" is typed and it follows an identifier or in the middle of typing such syntax', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -135,7 +135,27 @@ describe('On Completion', () => {
       }
     })
 
+    // In the middle of typing operator/override syntax
+    const result2 = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 2,
+        character: 7
+      }
+    })
+
     expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          label: 'append',
+          kind: 24
+        }
+      ])
+    )
+
+    expect(result2).toEqual(
       expect.arrayContaining([
         {
           label: 'append',
