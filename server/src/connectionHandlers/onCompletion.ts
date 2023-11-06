@@ -123,12 +123,15 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   // TODO: Add completions from contextHandler.getCompletionItemForRecipesAndSymbols() after refactor the CompletionProviders & SymbolScanner & ProjectScanner
 
-  const reserverdKeywordCompletionItems: CompletionItem[] = RESERVED_KEYWORDS.map(keyword => {
-    return {
-      label: keyword,
-      kind: CompletionItemKind.Keyword
-    }
-  })
+  let reserverdKeywordCompletionItems: CompletionItem[] = []
+  if (!analyzer.isVariableExpansion(documentUri, wordPosition.line, wordPosition.character)) {
+    reserverdKeywordCompletionItems = RESERVED_KEYWORDS.map(keyword => {
+      return {
+        label: keyword,
+        kind: CompletionItemKind.Keyword
+      }
+    })
+  }
 
   const bitBakeVariableCompletionItems: CompletionItem[] = bitBakeDocScanner.variableCompletionItems.length > 0
     ? formatCompletionItems(bitBakeDocScanner.variableCompletionItems)

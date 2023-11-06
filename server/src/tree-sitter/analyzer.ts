@@ -215,6 +215,24 @@ export default class Analyzer {
   }
 
   /**
+   * Check if the variable expansion syntax is being typed. Only for expressions that reference variables. \
+   * Example:
+   * ```
+   * NAME = "foo"
+   * DESCRIPTION = "Name: ${NAME}"
+   * ```
+   * Caveat: Current tree-sitter @1.0.1 doesn't treat "${}" as variable expansion syntax.
+   */
+  public isVariableExpansion (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    return n?.type === 'identifier' && n?.parent?.type === 'variable_expansion'
+  }
+
+  /**
    * Check if the node is the identifier in a variable assignment syntax (identifiers are only on the left hand side)
    */
   public isIdentifierOfVariableAssignment (
