@@ -86,7 +86,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       }
     })
     if (wordBeforeIsIdentifier) {
-      const variableFlagsFromScanner: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.variableFlagCompletionItems)
+      const variableFlagsFromScanner: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.variableFlagCompletionItems, CompletionItemKind.Keyword)
 
       const variableFlagCompletionItems: CompletionItem[] = VARIABLE_FLAGS.map(keyword => {
         return {
@@ -134,7 +134,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   }
 
   const bitBakeVariableCompletionItems: CompletionItem[] = bitBakeDocScanner.variableCompletionItems.length > 0
-    ? formatCompletionItems(bitBakeDocScanner.variableCompletionItems)
+    ? formatCompletionItems(bitBakeDocScanner.variableCompletionItems, CompletionItemKind.Variable)
     : BITBAKE_VARIABLES.map(keyword => {
       return {
         label: keyword,
@@ -142,7 +142,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       }
     })
 
-  const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.yoctoTaskCompletionItems)
+  const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.yoctoTaskCompletionItems, CompletionItemKind.Snippet)
 
   const allCompletions = [
     ...reserverdKeywordCompletionItems,

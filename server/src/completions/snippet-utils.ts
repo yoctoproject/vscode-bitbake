@@ -12,7 +12,7 @@ import { InsertTextFormat, type CompletionItem, CompletionItemKind, MarkupKind }
 
 /* eslint-disable no-template-curly-in-string */
 
-export function formatCompletionItems (completions: CompletionItem[]): CompletionItem[] {
+export function formatCompletionItems (completions: CompletionItem[], completionItemKind?: CompletionItemKind): CompletionItem[] {
   return completions.map((item) => {
     const formatted = {
       ...item,
@@ -31,7 +31,7 @@ export function formatCompletionItems (completions: CompletionItem[]): Completio
         kind: MarkupKind.Markdown
       },
 
-      kind: CompletionItemKind.Snippet
+      kind: item.kind ?? completionItemKind ?? CompletionItemKind.Snippet
     }
 
     const { data, ...filtered } = formatted
