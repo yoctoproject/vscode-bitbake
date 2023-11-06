@@ -124,7 +124,7 @@ connection.onExecuteCommand((params) => {
   logger.info(`executeCommand ${JSON.stringify(params)}`)
 
   if (params.command === 'bitbake.rescan-project') {
-    void bitBakeProjectScanner.rescanProject()
+    bitBakeProjectScanner.rescanProject()
   }
 })
 

@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import bitBakeProjectScanner, { BitBakeProjectScanner } from '../BitBakeProjectScanner'
+import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
 import path from 'path'
 
 const pathToBitbakeFolder = path.join(__dirname, '../../../integration-tests/project-folder/sources/poky/bitbake')
