@@ -99,8 +99,9 @@ function checkBitbakeSettingsSanity (): boolean {
 connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake.loggingLevel
   bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
-  checkBitbakeSettingsSanity()
-  bitBakeProjectScanner.rescanProject()
+  if (checkBitbakeSettingsSanity()) {
+    bitBakeProjectScanner.rescanProject()
+  }
   parseOnSave = change.settings.bitbake.parseOnSave
 })
 
