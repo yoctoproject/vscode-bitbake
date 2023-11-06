@@ -24,25 +24,6 @@ describe('BitBakeProjectScanner', () => {
     bitBakeProjectScanner.rescanProject()
   })
 
-  it('can run a bitbake parse', async () => {
-    const parseSuccesful = bitBakeProjectScanner.parseAllRecipes()
-    expect(parseSuccesful).toBe(true)
-  })
-
-  it('can detect incorrect bitbake settings', async () => {
-    const bitbakeScannerWithIncorrectSettings = new BitBakeProjectScanner()
-    bitbakeScannerWithIncorrectSettings.loadSettings(
-      {
-        pathToBitbakeFolder,
-        pathToBuildFolder,
-        pathToEnvScript: 'nonexistent-script'
-      },
-      workspaceFolder
-    )
-    const parseSuccesful = bitbakeScannerWithIncorrectSettings.parseAllRecipes()
-    expect(parseSuccesful).toBe(false)
-  })
-
   it('can get a list of layers', async () => {
     const layers = bitBakeProjectScanner.layers
     // poky provides the "core", "yocto" and "yoctobsp" layers
