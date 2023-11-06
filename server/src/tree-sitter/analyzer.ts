@@ -135,18 +135,6 @@ export default class Analyzer {
     )
   }
 
-  public shouldProvideCompletionItems (
-    uri: string,
-    line: number,
-    column: number
-  ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
-    if (n?.type === 'string_content' || n?.type === 'ERROR') {
-      return false
-    }
-    return true
-  }
-
   public hasParser (): boolean {
     return this.parser !== undefined
   }
@@ -197,6 +185,33 @@ export default class Analyzer {
       params.position.character
     )
     return n?.type === 'identifier'
+  }
+
+  public isStringContent (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    if (n?.type === 'string_content') {
+      return true
+    }
+    return false
+  }
+
+  public isOverride (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    // Current tree-sitter @1.0.1 only treats 'append', 'prepend' and 'remove' as a node with "override" type. Other words following ":" will yield a node with "identifier" type whose parent node is of type "override"
+    // However, in some cases, its parent node is not of type override but its grandparent is.
+    // See if future tree-sitter has a nicer way to handle this.
+    if (n?.type === 'override' || n?.parent?.type === 'override' || n?.parent?.parent?.type === 'override') {
+      return true
+    }
+    return false
   }
 
   /**

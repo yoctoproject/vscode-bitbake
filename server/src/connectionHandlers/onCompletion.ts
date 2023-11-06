@@ -28,6 +28,8 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     character: Math.max(textDocumentPositionParams.position.character - 1, 0)
   }
 
+  const documentUri = textDocumentPositionParams.textDocument.uri
+
   const word = analyzer.wordAtPointFromTextPosition({
     ...textDocumentPositionParams,
     position: wordPosition
@@ -35,14 +37,13 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   logger.debug(`[onCompletion] current word: ${word}`)
 
-  const shouldComplete = analyzer.shouldProvideCompletionItems(textDocumentPositionParams.textDocument.uri, wordPosition.line, wordPosition.character)
-  // Do not provide completions if it is inside a string but not inside a variable expansion
-  if (!shouldComplete) {
+  if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
     return []
   }
 
   // bitbake operators
-  if (word === ':') {
+  const isOverride = analyzer.isOverride(documentUri, wordPosition.line, wordPosition.character)
+  if (word === ':' || isOverride) {
     const wordBeforeIsIdentifier = analyzer.isIdentifier({
       ...textDocumentPositionParams,
       position: {
@@ -51,7 +52,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
         character: Math.max(textDocumentPositionParams.position.character - 2, 0)
       }
     })
-    if (wordBeforeIsIdentifier) {
+    if (wordBeforeIsIdentifier || isOverride) {
       const bitBakeOperatorCompletionItems: CompletionItem[] = BITBAKE_OPERATOR.map(keyword => {
         return {
           label: keyword,
@@ -73,7 +74,6 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       return []
     }
   }
-  // TODO: add dynamic overrides, completion type: Property
 
   // variable flags
   if (word === '[') {
@@ -103,7 +103,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   let symbolCompletions: CompletionItem[] = []
   if (word !== null) {
-    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(textDocumentPositionParams.textDocument.uri)
+    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri)
     // Filter out duplicate BITBAKE_VARIABLES as they will be included as global declaration after running analyzer.analyze() in documents.onDidChangeContent() in server.ts
     symbolCompletions = globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
       {
