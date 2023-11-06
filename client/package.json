@@ -89,9 +89,6 @@
     "taskDefinitions": [
       {
         "type": "bitbake",
-        "required": [
-          "recipes"
-        ],
         "properties": {
           "recipes": {
             "description": "Bitbake recipe(s)",
@@ -115,6 +112,10 @@
               "force": {
                 "type": "boolean",
                 "description": "Force the specified targets/task to run (-f)."
+              },
+              "parseOnly": {
+                "type": "boolean",
+                "description": "Run bitbake in parse-only mode (-p)."
               }
             }
           }
@@ -201,6 +202,11 @@
         "title": "BitBake: Add a recipe to the active workspace",
         "description": "Start watching or suggesting a recipe in bitbake commands.",
         "enablement": "false"
+      },
+      {
+        "command": "bitbake.parse-recipes",
+        "title": "BitBake: Parse all recipes",
+        "description": "This command runs bitbake in parse-only mode."
       }
     ],
     "submenus": [

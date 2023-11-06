@@ -12,11 +12,12 @@ const endOfLine: string = '\r\n'
 
 /// Reflects the task definition in package.json
 interface BitbakeTaskDefinition extends vscode.TaskDefinition {
-  recipes: string[]
+  recipes?: string[]
   task?: string
   options?: {
-    continue: boolean
-    force: boolean
+    continue?: boolean
+    force?: boolean
+    parseOnly?: boolean
   }
 }
 
@@ -33,7 +34,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 
   resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
-    if (bitbakeTaskDefinition.recipes?.[0] !== undefined) {
+    if (bitbakeTaskDefinition.recipes?.[0] !== undefined || bitbakeTaskDefinition.options?.parseOnly === true) {
       const resolvedTask = new vscode.Task(
         task.definition,
         task.scope ?? vscode.TaskScope.Workspace,
@@ -43,11 +44,16 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
           new BitbakeBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
         ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic']
       )
-      if (bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) {
+      if ((bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) &&
+          bitbakeTaskDefinition.options?.parseOnly !== true) {
         resolvedTask.group = vscode.TaskGroup.Build
       }
       if (bitbakeTaskDefinition.task !== undefined && bitbakeTaskDefinition.task.includes('clean')) {
         resolvedTask.group = vscode.TaskGroup.Clean
+      }
+      if (bitbakeTaskDefinition.options?.parseOnly === true) {
+        resolvedTask.presentationOptions.reveal = vscode.TaskRevealKind.Silent
+        resolvedTask.presentationOptions.focus = false
       }
       return resolvedTask
     }
@@ -57,17 +63,20 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
   private composeBitbakeCommand (bitbakeTaskDefinition: BitbakeTaskDefinition): string {
     let command = 'bitbake'
 
-    for (const recipe of bitbakeTaskDefinition.recipes) {
+    bitbakeTaskDefinition.recipes?.forEach(recipe => {
       command = this.appendCommandParam(command, `${recipe}`)
-    }
+    })
     if (bitbakeTaskDefinition.task !== undefined) {
       command = this.appendCommandParam(command, `-c ${bitbakeTaskDefinition.task}`)
     }
-    if (bitbakeTaskDefinition.options?.continue !== undefined) {
+    if (bitbakeTaskDefinition.options?.continue === true) {
       command = this.appendCommandParam(command, '-k')
     }
-    if (bitbakeTaskDefinition.options?.force !== undefined) {
+    if (bitbakeTaskDefinition.options?.force === true) {
       command = this.appendCommandParam(command, '-f')
+    }
+    if (bitbakeTaskDefinition.options?.parseOnly === true) {
+      command = this.appendCommandParam(command, '-p')
     }
 
     return command

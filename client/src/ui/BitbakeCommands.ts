@@ -13,11 +13,23 @@ import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
+}
+
+async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
+  logger.debug('Command: parse-recipes')
+  const parseAllRecipesTask = new vscode.Task(
+    { type: 'bitbake', options: { parseOnly: true } },
+    vscode.TaskScope.Workspace,
+    'Parse all recipes',
+    'bitbake'
+  )
+  await runBitbakeTask(parseAllRecipesTask, taskProvider)
 }
 
 async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
@@ -132,6 +144,6 @@ async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvi
   if (resolvedTask instanceof vscode.Task) {
     await vscode.tasks.executeTask(resolvedTask)
   } else {
-    await vscode.window.showErrorMessage(`Failed to resolve task for recipe ${task.definition.recipes[0]}`)
+    throw new Error(`Failed to resolve task for recipe ${task.definition.recipes[0]}`)
   }
 }
