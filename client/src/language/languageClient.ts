@@ -8,8 +8,7 @@ import * as path from 'path'
 import {
   workspace,
   type ExtensionContext,
-  window,
-  ConfigurationTarget
+  window
 } from 'vscode'
 
 import {
@@ -87,16 +86,6 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
           void window.showErrorMessage(`Failed to associate this file (${param.filePath}) with BitBake Language mode. Current language mode: ${languageId}. Please make sure there is no other extension that is causing the conflict. (e.g. Txt Syntax)`)
         }
       }, 1000)
-    }
-  })
-
-  // Enable suggestions when inside strings, but server side disables suggestions on pure string content, they are onlyavailable in the variable expansion
-  window.onDidChangeActiveTextEditor((editor) => {
-    if (editor !== null && editor?.document.languageId === 'bitbake') {
-      void workspace.getConfiguration('editor').update('quickSuggestions', { strings: true }, ConfigurationTarget.Workspace)
-    } else {
-      // Reset to default settings
-      void workspace.getConfiguration('editor').update('quickSuggestions', { strings: false }, ConfigurationTarget.Workspace)
     }
   })
 
