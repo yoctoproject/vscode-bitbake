@@ -186,6 +186,22 @@ export default class Analyzer {
     return n?.type === 'identifier'
   }
 
+  public isFunctionIdentifier (
+    params: TextDocumentPositionParams
+  ): boolean {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+    if (n?.type === 'identifier') {
+      return n?.parent?.type === 'function_definition' || n?.parent?.type === 'anonymous_python_function'
+    } else if (n?.type === 'python_identifier') {
+      return n?.parent?.type === 'python_function_definition'
+    }
+    return false
+  }
+
   public isStringContent (
     uri: string,
     line: number,
