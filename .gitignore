@@ -15,5 +15,5 @@ coverage/
 **/.vscode-test
 
 resources/poky*
-
+resources/docs/
 integration-tests/project-folder/build
