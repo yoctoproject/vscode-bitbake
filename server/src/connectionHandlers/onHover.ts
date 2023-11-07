@@ -37,11 +37,10 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
       return null
     }
 
-    const definition = found.definition
     const hover: Hover = {
       contents: {
         kind: 'markdown',
-        value: `**${word}**\n___\n${definition}`
+        value: `**${found.name}**\n___\n${found.definition}`
       }
     }
     logger.debug(`[onHover] Hover item: ${JSON.stringify(hover)}`)
@@ -58,12 +57,28 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     const hover: Hover = {
       contents: {
         kind: 'markdown',
-        value: `**${word}**\n___\n${found.definition}`
+        value: `**${found.name}**\n___\n${found.definition}`
       }
     }
     logger.debug(`[onHover] Hover item: ${JSON.stringify(hover)}`)
     return hover
   }
 
+  // Yocto tasks
+  if (analyzer.isFunctionIdentifier(params)) {
+    const found = bitBakeDocScanner.yoctoTaskInfo.find(item => item.name === word)
+    if (found === undefined) {
+      return null
+    }
+    logger.debug(`[onHover] Found Yocto task: ${found.name}`)
+    const hover: Hover = {
+      contents: {
+        kind: 'markdown',
+        value: `**${found.name}**\n___\n${found.definition}`
+      }
+    }
+    logger.debug(`[onHover] Hover item: ${JSON.stringify(hover)}`)
+    return hover
+  }
   return null
 }
