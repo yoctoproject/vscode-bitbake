@@ -137,11 +137,10 @@
           "${cwd}"
         ],
         "pattern": {
-          "regexp": "^Parsing recipes...(ERROR): ParseError (at|in) (.+?):(\\d+)?:? (.+)$",
-          "file": 3,
-          "line": 4,
-          "severity": 1,
-          "message": 5
+          "regexp": "^.*ParseError (at|in) (.+?):(\\d+)?:? (.+)$",
+          "file": 2,
+          "line": 3,
+          "message": 4
         }
       },
       {
