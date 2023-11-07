@@ -36,6 +36,10 @@ Press `F5` or navigate to the debug section on the left of the VS Code and selec
 
 ## Testing
 
+Bitbake and Yocto docs are required for some features to work, They need to be fetched before testing and development:
+
+ $ npm run fetch:docs
+
 A wrapper npm script allows running several kinds of tests. To run all tests, use:
 
  $ npm test
