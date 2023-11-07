@@ -6,7 +6,7 @@
 import { type HoverParams, type Hover } from 'vscode-languageserver'
 import { analyzer } from '../tree-sitter/analyzer'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
-import logger from 'winston'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 export async function onHoverHandler (params: HoverParams): Promise<Hover | null> {
   const { position, textDocument } = params
@@ -19,8 +19,8 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   // Triggers only on global declaration expressions like "VAR = 'foo'" but skip the ones like "python VAR(){}"
   const wordIsGlobalDeclarationAndVariableName: boolean = analyzer.getGlobalDeclarationSymbols(textDocument.uri).some((symbol) => symbol.name === word) && analyzer.isIdentifierOfVariableAssignment(params)
   if (wordIsGlobalDeclarationAndVariableName) {
-    const found = Object.keys(bitBakeDocScanner.variablesInfos).includes(word)
-    if (!found) {
+    const found = bitBakeDocScanner.bitbakeVariableInfo.find((item) => item.name === word)
+    if (found === undefined) {
       logger.debug(`[onHover] Not a bitbake variable: ${word}`)
       return null
     }
@@ -37,7 +37,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
       return null
     }
 
-    const definition = bitBakeDocScanner.variablesInfos[word]?.definition
+    const definition = found.definition
     const hover: Hover = {
       contents: {
         kind: 'markdown',
@@ -50,8 +50,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 
   // Variable flag
   if (analyzer.isVariableFlag(params)) {
-    const found = bitBakeDocScanner.variableFlagInfos.find(item => item.name === word)
-
+    const found = bitBakeDocScanner.variableFlagInfo.find(item => item.name === word)
     if (found === undefined) {
       return null
     }

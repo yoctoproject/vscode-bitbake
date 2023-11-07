@@ -15,7 +15,7 @@ import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
 import { analyzer } from '../tree-sitter/analyzer'
 import { formatCompletionItems } from '../completions/snippet-utils'
-import { bitBakeDocScanner } from '../BitBakeDocScanner'
+import { bitBakeDocScanner, type DocInfoType } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import contextHandler from '../ContextHandler'
@@ -91,7 +91,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       }
     })
     if (wordBeforeIsIdentifier) {
-      const variableFlagsFromScanner: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.variableFlagCompletionItems, CompletionItemKind.Keyword)
+      const variableFlagsFromScanner: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.variableFlagInfo), CompletionItemKind.Keyword)
 
       const variableFlagCompletionItems: CompletionItem[] = VARIABLE_FLAGS.map(keyword => {
         return {
@@ -138,8 +138,8 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     })
   }
 
-  const bitBakeVariableCompletionItems: CompletionItem[] = bitBakeDocScanner.variableCompletionItems.length > 0
-    ? formatCompletionItems(bitBakeDocScanner.variableCompletionItems, CompletionItemKind.Variable)
+  const bitBakeVariableCompletionItems: CompletionItem[] = bitBakeDocScanner.bitbakeVariableInfo.length > 0
+    ? formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.bitbakeVariableInfo), CompletionItemKind.Variable)
     : BITBAKE_VARIABLES.map(keyword => {
       return {
         label: keyword,
@@ -147,7 +147,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       }
     })
 
-  const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(bitBakeDocScanner.yoctoTaskCompletionItems, CompletionItemKind.Snippet)
+  const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoTaskInfo), CompletionItemKind.Snippet)
 
   const allCompletions = [
     ...reserverdKeywordCompletionItems,
@@ -157,4 +157,26 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   ]
 
   return allCompletions
+}
+
+/**
+ * Convert data in BitBakeDocScanner to completion items
+ */
+function docInfoToCompletionItems (docInfo: DocInfoType): CompletionItem[] {
+  const completionItems: CompletionItem[] = []
+  docInfo.forEach((info) => {
+    completionItems.push({
+      label: info.name,
+      labelDetails: {
+        description: info.docSource !== undefined ? `Source: ${info.docSource}` : ''
+      },
+      documentation: info.definition,
+      data: {
+        referenceUrl: info.referenceUrl
+      },
+      insertText: info?.insertText
+    })
+  })
+
+  return completionItems
 }
