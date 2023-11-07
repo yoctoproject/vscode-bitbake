@@ -26,7 +26,7 @@ export function formatCompletionItems (completions: CompletionItem[], completion
           markdownBlock(item.insertText?.replace(/\$\{\d+:(?<code>.*)\}/g, (m, p1) => p1), 'bitbake'),
           '---',
           `${JSON.parse(JSON.stringify(item.documentation))}`,
-          item.data?.referenceUrl !== '' ? `[Reference](${item.data?.referenceUrl})` : ''
+          item.data.referenceUrl !== undefined ? `[Reference](${item.data?.referenceUrl})` : ''
         ].join('\n'),
         kind: MarkupKind.Markdown
       },
