@@ -1,3 +1,6 @@
+#!/bin/bash
+set -e
+
 mkdir -p resources/docs 
 #  Bitbake docs
 git clone --depth 1 --filter=blob:none --sparse https://github.com/openembedded/bitbake.git 
