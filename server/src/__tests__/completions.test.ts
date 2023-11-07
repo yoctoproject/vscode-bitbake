@@ -28,12 +28,11 @@ describe('On Completion', () => {
 
   beforeEach(() => {
     analyzer.resetAnalyzedDocuments()
+    bitBakeDocScanner.clearScannedDocs()
   })
 
   it('expects reserved variables, keywords and snippets in completion item lists', async () => {
-    bitBakeDocScanner.parseYoctoTaskFile()
-
-    // nothing is analyzed yet, only the static completion items are provided
+    // nothing is analyzed yet, and docs are not scanned. Only the static and fallback completion items are provided
     const result = onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
@@ -64,7 +63,22 @@ describe('On Completion', () => {
       ])
     )
 
-    expect(result).toEqual(
+    // Scan docs
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    bitBakeDocScanner.parseYoctoVariablesFile()
+    bitBakeDocScanner.parseYoctoTaskFile()
+
+    const resultAfterDocScan = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 0,
+        character: 1
+      }
+    })
+    // Yocto tasks
+    expect(resultAfterDocScan).toEqual(
       /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
@@ -72,10 +86,51 @@ describe('On Completion', () => {
             value: '```man\ndo_build (bitbake-language-server)\n\n\n```\n```bitbake\ndo_build(){\n\t# Your code here\n}\n```\n---\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n\n[Reference](https://docs.yoctoproject.org/singleindex.html#do-build)',
             kind: 'markdown'
           },
+          labelDetails: {
+            description: ''
+          },
           insertText: 'do_build(){\n\t${1:# Your code here}\n}',
           insertTextFormat: 2,
           label: 'do_build',
           kind: 15
+        }
+      ])
+    )
+    // Variables from scanning bitbake docs
+    expect(resultAfterDocScan).toEqual(
+      /* eslint-disable no-template-curly-in-string */
+      expect.arrayContaining([
+        {
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   A long description for the recipe.\n\n\n[Reference](https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-ref-variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: 'Source: Bitbake'
+          },
+          insertText: undefined,
+          insertTextFormat: 1,
+          label: 'DESCRIPTION',
+          kind: 6
+        }
+      ])
+    )
+    // Variables from scanning Yocto docs
+    expect(resultAfterDocScan).toEqual(
+      /* eslint-disable no-template-curly-in-string */
+      expect.arrayContaining([
+        {
+          documentation: {
+            value: '```man\nAPPEND (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   An override list of append strings for each target specified with\n   `LABELS`.\n\n   See the `ref-classes-grub-efi` class for more\n   information on how this variable is used.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-APPEND)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: 'Source: Yocto'
+          },
+          insertText: undefined,
+          insertTextFormat: 1,
+          label: 'APPEND',
+          kind: 6
         }
       ])
     )
@@ -243,8 +298,7 @@ describe('On Completion', () => {
     expect(result).toEqual([])
   })
 
-  it('provides fallback suggestions for variable flags when a "[" is typed and it follows an identifier', async () => {
-    // TODO: This one only tests the fallback suggestions, the ones from docs require scanning docs in bitbake folder
+  it('provides suggestions for variable flags when a "[" is typed and it follows an identifier (Before and After scanning docs', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -264,6 +318,36 @@ describe('On Completion', () => {
       expect.arrayContaining([
         {
           label: 'cleandirs',
+          kind: 14
+        }
+      ])
+    )
+
+    bitBakeDocScanner.parseVariableFlagFile()
+
+    const resultAfterDocScan = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 3,
+        character: 6
+      }
+    })
+
+    expect(resultAfterDocScan).toEqual(
+      expect.arrayContaining([
+        {
+          label: 'cleandirs',
+          documentation: {
+            value: '```man\ncleandirs (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n Empty directories that should be created before\n   the task runs. Directories that already exist are removed and\n   recreated to empty them.\n\n[Reference](https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#variable-flags)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: ''
+          },
+          insertText: undefined,
+          insertTextFormat: 1,
           kind: 14
         }
       ])

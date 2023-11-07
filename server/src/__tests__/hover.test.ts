@@ -3,24 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { bitBakeDocScanner, type VariableInfos } from '../BitBakeDocScanner'
+import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { onHoverHandler } from '../connectionHandlers/onHover'
-const DUMMY_URI = 'dummy_uri'
-const mockedVariableInfos: Record<string, VariableInfos> = {
-  DESCRIPTION: {
-    name: 'DESCRIPTION',
-    definition: 'A long description for the recipe.'
-  },
-  B: {
-    name: 'B',
-    definition: 'The directory in which BitBake executes functions during a recipe’s build process.'
-  }
-}
 
-jest.spyOn(bitBakeDocScanner, 'variablesInfos', 'get').mockReturnValue(mockedVariableInfos)
+const DUMMY_URI = 'dummy_uri'
 
 describe('on hover', () => {
   beforeAll(async () => {
@@ -33,9 +22,11 @@ describe('on hover', () => {
 
   beforeEach(() => {
     analyzer.resetAnalyzedDocuments()
+    bitBakeDocScanner.clearScannedDocs()
   })
 
-  it('only shows definition on hovering global variable declaration syntax for bitbake variables', async () => {
+  it('only shows definition on hovering global variable declaration syntax for bitbake variables after scanning the docs', async () => {
+    bitBakeDocScanner.parseBitbakeVariablesFile()
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -84,12 +75,131 @@ describe('on hover', () => {
     expect(shouldShow).toEqual({
       contents: {
         kind: 'markdown',
-        value: '**DESCRIPTION**\n___\nA long description for the recipe.'
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
       }
     })
 
     expect(shouldNotShow1).toBe(null)
     expect(shouldNotShow2).toBe(null)
     expect(shouldNotShow3).toBe(null)
+  })
+
+  it('should show hover definition for variable flags after scanning the docs', async () => {
+    bitBakeDocScanner.parseVariableFlagFile()
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 12,
+        character: 7
+      }
+    })
+
+    const shouldNotShow = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 13,
+        character: 9
+      }
+    })
+
+    expect(shouldShow).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**cleandirs**\n___\n Empty directories that should be created before\n   the task runs. Directories that already exist are removed and\n   recreated to empty them.\n'
+      }
+    })
+
+    expect(shouldNotShow).toBe(null)
+  })
+
+  it('should show hover definition for yocto tasks after scanning the docs', async () => {
+    bitBakeDocScanner.parseYoctoTaskFile()
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 15,
+        character: 2
+      }
+    })
+
+    const shouldShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 19,
+        character: 9
+      }
+    })
+
+    const shouldShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 23,
+        character: 6
+      }
+    })
+
+    const shouldNotShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 26,
+        character: 5
+      }
+    })
+
+    const shouldNotShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 27,
+        character: 13
+      }
+    })
+
+    expect(shouldShow1).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**do_build**\n___\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n'
+      }
+    })
+
+    expect(shouldShow2).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**do_build**\n___\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n'
+      }
+    })
+
+    expect(shouldShow3).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**do_build**\n___\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n'
+      }
+    })
+
+    expect(shouldNotShow1).toBe(null)
+    expect(shouldNotShow2).toBe(null)
   })
 })
