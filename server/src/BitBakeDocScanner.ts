@@ -50,12 +50,17 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
 
 export class BitBakeDocScanner {
   private _bitbakeVariableInfo: VariableInfo[] = []
+  private _yoctoVariableInfo: VariableInfo[] = []
   private _variableFlagInfo: VariableFlagInfo[] = []
   private _yoctoTaskInfo: DocInfo[] = []
   private _docPath: string = path.join(__dirname, '../../resources/docs') // This default path is for the test. The path after the compilation can be different
 
   get bitbakeVariableInfo (): VariableInfo[] {
     return this._bitbakeVariableInfo
+  }
+
+  get yoctoVariableInfo (): VariableInfo[] {
+    return this._yoctoVariableInfo
   }
 
   get variableFlagInfo (): VariableFlagInfo[] {
@@ -70,9 +75,11 @@ export class BitBakeDocScanner {
     this._docPath = path.join(extensionPath, '../resources/docs')
     this.parseVariableFlagFile()
     this.parseBitbakeVariablesFile()
+    this.parseYoctoVariablesFile()
     this.parseYoctoTaskFile()
   }
 
+  // TODO: Generalize these parse functions. They all read a file, match some content and store it.
   public parseBitbakeVariablesFile (): void {
     const variablesFilePath = path.join(this._docPath, 'bitbake-user-manual-ref-variables.rst')
     const variablesRegexForDoc = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)(?=^ {3}:term:|$(?!\n))/gsm
@@ -107,6 +114,42 @@ export class BitBakeDocScanner {
     }
 
     this._bitbakeVariableInfo = bitbakeVariableInfo
+  }
+
+  public parseYoctoVariablesFile (): void {
+    const filePath = path.join(this._docPath, 'variables.rst')
+    const variableRegex = /^ {3}:term:`(?<name>[A-Z_]*?)`\n(?<definition>.*?)(?=^ {3}:term:|$(?!\n))/gsm
+    let file = ''
+    try {
+      file = fs.readFileSync(filePath, 'utf8')
+    } catch {
+      logger.error(`Failed to read Yocto variables at ${filePath}`)
+    }
+
+    const yoctoVariableInfo: VariableInfo[] = []
+    for (const match of file.matchAll(variableRegex)) {
+      const name = match.groups?.name
+      // Naive silly inneficient incomplete conversion to markdown
+      const definition = match.groups?.definition
+        .replace(/^ {3}/gm, '')
+        .replace(/:term:|:ref:/g, '')
+        .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
+        .replace(/::/g, ':')
+        .replace(/``/g, '`')
+        .replace(/^\n(\s{5,})/gm, ' ')
+        .replace(/^(\s{5,})/gm, ' ')
+      if (name === undefined || definition === undefined) {
+        return
+      }
+      yoctoVariableInfo.push({
+        name,
+        definition,
+        referenceUrl: `https://docs.yoctoproject.org/ref-manual/variables.html#term-${name}`,
+        docSource: 'Yocto'
+      })
+    }
+
+    this._yoctoVariableInfo = yoctoVariableInfo
   }
 
   public parseYoctoTaskFile (): void {

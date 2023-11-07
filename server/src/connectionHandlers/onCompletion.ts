@@ -149,10 +149,13 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoTaskInfo), CompletionItemKind.Snippet)
 
+  const yoctoVariableCompletionItems: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoVariableInfo), CompletionItemKind.Variable)
+
   const allCompletions = [
     ...reserverdKeywordCompletionItems,
     ...bitBakeVariableCompletionItems,
     ...yoctoTaskSnippets,
+    ...yoctoVariableCompletionItems,
     ...symbolCompletions
   ]
 
