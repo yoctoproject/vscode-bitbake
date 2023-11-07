@@ -203,54 +203,44 @@
         "enablement": "false"
       }
     ],
+    "submenus": [
+      {
+        "id": "bitbake/main",
+        "label": "BitBake"
+      }
+    ],
     "menus": {
-      "explorer/context": [
+      "bitbake/main": [
         {
           "command": "bitbake.clean-recipe",
-          "group": "bitbake",
-          "when": "resourceLangId == bitbake"
+          "group": "bitbake_recipe"
         },
         {
           "command": "bitbake.build-recipe",
-          "group": "bitbake",
-          "when": "resourceLangId == bitbake"
+          "group": "bitbake_recipe"
         },
         {
           "command": "bitbake.run-task",
+          "group": "bitbake_recipe"
+        }
+      ],
+      "explorer/context": [
+        {
+          "submenu": "bitbake/main",
           "group": "bitbake",
           "when": "resourceLangId == bitbake"
         }
       ],
       "editor/context": [
         {
-          "command": "bitbake.clean-recipe",
-          "group": "bitbake",
-          "when": "editorLangId == bitbake"
-        },
-        {
-          "command": "bitbake.build-recipe",
-          "group": "bitbake",
-          "when": "editorLangId == bitbake"
-        },
-        {
-          "command": "bitbake.run-task",
+          "submenu": "bitbake/main",
           "group": "bitbake",
           "when": "editorLangId == bitbake"
         }
       ],
       "editor/title/context": [
         {
-          "command": "bitbake.clean-recipe",
-          "group": "bitbake",
-          "when": "resourceLangId == bitbake"
-        },
-        {
-          "command": "bitbake.build-recipe",
-          "group": "bitbake",
-          "when": "resourceLangId == bitbake"
-        },
-        {
-          "command": "bitbake.run-task",
+          "submenu": "bitbake/main",
           "group": "bitbake",
           "when": "resourceLangId == bitbake"
         }
