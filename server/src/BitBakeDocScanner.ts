@@ -71,6 +71,13 @@ export class BitBakeDocScanner {
     return this._yoctoTaskInfo
   }
 
+  public clearScannedDocs (): void {
+    this._bitbakeVariableInfo = []
+    this._yoctoVariableInfo = []
+    this._variableFlagInfo = []
+    this._yoctoTaskInfo = []
+  }
+
   public setDocPathAndParse (extensionPath: string): void {
     this._docPath = path.join(extensionPath, '../resources/docs')
     this.parseVariableFlagFile()
