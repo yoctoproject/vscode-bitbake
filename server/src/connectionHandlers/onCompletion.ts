@@ -61,11 +61,16 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
       })
 
       const bitbakeOverridesCompletionItems: CompletionItem[] = bitBakeProjectScanner.overrides.map((override, index) => {
+        let label = override
+        if (override === 'pn-defaultpkgname') {
+          // eslint-disable-next-line no-template-curly-in-string
+          label = '${PN}'
+        }
         return {
-          label: override,
+          label,
           kind: CompletionItemKind.Property,
           // Present overrides after operators, in order of priority
-          sortText: '~' + String.fromCharCode(21 + index) + override
+          sortText: '~' + String.fromCharCode(21 + index) + label
         }
       })
 
