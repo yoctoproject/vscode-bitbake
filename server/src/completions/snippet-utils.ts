@@ -16,7 +16,7 @@ export function formatCompletionItems (completions: CompletionItem[], completion
   return completions.map((item) => {
     const formatted = {
       ...item,
-      insertTextFormat: InsertTextFormat.Snippet,
+      insertTextFormat: item.insertText !== undefined ? InsertTextFormat.Snippet : InsertTextFormat.PlainText,
       documentation: {
         value: [
           markdownBlock(
