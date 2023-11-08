@@ -14,6 +14,7 @@ import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { registerBitbakeCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
+import { BitBakeProjectScannerClient } from './language/BitbakeProjectScannerClient'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -55,6 +56,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   const notificationManager = new ClientNotificationManager(client, context.globalState)
   context.subscriptions.push(...notificationManager.buildHandlers())
+  const bitBakeProjectScannerClient = new BitBakeProjectScannerClient(client)
+  context.subscriptions.push(...bitBakeProjectScannerClient.buildHandlers())
 
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {

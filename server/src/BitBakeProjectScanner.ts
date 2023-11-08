@@ -108,6 +108,12 @@ export class BitBakeProjectScanner {
 
         logger.info('scan ready')
         this.printScanStatistic()
+
+        const scanResult: BitbakeScanResult = {
+          recipes: this._recipes,
+          includes: this._includes
+        }
+        void _connection?.sendNotification('bitbake/scanReady', scanResult)
       } catch (error) {
         logger.error(`scanning of project is abborted: ${error as any}`)
       }
