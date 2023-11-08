@@ -202,7 +202,8 @@
       {
         "command": "bitbake.rescan-project",
         "title": "BitBake: Rescan Project",
-        "description": "This command rescans the bitbake project."
+        "description": "This command rescans the bitbake project.",
+        "icon": "$(refresh)"
       },
       {
         "command": "bitbake.build-recipe",
@@ -297,6 +298,13 @@
           "submenu": "bitbake/main",
           "group": "bitbake",
           "when": "resourceLangId == bitbake"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "bitbake.rescan-project",
+          "group": "navigation@0",
+          "when": "view == bitbakeRecipes"
         }
       ],
       "view/item/context": [
