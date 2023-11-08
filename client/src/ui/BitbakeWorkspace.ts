@@ -3,12 +3,14 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { EventEmitter } from 'events'
 import type * as vscode from 'vscode'
 
 /// Class representing active bitbake recipes for a bitbake project
 export class BitbakeWorkspace {
   activeRecipes: string[] = []
   private memento: vscode.Memento | undefined
+  onChange: EventEmitter = new EventEmitter()
 
   addActiveRecipe (recipe: string): void {
     if (this.activeRecipes.includes(recipe)) {
@@ -21,6 +23,7 @@ export class BitbakeWorkspace {
     if (this.memento !== undefined) {
       void this.saveBitbakeWorkspace(this.memento)
     }
+    this.onChange.emit('recipeAdded', recipe)
   }
 
   dropActiveRecipe (chosenRecipe: string): void {
@@ -31,6 +34,7 @@ export class BitbakeWorkspace {
     if (this.memento !== undefined) {
       void this.saveBitbakeWorkspace(this.memento)
     }
+    this.onChange.emit('recipeDropped', chosenRecipe)
   }
 
   loadBitbakeWorkspace (workspaceState: vscode.Memento): void {

@@ -29,10 +29,18 @@ class BitbakeRecipe extends vscode.TreeItem {
 class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipe> {
   readonly bitbakeWorkspace: BitbakeWorkspace
 
-  readonly onDidChangeTreeData: vscode.Event<BitbakeRecipe | undefined> = new vscode.EventEmitter<BitbakeRecipe | undefined>().event
+  private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipe | undefined> = new vscode.EventEmitter<BitbakeRecipe | undefined>()
+  readonly onDidChangeTreeData: vscode.Event<BitbakeRecipe | undefined> = this._onDidChangeTreeData.event
 
   constructor (bitbakeWorkspace: BitbakeWorkspace) {
     this.bitbakeWorkspace = bitbakeWorkspace
+
+    bitbakeWorkspace.onChange.on('recipeAdded', (recipe: string) => {
+      this._onDidChangeTreeData.fire(undefined)
+    })
+    bitbakeWorkspace.onChange.on('recipeDropped', (recipe: string) => {
+      this._onDidChangeTreeData.fire(undefined)
+    })
   }
 
   getTreeItem (element: BitbakeRecipe): vscode.TreeItem | Thenable<vscode.TreeItem> {
