@@ -11,7 +11,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
-import { BitbakeRecipe, BitbakeRecipesView } from './BitbakeRecipesView'
+import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
@@ -94,7 +94,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   if (typeof uri === 'string') {
     return uri
   }
-  if (uri instanceof BitbakeRecipe) {
+  if (uri instanceof BitbakeRecipeTreeItem) {
     return uri.label
   }
   // A vscode.Uri is provided when the command is called through the context menu of a .bb file

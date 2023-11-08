@@ -18,18 +18,18 @@ export class BitbakeRecipesView {
   }
 }
 
-export class BitbakeRecipe extends vscode.TreeItem {
-  constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+export class BitbakeRecipeTreeItem extends vscode.TreeItem {
+  constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState, contextValue: string = 'bitbakeRecipeCtx') {
     super(label, collapsibleState)
-    this.contextValue = 'bitbakeRecipeCtx'
+    this.contextValue = contextValue
   }
 }
 
-class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipe> {
+class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTreeItem> {
   readonly bitbakeWorkspace: BitbakeWorkspace
 
-  private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipe | undefined> = new vscode.EventEmitter<BitbakeRecipe | undefined>()
-  readonly onDidChangeTreeData: vscode.Event<BitbakeRecipe | undefined> = this._onDidChangeTreeData.event
+  private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipeTreeItem | undefined> = new vscode.EventEmitter<BitbakeRecipeTreeItem | undefined>()
+  readonly onDidChangeTreeData: vscode.Event<BitbakeRecipeTreeItem | undefined> = this._onDidChangeTreeData.event
 
   constructor (bitbakeWorkspace: BitbakeWorkspace) {
     this.bitbakeWorkspace = bitbakeWorkspace
@@ -42,20 +42,21 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipe> 
     })
   }
 
-  getTreeItem (element: BitbakeRecipe): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  getTreeItem (element: BitbakeRecipeTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element
   }
 
-  getChildren (element?: BitbakeRecipe | undefined): vscode.ProviderResult<BitbakeRecipe[]> {
+  getChildren (element?: BitbakeRecipeTreeItem | undefined): vscode.ProviderResult<BitbakeRecipeTreeItem[]> {
     if (element === undefined) {
-      return this.getBitbakeRecipes()
+      const items = this.getBitbakeRecipes()
+      return items
     }
     throw new Error('getChildren not implemented.')
   }
 
-  private getBitbakeRecipes (): BitbakeRecipe[] {
+  private getBitbakeRecipes (): BitbakeRecipeTreeItem[] {
     return this.bitbakeWorkspace.activeRecipes.map((recipe: string) => {
-      return new BitbakeRecipe(recipe, vscode.TreeItemCollapsibleState.None)
+      return new BitbakeRecipeTreeItem(recipe, vscode.TreeItemCollapsibleState.None)
     })
   }
 }
