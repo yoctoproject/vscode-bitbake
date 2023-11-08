@@ -158,8 +158,7 @@ export default class Analyzer {
     const type = n?.type
     const parentType = n?.parent?.type
     switch (type) {
-      // Caveat: In some cases, the current tree-sitter can't correctly parse the classes in inherit directive. For example, a bbclass file with a name update-rc.d.bbclass and the statement for inherting it is 'inherit update-rc.d', the tree-sitter will treat '.d' as ERROR.
-      case 'identifier':
+      case 'inherit_path':
         if (parentType === 'inherit_directive') {
           return 'inherit'
         }
@@ -229,7 +228,8 @@ export default class Analyzer {
     column: number
   ): boolean {
     const n = this.nodeAtPoint(uri, line, column)
-    return n?.type === 'identifier' && n?.parent?.type === 'variable_expansion'
+    // since @1.0.2 the tree-sitter gives empty variable expansion (e.g. `VAR = "${}""`) the type "variable_expansion". But the node type returned from nodeAtPoint() at the position between "${" and "}" is of type "${" which is the result from descendantForPosition() (It returns the smallest node containing the given postion). In this case, the parent node has type "variable_expansion". Hence, we have n?.parent?.type === 'variable_expansion' below. The second expression after the || will be true if it encounters non-empty variable expansion syntax. e.g. `VAR = "${A}". Note that inline python with ${@} has type "inline_python"
+    return n?.parent?.type === 'variable_expansion' || (n?.type === 'identifier' && n?.parent?.type === 'variable_expansion')
   }
 
   /**
