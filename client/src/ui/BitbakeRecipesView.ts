@@ -80,6 +80,19 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
         if (recipe.path !== undefined) {
           fileItems.push(new BitbakeFileTreeItem(recipe.path, vscode.TreeItemCollapsibleState.None))
         }
+        recipe.appends?.forEach((append: PathInfo) => {
+          fileItems.push(new BitbakeFileTreeItem(append, vscode.TreeItemCollapsibleState.None))
+        })
+        recipe.overlayes?.forEach((append: PathInfo) => {
+          fileItems.push(new BitbakeFileTreeItem(append, vscode.TreeItemCollapsibleState.None))
+        })
+      }
+    })
+    this.bitbakeProjectScannerClient.bitbakeScanResult.includes.forEach((include: ElementInfo) => {
+      if (include.name === element.label) {
+        if (include.path !== undefined) {
+          fileItems.push(new BitbakeFileTreeItem(include.path, vscode.TreeItemCollapsibleState.None))
+        }
       }
     })
     return fileItems
