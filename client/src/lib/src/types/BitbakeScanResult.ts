@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------------------------------
- * Copyright (c) Eugen Wiens. All rights reserved.
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
@@ -25,4 +25,9 @@ export interface ElementInfo {
   appends?: PathInfo[]
   overlayes?: PathInfo[]
   version?: string
+}
+
+export interface BitbakeScanResult {
+  recipes: ElementInfo[]
+  includes: ElementInfo[]
 }

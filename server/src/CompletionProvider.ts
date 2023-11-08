@@ -15,7 +15,7 @@ import {
 import {
   type PathInfo,
   type ElementInfo
-} from './ElementInfo'
+} from './lib/src/types/BitbakeScanResult'
 
 import {
   type SymbolScanner,

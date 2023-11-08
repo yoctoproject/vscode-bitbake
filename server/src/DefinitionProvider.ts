@@ -12,7 +12,7 @@ import {
 import {
   type ElementInfo,
   type PathInfo
-} from './ElementInfo'
+} from './lib/src/types/BitbakeScanResult'
 
 import {
   type BitBakeProjectScanner

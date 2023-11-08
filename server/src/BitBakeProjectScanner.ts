@@ -12,10 +12,11 @@ import { type Connection } from 'vscode-languageserver'
 import { logger } from './lib/src/utils/OutputLogger'
 
 import type {
+  BitbakeScanResult,
   ElementInfo,
   LayerInfo,
   PathInfo
-} from './ElementInfo'
+} from './lib/src/types/BitbakeScanResult'
 
 import { BitbakeDriver } from './lib/src/BitbakeDriver'
 interface ScannStatus {
