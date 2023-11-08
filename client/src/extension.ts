@@ -13,6 +13,7 @@ import { BitbakeDriver } from './lib/src/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { registerBitbakeCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
+import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -20,6 +21,8 @@ let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
 const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 export let bitbakeExtensionContext: vscode.ExtensionContext
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+let bitbakeRecipesView: BitbakeRecipesView | undefined
 
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
@@ -46,6 +49,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
+  bitbakeRecipesView = new BitbakeRecipesView(context, bitbakeWorkspace)
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 

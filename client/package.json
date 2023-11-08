@@ -236,6 +236,24 @@
         "description": "This command runs bitbake in parse-only mode."
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "bitbakeView",
+          "title": "Bitbake",
+          "icon": "images/yocto-view-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "bitbakeView": [
+        {
+          "id": "bitbakeRecipes",
+          "name": "Recipes",
+					"contextualTitle": "Recipes Explorer"
+        }
+      ]
+    },
     "submenus": [
       {
         "id": "bitbake/main",
