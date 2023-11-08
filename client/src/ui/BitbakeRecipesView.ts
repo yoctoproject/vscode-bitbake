@@ -19,9 +19,9 @@ export class BitbakeRecipesView {
 }
 
 export class BitbakeRecipeTreeItem extends vscode.TreeItem {
-  constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState, contextValue: string = 'bitbakeRecipeCtx') {
+  constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     super(label, collapsibleState)
-    this.contextValue = contextValue
+    this.contextValue = 'bitbakeRecipeCtx'
   }
 }
 
@@ -49,6 +49,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   getChildren (element?: BitbakeRecipeTreeItem | undefined): vscode.ProviderResult<BitbakeRecipeTreeItem[]> {
     if (element === undefined) {
       const items = this.getBitbakeRecipes()
+      items.push(this.getAddRecipeItem())
       return items
     }
     throw new Error('getChildren not implemented.')
@@ -58,5 +59,13 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     return this.bitbakeWorkspace.activeRecipes.map((recipe: string) => {
       return new BitbakeRecipeTreeItem(recipe, vscode.TreeItemCollapsibleState.None)
     })
+  }
+
+  private getAddRecipeItem (): BitbakeRecipeTreeItem {
+    const item = new BitbakeRecipeTreeItem('Add recipe', vscode.TreeItemCollapsibleState.None)
+    item.command = { command: 'bitbake.watch-recipe', title: 'Add a recipe to the active workspace', arguments: [undefined] }
+    item.iconPath = new vscode.ThemeIcon('add')
+    item.contextValue = undefined
+    return item
   }
 }
