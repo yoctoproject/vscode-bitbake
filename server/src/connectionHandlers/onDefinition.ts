@@ -14,6 +14,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
 
   const documentAsText = analyzer.getDocumentTexts(textDocument.uri)
   if (documentAsText === undefined) {
+    logger.debug(`[onDefinition] Document not found for ${textDocument.uri}`)
     return []
   }
 
