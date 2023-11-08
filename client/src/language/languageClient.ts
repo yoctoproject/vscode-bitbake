@@ -21,6 +21,7 @@ import {
 import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
 import { middlewareProvideCompletion } from './middlewareCompletion'
 import { middlewareProvideHover } from './middlewareHover'
+import { requestsManager } from './RequestManager'
 
 const notifyFileRenameChanged = async (
   client: LanguageClient,
@@ -77,6 +78,7 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   // Create the language client and start the client.
   const client: LanguageClient = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
+  requestsManager.client = client
 
   client.onRequest('custom/verifyConfigurationFileAssociation', async (param) => {
     if (param.filePath?.endsWith('.conf') === true) {

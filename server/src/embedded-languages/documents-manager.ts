@@ -10,6 +10,7 @@ import fs from 'fs'
 import logger from 'winston'
 
 import { type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageDoc } from './utils'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
@@ -80,44 +81,42 @@ export default class EmbeddedLanguageDocsManager {
     return embeddedLanguageDocs?.[languageType]
   }
 
-  private getPathToEmbeddedLanguageDoc (originalUriString: string, languageType: EmbeddedLanguageType): string | undefined {
+  private getPathToEmbeddedLanguageDoc (embeddedLanguageDoc: EmbeddedLanguageDoc): string | undefined {
     if (this.storagePath === undefined) {
       return undefined
     }
-    const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(originalUriString, languageType)
+    const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(
+      embeddedLanguageDoc.originalUri,
+      embeddedLanguageDoc.language
+    )
     if (embeddedLanguageDocInfos !== undefined) {
       return embeddedLanguageDocInfos.uri.replace('file://', '')
     }
     const randomName = randomUUID()
-    const fileExtension = fileExtensionsMap[languageType]
+    const fileExtension = fileExtensionsMap[embeddedLanguageDoc.language]
     const embeddedLanguageDocFilename = randomName + fileExtension
     const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
     return `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
   }
 
   async saveEmbeddedLanguageDoc (
-    originalUriString: string,
-    embeddedLanguageDocContent: string,
-    partialEmbeddedLanguageDocInfos: Omit<EmbeddedLanguageDocInfos, 'uri'>
+    embeddedLanguageDoc: EmbeddedLanguageDoc
   ): Promise<void> {
-    logger.debug(`Save embedded document (${partialEmbeddedLanguageDocInfos.language}) for`, originalUriString)
-    const pathToEmbeddedLanguageDoc = this.getPathToEmbeddedLanguageDoc(
-      originalUriString,
-      partialEmbeddedLanguageDocInfos.language
-    )
+    logger.debug(`Save embedded document (${embeddedLanguageDoc.language}) for`, embeddedLanguageDoc.originalUri)
+    const pathToEmbeddedLanguageDoc = this.getPathToEmbeddedLanguageDoc(embeddedLanguageDoc)
     if (pathToEmbeddedLanguageDoc === undefined) {
       return
     }
     await new Promise<void>((resolve, reject) => {
-      fs.writeFile(pathToEmbeddedLanguageDoc, embeddedLanguageDocContent, (err) => {
+      fs.writeFile(pathToEmbeddedLanguageDoc, embeddedLanguageDoc.content, (err) => {
         err !== null ? reject(err) : resolve()
       })
     }).then(() => {
-      const documentInfos = {
-        ...partialEmbeddedLanguageDocInfos,
+      const embeddedLanguageDocInfos: EmbeddedLanguageDocInfos = {
+        ...embeddedLanguageDoc,
         uri: `file://${pathToEmbeddedLanguageDoc}`
       }
-      this.registerEmbeddedLanguageDocInfos(originalUriString, documentInfos)
+      this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc.originalUri, embeddedLanguageDocInfos)
     }).catch((err) => {
       logger.error('Failed to create embedded document:', err)
     })

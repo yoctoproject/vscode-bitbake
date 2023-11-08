@@ -44,12 +44,28 @@ export function isDefinition (n: SyntaxNode): boolean {
   }
 }
 
+export function isInlinePython (n: SyntaxNode): boolean {
+  return n.type === 'inline_python'
+}
+
 export function isPythonDefinition (n: SyntaxNode): boolean {
   return n.type === 'anonymous_python_function' || n.type === 'python_function_definition'
 }
 
 export function isShellDefinition (n: SyntaxNode): boolean {
   return n.type === 'function_definition'
+}
+
+export function containsInlinePython (n: SyntaxNode): boolean {
+  let contains = false
+  forEach(n, (node) => {
+    if (isInlinePython(node)) {
+      contains = true
+      return false
+    }
+    return true
+  })
+  return contains
 }
 
 export function isVariableReference (n: SyntaxNode): boolean {

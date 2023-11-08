@@ -10,6 +10,8 @@ import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } f
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
+import { TextDocument } from 'vscode-languageserver-textdocument'
+import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 
 describe('Embedded Language Documents', () => {
   beforeAll(async () => {
@@ -41,7 +43,6 @@ describe('Embedded Language Documents', () => {
       return
     }
     expect(bashEmbeddedLanguageDocInfos.language).toEqual('bash')
-    expect(bashEmbeddedLanguageDocInfos?.lineOffset).toEqual(0)
 
     const pythonEmbeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(FIXTURE_DOCUMENT.EMBEDDED.uri, 'python')
     if (pythonEmbeddedLanguageDocInfos === undefined) {
@@ -49,7 +50,6 @@ describe('Embedded Language Documents', () => {
       return
     }
     expect(pythonEmbeddedLanguageDocInfos?.language).toEqual('python')
-    expect(pythonEmbeddedLanguageDocInfos?.lineOffset).toEqual(1)
 
     // Test embedded documents contents
     const bashEmbeddedLanguageDocPath = bashEmbeddedLanguageDocInfos.uri.replace('file://', '')
@@ -101,6 +101,74 @@ describe('Embedded Language Documents', () => {
     expect(fs.existsSync(pythonEmbeddedLanguageDocPath)).toBeFalsy()
   })
 })
+
+describe('Create embedded language content for inline Python', () => {
+  beforeAll(async () => {
+    if (!analyzer.hasParser()) {
+      const parser = await generateParser()
+      analyzer.initialize(parser)
+    }
+    analyzer.resetAnalyzedDocuments()
+    await embeddedLanguageDocsManager.setStoragePath(__dirname)
+  })
+
+  beforeEach(() => {
+    analyzer.resetAnalyzedDocuments()
+  })
+
+  afterEach(async () => {
+    await embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs('dummy')
+  })
+
+  test.each([
+    [
+      'with single quotes',
+      // eslint-disable-next-line no-template-curly-in-string
+      "FOO = '${@\"BAR\"}'\n",
+      "import bb\nFOO = f'''{\"BAR\"}'''\n"
+    ],
+    [
+      'with double quotes',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO = "${@\'BAR\'}"\n',
+      'import bb\nFOO = f"""{\'BAR\'}"""\n'
+    ],
+    [
+      'with bitbake operator',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO ??= "${@\'BAR\'}"\n',
+      'import bb\nFOO = f"""{\'BAR\'}"""\n'
+    ],
+    [
+      'with complex spacing',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO  ?=   "  BAR  ${@  \'BAR\'   }  BAR  "\n',
+      'import bb\nFOO  =   f"""  BAR  {  \'BAR\'   }  BAR  """\n'
+    ],
+    [
+      'multiline',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO = "${@\'BAR\'} \\\n1 \\\n2"\n',
+      'import bb\nFOO = f"""{\'BAR\'} \n1 \n2"""\n'
+    ]
+  ])('%s', async (description, input, result) => {
+    const embeddedContent = await createEmbeddedContent(input, 'python')
+    expect(embeddedContent).toEqual(result)
+  })
+})
+
+const createEmbeddedContent = async (content: string, language: EmbeddedLanguageType): Promise<string | undefined> => {
+  const uri = 'dummmy'
+  const document = TextDocument.create(uri, 'bb', 1, content)
+  await analyzer.analyze({ document, uri })
+  await generateEmbeddedLanguageDocs(document)
+  const pythonEmbeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uri, 'python')
+  if (pythonEmbeddedLanguageDocInfos === undefined) {
+    return
+  }
+  const pythonEmbeddedLanguageDocPath = pythonEmbeddedLanguageDocInfos.uri.replace('file://', '')
+  return fs.readFileSync(pythonEmbeddedLanguageDocPath, 'utf8')
+}
 
 const expectedPythonEmbeddedLanguageDoc =
 `import bb

@@ -4,27 +4,28 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type TextDocument } from 'vscode-languageserver-textdocument'
-import { replaceTextForSpaces } from './utils'
 
 import { analyzer } from '../tree-sitter/analyzer'
-import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
+import * as TreeSitterUtils from '../tree-sitter/utils'
 import { embeddedLanguageDocsManager } from './documents-manager'
+import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 
 export const generateBashEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
-  const bashRegions = analyzer.getBashRegions(textDocument.uri)
-  const documentAsText = textDocument.getText().split(/\r?\n/g)
-  const embeddedLanguageDocAsText = replaceTextForSpaces(documentAsText)
-  bashRegions.forEach((region) => {
-    const { start, end } = region.location.range
-    for (let i = start.line; i <= end.line; i++) {
-      embeddedLanguageDocAsText[i] = documentAsText[i]
+  const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
+  if (analyzedDocument === undefined) {
+    return
+  }
+  const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'bash')
+  TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
+    switch (node.type) {
+      case 'recipe':
+        return true
+      case 'function_definition':
+        insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
+        return false
+      default:
+        return false
     }
   })
-
-  const content = embeddedLanguageDocAsText.join('\n')
-  const partialInfos: Omit<EmbeddedLanguageDocInfos, 'uri'> = {
-    language: 'bash',
-    lineOffset: 0
-  }
-  await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(textDocument.uri, content, partialInfos)
+  await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(embeddedLanguageDoc)
 }

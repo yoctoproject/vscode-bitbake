@@ -8,5 +8,5 @@ export type EmbeddedLanguageType = 'bash' | 'python'
 export interface EmbeddedLanguageDocInfos {
   uri: string
   language: EmbeddedLanguageType
-  lineOffset: number
+  characterIndexes: number[]
 }

@@ -80,7 +80,7 @@ export const getEmbeddedRegionsFromNode = (tree: Parser.Tree, uri: string): Embe
         bashRegions.push(symbol)
       }
       return false
-    } else if (TreeSitterUtil.isPythonDefinition(node)) {
+    } else if (TreeSitterUtil.isPythonDefinition(node) || TreeSitterUtil.isInlinePython(node)) {
       const symbol = nodeToSymbolInformation({ node, uri })
       if (symbol !== null) {
         pythonRegions.push(symbol)
@@ -96,7 +96,7 @@ export const getEmbeddedRegionsFromNode = (tree: Parser.Tree, uri: string): Embe
   }
 }
 
-function nodeToSymbolInformation ({
+export function nodeToSymbolInformation ({
   node,
   uri
 }: {

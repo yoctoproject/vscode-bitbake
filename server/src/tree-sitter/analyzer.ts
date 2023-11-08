@@ -38,6 +38,10 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
   }
 
+  public getAnalyzedDocument (uri: string): AnalyzedDocument | undefined {
+    return this.uriToAnalyzedDocument[uri]
+  }
+
   public initialize (parser: Parser): void {
     this.parser = parser
   }
