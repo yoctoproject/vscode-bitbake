@@ -264,15 +264,15 @@
       "bitbake/main": [
         {
           "command": "bitbake.clean-recipe",
-          "group": "bitbake_recipe"
+          "group": "bitbake_recipe@1"
         },
         {
           "command": "bitbake.build-recipe",
-          "group": "bitbake_recipe"
+          "group": "bitbake_recipe@0"
         },
         {
           "command": "bitbake.run-task",
-          "group": "bitbake_recipe"
+          "group": "bitbake_recipe@2"
         }
       ],
       "explorer/context": [
@@ -294,6 +294,24 @@
           "submenu": "bitbake/main",
           "group": "bitbake",
           "when": "resourceLangId == bitbake"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "bitbake.clean-recipe",
+          "group": "bitbake_recipe@1"
+        },
+        {
+          "command": "bitbake.build-recipe",
+          "group": "bitbake_recipe@0"
+        },
+        {
+          "command": "bitbake.run-task",
+          "group": "bitbake_recipe@2"
+        },
+        {
+          "command": "bitbake.drop-recipe",
+          "group": "bitbake_recipe@3"
         }
       ]
     }

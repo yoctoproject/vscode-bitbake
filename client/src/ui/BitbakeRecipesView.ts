@@ -18,11 +18,10 @@ export class BitbakeRecipesView {
   }
 }
 
-class BitbakeRecipe extends vscode.TreeItem {
+export class BitbakeRecipe extends vscode.TreeItem {
   constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     super(label, collapsibleState)
-    this.tooltip = `${this.label}`
-    this.description = this.label
+    this.contextValue = 'bitbakeRecipeCtx'
   }
 }
 

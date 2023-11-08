@@ -11,13 +11,14 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
+import { BitbakeRecipe, BitbakeRecipesView } from './BitbakeRecipesView'
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
 }
 
@@ -93,6 +94,9 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   if (typeof uri === 'string') {
     return uri
   }
+  if (uri instanceof BitbakeRecipe) {
+    return uri.label
+  }
   // A vscode.Uri is provided when the command is called through the context menu of a .bb file
   if (uri !== undefined) {
     const extension = path.extname(uri.fsPath)
@@ -129,8 +133,8 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, recipe?: str
   return chosenRecipe
 }
 
-async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, undefined, false)
+async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: string): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri, false)
   if (chosenRecipe !== undefined) {
     bitbakeWorkspace.dropActiveRecipe(chosenRecipe)
   }
