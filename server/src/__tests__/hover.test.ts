@@ -25,20 +25,40 @@ describe('on hover', () => {
     bitBakeDocScanner.clearScannedDocs()
   })
 
-  it('only shows definition on hovering global variable declaration syntax for bitbake variables after scanning the docs', async () => {
+  it('shows definition on hovering variable in variable assignment syntax or in variable expansion syntax after scanning the docs', async () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
     })
 
-    const shouldShow = await onHoverHandler({
+    const shouldShow1 = await onHoverHandler({
       textDocument: {
         uri: DUMMY_URI
       },
       position: {
         line: 1,
         character: 1
+      }
+    })
+
+    const shouldShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 2,
+        character: 12
+      }
+    })
+
+    const shouldShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 3,
+        character: 9
       }
     })
 
@@ -72,7 +92,21 @@ describe('on hover', () => {
       }
     })
 
-    expect(shouldShow).toEqual({
+    expect(shouldShow1).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldShow2).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldShow3).toEqual({
       contents: {
         kind: 'markdown',
         value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'

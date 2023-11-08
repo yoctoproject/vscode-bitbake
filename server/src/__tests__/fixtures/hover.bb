@@ -1,7 +1,7 @@
-# Should show definiton on hover
-DESCRIPTION = 'This is a description'
 
-# Should not show definition on hover
+DESCRIPTION = 'This is a description'
+MYVAR = "${DESCRIPTION}"
+MYVAR:${DESCRIPTION} = 'foo'
 python DESCRIPTION(){
     print('123')
 }
