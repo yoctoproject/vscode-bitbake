@@ -106,7 +106,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result1 = onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -115,9 +115,28 @@ describe('On Completion', () => {
         character: 13
       }
     })
+    // Empty ${}
+    const result2 = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 8,
+        character: 11
+      }
+    })
 
-    expect(result).not.toEqual([])
-    expect(result).not.toEqual(
+    expect(result1).not.toEqual([])
+    expect(result1).not.toEqual(
+      expect.arrayContaining([
+        {
+          kind: 14,
+          label: 'python'
+        }
+      ])
+    )
+    expect(result2).not.toEqual([])
+    expect(result2).not.toEqual(
       expect.arrayContaining([
         {
           kind: 14,

@@ -6,7 +6,7 @@ python (){
     myvar = [1,2,3]
     myvar[0] = 4
 }
-
+MYVAR = '${}'
 
 # Wrong code
 
