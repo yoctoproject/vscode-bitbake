@@ -207,12 +207,14 @@
       {
         "command": "bitbake.build-recipe",
         "title": "BitBake: Build recipe",
-        "description": "Build a recipe or an image."
+        "description": "Build a recipe or an image.",
+        "icon": "$(gear)"
       },
       {
         "command": "bitbake.clean-recipe",
         "title": "BitBake: Clean recipe",
-        "description": "Clean a recipe or an image (bitbake -c clean)."
+        "description": "Clean a recipe or an image (bitbake -c clean).",
+        "icon": "$(exclude)"
       },
       {
         "command": "bitbake.run-task",
@@ -222,7 +224,8 @@
       {
         "command": "bitbake.drop-recipe",
         "title": "BitBake: Drop a recipe from the active workspace",
-        "description": "Stop watching or suggesting a recipe in bitbake commands."
+        "description": "Stop watching or suggesting a recipe in bitbake commands.",
+        "icon": "$(close)"
       },
       {
         "command": "bitbake.watch-recipe",
@@ -299,19 +302,38 @@
       "view/item/context": [
         {
           "command": "bitbake.clean-recipe",
-          "group": "bitbake_recipe@1"
+          "group": "bitbake_recipe@1",
+          "when": "view == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.build-recipe",
-          "group": "bitbake_recipe@0"
+          "group": "bitbake_recipe@0",
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.run-task",
-          "group": "bitbake_recipe@2"
+          "group": "bitbake_recipe@2",
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.drop-recipe",
-          "group": "bitbake_recipe@3"
+          "group": "bitbake_recipe@3",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.build-recipe",
+          "group": "inline@0",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.clean-recipe",
+          "group": "inline@1",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.drop-recipe",
+          "group": "inline@2",
+          "when": "viewItem == bitbakeRecipeCtx"
         }
       ]
     }

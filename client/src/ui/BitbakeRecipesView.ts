@@ -22,6 +22,7 @@ export class BitbakeRecipeTreeItem extends vscode.TreeItem {
   constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     super(label, collapsibleState)
     this.contextValue = 'bitbakeRecipeCtx'
+    this.iconPath = new vscode.ThemeIcon('library')
   }
 }
 
