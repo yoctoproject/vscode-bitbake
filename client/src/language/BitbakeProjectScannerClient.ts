@@ -20,18 +20,20 @@ export class BitBakeProjectScannerClient {
   }
 
   buildHandlers (): vscode.Disposable[] {
-    const handlers = [
-      this.bitbakeScanHandler()
-    ]
-
-    return handlers
+    return this.bitbakeScanHandler()
   }
 
-  private bitbakeScanHandler (): vscode.Disposable {
-    return this.client.onNotification('bitbake/scanReady', (scanResults: BitbakeScanResult) => {
+  private bitbakeScanHandler (): vscode.Disposable[] {
+    const subscriptions: vscode.Disposable[] = []
+    subscriptions.push(this.client.onNotification('bitbake/scanReady', (scanResults: BitbakeScanResult) => {
       this.bitbakeScanResult = scanResults
       this.onChange.emit('scanReady', scanResults)
       logger.info('Bitbake scan results received from language server')
-    })
+    }))
+    subscriptions.push(this.client.onNotification('bitbake/startScan', () => {
+      logger.info('Bitbake scan in progress')
+      this.onChange.emit('startScan')
+    }))
+    return subscriptions
   }
 }

@@ -96,6 +96,7 @@ export class BitBakeProjectScanner {
     if (!this._scanStatus.scanIsRunning) {
       this._scanStatus.scanIsRunning = true
       logger.info('start rescanProject')
+      void _connection?.sendNotification('bitbake/startScan')
 
       try {
         this.parseAllRecipes()
