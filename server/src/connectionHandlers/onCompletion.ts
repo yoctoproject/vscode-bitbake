@@ -151,11 +151,16 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   const yoctoVariableCompletionItems: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoVariableInfo), CompletionItemKind.Variable)
 
+  // Remove the duplicate variables by their names. It still keeps the fallback variables from BITBAKE_VARIABLES before scanning the docs since yoctoVariableCompletionItems will be [] in that case
+  const variableCompletionItems: CompletionItem[] = [
+    ...bitBakeVariableCompletionItems.filter((bitbakeVariable) => !yoctoVariableCompletionItems.some(yoctoVariable => yoctoVariable.label === bitbakeVariable.label)),
+    ...yoctoVariableCompletionItems
+  ]
+
   const allCompletions = [
     ...reserverdKeywordCompletionItems,
-    ...bitBakeVariableCompletionItems,
+    ...variableCompletionItems,
     ...yoctoTaskSnippets,
-    ...yoctoVariableCompletionItems,
     ...symbolCompletions
   ]
 
