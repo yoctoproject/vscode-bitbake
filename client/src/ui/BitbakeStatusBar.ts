@@ -3,10 +3,6 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-/*
-    Bitbake status Bar showing scan in progress and scan results/errors
-*/
-
 import * as vscode from 'vscode'
 
 import { type BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
@@ -20,9 +16,7 @@ export class BitbakeStatusBar {
   constructor (bitbakeProjectScannerClient: BitBakeProjectScannerClient) {
     this.bitbakeProjectScannerClient = bitbakeProjectScannerClient
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0)
-    this.statusBarItem.text = 'BitBake: scanning...'
-    this.statusBarItem.command = 'bitbake.rescan-project'
-    this.statusBarItem.tooltip = 'BitBake: Rescan Project'
+    this.statusBarItem.text = '$(loading~spin) BitBake: Scanning...'
     this.statusBarItem.show()
     this.bitbakeProjectScannerClient.onChange.on('scanReady', (bitbakeScanResult: BitbakeScanResult) => {
       this.bitbakeScanResults = bitbakeScanResult
@@ -32,16 +26,18 @@ export class BitbakeStatusBar {
 
   updateStatusBar (): void {
     if (this.bitbakeScanResults.recipes.length > 0) {
-      this.statusBarItem.text = 'BitBake: ' + this.bitbakeScanResults.recipes.length + ' recipes found'
+      this.statusBarItem.text = '$(library) BitBake: ' + this.bitbakeScanResults.recipes.length + ' recipes parsed'
+      this.statusBarItem.command = 'bitbake.rescan-project'
       this.statusBarItem.tooltip = 'BitBake: Scan project for recipes'
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
     } else {
-      this.statusBarItem.text = 'BitBake: no recipes found'
-      this.statusBarItem.tooltip = 'BitBake: Scan project for recipes'
+      this.statusBarItem.text = '$(error) BitBake: Parsing error'
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground')
+      this.statusBarItem.command = 'workbench.action.problems.focus'
+      this.statusBarItem.tooltip = 'Open problems view for more details'
     }
   }
 
-  // TODO report parsing error
   // TODO report new scan
-  // TODO report new parsing
-  // TODO use icons for more readability
+  // TODO report new parsing status
 }
