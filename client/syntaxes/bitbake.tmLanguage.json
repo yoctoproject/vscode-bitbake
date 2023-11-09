@@ -22,6 +22,9 @@
             "include": "#comment"
         },
         {
+            "include": "#inline-python"
+        },
+        {
             "include": "#variable-expansion"
         },
         {
@@ -101,6 +104,9 @@
                             "name": "constant.character.escape.bb"
                         },
                         {
+                            "include": "#inline-python"
+                        },
+                        {
                             "include": "#variable-expansion"
                         }
                     ]
@@ -110,6 +116,13 @@
                     "begin": "(')",
                     "end": "(')",
                     "patterns": [
+                        {
+                            "match": "\\\\'",
+                            "name": "constant.character.escape.bb"
+                        },
+                        {
+                            "include": "#inline-python"
+                        },
                         {
                             "include": "#variable-expansion"
                         }
@@ -149,6 +162,7 @@
             }
         },
         "variable-expansion": {
+            "name": "variable.other.names.bb",
             "begin": "(\\$\\{)",
             "beginCaptures": {
                 "1": {
@@ -160,12 +174,26 @@
                 "1": {
                     "name": "punctuation.definition.template-expression.end.bb"
                 }
+            }
+        },
+        "inline-python": {
+            "begin": "(\\$\\{(@))",
+            "beginCaptures": {
+                "1": {
+                    "name": "punctuation.definition.template-expression.end.bb"
+                },
+                "2": {
+                    "name": "entity.name.function.decorator.python.bb"
+                }
+                
+            },
+            "end": "(\\})",
+            "endCaptures": {
+                "1": {
+                    "name": "punctuation.definition.template-expression.end.bb"
+                }
             },
             "patterns": [
-                {
-                    "match": "(@)",
-                    "name": "entity.name.function.decorator.python.bb"
-                },
                 {
                     "include": "#operator"
                 },
