@@ -152,6 +152,21 @@
         }
       },
       {
+        "name": "bitbake-UnableToParse",
+        "source": "bitbake",
+        "owner": "bitbake",
+        "fileLocation": [
+          "autoDetect",
+          "${cwd}"
+        ],
+        "pattern": {
+          "regexp": "^ERROR: (Unable to parse) (.+)$",
+          "file": 2,
+          "message": 1,
+          "kind": "File"
+        }
+      },
+      {
         "name": "bitbake-Variable",
         "source": "bitbake",
         "owner": "bitbake",
