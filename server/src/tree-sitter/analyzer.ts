@@ -112,6 +112,10 @@ export default class Analyzer {
     return []
   }
 
+  public getParsedTreeForUri (uri: string): Tree | undefined {
+    return this.uriToAnalyzedDocument[uri]?.tree
+  }
+
   /**
    * Find the full word at the given point.
    */
