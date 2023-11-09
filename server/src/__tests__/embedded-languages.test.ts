@@ -133,6 +133,12 @@ describe('Create Python embedded language content with inline Python', () => {
       'FOO = f"""{\'BAR\'}"""\n'
     ],
     [
+      'with override',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO:prepend = "${@\'BAR\'}"\n',
+      'FOO         = f"""{\'BAR\'}"""\n'
+    ],
+    [
       'with complex spacing',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO  ?=   "  BAR  ${@  \'BAR\'   }  BAR  "\n',

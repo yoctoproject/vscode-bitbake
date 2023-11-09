@@ -52,6 +52,16 @@ const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: E
   })
 }
 
+const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  // Remove it
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
+}
+
+const handleOperatorNode = (operatorNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  // Replace the operator with one that will be valid for sure in Python. It does not matters which one.
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, operatorNode.startIndex, operatorNode.endIndex, '=')
+}
+
 const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
@@ -62,7 +72,7 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
       case 'identifier':
         break
       case 'override':
-        insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ' '.repeat(child.text.length))
+        handleOverrideNode(child, embeddedLanguageDoc)
         break
       case '{':
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ':')
@@ -88,20 +98,6 @@ const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: Embe
   // Insert back the whole node, which we'll modify
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
 
-  // Handle operator node such as '=', '??=', '+=', etc.
-  const operatorNode = node.child(1)
-  if (operatorNode === null) {
-    logger.warn('Unexpected variable_assignment node: operator is null')
-    return
-  }
-  // Replace the operator with one that will be valid for sure in Python. It does not matters whih one.
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, operatorNode.startIndex, operatorNode.endIndex, '=')
-
-  const literalNode = node.child(2)
-  if (literalNode === null) {
-    logger.warn('Unexpected variable_assignment node: literal is null')
-    return
-  }
   const handleLiteralNode = (literalNode: SyntaxNode): void => {
     const stringNode = literalNode.child(0)
     if (stringNode === null) {
@@ -162,7 +158,19 @@ const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: Embe
       return false
     })
   }
-  handleLiteralNode(literalNode)
+
+  node.children.forEach((child) => {
+    if (child.type === 'identifier') {
+      // pass
+    } else if (child.type === 'override') {
+      handleOverrideNode(child, embeddedLanguageDoc)
+    } else if (child.type === 'literal') {
+      handleLiteralNode(child)
+    } else {
+      // we assume this is an operator
+      handleOperatorNode(child, embeddedLanguageDoc)
+    }
+  })
 }
 
 const handleBlockNode = (blockNode: SyntaxNode, imports: Set<string>): void => {
