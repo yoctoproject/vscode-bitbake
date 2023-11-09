@@ -23,6 +23,8 @@ const languages = {
     onDidChangeActiveTextEditor: jest.fn(),
     showInformationMessage: jest.fn(),
     createWebviewPanel: jest.fn(),
+    registerTreeDataProvider: jest.fn(),
+    createTreeView: jest.fn(),
   };
 
   const workspace = {
@@ -105,6 +107,13 @@ const languages = {
     Default: 0,
   };
 
+  const TreeItem = jest.fn();
+  const TreeItemCollapsibleState = {
+    None: 0,
+    Collapsed: 1,
+    Expanded: 2,
+  };
+
   export = {
     ThemeColor,
     CodeLens,
@@ -131,4 +140,6 @@ const languages = {
     TestRunRequest,
     ViewColumn,
     QuickPickItemKind,
+    TreeItem,
+    TreeItemCollapsibleState
   };
