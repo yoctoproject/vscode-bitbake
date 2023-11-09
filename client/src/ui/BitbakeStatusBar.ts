@@ -12,19 +12,32 @@ export class BitbakeStatusBar {
   private bitbakeScanResults: BitbakeScanResult = { recipes: [], includes: [] }
   private readonly bitbakeProjectScannerClient: BitBakeProjectScannerClient
   readonly statusBarItem: vscode.StatusBarItem
+  private scanInProgress = true
 
   constructor (bitbakeProjectScannerClient: BitBakeProjectScannerClient) {
     this.bitbakeProjectScannerClient = bitbakeProjectScannerClient
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 0)
-    this.statusBarItem.text = '$(loading~spin) BitBake: Scanning...'
+    this.updateStatusBar()
     this.statusBarItem.show()
     this.bitbakeProjectScannerClient.onChange.on('scanReady', (bitbakeScanResult: BitbakeScanResult) => {
+      this.scanInProgress = false
       this.bitbakeScanResults = bitbakeScanResult
+      this.updateStatusBar()
+    })
+    this.bitbakeProjectScannerClient.onChange.on('startScan', () => {
+      this.scanInProgress = true
       this.updateStatusBar()
     })
   }
 
   updateStatusBar (): void {
+    if (this.scanInProgress) {
+      this.statusBarItem.text = '$(loading~spin) BitBake: Scanning...'
+      this.statusBarItem.tooltip = 'BitBake: Scanning...'
+      this.statusBarItem.command = undefined
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
+      return
+    }
     if (this.bitbakeScanResults.recipes.length > 0) {
       this.statusBarItem.text = '$(library) BitBake: ' + this.bitbakeScanResults.recipes.length + ' recipes parsed'
       this.statusBarItem.command = 'bitbake.rescan-project'
@@ -38,6 +51,5 @@ export class BitbakeStatusBar {
     }
   }
 
-  // TODO report new scan
   // TODO report new parsing status
 }
