@@ -319,13 +319,16 @@ export class BitBakeProjectScanner {
 
     const output = commandResult.output.toString()
 
-    const outerReg: RegExp = /(\S.*\.bb):(?:\s*\/\S*.bbappend)+/g
+    // Example:
+    // \nbusybox_1.36.1.bb:\n  /home/user/yocto/sources/poky/meta-poky/recipes-core/busybox/busybox_%.bbappend
+    const outerReg: RegExp = /\n(.*\.bb):(?:\n\s*\/.*\.bbappend)+/g
 
     for (const match of output.matchAll(outerReg)) {
       const fullRecipeNameAsArray: string[] = match[1].split('_')
 
       if (fullRecipeNameAsArray.length > 0) {
-        const recipeName: string = fullRecipeNameAsArray[0]
+        const recipeName: string = fullRecipeNameAsArray[0].split('.')[0]
+        const recipeVersion: string | undefined = fullRecipeNameAsArray[1]?.split('.bb')[0]
 
         const recipe: ElementInfo | undefined = this.recipes.find((obj: ElementInfo): boolean => {
           return obj.name === recipeName
@@ -338,8 +341,9 @@ export class BitBakeProjectScanner {
             if (recipe.appends === undefined) {
               recipe.appends = new Array < PathInfo >()
             }
-
-            recipe.appends.push(path.parse(matchInner[0]))
+            if (bbappendVersionMatches(recipeVersion, recipe.version)) {
+              recipe.appends.push(path.parse(matchInner[0]))
+            }
           }
         }
       }
@@ -352,3 +356,16 @@ export class BitBakeProjectScanner {
 }
 
 export const bitBakeProjectScanner = new BitBakeProjectScanner()
+
+function bbappendVersionMatches (bbappendVersion: string | undefined, recipeVersion: string | undefined): boolean {
+  if (bbappendVersion === undefined) {
+    return true
+  }
+  if (bbappendVersion === '%') {
+    return true
+  }
+  if (recipeVersion === undefined) {
+    return bbappendVersion === undefined
+  }
+  return recipeVersion.startsWith(bbappendVersion)
+}
