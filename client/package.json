@@ -50,6 +50,14 @@
         "path": "./syntaxes/bitbake.tmLanguage.json"
       }
     ],
+    "semanticTokenScopes": [
+      {
+        "language": "bitbake",
+        "scopes": {
+          "operator.readonly": ["keyword.other.bitbake-operator.bb"]
+        }
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "BitBake",
