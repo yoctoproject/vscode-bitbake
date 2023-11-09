@@ -15,6 +15,7 @@ import { registerBitbakeCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitBakeProjectScannerClient } from './language/BitbakeProjectScannerClient'
+import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -43,6 +44,7 @@ function updatePythonPath (pathToBitbakeFolder: string): void {
 
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
+
   loadLoggerSettings()
   bitbakeExtensionContext = context
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
@@ -59,6 +61,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(...bitBakeProjectScannerClient.buildHandlers())
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScannerClient)
   bitbakeRecipesView.registerView(context)
+  const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScannerClient)
+  context.subscriptions.push(bitbakeStatusBar.statusBarItem)
 
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
