@@ -95,6 +95,14 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
         }
       }
     })
+    if (fileItems.length === 0) {
+      const errorItem = new BitbakeRecipeTreeItem('Recipe not found', vscode.TreeItemCollapsibleState.None)
+      errorItem.contextValue = undefined
+      errorItem.iconPath = new vscode.ThemeIcon('warning')
+      errorItem.command = undefined
+      errorItem.tooltip = 'Recipe not found'
+      fileItems.push(errorItem)
+    }
     return fileItems
   }
 
