@@ -49,3 +49,9 @@
 
 >DEPENDS:append:machine = "libmad"
 #^^^^^^^ source.bb variable.other.names.bb
+
+># This expression is not referencing a variable nor an inline python statement
+>PN = "${bb.parse.vars_from_file(d.getVar('FILE', False),d)[0] or 'defaultpkgname'}"
+#      ^^ source.bb string.quoted.double.bb variable.other.names.bb punctuation.definition.template-expression.begin.bb
+#        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb variable.other.names.bb
+#                                                                                 ^ source.bb string.quoted.double.bb variable.other.names.bb punctuation.definition.template-expression.end.bb

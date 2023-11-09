@@ -123,6 +123,16 @@
 #            ^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb
 #                               ^ source.bb string.quoted.double.bb
 
->MYVAR = "This string contains literal \" and it should work"
-#        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^    ^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb
-#                                      ^^ source.bb string.quoted.double.bb constant.character.escape.bb 
+>MYVAR = "This string contains escaped double quote \" and it should not break the highlight"
+#        ^ source.bb string.quoted.double.bb
+#         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb
+#                                                   ^^ source.bb string.quoted.double.bb constant.character.escape.bb
+#                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.double.bb
+#                                                                                           ^ source.bb string.quoted.double.bb
+
+>MYVAR = 'This string contains escaped single quote \' and it should not break the highlight'
+#        ^ source.bb string.quoted.single.bb
+#         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.single.bb
+#                                                   ^^ source.bb string.quoted.single.bb constant.character.escape.bb
+#                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.single.bb
+#                                                                                           ^ source.bb string.quoted.single.bb

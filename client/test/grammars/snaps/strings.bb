@@ -45,4 +45,6 @@ inherit ${@ 'classname' if condition else ''}
 
 INHERIT += "autotools pkgconfig"
 
-MYVAR = "This string contains literal \" and it should work"
+MYVAR = "This string contains escaped double quote \" and it should not break the highlight"
+
+MYVAR = 'This string contains escaped single quote \' and it should not break the highlight'

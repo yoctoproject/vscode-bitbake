@@ -34,6 +34,7 @@
 >}
  
 >PN = "${@bb.parse.vars_from_file(d.getVar('FILE', False),d)[0] or 'defaultpkgname'}"
+#        ^ source.bb string.quoted.double.bb punctuation.definition.template-expression.end.bb entity.name.function.decorator.python.bb
 #                  ^^^^^^^^^^^^^^ source.bb string.quoted.double.bb entity.name.function.python.bb
 #                                   ^^^^^^ source.bb string.quoted.double.bb entity.name.function.python.bb
  

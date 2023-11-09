@@ -23,3 +23,5 @@ export ENV_VARIABLE = "variable-value"
 KBRANCH:qemuarm = "standard/arm-versatile-926ejs"
 
 DEPENDS:append:machine = "libmad"
+# This expression is not referencing a variable nor an inline python statement
+PN = "${bb.parse.vars_from_file(d.getVar('FILE', False),d)[0] or 'defaultpkgname'}"
