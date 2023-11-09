@@ -31,6 +31,7 @@ import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } f
 import { embeddedLanguageDocsManager } from './embedded-languages/documents-manager'
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
+import { getSemanticTokens, legend } from './semanticTokensProvider'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
@@ -68,7 +69,11 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
           'bitbake.rescan-project'
         ]
       },
-      hoverProvider: true
+      hoverProvider: true,
+      semanticTokensProvider: {
+        legend,
+        full: true
+      }
     }
   }
 })
@@ -141,6 +146,11 @@ connection.onRequest(
     return getEmbeddedLanguageDocInfosOnPosition(uriString, position)
   }
 )
+// This request method 'textDocument/semanticTokens' will be sent when semanticTokensProvider capability is enabled
+connection.onRequest('textDocument/semanticTokens/full', ({ textDocument }) => {
+  logger.debug(`[OnRequest] <textDocument/semanticTokens/full> Document uri: ${textDocument.uri}`)
+  return getSemanticTokens(textDocument.uri)
+})
 
 connection.onNotification(
   NotificationMethod.FilenameChanged,
