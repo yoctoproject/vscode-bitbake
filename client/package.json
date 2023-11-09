@@ -269,7 +269,7 @@
           "id": "bitbakeRecipes",
           "name": "Recipes",
           "contextualTitle": "Recipes Explorer",
-          "when": "resourceLangId == bitbake"
+          "when": "bitbake.active"
         }
       ]
     },

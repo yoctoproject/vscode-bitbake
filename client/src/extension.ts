@@ -61,6 +61,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(...bitBakeProjectScannerClient.buildHandlers())
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScannerClient)
   bitbakeRecipesView.registerView(context)
+  void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScannerClient)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
 
