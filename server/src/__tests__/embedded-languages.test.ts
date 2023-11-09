@@ -115,41 +115,42 @@ describe('Create Python embedded language content with inline Python', () => {
 
   test.each([
     [
-      'with single quotes',
+      'basic',
       // eslint-disable-next-line no-template-curly-in-string
-      "FOO = '${@\"BAR\"}'\n",
-      "FOO = f'''{\"BAR\"}'''\n"
+      'FOO = \'${@"BAR"}\'\n',
+      '         \n\n"BAR"\n \n'
     ],
     [
-      'with double quotes',
+      'with spacing',
       // eslint-disable-next-line no-template-curly-in-string
-      'FOO = "${@\'BAR\'}"\n',
-      'FOO = f"""{\'BAR\'}"""\n'
-    ],
-    [
-      'with bitbake operator',
-      // eslint-disable-next-line no-template-curly-in-string
-      'FOO ??= "${@\'BAR\'}"\n',
-      'FOO = f"""{\'BAR\'}"""\n'
-    ],
-    [
-      'with override',
-      // eslint-disable-next-line no-template-curly-in-string
-      'FOO:prepend = "${@\'BAR\'}"\n',
-      'FOO         = f"""{\'BAR\'}"""\n'
-    ],
-    [
-      'with complex spacing',
-      // eslint-disable-next-line no-template-curly-in-string
-      'FOO  ?=   "  BAR  ${@  \'BAR\'   }  BAR  "\n',
-      'FOO  =   f"""  BAR  {  \'BAR\'   }  BAR  """\n'
+      'FOO = \'${@  "BAR"  }\'\n',
+      '         \n  \n"BAR"  \n \n'
     ],
     [
       'multiline',
       // eslint-disable-next-line no-template-curly-in-string
-      'FOO = "${@\'BAR\'} \\\n1 \\\n2"\n',
-      'FOO = f"""{\'BAR\'} \n1 \n2"""\n'
+      'FOO = \'${@"BAR"}\' \\\n1 \\\n2"\n',
+      '         \n\n"BAR"\n   \n   \n  \n'
+    ],
+    [
+      'with two embedded python regions',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO = \'${@"BAR"}${@"BAR"}\'\n',
+      '         \n\n"BAR"\n  \n\n"BAR"\n \n'
+    ],
+    [
+      'without surrounding quotes',
+      // eslint-disable-next-line no-template-curly-in-string
+      'inherit ${@"test"}\n',
+      '          \n\n"test"\n\n'
     ]
+    /* // This is not yet supported by tree-sitter
+    [
+      'inside bash function',
+      // eslint-disable-next-line no-template-curly-in-string
+      'foo(){\necho ${@"bar"}\n}\n',
+      '      \n       \n"bar"\n\n \n'
+    ] */
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
     expect(embeddedContent).toEqual(result)

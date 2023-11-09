@@ -61,6 +61,8 @@ const insertTextBetweenIndexes = (inputString: string, start: number, end: numbe
   return `${beforeTarget}${replacementText}${afterTarget}`
 }
 
+// Important constraint: Regions of the document on which the user interacts must keep the same size
+// Otherwise it will not be possible to map the cursor position from the original document to the embedded document
 export const insertTextIntoEmbeddedLanguageDoc = (embeddedLanguageDoc: EmbeddedLanguageDoc, start: number, end: number, textToInsert: string): void => {
   const adjustedStart = embeddedLanguageDoc.characterIndexes[start]
   const adjustedEnd = embeddedLanguageDoc.characterIndexes[end]
@@ -71,8 +73,4 @@ export const insertTextIntoEmbeddedLanguageDoc = (embeddedLanguageDoc: EmbeddedL
   if (diff !== 0) {
     addCharacterOffset(embeddedLanguageDoc.characterIndexes, end, diff)
   }
-}
-
-export const isQuotes = (value: unknown): value is "'" | '"' => {
-  return value === '"' || value === "'"
 }

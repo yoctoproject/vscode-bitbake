@@ -10,8 +10,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import * as TreeSitterUtils from '../tree-sitter/utils'
 
 import { embeddedLanguageDocsManager } from './documents-manager'
-import { logger } from '../lib/src/utils/OutputLogger'
-import { type EmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc, isQuotes } from './utils'
+import { type EmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
 
 export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
   const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
@@ -22,19 +21,17 @@ export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocume
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'python')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
     switch (node.type) {
-      case 'recipe':
-        return true
       case 'python_function_definition':
         handlePythonFunctionDefinition(node, embeddedLanguageDoc, imports)
         return false
       case 'anonymous_python_function':
         handleAnonymousPythonFunction(node, embeddedLanguageDoc, imports)
         return false
-      case 'variable_assignment': // Handle 'inline_python'
-        handleVariableAssigmentNode(node, embeddedLanguageDoc, imports)
+      case 'inline_python':
+        handleInlinePythonNode(node, embeddedLanguageDoc, imports)
         return false
       default:
-        return false
+        return true
     }
   })
   if (imports.size !== 0) {
@@ -50,16 +47,6 @@ const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: E
       handleBlockNode(child, imports)
     }
   })
-}
-
-const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
-  // Remove it
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
-}
-
-const handleOperatorNode = (operatorNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
-  // Replace the operator with one that will be valid for sure in Python. It does not matters which one.
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, operatorNode.startIndex, operatorNode.endIndex, '=')
 }
 
 const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
@@ -89,88 +76,25 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
   })
 }
 
-const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
-  if (!TreeSitterUtils.containsInlinePython(node)) {
-    // We only care about inline python
+const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
+  const openingNode = inlinePythonNode.child(0)
+  const pythonContentNode = inlinePythonNode.child(1)
+  const closingNode = inlinePythonNode.child(2)
+  if (openingNode?.type !== '${@') {
     return
   }
-
-  // Insert back the whole node, which we'll modify
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
-
-  const handleLiteralNode = (literalNode: SyntaxNode): void => {
-    const stringNode = literalNode.child(0)
-    if (stringNode === null) {
-      logger.warn('Unexpected variable_assignment node: string is null')
-      return
-    }
-    const handleQuotesNode = (stringNode: SyntaxNode): void => {
-      const openingQuoteNode = stringNode.child(0)
-      const closingQuoteNode = stringNode.child(stringNode.childCount - 1)
-      if (openingQuoteNode === null || !isQuotes(openingQuoteNode?.text)) {
-        logger.warn(`Unexpected opening quote node: quote is ${openingQuoteNode?.text}}`)
-        return
-      }
-      if (closingQuoteNode === null || !isQuotes(closingQuoteNode?.text)) {
-        logger.warn(`Unexpected closing quote node: quote is ${closingQuoteNode?.text}}`)
-        return
-      }
-      const newQuotes = openingQuoteNode.text.repeat(3)
-      // Transform the string into a python f-string
-      insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, openingQuoteNode.startIndex, openingQuoteNode.endIndex, `f${newQuotes}`)
-      insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, closingQuoteNode.startIndex, closingQuoteNode.endIndex, newQuotes)
-    }
-    handleQuotesNode(stringNode)
-
-    const handleInlinePythonNode = (inlinePythonNode: SyntaxNode): void => {
-      const openingNode = inlinePythonNode.child(0)
-      // python_string
-      if (openingNode?.type !== '${@') {
-        return
-      }
-      // Replace '${@' for '{', which is the f-string syntax
-      insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, openingNode.startIndex, openingNode.endIndex, '{')
-
-      const pythonContentNode = inlinePythonNode.child(1)
-      if (pythonContentNode === null) {
-        return
-      }
-      handleBlockNode(pythonContentNode, imports)
-    }
-    const handleStringContentNode = (stringContentNode: SyntaxNode): void => {
-      // Remove all line continuation backslashes ('\')
-      for (const match of stringContentNode.text.matchAll(/\\\n/g)) {
-        if (match.index === undefined) {
-          continue
-        }
-        const startIndex = stringContentNode.startIndex + match.index
-        insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, startIndex, startIndex + 2, '\n')
-      }
-    }
-    TreeSitterUtils.forEach(stringNode, (child) => {
-      if (child.type === 'string') {
-        return true
-      } else if (child.type === 'inline_python') {
-        handleInlinePythonNode(child)
-      } else if (child.type === 'string_content') {
-        handleStringContentNode(child)
-      }
-      return false
-    })
+  if (pythonContentNode === null) {
+    return
   }
-
-  node.children.forEach((child) => {
-    if (child.type === 'identifier') {
-      // pass
-    } else if (child.type === 'override') {
-      handleOverrideNode(child, embeddedLanguageDoc)
-    } else if (child.type === 'literal') {
-      handleLiteralNode(child)
-    } else {
-      // we assume this is an operator
-      handleOperatorNode(child, embeddedLanguageDoc)
-    }
-  })
+  if (closingNode?.type !== '}') {
+    return
+  }
+  // We put the inline_python content on a new line
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, openingNode.startIndex, openingNode.endIndex, '  \n')
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, pythonContentNode.startIndex, pythonContentNode.startIndex, '\n') // prevent trailing spaces
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, pythonContentNode.startIndex, pythonContentNode.endIndex, pythonContentNode.text)
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, closingNode.startIndex, closingNode.endIndex, '\n')
+  handleBlockNode(pythonContentNode, imports)
 }
 
 const handleBlockNode = (blockNode: SyntaxNode, imports: Set<string>): void => {
@@ -213,4 +137,9 @@ const handleBlockNode = (blockNode: SyntaxNode, imports: Set<string>): void => {
     }
     return true
   })
+}
+
+const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  // Remove it
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
 }
