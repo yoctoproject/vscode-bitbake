@@ -96,17 +96,16 @@ describe('On Completion', () => {
         }
       ])
     )
-    // Variables from scanning bitbake docs
+    // Variables from yocto docs after filtering the duplicates
     expect(resultAfterDocScan).toEqual(
-      /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
           documentation: {
-            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   A long description for the recipe.\n\n\n[Reference](https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-ref-variables.html#term-DESCRIPTION)',
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
             kind: 'markdown'
           },
           labelDetails: {
-            description: 'Source: Bitbake'
+            description: 'Source: Yocto'
           },
           insertText: undefined,
           insertTextFormat: 1,
@@ -115,7 +114,27 @@ describe('On Completion', () => {
         }
       ])
     )
-    // Variables from scanning Yocto docs
+    // Variables from bitbake docs after filtering the duplicates
+    expect(resultAfterDocScan).toEqual(
+      expect.arrayContaining([
+        {
+          documentation: {
+            /* eslint-disable no-useless-escape */
+            value: '```man\nBB_HASH_CODEPARSER_VALS (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   Specifies values for variables to use when populating the codeparser cache.\n   This can be used selectively to set dummy values for variables to avoid\n   the codeparser cache growing on every parse. Variables that would typically\n   be included are those where the value is not significant for where the\n   codeparser cache is used (i.e. when calculating variable dependencies for\n   code fragments.) The value is space-separated without quoting values, for\n   example:\n BB_HASH_CODEPARSER_VALS = \"T=/ WORKDIR=/ DATE=1234 TIME=1234\"\n\n\n[Reference](https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-ref-variables.html#term-BB_HASH_CODEPARSER_VALS)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: 'Source: Bitbake'
+          },
+          insertText: undefined,
+          insertTextFormat: 1,
+          label: 'BB_HASH_CODEPARSER_VALS',
+          kind: 6
+        }
+      ])
+    )
+
+    // Variables from Yocto docs but not in bitbake docs
     expect(resultAfterDocScan).toEqual(
       /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
