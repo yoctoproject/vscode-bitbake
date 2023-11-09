@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import fs from 'fs'
+import { randomUUID } from 'crypto'
 
 import { embeddedLanguageDocsManager } from '../embedded-languages/documents-manager'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from '../embedded-languages/general-support'
@@ -13,7 +14,7 @@ import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 
-describe('Embedded Language Documents', () => {
+describe('Embedded Language Documents file management', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
       const parser = await generateParser()
@@ -27,7 +28,7 @@ describe('Embedded Language Documents', () => {
     analyzer.resetAnalyzedDocuments()
   })
 
-  it('generate and delete embedded documents for bash and python', async () => {
+  it('generate, rename and delete embedded language documents', async () => {
     // Setup
     await analyzer.analyze({
       uri: FIXTURE_DOCUMENT.EMBEDDED.uri,
@@ -102,7 +103,7 @@ describe('Embedded Language Documents', () => {
   })
 })
 
-describe('Create embedded language content for inline Python', () => {
+describe('Create Python embedded language content with inline Python', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
       const parser = await generateParser()
@@ -112,44 +113,78 @@ describe('Create embedded language content for inline Python', () => {
     await embeddedLanguageDocsManager.setStoragePath(__dirname)
   })
 
-  beforeEach(() => {
-    analyzer.resetAnalyzedDocuments()
-  })
-
-  afterEach(async () => {
-    await embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs('dummy')
-  })
-
   test.each([
     [
       'with single quotes',
       // eslint-disable-next-line no-template-curly-in-string
       "FOO = '${@\"BAR\"}'\n",
-      "import bb\nFOO = f'''{\"BAR\"}'''\n"
+      "FOO = f'''{\"BAR\"}'''\n"
     ],
     [
       'with double quotes',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = "${@\'BAR\'}"\n',
-      'import bb\nFOO = f"""{\'BAR\'}"""\n'
+      'FOO = f"""{\'BAR\'}"""\n'
     ],
     [
       'with bitbake operator',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO ??= "${@\'BAR\'}"\n',
-      'import bb\nFOO = f"""{\'BAR\'}"""\n'
+      'FOO = f"""{\'BAR\'}"""\n'
     ],
     [
       'with complex spacing',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO  ?=   "  BAR  ${@  \'BAR\'   }  BAR  "\n',
-      'import bb\nFOO  =   f"""  BAR  {  \'BAR\'   }  BAR  """\n'
+      'FOO  =   f"""  BAR  {  \'BAR\'   }  BAR  """\n'
     ],
     [
       'multiline',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = "${@\'BAR\'} \\\n1 \\\n2"\n',
-      'import bb\nFOO = f"""{\'BAR\'} \n1 \n2"""\n'
+      'FOO = f"""{\'BAR\'} \n1 \n2"""\n'
+    ]
+  ])('%s', async (description, input, result) => {
+    const embeddedContent = await createEmbeddedContent(input, 'python')
+    expect(embeddedContent).toEqual(result)
+  })
+})
+
+describe('Create Python embedded language content with imports', () => {
+  beforeAll(async () => {
+    if (!analyzer.hasParser()) {
+      const parser = await generateParser()
+      analyzer.initialize(parser)
+    }
+    analyzer.resetAnalyzedDocuments()
+    await embeddedLanguageDocsManager.setStoragePath(__dirname)
+  })
+
+  test.each([
+    [
+      'with bb',
+      'python (){\n  bb.parse.vars_from_file("test")\n}\n',
+      'import bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  bb.parse.vars_from_file("test")\n \n'
+    ],
+    [
+      'with d',
+      'python (){\n  d.getVar("test")\n}\n',
+      'from bb import data_smart\nd = data_smart.DataSmart()\ndef ():\n  d.getVar("test")\n \n'
+    ],
+    [
+      'with e',
+      'python (){\n  e.data.getVar("test")\n}\n',
+      'from bb import data_smart\nd = data_smart.DataSmart()\nfrom bb import event\ne = event.Event()\ne.data = d\ndef ():\n  e.data.getVar("test")\n \n'
+    ],
+    [
+      'with os',
+      'python (){\n  os.path.dirname("test")\n}\n',
+      'import os\ndef ():\n  os.path.dirname("test")\n \n'
+    ],
+    [
+      'with combination (d and bb)',
+      'python (){\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n}\n',
+      'from bb import data_smart\nd = data_smart.DataSmart()\nimport bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n \n'
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
@@ -158,21 +193,23 @@ describe('Create embedded language content for inline Python', () => {
 })
 
 const createEmbeddedContent = async (content: string, language: EmbeddedLanguageType): Promise<string | undefined> => {
-  const uri = 'dummmy'
-  const document = TextDocument.create(uri, 'bb', 1, content)
+  const uri = randomUUID()
+  const document = TextDocument.create(uri, 'bitbake', 1, content)
   await analyzer.analyze({ document, uri })
   await generateEmbeddedLanguageDocs(document)
-  const pythonEmbeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uri, 'python')
+  const pythonEmbeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uri, language)
   if (pythonEmbeddedLanguageDocInfos === undefined) {
     return
   }
   const pythonEmbeddedLanguageDocPath = pythonEmbeddedLanguageDocInfos.uri.replace('file://', '')
-  return fs.readFileSync(pythonEmbeddedLanguageDocPath, 'utf8')
+  const embeddedContent = fs.readFileSync(pythonEmbeddedLanguageDocPath, 'utf8')
+  void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(uri)
+  analyzer.resetAnalyzedDocuments()
+  return embeddedContent
 }
 
 const expectedPythonEmbeddedLanguageDoc =
-`import bb
-                                    
+`                                    
 
 def do_foo():
     print('123')

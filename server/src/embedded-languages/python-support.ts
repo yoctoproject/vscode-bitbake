@@ -18,34 +18,41 @@ export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocume
   if (analyzedDocument === undefined) {
     return
   }
-  const imports: string[] = ['import bb']
+  const imports = new Set<string>()
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'python')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
     switch (node.type) {
       case 'recipe':
         return true
       case 'python_function_definition':
-        handlePythonFunctionDefinition(node, embeddedLanguageDoc)
+        handlePythonFunctionDefinition(node, embeddedLanguageDoc, imports)
         return false
       case 'anonymous_python_function':
-        handleAnonymousPythonFunction(node, embeddedLanguageDoc)
+        handleAnonymousPythonFunction(node, embeddedLanguageDoc, imports)
         return false
       case 'variable_assignment': // Handle 'inline_python'
-        handleVariableAssigmentNode(node, embeddedLanguageDoc)
+        handleVariableAssigmentNode(node, embeddedLanguageDoc, imports)
         return false
       default:
         return false
     }
   })
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, imports.join('\n') + '\n')
+  if (imports.size !== 0) {
+    insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, [...imports].join('\n') + '\n')
+  }
   await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(embeddedLanguageDoc)
 }
 
-const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
+  node.children.forEach((child) => {
+    if (child.type === 'block') {
+      handleBlockNode(child, imports)
+    }
+  })
 }
 
-const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     switch (child.type) {
@@ -63,13 +70,16 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
       case '}':
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ' ')
         break
+      case 'block':
+        handleBlockNode(child, imports)
+        break
       default:
         break
     }
   })
 }
 
-const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
   if (!TreeSitterUtils.containsInlinePython(node)) {
     // We only care about inline python
     return
@@ -118,11 +128,18 @@ const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: Embe
 
     const handleInlinePythonNode = (inlinePythonNode: SyntaxNode): void => {
       const openingNode = inlinePythonNode.child(0)
+      // python_string
       if (openingNode?.type !== '${@') {
         return
       }
       // Replace '${@' for '{', which is the f-string syntax
       insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, openingNode.startIndex, openingNode.endIndex, '{')
+
+      const pythonContentNode = inlinePythonNode.child(1)
+      if (pythonContentNode === null) {
+        return
+      }
+      handleBlockNode(pythonContentNode, imports)
     }
     const handleStringContentNode = (stringContentNode: SyntaxNode): void => {
       // Remove all line continuation backslashes ('\')
@@ -146,4 +163,46 @@ const handleVariableAssigmentNode = (node: SyntaxNode, embeddedLanguageDoc: Embe
     })
   }
   handleLiteralNode(literalNode)
+}
+
+const handleBlockNode = (blockNode: SyntaxNode, imports: Set<string>): void => {
+  const importBb = (bbNode: SyntaxNode): void => {
+    if (bbNode.nextSibling?.type === '.' && bbNode.nextNamedSibling?.type === 'python_identifier') {
+      const importName = bbNode.nextNamedSibling.text
+      imports.add('import bb')
+      imports.add(`from bb import ${importName}`)
+      imports.add(`bb.${importName} = ${importName}`)
+    }
+  }
+
+  const importD = (): void => {
+    imports.add('from bb import data_smart')
+    imports.add('d = data_smart.DataSmart()')
+  }
+
+  const importE = (): void => {
+    importD()
+    imports.add('from bb import event')
+    imports.add('e = event.Event()')
+    imports.add('e.data = d')
+  }
+
+  const importOs = (): void => {
+    imports.add('import os')
+  }
+
+  TreeSitterUtils.forEach(blockNode, (child) => {
+    if (child.type === 'python_identifier') {
+      if (child.text === 'bb') {
+        importBb(child)
+      } else if (child.text === 'd') {
+        importD()
+      } else if (child.text === 'e') {
+        importE()
+      } else if (child.text === 'os') {
+        importOs()
+      }
+    }
+    return true
+  })
 }
