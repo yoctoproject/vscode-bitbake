@@ -52,10 +52,41 @@ export function isShellDefinition (n: SyntaxNode): boolean {
   return n.type === 'function_definition'
 }
 
-export function isReference (n: SyntaxNode): boolean {
+export function isVariableReference (n: SyntaxNode): boolean {
   switch (n.type) {
-    case 'variable_assignment': // Currently, the tree doesn't have a unique type for variable reference neither for function reference
-      return true
+    case 'identifier':
+      return n?.parent?.type === 'variable_assignment' || n?.parent?.type === 'variable_expansion'
+    default:
+      return false
+  }
+}
+
+export function isOverride (n: SyntaxNode): boolean {
+  const parentTypes = [
+    'variable_assignment',
+    'function_definition',
+    'anonymous_python_function',
+    'python_function_definition'
+  ]
+  const parentType = n?.parent?.type
+  switch (n.type) {
+    case 'override':
+      if (parentType !== undefined) {
+        return parentTypes.includes(parentType)
+      }
+      return false
+    default:
+      return false
+  }
+}
+
+export function isFunctionIdentifier (n: SyntaxNode): boolean {
+  switch (n.type) {
+    case 'identifier':
+      return n?.parent?.type === 'function_definition' ||
+      n?.parent?.type === 'anonymous_python_function'
+    case 'python_identifier':
+      return n?.parent?.type === 'python_function_definition'
     default:
       return false
   }
