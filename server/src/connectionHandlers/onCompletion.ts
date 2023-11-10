@@ -18,8 +18,8 @@ import { formatCompletionItems } from '../completions/snippet-utils'
 import { bitBakeDocScanner, type DocInfoType } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
-import contextHandler from '../ContextHandler'
 import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
+import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   const wordPosition = {
@@ -123,10 +123,8 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   const directiveStatementKeyword = analyzer.getDirectiveStatementKeywordByLine(textDocumentPositionParams)
   if (directiveStatementKeyword !== undefined) {
     logger.debug(`[onCompletion] Found directive statement: ${directiveStatementKeyword}`)
-    return contextHandler.getCompletionItemForDirectiveStatementKeyword(directiveStatementKeyword)
+    return getCompletionItemForDirectiveStatementKeyword(directiveStatementKeyword)
   }
-
-  // TODO: Add completions from contextHandler.getCompletionItemForRecipesAndSymbols() after refactor the CompletionProviders & SymbolScanner & ProjectScanner
 
   let reserverdKeywordCompletionItems: CompletionItem[] = []
   if (!analyzer.isVariableExpansion(documentUri, wordPosition.line, wordPosition.character)) {
@@ -188,3 +186,79 @@ function docInfoToCompletionItems (docInfo: DocInfoType): CompletionItem[] {
 
   return completionItems
 }
+
+function getCompletionItemForDirectiveStatementKeyword (keyword: string): CompletionItem[] {
+  let completionItem: CompletionItem[] = []
+
+  switch (keyword) {
+    case 'inherit':
+      completionItem = [
+        ...convertElementInfoListToCompletionItemList(
+          bitBakeProjectScanner.classes,
+          CompletionItemKind.Class,
+          'bbclass'
+        )]
+      break
+    case 'require':
+    case 'include':
+      completionItem = [
+        ...convertElementInfoListToCompletionItemList(
+          bitBakeProjectScanner.includes,
+          CompletionItemKind.Interface,
+          'inc'
+        )
+      ]
+      break
+    default:
+      break
+  }
+
+  return completionItem
+}
+
+function convertElementInfoListToCompletionItemList (elementInfoList: ElementInfo[], completionItemKind: CompletionItemKind, fileType: string): CompletionItem[] {
+  const completionItems: CompletionItem[] = []
+
+  for (const element of elementInfoList) {
+    const filePath = getFilePath(element, fileType)
+    const completionItem: CompletionItem = {
+      label: element.name,
+      labelDetails: {
+        description: filePath ?? fileType
+      },
+      // TODO1: Construct the file path which should be relative to the current document for insertText.
+      // TODO2: Limit what should be shown in the completion list for directive statment?
+      // insertText: filePath ?? element.name,
+      documentation: element.extraInfo,
+      data: element,
+      kind: completionItemKind
+    }
+    completionItems.push(completionItem)
+  }
+
+  return completionItems
+}
+
+function getFilePath (elementInfo: ElementInfo, fileType: string): string | undefined {
+  if (fileType === 'inc' || fileType === 'bbclass') {
+    const path = elementInfo.path
+    let pathAsString = path?.dir.replace(elementInfo.layerInfo?.path as string, '')
+    if (pathAsString !== undefined && pathAsString.startsWith('/')) {
+      pathAsString = pathAsString.slice(1)
+    }
+
+    return pathAsString + '/' + elementInfo?.path?.base
+  }
+  return undefined
+}
+
+// TBD: Recipe completion, the code from CompletionProvider.ts
+// function createCompletionItemForRecipes (): CompletionItem[] {
+//   return [
+//     ...convertElementInfoListToCompletionItemList(
+//       bitBakeProjectScanner.recipes,
+//       CompletionItemKind.Method,
+//       'bb'
+//     )
+//   ]
+// }
