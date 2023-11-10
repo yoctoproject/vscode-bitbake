@@ -57,3 +57,15 @@ The extension provides commands and shortcuts to run bitbake tasks. These comman
 - Build folder
 - Path to an environment script to configure the BitBake project (optional)
 See the section on [setting up the extension](#setup-the-extension) for more information.
+
+## Contributing
+
+### Reporting issues
+
+User feedback is very welcome on this [extension's repository](https://github.com/yoctoproject/vscode-bitbake). Please report any issues or feature requests you may have with a detailed description of the problem and the steps to reproduce it.
+
+### Contributing code
+
+Contributions are welcome! Please submit your contributions as pull requests on this [extension's repository](https://github.com/yoctoproject/vscode-bitbake)
+
+Instructions to build, test and debug the extension are available in the [root README](../README.md).

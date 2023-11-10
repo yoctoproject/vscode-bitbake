@@ -77,5 +77,5 @@ This extension uses tree-sitter to parse the documents. The `.wasm` file used fo
 
 ## Contributing
 
-Development of this extension happens on [GitHub](https://github.com/savoirfairelinux/vscode-bitbake).
+Development of this extension happens on [GitHub](https://github.com/yoctoproject/vscode-bitbake).
 Issues and pull requests are welcome.
