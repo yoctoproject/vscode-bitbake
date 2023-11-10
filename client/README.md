@@ -54,12 +54,30 @@ The go to definition feature currently behaves as follows:
 
 Place your cursor over a variable. If it is a BitBake defined variable, then its definition from the documentation will be displayed.
 
-### Bitbake commands
+### BitBake tasks
 
-The extension provides commands and shortcuts to run bitbake tasks. These commands are available in the command palette (CTRL+SHIFT+P) and in the editor's context menu. Before using these commands, you must provide the following settings:
-- Build folder
-- Path to an environment script to configure the BitBake project (optional)
-See the section on [setting up the extension](#setup-the-extension) for more information.
+BitBake build tasks may be defined through the `tasks.json` file. They allow to build or a run any specific BitBake command on a set of recipes. This feature requires to have properly [configured the extension](#setup-the-extension). Learn how to use VSCode tasks [on the official Visual Studio Code documentation](https://code.visualstudio.com/docs/editor/tasks).
+
+Here's an example `tasks.json` configuration:
+```json
+{
+    "tasks": [
+        {
+            "label": "Build core-image-minimal",
+            "type": "bitbake",
+            "recipes": [
+                "core-image-minimal"
+            ]
+        }
+    ]
+}
+```
+
+### BitBake commands
+
+The extension provides commands and shortcuts to run BitBake tasks. These commands are available in the command palette (`CTRL+SHIFT+P`) and in the editor's contextual menu.
+
+![Contextual menu](doc/contextual-menu.png)
 
 ## Contributing
 
