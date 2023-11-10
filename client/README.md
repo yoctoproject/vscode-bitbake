@@ -1,15 +1,19 @@
 # BitBake recipe language support in Visual Studio Code
 
-## Setup the extension
-In order to work properly, the extension needs to know your Bitbake's location and build folder. It will make the following assumptions:
-- Bitbake's folder is located in `sources/poky/bitbake`, relative to the root of the project.
-- Your build folder is located at the root of the project in a folder named `build`
+## Configuration
 
-Ideally, the path to an environment script to configure the BitBake project should also be specified. If it is not specified, the extension will try to configure the environment variables by itself.
+Some advanced features of this extension will need to locate and run BitBake. It can be configured from VSCode's settings.
 
-These can be configured into the VS Code's settings. More options are available.
+To access the settings, you can navigate to **Files -> Preferences -> Settings** (or use the shortcut [**Ctrl+,**]). BitBake's settings are under **Extensions**. More options are available to tweak the extension's behavior.
 
-To access the settings, you can navigate to **Files -> Preferences -> Settings** (or use the shortcut [**Ctrl+,**]). BitBake's settings are under **Extensions**
+Here's an example `settings.json` reflecting the default values:
+```json
+{
+    "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
+    "bitbake.pathToEnvScript": "${workspaceFolder}/sources/poky/oe-init-build-env",
+    "bitbake.pathToBitbakeFolder": "${workspaceFolder}/sources/poky/bitbake",
+}
+```
 
 ## Features
 
