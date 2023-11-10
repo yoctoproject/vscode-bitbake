@@ -65,7 +65,7 @@ describe('BitbakeDriver Recipes View', () => {
         done()
       })
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const bitbakeRecipesView = new BitbakeRecipesView(contextMock, bitbakeWorkspace, bitbakeProjectScannerClient)
+    const bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitbakeProjectScannerClient)
+    bitbakeRecipesView.registerView(contextMock)
   })
 })

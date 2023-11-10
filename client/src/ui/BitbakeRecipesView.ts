@@ -12,9 +12,11 @@ import path from 'path'
 export class BitbakeRecipesView {
   private readonly bitbakeTreeProvider: BitbakeTreeDataProvider
 
-  constructor (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScannerClient: BitBakeProjectScannerClient) {
+  constructor (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScannerClient: BitBakeProjectScannerClient) {
     this.bitbakeTreeProvider = new BitbakeTreeDataProvider(bitbakeWorkspace, bitbakeProjectScannerClient)
+  }
 
+  registerView (context: vscode.ExtensionContext): void {
     const view = vscode.window.createTreeView('bitbakeRecipes', { treeDataProvider: this.bitbakeTreeProvider, showCollapseAll: true })
     context.subscriptions.push(view)
     vscode.window.registerTreeDataProvider('bitbakeRecipes', this.bitbakeTreeProvider)
