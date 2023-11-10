@@ -19,6 +19,12 @@ Here's an example `settings.json` reflecting the default values:
 
 ### Syntax highlighting
 
+The extension provides syntax highlighting for BitBake recipes, classes, configuration and inc-files. Syntax highlighting also supports embedded languages inside bitbake recipes including inline Python variable expansion, shell code and Python code.
+
+The BitBake language is automatically detected based on the file extension:
+[`.bb`, `.bbappend`, `.bbclass`]. [`.conf`, `.inc`] are also supported but may be used by other tools.
+
+![Syntax Hilighting](doc/highlighting.png)
 
 ### Context-based suggestions
 
