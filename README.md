@@ -77,7 +77,9 @@ These tests allow running the bitbake extension in a live VSCode environment.
 See [the individual integration tests README](integration-tests/README.md).
 
 ## Tree-sitter
-This extension uses tree-sitter to parse the documents. The `.wasm` file used for creating the parser is generated from latest release at [here](https://github.com/amaanq/tree-sitter-bitbake)
+This extension uses tree-sitter to parse the documents. The `.wasm` file used for creating the parser is generated from latest release at [here](https://github.com/amaanq/tree-sitter-bitbake).
+
+For more information about the tree-sitter and its CLI, Check out the offical [site](https://tree-sitter.github.io/tree-sitter/) and [npm page](https://www.npmjs.com/package/tree-sitter-cli)
 
 ## Contributing
 
