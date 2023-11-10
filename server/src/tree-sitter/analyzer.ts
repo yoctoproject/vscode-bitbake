@@ -224,7 +224,7 @@ export default class Analyzer {
     column: number
   ): boolean {
     const n = this.nodeAtPoint(uri, line, column)
-    // Current tree-sitter @1.0.1 only treats 'append', 'prepend' and 'remove' as a node with "override" type. Other words following ":" will yield a node with "identifier" type whose parent node is of type "override"
+    // Current tree-sitter (as of @1.0.1) only treats 'append', 'prepend' and 'remove' as a node with "override" type. Other words following ":" will yield a node with "identifier" type whose parent node is of type "override"
     // However, in some cases, its parent node is not of type override but its grandparent is.
     // See if future tree-sitter has a nicer way to handle this.
     if (n?.type === 'override' || n?.parent?.type === 'override' || n?.parent?.parent?.type === 'override') {
@@ -240,7 +240,6 @@ export default class Analyzer {
    * NAME = "foo"
    * DESCRIPTION = "Name: ${NAME}"
    * ```
-   * Caveat: Current tree-sitter @1.0.1 doesn't treat "${}" as variable expansion syntax.
    */
   public isVariableExpansion (
     uri: string,
@@ -297,7 +296,7 @@ export default class Analyzer {
   /**
    * Check if the current line starts with any directive statement keyword. The keyword is one of `include`, `inherit` and `require`
    *
-   * Tree-sitter functionalities are not used here since the current version @1.0.1 doesn't treat a line as directive statement if the keyword presents but nothing follows.
+   * Tree-sitter functionalities are not used here since they (as of @1.0.1) can't reliably treat a line as directive statement if the keyword presents but nothing follows.
    */
   public getDirectiveStatementKeywordByLine (textDocumentPositionParams: TextDocumentPositionParams): string | undefined {
     const { textDocument, position } = textDocumentPositionParams
