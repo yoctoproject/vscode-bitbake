@@ -8,6 +8,9 @@ python (){
 }
 MYVAR = '${}'
 
+include i
+require i
+inherit c
 # Wrong code
 
 []

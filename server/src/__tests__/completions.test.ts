@@ -219,7 +219,7 @@ describe('On Completion', () => {
       ])
     )
   })
-
+  // TODO: Add tests for the second and other overrides that come after. e.g. VAR:override1:override2:over...  And it is better after the tree-sitter library can properly handle it as mentioned in the issue: https://github.com/amaanq/tree-sitter-bitbake/issues/9
   it('provides suggestions for operators when a ":" is typed and it follows an identifier or in the middle of typing such syntax', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
@@ -309,7 +309,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 13,
+        line: 16,
         character: 1
       }
     })
@@ -384,7 +384,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 12,
+        line: 15,
         character: 1
       }
     })
@@ -401,5 +401,109 @@ describe('On Completion', () => {
 
     expect(result1).toEqual([])
     expect(result2).toEqual([])
+  })
+
+  it('provides suggestions for direcitive statement after keywords "include", "inherit" and "requrie" are typed', async () => {
+    jest.spyOn(bitBakeProjectScanner, 'includes', 'get').mockReturnValue([{
+      name: 'init-manager-none',
+      path: {
+        root: '/',
+        dir: '/home/projects/poky/meta/conf/distro/include',
+        base: 'init-manager-none.inc',
+        ext: '.inc',
+        name: 'init-manager-none'
+      },
+      extraInfo: 'layer: core',
+      layerInfo: {
+        name: 'core',
+        path: '/home/projects/poky/meta',
+        priority: 5
+      }
+    }])
+
+    jest.spyOn(bitBakeProjectScanner, 'classes', 'get').mockReturnValue([{
+      name: 'copyleft_filter',
+      path: {
+        root: '/',
+        dir: '/home/projects/poky/meta/classes',
+        base: 'copyleft_filter.bbclass',
+        ext: '.bbclass',
+        name: 'copyleft_filter'
+      },
+      extraInfo: 'layer: core',
+      layerInfo: {
+        name: 'core',
+        path: '/home/projects/poky/meta',
+        priority: 5
+      }
+    }])
+
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const resultForInclude = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 10,
+        character: 9
+      }
+    })
+
+    const resultForRequire = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 11,
+        character: 9
+      }
+    })
+
+    const resultForInherit = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 12,
+        character: 9
+      }
+    })
+
+    expect(resultForInclude).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'init-manager-none',
+            kind: 8
+          }
+        )
+      ])
+    )
+
+    expect(resultForRequire).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'init-manager-none',
+            kind: 8
+          }
+        )
+      ])
+    )
+
+    expect(resultForInherit).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'copyleft_filter',
+            kind: 7
+          }
+        )
+      ])
+    )
   })
 })
