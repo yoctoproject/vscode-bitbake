@@ -170,28 +170,28 @@ describe('Create Python embedded language content with imports', () => {
   test.each([
     [
       'with bb',
-      'python (){\n  bb.parse.vars_from_file("test")\n}',
-      'import bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  bb.parse.vars_from_file("test")\n '
+      'python(){\n  bb.parse.vars_from_file("test")\n}',
+      'import bb\nfrom bb import parse\nbb.parse = parse\ndef _ ():\n  bb.parse.vars_from_file("test")\n '
     ],
     [
       'with d',
-      'python (){\n  d.getVar("test")\n}',
-      'from bb import data_smart\nd = data_smart.DataSmart()\ndef ():\n  d.getVar("test")\n '
+      'python(){\n  d.getVar("test")\n}',
+      'from bb import data_smart\nd = data_smart.DataSmart()\ndef _ ():\n  d.getVar("test")\n '
     ],
     [
       'with e',
-      'python (){\n  e.data.getVar("test")\n}',
-      'from bb import data_smart\nd = data_smart.DataSmart()\nfrom bb import event\ne = event.Event()\ne.data = d\ndef ():\n  e.data.getVar("test")\n '
+      'python(){\n  e.data.getVar("test")\n}',
+      'from bb import data_smart\nd = data_smart.DataSmart()\nfrom bb import event\ne = event.Event()\ne.data = d\ndef _ ():\n  e.data.getVar("test")\n '
     ],
     [
       'with os',
-      'python (){\n  os.path.dirname("test")\n}',
-      'import os\ndef ():\n  os.path.dirname("test")\n '
+      'python(){\n  os.path.dirname("test")\n}',
+      'import os\ndef _ ():\n  os.path.dirname("test")\n '
     ],
     [
       'with combination (d and bb)',
-      'python (){\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n}',
-      'from bb import data_smart\nd = data_smart.DataSmart()\nimport bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n '
+      'python(){\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n}',
+      'from bb import data_smart\nd = data_smart.DataSmart()\nimport bb\nfrom bb import parse\nbb.parse = parse\ndef _ ():\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n '
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')

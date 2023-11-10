@@ -55,6 +55,10 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
     switch (child.type) {
       case 'python':
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, 'def')
+        if (child.nextSibling?.type === '(') {
+          // if there is no identfier, we add a dummy one
+          insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.endIndex, child.endIndex, ' _ ')
+        }
         break
       case 'identifier':
         break
