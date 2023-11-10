@@ -79,6 +79,24 @@ The extension provides commands and shortcuts to run BitBake tasks. These comman
 
 ![Contextual menu](doc/contextual-menu.png)
 
+### BitBake recipes view
+
+The extension provides a view to display the list of recipes in the current workspace. This view is available in the left panel. You can quickly navigate to a recipe's source or build it by clicking on it.
+
+![Recipe tree view](doc/recipe-view.png)
+
+### Problems matcher
+
+By default, this extension will run BitBake in parse only mode in the background on file saves to identify syntax errors. They will be displayed in the problems panel. You can disable this feature through the extension's settings.
+
+![Problem matcher](doc/problems.png)
+
+### BitBake status bar
+
+Bitbake parsing status is displayed in the status bar at the bottom of the screen. It will show wether the last BitBake run was successful or not. The bitbake server queues all BitBake commands and runs them sequentially. The status bar will show you if the extension is currently trying to access the bitbake server.
+
+![Status bar](doc/status-bar.gif)
+
 ## Contributing
 
 ### Reporting issues
