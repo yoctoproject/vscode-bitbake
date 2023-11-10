@@ -19,9 +19,6 @@ Here's an example `settings.json` reflecting the default values:
 
 ### Syntax highlighting
 
-Acknowledgements:
-
-* Syntax derived from https://github.com/mholo65/vscode-bitbake, which is licensed under the [MIT License](https://github.com/mholo65/vscode-bitbake/blob/master/LICENSE).
 
 ### Context-based suggestions
 
