@@ -117,32 +117,32 @@ describe('Create Python embedded language content with inline Python', () => {
     [
       'basic',
       // eslint-disable-next-line no-template-curly-in-string
-      'FOO = \'${@"BAR"}\'\n',
-      '         \n\n"BAR"\n \n'
+      'FOO = \'${@"BAR"}\'',
+      '         \n\n"BAR"\n '
     ],
     [
       'with spacing',
       // eslint-disable-next-line no-template-curly-in-string
-      'FOO = \'${@  "BAR"  }\'\n',
-      '         \n  \n"BAR"  \n \n'
+      'FOO = \'${@  "BAR"  }\'',
+      '         \n  \n"BAR"  \n '
     ],
     [
       'multiline',
       // eslint-disable-next-line no-template-curly-in-string
-      'FOO = \'${@"BAR"}\' \\\n1 \\\n2"\n',
-      '         \n\n"BAR"\n   \n   \n  \n'
+      'FOO = \'${@"BAR"}\' \\\n1 \\\n2"',
+      '         \n\n"BAR"\n   \n   \n  '
     ],
     [
       'with two embedded python regions',
       // eslint-disable-next-line no-template-curly-in-string
-      'FOO = \'${@"BAR"}${@"BAR"}\'\n',
-      '         \n\n"BAR"\n  \n\n"BAR"\n \n'
+      'FOO = \'${@"BAR"}${@"BAR"}\'',
+      '         \n\n"BAR"\n  \n\n"BAR"\n '
     ],
     [
       'without surrounding quotes',
       // eslint-disable-next-line no-template-curly-in-string
-      'inherit ${@"test"}\n',
-      '          \n\n"test"\n\n'
+      'inherit ${@"test"}',
+      '          \n\n"test"\n'
     ]
     /* // This is not yet supported by tree-sitter
     [
@@ -170,28 +170,28 @@ describe('Create Python embedded language content with imports', () => {
   test.each([
     [
       'with bb',
-      'python (){\n  bb.parse.vars_from_file("test")\n}\n',
-      'import bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  bb.parse.vars_from_file("test")\n \n'
+      'python (){\n  bb.parse.vars_from_file("test")\n}',
+      'import bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  bb.parse.vars_from_file("test")\n '
     ],
     [
       'with d',
-      'python (){\n  d.getVar("test")\n}\n',
-      'from bb import data_smart\nd = data_smart.DataSmart()\ndef ():\n  d.getVar("test")\n \n'
+      'python (){\n  d.getVar("test")\n}',
+      'from bb import data_smart\nd = data_smart.DataSmart()\ndef ():\n  d.getVar("test")\n '
     ],
     [
       'with e',
-      'python (){\n  e.data.getVar("test")\n}\n',
-      'from bb import data_smart\nd = data_smart.DataSmart()\nfrom bb import event\ne = event.Event()\ne.data = d\ndef ():\n  e.data.getVar("test")\n \n'
+      'python (){\n  e.data.getVar("test")\n}',
+      'from bb import data_smart\nd = data_smart.DataSmart()\nfrom bb import event\ne = event.Event()\ne.data = d\ndef ():\n  e.data.getVar("test")\n '
     ],
     [
       'with os',
-      'python (){\n  os.path.dirname("test")\n}\n',
-      'import os\ndef ():\n  os.path.dirname("test")\n \n'
+      'python (){\n  os.path.dirname("test")\n}',
+      'import os\ndef ():\n  os.path.dirname("test")\n '
     ],
     [
       'with combination (d and bb)',
-      'python (){\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n}\n',
-      'from bb import data_smart\nd = data_smart.DataSmart()\nimport bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n \n'
+      'python (){\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n}',
+      'from bb import data_smart\nd = data_smart.DataSmart()\nimport bb\nfrom bb import parse\nbb.parse = parse\ndef ():\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n '
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')

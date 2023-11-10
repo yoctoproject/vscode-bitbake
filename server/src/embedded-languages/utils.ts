@@ -37,7 +37,7 @@ const replaceTextForSpaces = (text: string): string => {
 }
 
 const initCharactersOffsetArrays = (length: number): number[] => {
-  return Array.from({ length }, (_, i) => i)
+  return Array.from({ length: length + 1 }, (_, i) => i)
 }
 
 export const initEmbeddedLanguageDoc = (textDocument: TextDocument, language: EmbeddedLanguageType): EmbeddedLanguageDoc => {
