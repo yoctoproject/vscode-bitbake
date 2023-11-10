@@ -9,6 +9,7 @@ import { type BitbakeDriver } from '../lib/src/BitbakeDriver'
 import { logger } from '../lib/src/utils/OutputLogger'
 
 const endOfLine: string = '\r\n'
+export let lastParsingExitCode = 0
 
 /// Reflects the task definition in package.json
 interface BitbakeTaskDefinition extends vscode.TaskDefinition {
@@ -34,6 +35,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 
   resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
+    const parseAllRecipes: boolean = task.name === 'Parse all recipes'
     if (bitbakeTaskDefinition.recipes?.[0] !== undefined || bitbakeTaskDefinition.options?.parseOnly === true) {
       const resolvedTask = new vscode.Task(
         task.definition,
@@ -41,7 +43,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
         task.name,
         task.source ?? 'bitbake',
         new vscode.CustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> =>
-          new BitbakeBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver)),
+          new BitbakeBuildTaskTerminal(this.composeBitbakeCommand(bitbakeTaskDefinition), this.bitbakeDriver, parseAllRecipes)),
         ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
       )
       if ((bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) &&
@@ -93,13 +95,15 @@ class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
   private child: child_process.ChildProcess | undefined = undefined
   private readonly command: string = ''
   private readonly bitbakeDriver: BitbakeDriver
+  private readonly updateParseStatus: boolean | undefined
 
   onDidWrite: vscode.Event<string> = this.writeEmitter.event
   onDidClose?: vscode.Event<number> = this.closeEmitter.event
 
-  constructor (command: string, bitbakeDriver: BitbakeDriver) {
+  constructor (command: string, bitbakeDriver: BitbakeDriver, updateParseStatus: boolean) {
     this.command = command
     this.bitbakeDriver = bitbakeDriver
+    this.updateParseStatus = updateParseStatus
   }
 
   output (line: string): void {
@@ -130,7 +134,8 @@ class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
         resolve()
       })
       this.child.on('exit', (code) => {
-        this.closeEmitter.fire(code ?? 0)
+        this.closeEmitter.fire(code ?? -1)
+        if (this.updateParseStatus === true) { lastParsingExitCode = code ?? -1 }
         resolve()
       })
     })
@@ -138,6 +143,7 @@ class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
 
   async close (): Promise<void> {
     if (this.child !== undefined) {
+      if (this.updateParseStatus === true) { lastParsingExitCode = -1 }
       this.child.kill()
     }
   }
