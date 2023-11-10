@@ -44,7 +44,7 @@ const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: E
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     if (child.type === 'block') {
-      handleBlockNode(child, imports)
+      handleBlockNode(child, embeddedLanguageDoc, imports)
     }
   })
 }
@@ -72,7 +72,7 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ' ')
         break
       case 'block':
-        handleBlockNode(child, imports)
+        handleBlockNode(child, embeddedLanguageDoc, imports)
         break
       default:
         break
@@ -98,10 +98,17 @@ const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDo
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, pythonContentNode.startIndex, pythonContentNode.startIndex, '\n') // prevent trailing spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, pythonContentNode.startIndex, pythonContentNode.endIndex, pythonContentNode.text)
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, closingNode.startIndex, closingNode.endIndex, '\n')
-  handleBlockNode(pythonContentNode, imports)
+  handleBlockNode(pythonContentNode, embeddedLanguageDoc, imports)
 }
 
-const handleBlockNode = (blockNode: SyntaxNode, imports: Set<string>): void => {
+const handleBlockNode = (blockNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
+  if (blockNode.text === '') {
+    insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, blockNode.startIndex, blockNode.endIndex, '\n  pass')
+  }
+  handleImports(blockNode, imports)
+}
+
+const handleImports = (blockNode: SyntaxNode, imports: Set<string>): void => {
   const importBb = (bbNode: SyntaxNode): void => {
     if (bbNode.nextSibling?.type === '.' && bbNode.nextNamedSibling?.type === 'python_identifier') {
       const importName = bbNode.nextNamedSibling.text

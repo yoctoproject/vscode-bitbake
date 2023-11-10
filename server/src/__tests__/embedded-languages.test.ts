@@ -103,6 +103,43 @@ describe('Embedded Language Documents file management', () => {
   })
 })
 
+describe('Create various basic embedded python documents', () => {
+  beforeAll(async () => {
+    if (!analyzer.hasParser()) {
+      const parser = await generateParser()
+      analyzer.initialize(parser)
+    }
+    analyzer.resetAnalyzedDocuments()
+    await embeddedLanguageDocsManager.setStoragePath(__dirname)
+  })
+
+  test.each([
+    [
+      'anonymous',
+      'python(){\n  pass\n}',
+      'def _ ():\n  pass\n '
+    ],
+    [
+      'named with python keyword',
+      'python foo (){\n  pass\n}',
+      'def foo ():\n  pass\n '
+    ],
+    [
+      'empty',
+      'python(){\n}',
+      'def _ ():\n  pass\n '
+    ],
+    [
+      'with def keyword',
+      'def foo():\n  pass',
+      'def foo():\n  pass'
+    ]
+  ])('%s', async (description, input, result) => {
+    const embeddedContent = await createEmbeddedContent(input, 'python')
+    expect(embeddedContent).toEqual(result)
+  })
+})
+
 describe('Create Python embedded language content with inline Python', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
