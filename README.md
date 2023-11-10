@@ -40,6 +40,10 @@ Bitbake and Yocto docs are required for some features to work, They need to be f
 
  $ npm run fetch:docs
 
+Similar for the command that fetches poky, it needs to be run before running the integration tests:
+
+$ npm run fetch:poky
+
 A wrapper npm script allows running several kinds of tests. To run all tests, use:
 
  $ npm test
