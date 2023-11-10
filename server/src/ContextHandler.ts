@@ -4,8 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import type {
-  TextDocumentPositionParams,
-  CompletionItem, Definition
+  TextDocumentPositionParams, Definition
 } from 'vscode-languageserver'
 
 import type {
@@ -15,10 +14,6 @@ import type {
 import {
   DefinitionProvider
 } from './DefinitionProvider'
-
-import {
-  CompletionProvider
-} from './CompletionProvider'
 
 import type {
   SymbolScanner
@@ -33,12 +28,10 @@ import { bitBakeProjectScanner } from './BitBakeProjectScanner'
 export class ContextHandler {
   private readonly _projectScanner: BitBakeProjectScanner
   private readonly _definitionProvider: DefinitionProvider
-  private readonly _completionProvider: CompletionProvider
 
   constructor (projectScanner: BitBakeProjectScanner) {
     this._projectScanner = projectScanner
     this._definitionProvider = new DefinitionProvider(this._projectScanner)
-    this._completionProvider = new CompletionProvider(this._projectScanner)
   }
 
   getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
@@ -67,7 +60,6 @@ export class ContextHandler {
 
   // eslint-disable-next-line accessor-pairs -- adding a setter would be pointless and weird
   set symbolScanner (symbolScanner: SymbolScanner | null) {
-    this._completionProvider.symbolScanner = symbolScanner
     this._definitionProvider.symbolScanner = symbolScanner
   }
 
@@ -127,18 +119,6 @@ export class ContextHandler {
     logger.debug(`symbol ${symbol}`)
 
     return symbol
-  }
-
-  getCompletionItemForDirectiveStatementKeyword (keyword: string): CompletionItem[] {
-    return this._completionProvider.createCompletionItemForDirectiveStatementKeyword(keyword)
-  }
-
-  getCompletionItemForRecipesAndSymbols (): CompletionItem[] {
-    return this._completionProvider.createCompletionItemForRecipesAndSymbols()
-  }
-
-  getInsertStringForTheElement (item: CompletionItem): string {
-    return this._completionProvider.getInsertStringForTheElement(item)
   }
 }
 
