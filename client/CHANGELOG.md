@@ -1,3 +1,18 @@
+# 2.0.0 - 2023.11.17
+ - Fixed highlighting errors
+ - Added more diagnostics to the Problems view
+ - Added documentation on hover for Yocto variables, flags and functions
+ - Added embedded languages features for python and shell scripts
+   - Improved syntax highlighting
+   - Code completion
+   - Hover documentation
+ - Added code completion for Yocto variables, keywords, overrides, classes, functions, include files
+ - Added BitBake build tasks
+ - Added BitBake build commands
+ - Added a BitBake parsing status bar
+ - Added a BitBake tree view for navigating and building recipes
+ - Check BitBake settings sanity and prompt the user
+
 # 1.1.2 - 2019.03.13
 fixed deployment problems
 
@@ -16,7 +31,7 @@ Security updates of dependent packages
 # 1.0.2 - 2018.04.11
 
 ## Fixed Bugs:
-[issue 23](https://github.com/EugenWiens/vscode-bitbake/issues/23) moved `executeBitBakeCmd.sh` script to the working folder. e.g. `vscode-bitbake-build` if the setting for the working path is not changed 
+[issue 23](https://github.com/EugenWiens/vscode-bitbake/issues/23) moved `executeBitBakeCmd.sh` script to the working folder. e.g. `vscode-bitbake-build` if the setting for the working path is not changed
 
 # 1.0.1 - 2018.03.06
 fixed typo in changelog for the [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues/19)
@@ -24,7 +39,7 @@ fixed typo in changelog for the [issue 19](https://github.com/EugenWiens/vscode-
 # 1.0.0 - 2018.03.06
 
 ## Enhancements:
-- [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues/19) Add diagnostic messages on parsing errors 
+- [issue 19](https://github.com/EugenWiens/vscode-bitbake/issues/19) Add diagnostic messages on parsing errors
 
 # 0.0.13 - 2018.02.10
 
