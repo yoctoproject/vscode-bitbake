@@ -117,7 +117,9 @@ connection.onDidChangeWatchedFiles((change) => {
       void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
     }
   })
-  bitBakeProjectScanner.rescanProject()
+  if (checkBitbakeSettingsSanity()) {
+    bitBakeProjectScanner.rescanProject()
+  }
 })
 
 connection.onCompletion(onCompletionHandler)
@@ -132,7 +134,9 @@ connection.onExecuteCommand((params) => {
   logger.info(`executeCommand ${JSON.stringify(params)}`)
 
   if (params.command === 'bitbake.rescan-project') {
-    bitBakeProjectScanner.rescanProject()
+    if (checkBitbakeSettingsSanity()) {
+      bitBakeProjectScanner.rescanProject()
+    }
   }
 })
 
@@ -186,7 +190,9 @@ documents.onDidClose((event) => {
 documents.onDidSave((event) => {
   if (parseOnSave) {
     logger.debug(`onDidSave ${JSON.stringify(event)}`)
-    bitBakeProjectScanner.parseAllRecipes()
+    if (checkBitbakeSettingsSanity()) {
+      bitBakeProjectScanner.parseAllRecipes()
+    }
   }
 })
 

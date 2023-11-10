@@ -13,7 +13,7 @@ export class BitbakeStatusBar {
   private bitbakeScanResults: BitbakeScanResult = { recipes: [], includes: [] }
   private readonly bitbakeProjectScannerClient: BitBakeProjectScannerClient
   readonly statusBarItem: vscode.StatusBarItem
-  private scanInProgress = true
+  private scanInProgress = false
   private parsingInProgress = false
   private scanExitCode = 0
 
