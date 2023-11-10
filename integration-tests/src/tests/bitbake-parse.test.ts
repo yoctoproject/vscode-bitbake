@@ -22,6 +22,8 @@ suite('Bitbake Commands Test Suite', () => {
     while (vscode.workspace.workspaceFolders === undefined || vscode.workspace.workspaceFolders?.length === 0) {
       await delay(100)
     }
+    // Generate the build directory for the addLayer functions to work
+    await vscode.commands.executeCommand('bitbake.parse-recipes')
   })
 
   afterEach(function () {
