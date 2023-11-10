@@ -1,0 +1,64 @@
+# Inspired by bash-language-server under MIT license
+# Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/.github/workflows/upgrade-tree-sitter.yml
+
+name: Update Tree Sitter WASM File
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 2'
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
+      SHELL: /usr/bin/bash
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Clean install
+      run: npm run clean
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Update tree-sitter wasm
+      run: bash scripts/update-tree-sitter-wasm.sh
+
+    - name: Verify file changes
+      uses: tj-actions/verify-changed-files@v16
+      id: verify-changed-files
+      with:
+        # The script generates a new wasm file and replaces the existing one. Git will treat it as a different file even it is generated with the same commit and CLI  
+        # Hence, we only compare the parser.info. It should be enough to tell the difference
+        files: |
+            client/parser.info
+
+    - name: Create pull request
+      if: steps.verify-changed-files.outputs.files_changed == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        add-paths: |
+          client/parser.info
+          client/tree-sitter-bitbake.wasm
+        title: Auto update tree-sitter-sitter wasm file
+        commit-message: Auto update tree-sitter-sitter wasm file
+        token: ${{ secrets.GITHUB_TOKEN }}
