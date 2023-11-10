@@ -298,7 +298,7 @@ export default class Analyzer {
    *
    * Tree-sitter functionalities are not used here since they (as of @1.0.1) can't reliably treat a line as directive statement if the keyword presents but nothing follows.
    */
-  public getDirectiveStatementKeywordByLine (textDocumentPositionParams: TextDocumentPositionParams): string | undefined {
+  public getDirectiveStatementKeywordByLine (textDocumentPositionParams: TextDocumentPositionParams): 'include' | 'inherit' | 'require' | undefined {
     const { textDocument, position } = textDocumentPositionParams
     const documentAsText = this.getDocumentTexts(textDocument.uri)
     if (documentAsText === undefined) {
@@ -308,9 +308,7 @@ export default class Analyzer {
     const lineTillCurrentPosition = currentLine.substring(0, position.character)
     const words = lineTillCurrentPosition.split(' ')
 
-    const directiveStatementKeywords = new Set(['include', 'inherit', 'require'])
-
-    if (directiveStatementKeywords.has(words[0])) {
+    if (words[0] === 'include' || words[0] === 'inherit' || words[0] === 'require') {
       return words[0]
     }
 
