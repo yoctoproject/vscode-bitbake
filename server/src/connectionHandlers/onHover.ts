@@ -19,7 +19,11 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   // Triggers on global declaration expressions like "VAR = 'foo'" and inside variable expansion like "FOO = ${VAR}" but skip the ones like "python VAR(){}"
   const canShowHoverDefinitionForVariableName: boolean = (analyzer.getGlobalDeclarationSymbols(textDocument.uri).some((symbol) => symbol.name === word) && analyzer.isIdentifierOfVariableAssignment(params)) || analyzer.isVariableExpansion(textDocument.uri, position.line, position.character)
   if (canShowHoverDefinitionForVariableName) {
-    const found = bitBakeDocScanner.bitbakeVariableInfo.find((item) => item.name === word)
+    const found = [
+      ...bitBakeDocScanner.bitbakeVariableInfo.filter((bitbakeVariable) => !bitBakeDocScanner.yoctoVariableInfo.some(yoctoVariable => yoctoVariable.name === bitbakeVariable.name)),
+      ...bitBakeDocScanner.yoctoVariableInfo
+    ].find((item) => item.name === word)
+
     if (found === undefined) {
       logger.debug(`[onHover] Not a bitbake variable: ${word}`)
       return null
