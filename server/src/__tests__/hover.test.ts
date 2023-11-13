@@ -116,6 +116,26 @@ describe('on hover', () => {
     expect(shouldNotShow1).toBe(null)
     expect(shouldNotShow2).toBe(null)
     expect(shouldNotShow3).toBe(null)
+
+    // With Yocto variables present, the yocto variables should be shown in case of the duplicated variable names
+    bitBakeDocScanner.parseYoctoVariablesFile()
+
+    const shouldShow4 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 1,
+        character: 1
+      }
+    })
+
+    expect(shouldShow4).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n'
+      }
+    })
   })
 
   it('should show hover definition for variable flags after scanning the docs', async () => {
