@@ -11,7 +11,7 @@ import { getEmbeddedLanguageDocPosition } from './utils'
 
 export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (document, position, token, next) => {
   const embeddedLanguageDocInfos = await requestsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), position)
-  if (embeddedLanguageDocInfos === undefined) {
+  if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return await next(document, position, token)
   }
   const adjustedPosition = await getEmbeddedLanguageDocPosition(document, embeddedLanguageDocInfos, position)

@@ -11,7 +11,7 @@ import { getEmbeddedLanguageDocPosition } from './utils'
 
 export const middlewareProvideCompletion: CompletionMiddleware['provideCompletionItem'] = async (document, position, context, token, next) => {
   const embeddedLanguageDocInfos = await requestsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), position)
-  if (embeddedLanguageDocInfos === undefined) {
+  if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return await next(document, position, context, token)
   }
   const adjustedPosition = await getEmbeddedLanguageDocPosition(document, embeddedLanguageDocInfos, position)

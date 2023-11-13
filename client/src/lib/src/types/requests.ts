@@ -19,7 +19,7 @@ export interface RequestParams {
 }
 
 export interface RequestResult {
-  [RequestType.EmbeddedLanguageDocInfos]: Promise<EmbeddedLanguageDocInfos | undefined>
+  [RequestType.EmbeddedLanguageDocInfos]: Promise<EmbeddedLanguageDocInfos | undefined | null> // for unknown reasons, the client receives null instead of undefined
 }
 
 interface RequestEmbeddedLanguageDocInfosParams {
