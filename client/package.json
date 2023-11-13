@@ -377,5 +377,9 @@
   },
   "workspaces": [
     "src/lib"
-  ]
+  ],
+  "vsce": {
+    "baseContentUrl": "https://github.com/savoirfairelinux/vscode-bitbake/raw/HEAD/client",
+    "baseImageUrl": "https://github.com/savoirfairelinux/vscode-bitbake/raw/HEAD/client"
+  }
 }
