@@ -8,27 +8,27 @@ YOCTO_DOCS_LIST=" tasks.rst variables.rst"
 
 set -e
 
-mkdir -p resources/docs 
+mkdir -p resources/docs
 #  Bitbake docs
-git clone --depth 1 --filter=blob:none --sparse https://github.com/openembedded/bitbake.git 
-cd bitbake 
-git sparse-checkout set doc/bitbake-user-manual/ 
+git clone --depth 1 --filter=blob:none --sparse https://github.com/openembedded/bitbake.git
+cd bitbake
+git sparse-checkout set doc/bitbake-user-manual/
 git fetch origin
 git checkout $BITBAKE_DOCS_COMMIT
-cd doc/bitbake-user-manual/ 
-mv $BITBAKE_DOCS_LIST  ../../../resources/docs 
-cd ../../../ 
+cd doc/bitbake-user-manual/
+mv $BITBAKE_DOCS_LIST  ../../../resources/docs
+cd ../../../
 rm -rf bitbake
 
 # Yocto docs
-git clone --depth 1 --filter=blob:none --sparse https://git.yoctoproject.org/yocto-docs 
-cd yocto-docs 
-git sparse-checkout set documentation/ref-manual 
+git clone --depth 1 --filter=blob:none --sparse https://git.yoctoproject.org/yocto-docs
+cd yocto-docs
+git sparse-checkout set documentation/ref-manual
 git fetch origin
 git checkout $YOCTO_DOCS_COMMIT
-cd documentation/ref-manual 
-mv $YOCTO_DOCS_LIST ../../../resources/docs 
-cd ../../../ 
+cd documentation/ref-manual
+mv $YOCTO_DOCS_LIST ../../../resources/docs
+cd ../../../
 rm -rf yocto-docs
 
 # This line is added to let the last task in tasks.rst get matched by the regex in doc scanner
