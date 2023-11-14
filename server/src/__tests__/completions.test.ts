@@ -478,7 +478,8 @@ describe('On Completion', () => {
         expect.objectContaining(
           {
             label: 'init-manager-none',
-            kind: 8
+            kind: 8,
+            insertText: 'conf/distro/include/init-manager-none.inc'
           }
         )
       ])
@@ -489,7 +490,8 @@ describe('On Completion', () => {
         expect.objectContaining(
           {
             label: 'init-manager-none',
-            kind: 8
+            kind: 8,
+            insertText: 'conf/distro/include/init-manager-none.inc'
           }
         )
       ])
@@ -500,7 +502,8 @@ describe('On Completion', () => {
         expect.objectContaining(
           {
             label: 'copyleft_filter',
-            kind: 7
+            kind: 7,
+            insertText: 'copyleft_filter'
           }
         )
       ])
