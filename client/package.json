@@ -40,7 +40,11 @@
           ".bbclass",
           ".conf"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "dark": "images/yocto-file-icon.svg",
+          "light": "images/yocto-file-icon.svg"
+        }
       }
     ],
     "grammars": [
