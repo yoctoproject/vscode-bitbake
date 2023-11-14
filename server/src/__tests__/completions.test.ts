@@ -246,6 +246,26 @@ describe('On Completion', () => {
         character: 7
       }
     })
+    // MYVAR:append: = '123' when the cursor is at the end of second colon
+    const result3 = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 9,
+        character: 13
+      }
+    })
+    // Show completion at the last line of the document https://github.com/amaanq/tree-sitter-bitbake/issues/9
+    const result4 = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 18,
+        character: 13
+      }
+    })
 
     expect(result).toEqual(
       expect.arrayContaining([
@@ -257,6 +277,24 @@ describe('On Completion', () => {
     )
 
     expect(result2).toEqual(
+      expect.arrayContaining([
+        {
+          label: 'append',
+          kind: 24
+        }
+      ])
+    )
+
+    expect(result3).toEqual(
+      expect.arrayContaining([
+        {
+          label: 'append',
+          kind: 24
+        }
+      ])
+    )
+
+    expect(result4).toEqual(
       expect.arrayContaining([
         {
           label: 'append',
@@ -298,7 +336,7 @@ describe('On Completion', () => {
     )
   })
 
-  it('provides no suggestions when a ":" is typed but it doesn\'t follow an identifier', async () => {
+  it('provides no suggestions when a ":" is typed but it is not part of a valid override syntax', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -309,8 +347,8 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 16,
-        character: 1
+        line: 14,
+        character: 28
       }
     })
 
@@ -384,8 +422,8 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 15,
-        character: 1
+        line: 14,
+        character: 20
       }
     })
 
