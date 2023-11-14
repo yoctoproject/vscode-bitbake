@@ -230,11 +230,13 @@ export default class Analyzer {
     const n = this.nodeAtPoint(uri, line, column)
     // Current tree-sitter (as of @1.0.1) only treats 'append', 'prepend' and 'remove' as a node with "override" type. Other words following ":" will yield a node with "identifier" type whose parent node is of type "override"
     // However, in some cases, its parent node is not of type override but its grandparent is.
+    // Some ugly checks were added (as of tree-sitter @1.1.0) due to: https://github.com/amaanq/tree-sitter-bitbake/issues/9
     // See if future tree-sitter has a nicer way to handle this.
-    if (n?.type === 'override' || n?.parent?.type === 'override' || n?.parent?.parent?.type === 'override') {
-      return true
-    }
-    return false
+    return n?.type === 'override' ||
+    n?.parent?.type === 'override' ||
+    n?.parent?.parent?.type === 'override' ||
+    (n?.type === ':' && n?.parent?.firstNamedChild?.type === 'identifier') || // when having something like "MYVAR:append:" at the last line of the document
+    (n?.type === ':' && n?.parent?.type === 'ERROR' && n?.parent?.previousSibling?.type === 'override') // when having MYVAR:append: = '123' and the second or later colon is typed
   }
 
   /**
