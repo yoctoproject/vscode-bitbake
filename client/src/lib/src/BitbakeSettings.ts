@@ -12,9 +12,15 @@ export interface BitbakeSettings {
   pathToEnvScript: string
 }
 
-export function loadBitbakeSettings (settings: any, workspaceFolder: string = ''): BitbakeSettings {
+export function loadBitbakeSettings (settings: any, workspaceFolder: string): BitbakeSettings {
   /* eslint no-template-curly-in-string: "off" */
   // The default values are defined in package.json
+  // Change the working directory to properly handle relative paths in the language client
+  try {
+    process.chdir(workspaceFolder)
+  } catch (err: any) {
+    console.error(`chdir: ${err}`)
+  }
   let pathToBitbakeFolder: string = settings.pathToBitbakeFolder
   pathToBitbakeFolder = pathToBitbakeFolder.replace('${workspaceFolder}', workspaceFolder)
   pathToBitbakeFolder = path.resolve(pathToBitbakeFolder)
