@@ -16,14 +16,30 @@ async function delay (ms: number): Promise<void> {
 
 suite('Bitbake Commands Test Suite', () => {
   let disposables: vscode.Disposable[] = []
+  let workspaceURI: vscode.Uri
+  let buildFolder: vscode.Uri
 
   suiteSetup(async function (this: Mocha.Context) {
-    this.timeout(10000)
+    this.timeout(100000)
     while (vscode.workspace.workspaceFolders === undefined || vscode.workspace.workspaceFolders?.length === 0) {
       await delay(100)
     }
+    workspaceURI = vscode.workspace.workspaceFolders[0].uri
+    buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')
+
     // Generate the build directory for the addLayer functions to work
+    let taskExecuted = false
+    const disposable = vscode.tasks.onDidEndTask(async (e) => {
+      if (e.execution.task.definition.options.parseOnly === true) {
+        taskExecuted = true
+      }
+    })
     await vscode.commands.executeCommand('bitbake.parse-recipes')
+    // eslint-disable-next-line no-unmodified-loop-condition
+    while (!taskExecuted) {
+      await delay(100)
+    }
+    disposable.dispose()
   })
 
   afterEach(function () {
@@ -34,9 +50,6 @@ suite('Bitbake Commands Test Suite', () => {
   })
 
   suiteTeardown(async function (this: Mocha.Context) {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const workspaceURI: vscode.Uri = vscode.workspace.workspaceFolders![0].uri
-    const buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')
     await vscode.workspace.fs.delete(buildFolder, { recursive: true })
   })
 
@@ -63,8 +76,7 @@ suite('Bitbake Commands Test Suite', () => {
 
   test('Bitbake can detect parsing errors', async () => {
     let taskExecuted = false
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const workspacePath: string = vscode.workspace.workspaceFolders![0].uri.fsPath
+    const workspacePath: string = workspaceURI.fsPath
 
     disposables.push(vscode.tasks.onDidEndTask(async (e) => {
       assert.strictEqual(e.execution.task.definition.options.parseOnly, true)
