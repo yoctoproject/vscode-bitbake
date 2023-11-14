@@ -1,6 +1,7 @@
 name: vscode-bitbake CI/CD
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - '*'
