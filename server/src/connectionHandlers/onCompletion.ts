@@ -226,9 +226,7 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
       labelDetails: {
         description: filePath ?? fileType
       },
-      // TODO1: Construct the file path which should be relative to the current document for insertText.
-      // TODO2: Limit what should be shown in the completion list for directive statment?
-      // insertText: filePath ?? element.name,
+      insertText: filePath ?? element.name,
       documentation: element.extraInfo,
       data: element,
       kind: completionItemKind
@@ -240,14 +238,17 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
 }
 
 function getFilePath (elementInfo: ElementInfo, fileType: string): string | undefined {
-  if (fileType === 'inc' || fileType === 'bbclass') {
+  if (fileType === 'inc') {
     const path = elementInfo.path
-    let pathAsString = path?.dir.replace(elementInfo.layerInfo?.path as string, '')
-    if (pathAsString !== undefined && pathAsString.startsWith('/')) {
+    if (path === undefined) {
+      return undefined
+    }
+    let pathAsString = path.dir.replace(elementInfo.layerInfo?.path ?? '', '')
+    if (pathAsString.startsWith('/')) {
       pathAsString = pathAsString.slice(1)
     }
 
-    return pathAsString + '/' + elementInfo?.path?.base
+    return pathAsString + '/' + path.base
   }
   return undefined
 }
