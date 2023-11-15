@@ -21,6 +21,8 @@ import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
 import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
+let documentUri = ''
+
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   const wordPosition = {
     line: textDocumentPositionParams.position.line,
@@ -28,7 +30,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     character: Math.max(textDocumentPositionParams.position.character - 1, 0)
   }
 
-  const documentUri = textDocumentPositionParams.textDocument.uri
+  documentUri = textDocumentPositionParams.textDocument.uri
 
   const word = analyzer.wordAtPointFromTextPosition({
     ...textDocumentPositionParams,
@@ -222,7 +224,7 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
   for (const element of elementInfoList) {
     const filePath = getFilePath(element, fileType)
     const completionItem: CompletionItem = {
-      label: element.name,
+      label: element.name + (element.path?.ext === '.inc' ? '.inc' : ''),
       labelDetails: {
         description: filePath ?? fileType
       },
@@ -232,6 +234,19 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
       kind: completionItemKind
     }
     completionItems.push(completionItem)
+  }
+
+  if (completionItems.length > 0) {
+    const docUriSplit = documentUri.replace('file://', '').split('/')
+    const condition = (item: CompletionItem): boolean => {
+      if (item.insertText === undefined || item.insertText.split('.')[0] === item.label.split('.')[0]) {
+        return false
+      } else {
+        return docUriSplit.includes(item.insertText.split('/')[0])
+      }
+    }
+
+    completionItems.sort((a, b) => Number(condition(b)) - Number(condition(a)))
   }
 
   return completionItems

@@ -404,22 +404,41 @@ describe('On Completion', () => {
   })
 
   it('provides suggestions for direcitive statement after keywords "include", "inherit" and "requrie" are typed', async () => {
-    jest.spyOn(bitBakeProjectScanner, 'includes', 'get').mockReturnValue([{
-      name: 'init-manager-none',
-      path: {
-        root: '/',
-        dir: '/home/projects/poky/meta/conf/distro/include',
-        base: 'init-manager-none.inc',
-        ext: '.inc',
-        name: 'init-manager-none'
+    const documentUri = 'file:///home/projects/poky/meta/conf-2/path/to/dummy.bb'
+    jest.spyOn(bitBakeProjectScanner, 'includes', 'get').mockReturnValue([
+      {
+        name: 'init-manager-none',
+        path: {
+          root: '/',
+          dir: '/home/projects/poky/meta/conf/distro/include',
+          base: 'init-manager-none.inc',
+          ext: '.inc',
+          name: 'init-manager-none'
+        },
+        extraInfo: 'layer: core',
+        layerInfo: {
+          name: 'core',
+          path: '/home/projects/poky/meta',
+          priority: 5
+        }
       },
-      extraInfo: 'layer: core',
-      layerInfo: {
-        name: 'core',
-        path: '/home/projects/poky/meta',
-        priority: 5
+      {
+        name: 'init-manager-none-2',
+        path: {
+          root: '/',
+          dir: '/home/projects/poky/meta/conf-2/distro/include', // Note that this fake path is under the same "conf-2" folder as the documentUri
+          base: 'init-manager-none-2.inc',
+          ext: '.inc',
+          name: 'init-manager-none-2'
+        },
+        extraInfo: 'layer: core',
+        layerInfo: {
+          name: 'core',
+          path: '/home/projects/poky/meta',
+          priority: 5
+        }
       }
-    }])
+    ])
 
     jest.spyOn(bitBakeProjectScanner, 'classes', 'get').mockReturnValue([{
       name: 'copyleft_filter',
@@ -439,13 +458,13 @@ describe('On Completion', () => {
     }])
 
     await analyzer.analyze({
-      uri: DUMMY_URI,
+      uri: documentUri,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
     const resultForInclude = onCompletionHandler({
       textDocument: {
-        uri: DUMMY_URI
+        uri: documentUri
       },
       position: {
         line: 10,
@@ -455,7 +474,7 @@ describe('On Completion', () => {
 
     const resultForRequire = onCompletionHandler({
       textDocument: {
-        uri: DUMMY_URI
+        uri: documentUri
       },
       position: {
         line: 11,
@@ -465,7 +484,7 @@ describe('On Completion', () => {
 
     const resultForInherit = onCompletionHandler({
       textDocument: {
-        uri: DUMMY_URI
+        uri: documentUri
       },
       position: {
         line: 12,
@@ -477,7 +496,7 @@ describe('On Completion', () => {
       expect.arrayContaining([
         expect.objectContaining(
           {
-            label: 'init-manager-none',
+            label: 'init-manager-none.inc',
             kind: 8,
             insertText: 'conf/distro/include/init-manager-none.inc'
           }
@@ -485,11 +504,16 @@ describe('On Completion', () => {
       ])
     )
 
+    const index1 = resultForInclude.findIndex((item) => item.label === 'init-manager-none.inc')
+    const index2 = resultForInclude.findIndex((item) => item.label === 'init-manager-none-2.inc')
+    // Since the path of "init-manager-none-2.inc" is under the same "conf-2" folder as the documentUri, it should be suggested first
+    expect(index2).toBeLessThan(index1)
+
     expect(resultForRequire).toEqual(
       expect.arrayContaining([
         expect.objectContaining(
           {
-            label: 'init-manager-none',
+            label: 'init-manager-none.inc',
             kind: 8,
             insertText: 'conf/distro/include/init-manager-none.inc'
           }
