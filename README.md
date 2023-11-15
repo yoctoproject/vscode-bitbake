@@ -4,7 +4,28 @@
 
 **For a description of the extension itself, please see [the client's README](./client/README.md)**.
 
-The changelog for the extension may be found [here](./client/CHANGELOG.md).
+The changelog for the extension can be found [here](./client/CHANGELOG.md).
+
+## Demo
+
+### Basic suggestions for variables, tasks, variable flags, overrides and more.
+
+![Variables](assets/demo/basic-variable.gif)
+![Tasks](assets/demo/yocto-tasks.gif)
+![Variable-flags](assets/demo/variable-flag.gif)
+![Overrides](assets/demo/overrides.gif)
+![Directive-statements](assets/demo/directive-statements.gif)
+### Go to definition for directive statements
+
+![Go-to-definition](assets/demo/go-to-definition.gif)
+
+### Show information on hover
+
+![Hover](assets/demo/hover-information.gif)
+
+
+
+
 
 ## Installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
 
