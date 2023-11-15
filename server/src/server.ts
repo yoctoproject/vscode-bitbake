@@ -31,7 +31,7 @@ import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } f
 import { embeddedLanguageDocsManager } from './embedded-languages/documents-manager'
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
-import { getSemanticTokens, legend } from './semanticTokensProvider'
+import { getSemanticTokens, legend } from './semanticTokens'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
