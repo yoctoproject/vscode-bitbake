@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import path from 'path'
 import { loadBitbakeSettings } from '../../BitbakeSettings'
 
 describe('BitbakeSettings Tests', () => {
@@ -18,5 +19,15 @@ describe('BitbakeSettings Tests', () => {
       pathToBuildFolder: '${workspaceFolder}/build'
     }, '/home/user/workspace')
     expect(settings.pathToBuildFolder).toEqual('/home/user/workspace/build')
+  })
+
+  it('should expand relative paths', () => {
+    const settings = loadBitbakeSettings({
+      pathToBitbakeFolder: '',
+      pathToEnvScript: '',
+      // eslint-disable-next-line no-template-curly-in-string
+      pathToBuildFolder: './build'
+    }, __dirname)
+    expect(settings.pathToBuildFolder).toEqual(path.join(__dirname, '/build'))
   })
 })
