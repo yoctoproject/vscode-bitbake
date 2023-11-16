@@ -61,17 +61,10 @@ Place your cursor over a variable. If it is a BitBake defined variable, then its
 ![Hover](doc/hover-information.gif)
 
 ### Other code suggestions
-You can trigger the override suggestions with the shortcut or by typing a `:` after a variable name or function name.
+Overrides, variable flags, frequently-used task names and more.
 
-![Overrides](doc/overrides.gif)
+![Other-suggestions](doc/other-suggestions.gif)
 
-Variable flag suggestions can be triggered by typing a `[`:
-
-![Variable-flags](doc/variable-flags.gif)
-
-Frequently-used task names:
-
-![Tasks](doc/yocto-tasks.gif)
 
 ### BitBake tasks
 
