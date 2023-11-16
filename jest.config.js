@@ -9,6 +9,7 @@ module.exports = {
     "ts"
   ],
   modulePathIgnorePatterns: [
+    "<rootDir>/.vscode-test",
     "<rootDir>/client/server",
     "<rootDir>/integration-tests",
     "<rootDir>/client/out"
