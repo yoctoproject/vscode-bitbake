@@ -39,7 +39,7 @@ The following suggestions are currently supported:
 ![Directive-statements](doc/directive-statements.gif)
 
 ### Go to definition
-*This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
+*This feature requires to have properly [configured the extension](#setup-the-extension)*
 
 *CTRL and click* may be used to open the file associated with a class, inc-file, recipe or variable. If more than one definition exists, a list of definitions is provided.
 
@@ -54,14 +54,14 @@ The go to definition feature currently behaves as follows:
 ![Go-to-definition](doc/go-to-definition.gif)
 
 ### Show definitions of BitBake's defined variables on hover
-*This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
+*This feature requires to have properly [configured the extension](#setup-the-extension)*
 
 Place your cursor over a variable. If it is a BitBake defined variable, then its definition from the documentation will be displayed.
 
 ![Hover](doc/hover-information.gif)
 
 ### Other code suggestions
-You can trigger the override suggestions with the shortcut or by typing a `:` after an variable name or function name.
+You can trigger the override suggestions with the shortcut or by typing a `:` after a variable name or function name.
 
 ![Overrides](doc/overrides.gif)
 
