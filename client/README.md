@@ -36,6 +36,8 @@ The following suggestions are currently supported:
 * Context-based suggestions for keywords `inherit`, `require` and `include` (provided by *language-server*)
 * Context-based suggestions for all symbols within the include hierarchy
 
+![Directive-statements](doc/directive-statements.gif)
+
 ### Go to definition
 *This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
 
@@ -49,10 +51,27 @@ The go to definition feature currently behaves as follows:
 | recipe | recipe definition and all bbappends |
 | symbol | all symbols within the include hierarchy |
 
+![Go-to-definition](doc/go-to-definition.gif)
+
 ### Show definitions of BitBake's defined variables on hover
 *This functionnality requires to [provide the BitBake's folder](#set-bitbakes-path)*
 
 Place your cursor over a variable. If it is a BitBake defined variable, then its definition from the documentation will be displayed.
+
+![Hover](doc/hover-information.gif)
+
+### Other code suggestions
+You can trigger the override suggestions with the shortcut or by typing a `:` after an variable name or function name.
+
+![Overrides](doc/overrides.gif)
+
+Variable flag suggestions can be triggered by typing a `[`:
+
+![Variable-flags](doc/variable-flags.gif)
+
+Frequently-used task names:
+
+![Tasks](doc/yocto-tasks.gif)
 
 ### BitBake tasks
 
