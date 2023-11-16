@@ -55,7 +55,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 
-  const notificationManager = new ClientNotificationManager(client, context.globalState)
+  const notificationManager = new ClientNotificationManager(client, context.workspaceState)
   context.subscriptions.push(...notificationManager.buildHandlers())
   const bitBakeProjectScannerClient = new BitBakeProjectScannerClient(client)
   context.subscriptions.push(...bitBakeProjectScannerClient.buildHandlers())
