@@ -31,6 +31,10 @@ describe('On Completion', () => {
     bitBakeDocScanner.clearScannedDocs()
   })
 
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
   it('expects reserved variables, keywords and snippets in completion item lists', async () => {
     // nothing is analyzed yet, and docs are not scanned. Only the static and fallback completion items are provided
     const result = onCompletionHandler({

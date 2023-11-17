@@ -7,17 +7,16 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { onDefinitionHandler } from '../connectionHandlers/onDefinition'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
-import contextHandler from '../ContextHandler'
 import { type Location } from 'vscode-languageserver'
-
+import { definitionProvider } from '../DefinitionProvider'
 // TODO: Current implementation of the definitionProvider needs to be improved, this test suite should be modified accordingly after
 const mockDefinition = (path: string | undefined): void => {
   if (path !== undefined) {
     const location: Location = { uri: 'file://' + path, range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } } }
 
-    jest.spyOn(contextHandler, 'getDefinitionForDirectives').mockReturnValueOnce(location)
+    jest.spyOn(definitionProvider, 'createDefinitionForKeyword').mockReturnValue(location)
   } else {
-    jest.spyOn(contextHandler, 'getDefinitionForDirectives').mockReturnValueOnce([])
+    jest.spyOn(definitionProvider, 'createDefinitionForKeyword').mockReturnValue([])
   }
 }
 
@@ -33,6 +32,10 @@ describe('on definition', () => {
 
   beforeEach(() => {
     analyzer.resetAnalyzedDocuments()
+  })
+
+  afterEach(() => {
+    jest.resetAllMocks()
   })
 
   it('provides definition to directive statement', async () => {
