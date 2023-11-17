@@ -11,10 +11,6 @@ import {
   DefinitionProvider
 } from './DefinitionProvider'
 
-import type {
-  SymbolScanner
-} from './SymbolScanner'
-
 import { logger } from './lib/src/utils/OutputLogger'
 
 /**
@@ -49,11 +45,6 @@ export class ContextHandler {
 
   get definitionProvider (): DefinitionProvider {
     return this._definitionProvider
-  }
-
-  // eslint-disable-next-line accessor-pairs -- adding a setter would be pointless and weird
-  set symbolScanner (symbolScanner: SymbolScanner | null) {
-    this._definitionProvider.symbolScanner = symbolScanner
   }
 
   private getDefinitionForKeyWord (keyWord: string, currentLine: string, selectedSympbol?: string): Definition {

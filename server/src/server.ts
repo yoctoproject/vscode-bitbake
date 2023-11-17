@@ -80,7 +80,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
 function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
   logger.debug('set new symbol scanner')
-  contextHandler.symbolScanner = newSymbolScanner
+  contextHandler.definitionProvider.symbolScanner = newSymbolScanner
 }
 
 function checkBitbakeSettingsSanity (): boolean {
