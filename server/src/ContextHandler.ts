@@ -12,6 +12,7 @@ import {
 } from './DefinitionProvider'
 
 import { logger } from './lib/src/utils/OutputLogger'
+import { type DirectiveStatementKeyword } from './lib/src/types/directiveKeywords'
 
 /**
  * ContextHandler
@@ -21,6 +22,10 @@ export class ContextHandler {
 
   constructor () {
     this._definitionProvider = new DefinitionProvider()
+  }
+
+  get definitionProvider (): DefinitionProvider {
+    return this._definitionProvider
   }
 
   getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
@@ -33,31 +38,21 @@ export class ContextHandler {
     return definition
   }
 
-  getDefinitionForDirectives (directiveStatementKeyword: string, textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
+  getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
     let definition: Definition = []
 
     const currentLine: string = documentAsText[textDocumentPositionParams.position.line]
     const symbol: string = this.extractSymbolFromLine(textDocumentPositionParams, currentLine)
 
-    definition = this.getDefinitionForKeyWord(directiveStatementKeyword, currentLine, symbol)
-    return definition
-  }
-
-  get definitionProvider (): DefinitionProvider {
-    return this._definitionProvider
-  }
-
-  private getDefinitionForKeyWord (keyWord: string, currentLine: string, selectedSympbol?: string): Definition {
-    let definition: Definition = []
     const words: string[] = currentLine.split(' ')
 
     if (words.length >= 2) {
-      if (words[0] === keyWord) {
+      if (words[0] === directiveStatementKeyword) {
         logger.debug(`getDefinitionForKeyWord: ${JSON.stringify(words)}`)
         if (words.length === 2) {
-          definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1])
+          definition = this._definitionProvider.createDefinitionForKeyword(directiveStatementKeyword, words[1])
         } else {
-          definition = this._definitionProvider.createDefinitionForKeyword(keyWord, words[1], selectedSympbol)
+          definition = this._definitionProvider.createDefinitionForKeyword(directiveStatementKeyword, words[1], symbol)
         }
       }
     }
