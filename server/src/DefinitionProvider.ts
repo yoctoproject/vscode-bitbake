@@ -191,3 +191,5 @@ export class DefinitionProvider {
     return Location.create(encodeURI(url), range)
   }
 }
+
+export const definitionProvider = new DefinitionProvider()
