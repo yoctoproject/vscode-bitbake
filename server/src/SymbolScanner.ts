@@ -5,12 +5,7 @@
 
 import fs from 'fs'
 
-import {
-  BasicKeywordMap
-} from './BasicKeywordMap'
-
 import type {
-  CompletionItem,
   Definition,
   Location
 } from 'vscode-languageserver'
@@ -20,6 +15,7 @@ import type {
 } from './DefinitionProvider'
 
 import { logger } from './lib/src/utils/OutputLogger'
+import { DIRECTIVE_STATEMENT_KEYWORDS } from './lib/src/types/directiveKeywords'
 
 interface FileContent {
   filePath: string
@@ -65,11 +61,11 @@ export class SymbolScanner {
       })
 
       for (const line of file) {
-        const keyword = this.lineContainsKeyword(line)
+        const words = line.split(' ')
 
-        if (keyword !== undefined) {
-          logger.debug(`keyword found: ${keyword}`)
-          this.handleKeyword(keyword, line)
+        if (new Set(DIRECTIVE_STATEMENT_KEYWORDS).has(words[0])) {
+          logger.debug(`Directive statement keyword found: ${words[0]}`)
+          this.handleKeyword(words[0], line)
         }
       }
     } catch (error) {
@@ -81,20 +77,6 @@ export class SymbolScanner {
         logger.error(`An unknown error occurred while reading the file at ${filePath}`)
       }
     }
-  }
-
-  private lineContainsKeyword (line: string): string | undefined {
-    const keywords: CompletionItem[] = BasicKeywordMap
-
-    const trimedLine = line.trim()
-
-    for (const keyword of keywords) {
-      if (trimedLine.startsWith(keyword.label)) {
-        return keyword.label
-      }
-    }
-
-    return undefined
   }
 
   private handleKeyword (keyword: string, line: string): void {
