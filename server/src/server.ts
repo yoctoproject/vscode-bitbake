@@ -93,6 +93,12 @@ function checkBitbakeSettingsSanity (): boolean {
     return false
   }
 
+  const ret = bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcessSync('which bitbake')
+  if (ret.status !== 0) {
+    serverNotificationManager.sendBitBakeSettingsError('Command "which bitbake" failed: \n' + ret.stdout.toString() + ret.stderr.toString())
+    return false
+  }
+
   return true
 }
 
