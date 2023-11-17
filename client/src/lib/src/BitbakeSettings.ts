@@ -10,6 +10,7 @@ export interface BitbakeSettings {
   pathToBitbakeFolder: string
   pathToBuildFolder?: string
   pathToEnvScript?: string
+  commandWrapper?: string
   workingDirectory: string
 }
 
@@ -27,6 +28,7 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
     pathToBitbakeFolder: resolveSettingsPath(settings.pathToBitbakeFolder, workspaceFolder),
     pathToBuildFolder: settings.pathToBuildFolder !== '' ? resolveSettingsPath(settings.pathToBuildFolder, workspaceFolder) : undefined,
     pathToEnvScript: settings.pathToEnvScript !== '' ? resolveSettingsPath(settings.pathToEnvScript, workspaceFolder) : undefined,
+    commandWrapper: settings.commandWrapper !== '' ? expandWorkspaceFolder(settings.commandWrapper, workspaceFolder) : undefined,
     workingDirectory: settings.workingDirectory !== '' ? resolveSettingsPath(settings.workingDirectory, workspaceFolder) : workspaceFolder
   }
 }

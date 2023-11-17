@@ -18,7 +18,8 @@ describe('BitBakeProjectScanner', () => {
         pathToBitbakeFolder,
         pathToBuildFolder,
         pathToEnvScript,
-        workingDirectory: workspaceFolder
+        workingDirectory: workspaceFolder,
+        commandWrapper: ''
       },
       workspaceFolder
     )

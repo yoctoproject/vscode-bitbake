@@ -17,7 +17,8 @@ describe('BitbakeSettings Tests', () => {
       pathToEnvScript: '',
       // eslint-disable-next-line no-template-curly-in-string
       pathToBuildFolder: '${workspaceFolder}/build',
-      workingDirectory: ''
+      workingDirectory: '',
+      commandWrapper: ''
     }, '/home/user/workspace')
     expect(settings.pathToBuildFolder).toEqual('/home/user/workspace/build')
   })
@@ -28,7 +29,8 @@ describe('BitbakeSettings Tests', () => {
       pathToEnvScript: '',
       // eslint-disable-next-line no-template-curly-in-string
       pathToBuildFolder: './build',
-      workingDirectory: ''
+      workingDirectory: '',
+      commandWrapper: ''
     }, __dirname)
     expect(settings.pathToBuildFolder).toEqual(path.join(__dirname, '/build'))
   })

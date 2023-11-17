@@ -10,7 +10,7 @@ import { type BitbakeSettings, loadBitbakeSettings } from './BitbakeSettings'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
-  bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '' }
+  bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
 
   loadSettings (settings: any, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -46,13 +46,27 @@ export class BitbakeDriver {
     return { shell, script }
   }
 
-  private composeBitbakeScript (command: string): string {
+  composeBitbakeScript (command: string): string {
+    // Here are some examples commands that we want to support:
+    // . sources/poky/oe-init-build-env build && bitbake busybox
+    // cqfd run -c '-- bitbake busybox'
+    // kas shell -c 'bitbake busybox'
+    // docker run --rm -it -v $PWD:/workdir crops/poky --workdir=/workdir /bin/bash -c '. sources/poky/oe-init-build-env build && bitbake busybox'
+
     let script = ''
+
+    if (this.bitbakeSettings.commandWrapper !== undefined) {
+      script += sanitizeForShell(this.bitbakeSettings.commandWrapper) + " '"
+    }
 
     if (this.bitbakeSettings.pathToEnvScript !== undefined) {
       script += `. ${sanitizeForShell(this.bitbakeSettings.pathToEnvScript)} ${sanitizeForShell(this.bitbakeSettings.pathToBuildFolder)} && `
     }
     script += sanitizeForShell(command)
+
+    if (this.bitbakeSettings.commandWrapper !== undefined) {
+      script += "'"
+    }
 
     return script
   }

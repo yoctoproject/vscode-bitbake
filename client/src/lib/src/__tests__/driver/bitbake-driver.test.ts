@@ -30,7 +30,8 @@ describe('BitbakeDriver Tests', () => {
       pathToEnvScript: fakeEnvScriptPath,
       pathToBuildFolder: fakeBuildPath,
       pathToBitbakeFolder: '',
-      workingDirectory: ''
+      workingDirectory: '',
+      commandWrapper: ''
     })
 
     fs.mkdirSync(fakeBuildPath, { recursive: true })
