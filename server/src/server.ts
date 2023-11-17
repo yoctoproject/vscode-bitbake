@@ -17,7 +17,6 @@ import {
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { bitBakeProjectScanner, setBitBakeProjectScannerConnection } from './BitBakeProjectScanner'
-import contextHandler from './ContextHandler'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
@@ -164,7 +163,7 @@ connection.listen()
 documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
   logger.debug('[onDidChangeContent] Set new symbol scanner')
-  definitionProvider.symbolScanner = new SymbolScanner(textDocument.uri, contextHandler.definitionProvider)
+  definitionProvider.symbolScanner = new SymbolScanner(textDocument.uri, definitionProvider)
 
   if (textDocument.getText().length > 0) {
     const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
