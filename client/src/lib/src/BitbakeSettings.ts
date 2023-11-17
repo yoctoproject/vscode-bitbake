@@ -8,8 +8,8 @@ import path from 'path'
 /// Defines the context of a bitbake workspace with all information to call bitbake
 export interface BitbakeSettings {
   pathToBitbakeFolder: string
-  pathToBuildFolder: string
-  pathToEnvScript: string
+  pathToBuildFolder?: string
+  pathToEnvScript?: string
   workingDirectory: string
 }
 
@@ -25,8 +25,8 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
 
   return {
     pathToBitbakeFolder: resolveSettingsPath(settings.pathToBitbakeFolder, workspaceFolder),
-    pathToBuildFolder: resolveSettingsPath(settings.pathToBuildFolder, workspaceFolder),
-    pathToEnvScript: resolveSettingsPath(settings.pathToEnvScript, workspaceFolder),
+    pathToBuildFolder: settings.pathToBuildFolder !== '' ? resolveSettingsPath(settings.pathToBuildFolder, workspaceFolder) : undefined,
+    pathToEnvScript: settings.pathToEnvScript !== '' ? resolveSettingsPath(settings.pathToEnvScript, workspaceFolder) : undefined,
     workingDirectory: settings.workingDirectory !== '' ? resolveSettingsPath(settings.workingDirectory, workspaceFolder) : workspaceFolder
   }
 }

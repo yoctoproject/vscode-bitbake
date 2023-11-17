@@ -97,12 +97,12 @@
         },
         "bitbake.pathToEnvScript": {
           "type": "string",
-          "default": "${workspaceFolder}/sources/poky/oe-init-build-env",
+          "examples": ["${workspaceFolder}/sources/poky/oe-init-build-env"],
           "description": "Set the path to the environment script to configure the BitBake project. If the file does not exist, the extension will attempt to configure the environment variables by itself."
         },
         "bitbake.pathToBuildFolder": {
           "type": "string",
-          "default": "${workspaceFolder}/build",
+          "examples": ["${workspaceFolder}/build"],
           "description": "Set the build folder for the BitBake project."
         },
         "bitbake.pathToBitbakeFolder": {

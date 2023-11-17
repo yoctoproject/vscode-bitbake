@@ -88,7 +88,7 @@ function checkBitbakeSettingsSanity (): boolean {
   }
 
   const pathToEnvScript = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToEnvScript
-  if (!fs.existsSync(pathToEnvScript)) {
+  if (pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
     serverNotificationManager.sendBitBakeSettingsError("Bitbake environment script doesn't exist: " + pathToEnvScript)
     return false
   }
