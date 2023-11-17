@@ -12,7 +12,7 @@ import { type BitbakeSettings, loadBitbakeSettings } from './BitbakeSettings'
 export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '' }
 
-  loadSettings (settings: any, workspaceFolder: string = ''): void {
+  loadSettings (settings: any, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
     logger.debug('BitbakeDriver settings updated: ' + JSON.stringify(this.bitbakeSettings))
   }
