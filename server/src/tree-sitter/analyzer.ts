@@ -20,6 +20,7 @@ import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarations
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
 import { range } from './utils'
+import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 const DEBOUNCE_TIME_MS = 500
 
 interface AnalyzedDocument {
@@ -156,7 +157,7 @@ export default class Analyzer {
    */
   public getDirectiveStatementKeywordByNodeType (
     params: TextDocumentPositionParams
-  ): string | undefined {
+  ): DirectiveStatementKeyword | undefined {
     const n = this.nodeAtPoint(
       params.textDocument.uri,
       params.position.line,
@@ -304,7 +305,7 @@ export default class Analyzer {
    *
    * Tree-sitter functionalities are not used here since they (as of @1.0.1) can't reliably treat a line as directive statement if the keyword presents but nothing follows.
    */
-  public getDirectiveStatementKeywordByLine (textDocumentPositionParams: TextDocumentPositionParams): 'include' | 'inherit' | 'require' | undefined {
+  public getDirectiveStatementKeywordByLine (textDocumentPositionParams: TextDocumentPositionParams): DirectiveStatementKeyword | undefined {
     const { textDocument, position } = textDocumentPositionParams
     const documentAsText = this.getDocumentTexts(textDocument.uri)
     if (documentAsText === undefined) {
