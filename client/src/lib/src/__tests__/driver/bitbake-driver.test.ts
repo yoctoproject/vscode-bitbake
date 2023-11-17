@@ -29,7 +29,8 @@ describe('BitbakeDriver Tests', () => {
     driver.loadSettings({
       pathToEnvScript: fakeEnvScriptPath,
       pathToBuildFolder: fakeBuildPath,
-      pathToBitbakeFolder: ''
+      pathToBitbakeFolder: '',
+      workingDirectory: ''
     })
 
     fs.mkdirSync(fakeBuildPath, { recursive: true })

@@ -17,7 +17,8 @@ describe('BitBakeProjectScanner', () => {
       {
         pathToBitbakeFolder,
         pathToBuildFolder,
-        pathToEnvScript
+        pathToEnvScript,
+        workingDirectory: workspaceFolder
       },
       workspaceFolder
     )
