@@ -7,10 +7,6 @@ import type {
   TextDocumentPositionParams, Definition
 } from 'vscode-languageserver'
 
-import type {
-  BitBakeProjectScanner
-} from './BitBakeProjectScanner'
-
 import {
   DefinitionProvider
 } from './DefinitionProvider'
@@ -20,18 +16,15 @@ import type {
 } from './SymbolScanner'
 
 import { logger } from './lib/src/utils/OutputLogger'
-import { bitBakeProjectScanner } from './BitBakeProjectScanner'
 
 /**
  * ContextHandler
  */
 export class ContextHandler {
-  private readonly _projectScanner: BitBakeProjectScanner
   private readonly _definitionProvider: DefinitionProvider
 
-  constructor (projectScanner: BitBakeProjectScanner) {
-    this._projectScanner = projectScanner
-    this._definitionProvider = new DefinitionProvider(this._projectScanner)
+  constructor () {
+    this._definitionProvider = new DefinitionProvider()
   }
 
   getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
@@ -122,5 +115,5 @@ export class ContextHandler {
   }
 }
 
-const contextHandler = new ContextHandler(bitBakeProjectScanner)
+const contextHandler = new ContextHandler()
 export default contextHandler

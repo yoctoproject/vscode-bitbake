@@ -15,7 +15,7 @@ import {
 } from './lib/src/types/BitbakeScanResult'
 
 import {
-  type BitBakeProjectScanner
+  bitBakeProjectScanner
 } from './BitBakeProjectScanner'
 
 import {
@@ -28,12 +28,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import path from 'path'
 
 export class DefinitionProvider {
-  private readonly _projectScanner: BitBakeProjectScanner
   private _symbolScanner: SymbolScanner | null = null
-
-  constructor (projectScanner: BitBakeProjectScanner) {
-    this._projectScanner = projectScanner
-  }
 
   // eslint-disable-next-line accessor-pairs
   set symbolScanner (symbolScanner: SymbolScanner | null) {
@@ -54,7 +49,7 @@ export class DefinitionProvider {
             searchString = selectedSympbol
           }
 
-          const elementInfos: ElementInfo[] = this._projectScanner.classes.filter((obj: ElementInfo): boolean => {
+          const elementInfos: ElementInfo[] = bitBakeProjectScanner.classes.filter((obj: ElementInfo): boolean => {
             return obj.name === searchString
           })
           definition = this.createDefinitionForElementInfo(elementInfos)
@@ -65,12 +60,12 @@ export class DefinitionProvider {
       case 'include':
         {
           const includeFile: PathInfo = path.parse(restOfLine)
-          let elementInfos: ElementInfo[] = this._projectScanner.includes.filter((obj: ElementInfo): boolean => {
+          let elementInfos: ElementInfo[] = bitBakeProjectScanner.includes.filter((obj: ElementInfo): boolean => {
             return obj.name === includeFile.name
           })
 
           if (elementInfos.length === 0) {
-            elementInfos = this._projectScanner.recipes.filter((obj: ElementInfo): boolean => {
+            elementInfos = bitBakeProjectScanner.recipes.filter((obj: ElementInfo): boolean => {
               return obj.name === includeFile.name
             })
           }
@@ -97,7 +92,7 @@ export class DefinitionProvider {
   private createDefinitionForSymbolRecipes (symbol: string): Definition {
     let definitions: Definition = []
 
-    const recipe: ElementInfo | undefined = this._projectScanner.recipes.find((obj: ElementInfo): boolean => {
+    const recipe: ElementInfo | undefined = bitBakeProjectScanner.recipes.find((obj: ElementInfo): boolean => {
       return obj.name === symbol
     })
 
