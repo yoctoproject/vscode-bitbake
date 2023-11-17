@@ -54,7 +54,6 @@ export class BitbakeDriver {
     }
     script += sanitizeForShell(command)
 
-    script = `echo 'Executing script: ${script}' && ${script}`
     return script
   }
 }

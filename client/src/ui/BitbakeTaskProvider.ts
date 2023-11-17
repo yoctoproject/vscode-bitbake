@@ -119,6 +119,7 @@ class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
   async open (_initialDimensions: vscode.TerminalDimensions | undefined): Promise<void> {
     await new Promise<void>((resolve) => {
       this.writeEmitter.fire('Starting bitbake command: ' + this.command + endOfLine)
+      this.writeEmitter.fire('Executing script: ' + this.bitbakeDriver.composeBitbakeScript(this.command) + endOfLine)
       this.child = this.bitbakeDriver.spawnBitbakeProcess(this.command)
       this.child.stdout?.on('data', (data) => {
         this.output(data.toString())
