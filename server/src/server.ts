@@ -32,6 +32,7 @@ import { embeddedLanguageDocsManager } from './embedded-languages/documents-mana
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 import { getSemanticTokens, legend } from './semanticTokens'
+import { definitionProvider } from './DefinitionProvider'
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
@@ -77,11 +78,6 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
     }
   }
 })
-
-function setSymbolScanner (newSymbolScanner: SymbolScanner | null): void {
-  logger.debug('set new symbol scanner')
-  contextHandler.definitionProvider.symbolScanner = newSymbolScanner
-}
 
 function checkBitbakeSettingsSanity (): boolean {
   const bitbakeFolder = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder
@@ -167,8 +163,8 @@ connection.listen()
 
 documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
-
-  setSymbolScanner(new SymbolScanner(textDocument.uri, contextHandler.definitionProvider))
+  logger.debug('[onDidChangeContent] Set new symbol scanner')
+  definitionProvider.symbolScanner = new SymbolScanner(textDocument.uri, contextHandler.definitionProvider)
 
   if (textDocument.getText().length > 0) {
     const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
@@ -184,7 +180,8 @@ documents.onDidChangeContent(async (event) => {
 })
 
 documents.onDidClose((event) => {
-  setSymbolScanner(null)
+  logger.debug('[onDidClose] Set symbol scanner to null')
+  definitionProvider.symbolScanner = null
 })
 
 documents.onDidSave((event) => {
