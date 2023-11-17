@@ -109,6 +109,11 @@
           "type": "string",
           "default": "${workspaceFolder}/sources/poky/bitbake",
           "description": "Set the path to the BitBake folder."
+        },
+        "bitbake.workingDirectory": {
+          "type": "string",
+          "default": "${workspaceFolder}",
+          "description": "Set the working directory for running BitBake command."
         }
       }
     },

@@ -10,7 +10,7 @@ import { type BitbakeSettings, loadBitbakeSettings } from './BitbakeSettings'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
-  bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '' }
+  bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '' }
 
   loadSettings (settings: any, workspaceFolder: string = ''): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -22,7 +22,8 @@ export class BitbakeDriver {
     const { shell, script } = this.prepareCommand(command)
     logger.debug(`Executing Bitbake command: ${shell} -c ${script}`)
     return childProcess.spawn(script, {
-      shell
+      shell,
+      cwd: this.bitbakeSettings.workingDirectory
     })
   }
 
@@ -31,7 +32,8 @@ export class BitbakeDriver {
     const { shell, script } = this.prepareCommand(command)
     logger.debug(`Executing Bitbake command (sync): ${shell} -c ${command}`)
     return childProcess.spawnSync(script, {
-      shell
+      shell,
+      cwd: this.bitbakeSettings.workingDirectory
     })
   }
 
