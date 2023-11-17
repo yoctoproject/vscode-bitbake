@@ -21,19 +21,18 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
   } catch (err: any) {
     console.error(`chdir: ${err}`)
   }
-  let pathToBitbakeFolder: string = settings.pathToBitbakeFolder
-  pathToBitbakeFolder = pathToBitbakeFolder.replace('${workspaceFolder}', workspaceFolder)
-  pathToBitbakeFolder = path.resolve(pathToBitbakeFolder)
-  let pathToBuildFolder: string = settings.pathToBuildFolder
-  pathToBuildFolder = pathToBuildFolder.replace('${workspaceFolder}', workspaceFolder)
-  pathToBuildFolder = path.resolve(pathToBuildFolder)
-  let pathToEnvScript: string = settings.pathToEnvScript
-  pathToEnvScript = pathToEnvScript.replace('${workspaceFolder}', workspaceFolder)
-  pathToEnvScript = path.resolve(pathToEnvScript)
 
   return {
-    pathToBitbakeFolder,
-    pathToBuildFolder,
-    pathToEnvScript
+    pathToBitbakeFolder: resolveSettingsPath(settings.pathToBitbakeFolder, workspaceFolder),
+    pathToBuildFolder: resolveSettingsPath(settings.pathToBuildFolder, workspaceFolder),
+    pathToEnvScript: resolveSettingsPath(settings.pathToEnvScript, workspaceFolder),
   }
+}
+
+function resolveSettingsPath (configurationPath: string, workspaceFolder: string): string {
+  return path.resolve(expandWorkspaceFolder(configurationPath, workspaceFolder))
+}
+
+function expandWorkspaceFolder (configuration: string, workspaceFolder: string): string {
+  return configuration.replace(/\${workspaceFolder}/g, workspaceFolder)
 }
