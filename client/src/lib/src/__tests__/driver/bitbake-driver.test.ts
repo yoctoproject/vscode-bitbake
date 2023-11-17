@@ -45,4 +45,33 @@ describe('BitbakeDriver Tests', () => {
       }
     })
   })
+
+  it('should produce a valid kas script', () => {
+    const driver = new BitbakeDriver()
+    driver.loadSettings({
+      commandWrapper: 'kas shell -c',
+      pathToBitbakeFolder: '',
+      pathToEnvScript: '',
+      pathToBuildFolder: '',
+      workingDirectory: ''
+    })
+
+    const script = driver.composeBitbakeScript('bitbake busybox')
+    expect(script).toEqual(expect.stringContaining("kas shell -c 'bitbake busybox'"))
+  })
+
+  it('should produce a valid crops docker run script', () => {
+    /* eslint-disable no-template-curly-in-string */
+    const driver = new BitbakeDriver()
+    driver.loadSettings({
+      commandWrapper: 'docker run --rm -it -v ${workspaceFolder}:/workdir crops/poky --workdir=/workdir /bin/bash -c',
+      pathToEnvScript: '${workspaceFolder}/poky/oe-init-build-env',
+      pathToBitbakeFolder: '',
+      pathToBuildFolder: '',
+      workingDirectory: ''
+    }, '/home/user/yocto')
+
+    const script = driver.composeBitbakeScript('bitbake busybox')
+    expect(script).toEqual(expect.stringContaining("docker run --rm -it -v /home/user/yocto:/workdir crops/poky --workdir=/workdir /bin/bash -c '. /home/user/yocto/poky/oe-init-build-env  && bitbake busybox'"))
+  })
 })
