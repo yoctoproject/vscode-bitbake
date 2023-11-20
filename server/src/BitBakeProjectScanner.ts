@@ -99,13 +99,13 @@ export class BitBakeProjectScanner {
       void _connection?.sendNotification('bitbake/startScan')
 
       try {
-        this.parseAllRecipes()
         this.scanAvailableLayers()
         this.scanForClasses()
         this.scanForIncludeFiles()
         this.scanForRecipes()
         this.scanRecipesAppends()
         this.scanOverrides()
+        this.parseAllRecipes()
 
         logger.info('scan ready')
         this.printScanStatistic()
