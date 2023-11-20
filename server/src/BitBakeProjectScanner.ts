@@ -91,7 +91,7 @@ export class BitBakeProjectScanner {
   }
 
   rescanProject (): void {
-    logger.info(`request rescanProject ${this._bitbakeDriver.bitbakeSettings.pathToBuildFolder}`)
+    logger.info('request rescanProject')
 
     if (!this._scanStatus.scanIsRunning) {
       this._scanStatus.scanIsRunning = true
@@ -132,7 +132,7 @@ export class BitBakeProjectScanner {
   }
 
   private printScanStatistic (): void {
-    logger.info(`Scan results for path: ${this._bitbakeDriver.bitbakeSettings.pathToBuildFolder}`)
+    logger.info('Scan results:')
     logger.info('******************************************************************')
     logger.info(`Layer:     ${this._layers.length}`)
     logger.info(`Recipes:   ${this._recipes.length}`)
