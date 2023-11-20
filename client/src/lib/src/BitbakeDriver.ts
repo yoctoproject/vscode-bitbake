@@ -56,13 +56,13 @@ export class BitbakeDriver {
     let script = ''
 
     if (this.bitbakeSettings.commandWrapper !== undefined) {
-      script += sanitizeForShell(this.bitbakeSettings.commandWrapper) + " '"
+      script += this.bitbakeSettings.commandWrapper + " '"
     }
 
     if (this.bitbakeSettings.pathToEnvScript !== undefined) {
-      script += `. ${sanitizeForShell(this.bitbakeSettings.pathToEnvScript)} ${sanitizeForShell(this.bitbakeSettings.pathToBuildFolder)} && `
+      script += `. ${this.bitbakeSettings.pathToEnvScript} ${this.bitbakeSettings.pathToBuildFolder} && `
     }
-    script += sanitizeForShell(command)
+    script += command
 
     if (this.bitbakeSettings.commandWrapper !== undefined) {
       script += "'"
@@ -70,12 +70,4 @@ export class BitbakeDriver {
 
     return script
   }
-}
-
-/// Santitize a string to be passed in a shell command (remove special characters)
-function sanitizeForShell (command: string | undefined): string {
-  if (command === undefined) {
-    return ''
-  }
-  return command.replace(/[;`&|<>\\$(){}!#*?"']/g, '')
 }

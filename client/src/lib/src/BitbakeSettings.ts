@@ -38,5 +38,13 @@ function resolveSettingsPath (configurationPath: string, workspaceFolder: string
 }
 
 function expandWorkspaceFolder (configuration: string, workspaceFolder: string): string {
-  return configuration.replace(/\${workspaceFolder}/g, workspaceFolder)
+  return sanitizeForShell(configuration.replace(/\${workspaceFolder}/g, workspaceFolder)) as string
+}
+
+/// Santitize a string to be passed in a shell command (remove special characters)
+function sanitizeForShell (command: string | undefined): string | undefined {
+  if (command === undefined) {
+    return undefined
+  }
+  return command.replace(/[;`&|<>\\$(){}!#*?"']/g, '')
 }
