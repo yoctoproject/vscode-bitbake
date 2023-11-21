@@ -60,7 +60,11 @@ export class BitbakeDriver {
     }
 
     if (this.bitbakeSettings.pathToEnvScript !== undefined) {
-      script += `. ${this.bitbakeSettings.pathToEnvScript} ${this.bitbakeSettings.pathToBuildFolder} && `
+      script += `. ${this.bitbakeSettings.pathToEnvScript}`
+      if (this.bitbakeSettings.pathToBuildFolder !== undefined) {
+        script += ` ${this.bitbakeSettings.pathToBuildFolder}`
+      }
+      script += ' && '
     }
     script += command
 
