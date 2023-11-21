@@ -92,7 +92,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
   private readonly writeEmitter = new vscode.EventEmitter<string>()
   private readonly closeEmitter = new vscode.EventEmitter<number>()
-  private child: child_process.ChildProcess | undefined = undefined
+  private child: Promise<child_process.ChildProcess> | undefined = undefined
   private readonly command: string = ''
   private readonly bitbakeDriver: BitbakeDriver
   private readonly updateParseStatus: boolean | undefined
@@ -121,23 +121,25 @@ class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
       this.writeEmitter.fire('Starting bitbake command: ' + this.command + endOfLine)
       this.writeEmitter.fire('Executing script: ' + this.bitbakeDriver.composeBitbakeScript(this.command) + endOfLine)
       this.child = this.bitbakeDriver.spawnBitbakeProcess(this.command)
-      this.child.stdout?.on('data', (data) => {
-        this.output(data.toString())
-        logger.debug(data.toString())
-      })
-      this.child.stderr?.on('data', (data) => {
-        this.error(data.toString())
-        logger.debug(data.toString())
-      })
-      this.child.on('error', (error) => {
-        this.error(error.toString())
-        logger.error(error.toString())
-        resolve()
-      })
-      this.child.on('exit', (code) => {
-        this.closeEmitter.fire(code ?? -1)
-        if (this.updateParseStatus === true) { lastParsingExitCode = code ?? -1 }
-        resolve()
+      void this.child.then((child) => {
+        child.stdout?.on('data', (data) => {
+          this.output(data.toString())
+          logger.debug(data.toString())
+        })
+        child.stderr?.on('data', (data) => {
+          this.error(data.toString())
+          logger.debug(data.toString())
+        })
+        child.on('error', (error) => {
+          this.error(error.toString())
+          logger.error(error.toString())
+          resolve()
+        })
+        child.on('exit', (code) => {
+          this.closeEmitter.fire(code ?? -1)
+          if (this.updateParseStatus === true) { lastParsingExitCode = code ?? -1 }
+          resolve()
+        })
       })
     })
   }
@@ -145,7 +147,7 @@ class BitbakeBuildTaskTerminal implements vscode.Pseudoterminal {
   async close (): Promise<void> {
     if (this.child !== undefined) {
       if (this.updateParseStatus === true) { lastParsingExitCode = -1 }
-      this.child.kill()
+      (await this.child).kill()
     }
   }
 }

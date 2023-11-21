@@ -12,7 +12,7 @@ const pathToEnvScript = path.join(__dirname, '../../../integration-tests/project
 const workspaceFolder = path.join(__dirname, '../../../integration-tests/project-folder')
 
 describe('BitBakeProjectScanner', () => {
-  beforeAll(() => {
+  beforeAll(async () => {
     bitBakeProjectScanner.loadSettings(
       {
         pathToBitbakeFolder,
@@ -23,8 +23,8 @@ describe('BitBakeProjectScanner', () => {
       },
       workspaceFolder
     )
-    bitBakeProjectScanner.rescanProject()
-  })
+    await bitBakeProjectScanner.rescanProject()
+  }, 300000)
 
   it('can get a list of layers', async () => {
     const layers = bitBakeProjectScanner.layers

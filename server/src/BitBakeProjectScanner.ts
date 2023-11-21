@@ -90,7 +90,7 @@ export class BitBakeProjectScanner {
     this._shouldDeepExamine = shouldDeepExamine
   }
 
-  rescanProject (): void {
+  async rescanProject (): Promise<void> {
     logger.info('request rescanProject')
 
     if (!this._scanStatus.scanIsRunning) {
@@ -99,12 +99,12 @@ export class BitBakeProjectScanner {
       void _connection?.sendNotification('bitbake/startScan')
 
       try {
-        this.scanAvailableLayers()
+        await this.scanAvailableLayers()
         this.scanForClasses()
         this.scanForIncludeFiles()
-        this.scanForRecipes()
-        this.scanRecipesAppends()
-        this.scanOverrides()
+        await this.scanForRecipes()
+        await this.scanRecipesAppends()
+        await this.scanOverrides()
         this.parseAllRecipes()
 
         logger.info('scan ready')
@@ -123,7 +123,7 @@ export class BitBakeProjectScanner {
 
       if (this._scanStatus.scanIsPending) {
         this._scanStatus.scanIsPending = false
-        this.rescanProject()
+        await this.rescanProject()
       }
     } else {
       logger.info('scan is already running, set the pending flag')
@@ -149,10 +149,10 @@ export class BitBakeProjectScanner {
     this._includes = this.searchFiles(this._includeFileExtension)
   }
 
-  private scanAvailableLayers (): void {
+  private async scanAvailableLayers (): Promise<void> {
     this._layers = new Array < LayerInfo >()
 
-    const commandResult = this.executeBitBakeCommand('bitbake-layers show-layers')
+    const commandResult = await this.executeBitBakeCommand('bitbake-layers show-layers')
 
     if (commandResult.status === 0) {
       const output = commandResult.stdout.toString()
@@ -211,10 +211,10 @@ export class BitBakeProjectScanner {
     return elements
   }
 
-  scanForRecipes (): void {
+  async scanForRecipes (): Promise<void> {
     this._recipes = new Array < ElementInfo >()
 
-    const commandResult = this.executeBitBakeCommand('bitbake-layers show-recipes')
+    const commandResult = await this.executeBitBakeCommand('bitbake-layers show-recipes')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan recipes: ${commandResult.stderr.toString()}`)
       return
@@ -254,11 +254,11 @@ export class BitBakeProjectScanner {
       this._recipes.push(element)
     }
 
-    this.scanForRecipesPath()
+    await this.scanForRecipesPath()
   }
 
-  scanOverrides (): void {
-    const commandResult = this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
+  async scanOverrides (): Promise<void> {
+    const commandResult = await this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan overrides: ${commandResult.stderr.toString()}`)
       return
@@ -272,7 +272,7 @@ export class BitBakeProjectScanner {
     void _connection?.sendRequest('bitbake/parseAllRecipes')
   }
 
-  private scanForRecipesPath (): void {
+  private async scanForRecipesPath (): Promise<void> {
     const tmpFiles = this.searchFiles(this._recipesFileExtension)
 
     for (const file of tmpFiles) {
@@ -295,7 +295,7 @@ export class BitBakeProjectScanner {
       logger.info(`${recipesWithOutPath.length} recipes must be examined more deeply.`)
 
       for (const recipeWithOutPath of recipesWithOutPath) {
-        const commandResult = this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+        const commandResult = await this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
         if (commandResult.status !== 0) {
           logger.error(`Failed to scan recipes path: ${commandResult.stderr.toString()}`)
           continue
@@ -310,8 +310,8 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private scanRecipesAppends (): void {
-    const commandResult = this.executeBitBakeCommand('bitbake-layers show-appends')
+  private async scanRecipesAppends (): Promise<void> {
+    const commandResult = await this.executeBitBakeCommand('bitbake-layers show-appends')
 
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan appends: ${commandResult.stderr.toString()}`)
@@ -351,7 +351,7 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private executeBitBakeCommand (command: string): childProcess.SpawnSyncReturns<Buffer> {
+  private async executeBitBakeCommand (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
     return this._bitbakeDriver.spawnBitbakeProcessSync(command)
   }
 }

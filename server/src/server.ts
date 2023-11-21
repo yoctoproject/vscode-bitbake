@@ -78,7 +78,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   }
 })
 
-function checkBitbakeSettingsSanity (): boolean {
+async function checkBitbakeSettingsSanity (): Promise<boolean> {
   const bitbakeFolder = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder
   const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
 
@@ -93,7 +93,7 @@ function checkBitbakeSettingsSanity (): boolean {
     return false
   }
 
-  const ret = bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcessSync('which bitbake')
+  const ret = await bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcessSync('which bitbake')
   if (ret.status !== 0) {
     serverNotificationManager.sendBitBakeSettingsError('Command "which bitbake" failed: \n' + ret.stdout.toString() + ret.stderr.toString())
     return false
@@ -102,24 +102,24 @@ function checkBitbakeSettingsSanity (): boolean {
   return true
 }
 
-connection.onDidChangeConfiguration((change) => {
+connection.onDidChangeConfiguration(async (change) => {
   logger.level = change.settings.bitbake.loggingLevel
   bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
-  if (checkBitbakeSettingsSanity()) {
-    bitBakeProjectScanner.rescanProject()
+  if (await checkBitbakeSettingsSanity()) {
+    await bitBakeProjectScanner.rescanProject()
   }
   parseOnSave = change.settings.bitbake.parseOnSave
 })
 
-connection.onDidChangeWatchedFiles((change) => {
+connection.onDidChangeWatchedFiles(async (change) => {
   logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
   change.changes?.forEach((change) => {
     if (change.type === FileChangeType.Deleted) {
       void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
     }
   })
-  if (checkBitbakeSettingsSanity()) {
-    bitBakeProjectScanner.rescanProject()
+  if (await checkBitbakeSettingsSanity()) {
+    await bitBakeProjectScanner.rescanProject()
   }
 })
 
@@ -131,12 +131,12 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   return item
 })
 
-connection.onExecuteCommand((params) => {
+connection.onExecuteCommand(async (params) => {
   logger.info(`executeCommand ${JSON.stringify(params)}`)
 
   if (params.command === 'bitbake.rescan-project') {
-    if (checkBitbakeSettingsSanity()) {
-      bitBakeProjectScanner.rescanProject()
+    if (await checkBitbakeSettingsSanity()) {
+      await bitBakeProjectScanner.rescanProject()
     }
   }
 })
@@ -189,10 +189,10 @@ documents.onDidClose((event) => {
   definitionProvider.symbolScanner = null
 })
 
-documents.onDidSave((event) => {
+documents.onDidSave(async (event) => {
   if (parseOnSave) {
     logger.debug(`onDidSave ${JSON.stringify(event)}`)
-    if (checkBitbakeSettingsSanity()) {
+    if (await checkBitbakeSettingsSanity()) {
       bitBakeProjectScanner.parseAllRecipes()
     }
   }
