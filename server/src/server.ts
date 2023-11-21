@@ -93,6 +93,7 @@ async function checkBitbakeSettingsSanity (): Promise<boolean> {
     return false
   }
 
+  // eslint-disable-next-line @typescript-eslint/await-thenable
   const ret = await bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcessSync('which bitbake')
   if (ret.status !== 0) {
     serverNotificationManager.sendBitBakeSettingsError('Command "which bitbake" failed: \n' + ret.stdout.toString() + ret.stderr.toString())
@@ -102,6 +103,7 @@ async function checkBitbakeSettingsSanity (): Promise<boolean> {
   return true
 }
 
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 connection.onDidChangeConfiguration(async (change) => {
   logger.level = change.settings.bitbake.loggingLevel
   bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
@@ -111,6 +113,7 @@ connection.onDidChangeConfiguration(async (change) => {
   parseOnSave = change.settings.bitbake.parseOnSave
 })
 
+// eslint-disable-next-line @typescript-eslint/no-misused-promises
 connection.onDidChangeWatchedFiles(async (change) => {
   logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
   change.changes?.forEach((change) => {

@@ -352,6 +352,7 @@ export class BitBakeProjectScanner {
   }
 
   private async executeBitBakeCommand (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
+    // eslint-disable-next-line @typescript-eslint/return-await
     return this._bitbakeDriver.spawnBitbakeProcessSync(command)
   }
 }

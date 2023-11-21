@@ -9,7 +9,7 @@ import { BitbakeDriver } from '../../BitbakeDriver'
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
     const driver = new BitbakeDriver()
-    driver.spawnBitbakeProcess(': ; printenv').then((process) => {
+    void driver.spawnBitbakeProcess(': ; printenv').then((process) => {
       process.stdout?.on('data', (data) => {
         if (data.toString().includes('USER=') === true) {
           done('Command injection detected')
@@ -39,7 +39,7 @@ describe('BitbakeDriver Tests', () => {
     const content = 'cd ' + fakeBuildPath + '; echo FINDME'
     fs.writeFileSync(fakeEnvScriptPath, content)
 
-    driver.spawnBitbakeProcess(':').then((process) => {
+    void driver.spawnBitbakeProcess(':').then((process) => {
       process.stdout?.on('data', (data) => {
         if (data.includes('FINDME') === true) {
           done()
