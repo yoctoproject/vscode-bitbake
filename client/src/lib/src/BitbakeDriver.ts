@@ -11,30 +11,52 @@ import { type BitbakeSettings, loadBitbakeSettings } from './BitbakeSettings'
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
+  bitbakeActive = false
 
   loadSettings (settings: any, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
     logger.debug('BitbakeDriver settings updated: ' + JSON.stringify(this.bitbakeSettings))
   }
 
-  /// Execute a command in the bitbake environment
-  spawnBitbakeProcess (command: string): childProcess.ChildProcess {
-    const { shell, script } = this.prepareCommand(command)
-    logger.debug(`Executing Bitbake command: ${shell} -c ${script}`)
-    return childProcess.spawn(script, {
-      shell,
-      cwd: this.bitbakeSettings.workingDirectory
+  private async waitForBitbakeToFinish (): Promise<void> {
+    await new Promise<void>((resolve) => {
+      const interval = setInterval(() => {
+        if (!this.bitbakeActive) {
+          clearInterval(interval)
+          resolve()
+        }
+      }, 100)
     })
   }
 
-  /// Execute a command in the bitbake environment and wait for completion
-  spawnBitbakeProcessSync (command: string): childProcess.SpawnSyncReturns<Buffer> {
+  /// Execute a command in the bitbake environment
+  async spawnBitbakeProcess (command: string): Promise<childProcess.ChildProcess> {
     const { shell, script } = this.prepareCommand(command)
-    logger.debug(`Executing Bitbake command (sync): ${shell} -c ${command}`)
-    return childProcess.spawnSync(script, {
+    await this.waitForBitbakeToFinish()
+    logger.debug(`Executing Bitbake command: ${shell} -c ${script}`)
+    this.bitbakeActive = true
+    const child = childProcess.spawn(script, {
       shell,
       cwd: this.bitbakeSettings.workingDirectory
     })
+    child.on('close', () => {
+      this.bitbakeActive = false
+    })
+    return child
+  }
+
+  /// Execute a command in the bitbake environment and wait for completion
+  async spawnBitbakeProcessSync (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
+    const { shell, script } = this.prepareCommand(command)
+    await this.waitForBitbakeToFinish()
+    logger.debug(`Executing Bitbake command (sync): ${shell} -c ${command}`)
+    this.bitbakeActive = true
+    const ret = childProcess.spawnSync(script, {
+      shell,
+      cwd: this.bitbakeSettings.workingDirectory
+    })
+    this.bitbakeActive = false
+    return ret
   }
 
   private prepareCommand (command: string): {
