@@ -9,12 +9,12 @@
 	"version": "2.0.0",
 	"publisher": "yocto-project",
 	"bugs": {
-		"url": "https://github.com/savoirfairelinux/vscode-bitbake/issues"
+		"url": "https://github.com/yoctoproject/vscode-bitbake/issues"
 	},
-	"homepage": "https://github.com/savoirfairelinux/vscode-bitbake",
+	"homepage": "https://github.com/yoctoproject/vscode-bitbake",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
+		"url": "https://github.com/yoctoproject/vscode-bitbake.git"
 	},
 	"scripts": {
 		"postinstall": "cd server && npm install && cd ../client && npm install",

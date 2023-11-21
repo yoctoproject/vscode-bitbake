@@ -10,12 +10,12 @@
   "publisher": "yocto-project",
   "icon": "images/icon.png",
   "bugs": {
-    "url": "https://github.com/savoirfairelinux/vscode-bitbake/issues"
+    "url": "https://github.com/yoctoproject/vscode-bitbake/issues"
   },
-  "homepage": "https://github.com/savoirfairelinux/vscode-bitbake/",
+  "homepage": "https://github.com/yoctoproject/vscode-bitbake/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/savoirfairelinux/vscode-bitbake.git"
+    "url": "https://github.com/yoctoproject/vscode-bitbake.git"
   },
   "engines": {
     "vscode": "^1.75.0"
@@ -383,7 +383,7 @@
     "src/lib"
   ],
   "vsce": {
-    "baseContentUrl": "https://github.com/savoirfairelinux/vscode-bitbake/raw/HEAD/client",
-    "baseImageUrl": "https://github.com/savoirfairelinux/vscode-bitbake/raw/HEAD/client"
+    "baseContentUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/client",
+    "baseImageUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/client"
   }
 }
