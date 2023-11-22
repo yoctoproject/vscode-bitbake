@@ -37,7 +37,7 @@ export class ClientNotificationManager {
       )
         .then((item) => {
           if (item === 'Open Settings') {
-            void commands.executeCommand('workbench.action.openWorkspaceSettings', '@ext:yocto-project.bitbake')
+            void commands.executeCommand('workbench.action.openWorkspaceSettings', '@ext:yocto-project.yocto-bitbake')
           } else if (item === 'Never Show Again') {
             void this.neverShowAgain('custom/bitbakeSettingsError')
           }

@@ -1,5 +1,5 @@
 {
-  "name": "bitbake",
+  "name": "yocto-bitbake",
   "description": "BitBake language support",
   "author": "Eugen Wiens",
   "contributors": [

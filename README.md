@@ -9,7 +9,7 @@ The changelog for the extension can be found [here](./client/CHANGELOG.md).
 
 ## Installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
 
-To install this extension from the VS Code Extension Marketplace, please follow [this guide](https://marketplace.visualstudio.com/items?itemName=EugenWiens.bitbake).
+To install this extension from the VS Code Extension Marketplace, please follow [this guide](https://marketplace.visualstudio.com/items?itemName=yocto-project.yocto-bitbake).
 For more information regarding the Extension Marketplace, please see the [official documentation](https://code.visualstudio.com/docs/editor/extension-gallery).
 
 ## Manual installation
