@@ -6,10 +6,7 @@
 import * as assert from 'assert'
 import * as vscode from 'vscode'
 import { afterEach } from 'mocha'
-
-async function delay (ms: number): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, ms))
-}
+import { delay } from '../utils/async'
 
 suite('Bitbake Commands Test Suite', () => {
   let disposables: vscode.Disposable[] = []

@@ -6,10 +6,7 @@
 import * as assert from 'assert'
 import { after } from 'mocha'
 import * as vscode from 'vscode'
-
-async function delay (ms: number): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, ms))
-}
+import { delay } from '../utils/async'
 
 suite('VSCode integration Test Suite', () => {
   suiteSetup(async function (this: Mocha.Context) {
