@@ -6,10 +6,7 @@
 import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
-
-async function delay (ms: number): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, ms))
-}
+import { delay } from '../utils/async'
 
 suite('Bitbake Hover Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/hover.bb')

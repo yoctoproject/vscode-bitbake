@@ -9,10 +9,7 @@ import { afterEach } from 'mocha'
 
 import path from 'path'
 import { addLayer, resetLayer } from '../utils/bitbake'
-
-async function delay (ms: number): Promise<void> {
-  await new Promise(resolve => setTimeout(resolve, ms))
-}
+import { delay } from '../utils/async'
 
 suite('Bitbake Commands Test Suite', () => {
   let disposables: vscode.Disposable[] = []
