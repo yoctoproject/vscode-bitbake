@@ -1,6 +1,7 @@
 {
   "name": "yocto-bitbake",
-  "description": "BitBake language support",
+	"displayName": "Yocto Project BitBake",
+  "description": "Extended Yocto Project and BitBake language support",
   "author": "Eugen Wiens",
   "contributors": [
     "Savoir-faire Linux"
