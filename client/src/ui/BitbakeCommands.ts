@@ -30,6 +30,11 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
     'Parse all recipes',
     'bitbake'
   )
+  const runningTasks = vscode.tasks.taskExecutions
+  if (runningTasks.some((execution) => execution.task.name === parseAllRecipesTask.name)) {
+    logger.debug('Parse all recipes task is already running')
+    return
+  }
   await runBitbakeTask(parseAllRecipesTask, taskProvider)
 }
 
