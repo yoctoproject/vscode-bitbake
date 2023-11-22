@@ -37,7 +37,8 @@ class BitbakeFileTreeItem extends BitbakeRecipeTreeItem {
     super(pathInfo.base, collapsibleState)
     this.contextValue = 'bitbakeFileCtx'
     this.iconPath = new vscode.ThemeIcon('book')
-    this.command = { command: 'vscode.open', title: 'Open file', arguments: [resolvedPath] }
+    const uri: vscode.Uri = vscode.Uri.file(resolvedPath)
+    this.command = { command: 'vscode.open', title: 'Open file', arguments: [uri] }
     this.description = resolvedPath
     this.tooltip = resolvedPath
   }
