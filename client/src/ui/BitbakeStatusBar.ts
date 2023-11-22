@@ -61,13 +61,13 @@ export class BitbakeStatusBar {
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
       return
     }
-    if (this.scanExitCode !== 0 || this.bitbakeScanResults.recipes.length === 0) {
+    if (this.scanExitCode !== 0) {
       this.statusBarItem.text = '$(error) BitBake: Parsing error'
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground')
       this.statusBarItem.command = 'workbench.action.problems.focus'
       this.statusBarItem.tooltip = 'Open problems view for more details'
     } else {
-      this.statusBarItem.text = '$(library) BitBake: ' + this.bitbakeScanResults.recipes.length + ' recipes parsed'
+      this.statusBarItem.text = '$(library) BitBake: ' + this.bitbakeScanResults.recipes.length + ' recipes scanned'
       this.statusBarItem.command = 'bitbake.rescan-project'
       this.statusBarItem.tooltip = 'BitBake: Scan project for recipes'
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
