@@ -370,7 +370,7 @@
     "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
     "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u",
     "vscode:prepublish": "npm install --omit=dev && cd ../server && npm install --omit=dev && npm run installServer",
-    "package": "npm run vscode:prepublish && vsce package --target linux-x64"
+    "package": "npm run vscode:prepublish && vsce package"
   },
   "dependencies": {
     "vscode-languageclient": "^8.1.0"
