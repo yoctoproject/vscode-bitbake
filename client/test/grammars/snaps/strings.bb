@@ -30,6 +30,9 @@ export ENV_VARIABLE = "variable-value"
 
 do_foo() {
   bbplain "$ENV_VARIABLE"
+  ACLOCAL="aclocal"
+  bbnote Executing ACLOCAL=\"$ACLOCAL\"
+  bbnote Executing ACLOCAL=\'$ACLOCAL\'
 }
 
 KERNEL_FEATURES:append:qemux86-64=" cfg/sound.scc cfg/paravirt_kvm.scc" 

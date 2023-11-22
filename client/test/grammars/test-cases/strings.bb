@@ -84,6 +84,13 @@
 #          ^ source.bb string.quoted.double.bb
 #           ^^^^^^^^^^^^^ source.bb string.quoted.double.bb
 #                        ^ source.bb string.quoted.double.bb
+>  ACLOCAL="aclocal"
+>  bbnote Executing ACLOCAL=\"$ACLOCAL\"
+#                           ^^ source.bb constant.character.escape.bb
+#                                     ^^ source.bb constant.character.escape.bb
+>  bbnote Executing ACLOCAL=\'$ACLOCAL\'
+#                           ^^ source.bb constant.character.escape.bb
+#                                     ^^ source.bb constant.character.escape.bb
 >}
  
 >KERNEL_FEATURES:append:qemux86-64=" cfg/sound.scc cfg/paravirt_kvm.scc"
