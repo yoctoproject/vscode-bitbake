@@ -13,6 +13,8 @@ import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
 import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
 
+let parsingPending = false
+
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
@@ -20,6 +22,17 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
+
+  // Handles enqueued parsing requests (onSave)
+  context.subscriptions.push(
+    vscode.tasks.onDidEndTask((e) => {
+      if (e.execution.task.name === 'Parse all recipes') {
+        if (parsingPending) {
+          parsingPending = false
+          void parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider)
+        }
+      }
+    }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
@@ -33,6 +46,7 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
   const runningTasks = vscode.tasks.taskExecutions
   if (runningTasks.some((execution) => execution.task.name === parseAllRecipesTask.name)) {
     logger.debug('Parse all recipes task is already running')
+    parsingPending = true
     return
   }
   await runBitbakeTask(parseAllRecipesTask, taskProvider)
