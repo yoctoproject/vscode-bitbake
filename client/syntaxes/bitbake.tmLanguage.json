@@ -10,6 +10,12 @@
     ],
     "patterns": [
         {
+            "include": "#escaped-single-quote"
+        },
+        {
+            "include": "#escaped-double-quote"
+        },
+        {
             "include": "#string"
         },
         {
@@ -100,8 +106,7 @@
                     "end": "(\")",
                     "patterns": [
                         {
-                            "match": "\\\\\"",
-                            "name": "constant.character.escape.bb"
+                            "include": "#escaped-double-quote"
                         },
                         {
                             "include": "#inline-python"
@@ -117,8 +122,7 @@
                     "end": "(')",
                     "patterns": [
                         {
-                            "match": "\\\\'",
-                            "name": "constant.character.escape.bb"
+                            "include": "#escaped-single-quote"
                         },
                         {
                             "include": "#inline-python"
@@ -251,6 +255,14 @@
         "parenthesis-close": {
             "match": "\\)",
             "name": "meta.embedded.parenthesis.close.bb"
+        },
+        "escaped-single-quote":{
+            "match": "\\\\'",
+            "name": "constant.character.escape.bb"
+        },
+        "escaped-double-quote":{
+            "match": "\\\\\"",
+            "name": "constant.character.escape.bb"
         }
     }
 }
