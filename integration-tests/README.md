@@ -1,6 +1,6 @@
 # Integration tests
 
-The integration tests allow running the bitbake extension in a live VSCode
+The integration tests allow running the extension in a live VSCode
 environment.
 
 ## Running the integration tests

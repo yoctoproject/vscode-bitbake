@@ -37,7 +37,7 @@ Press `F5` or navigate to the debug section on the left of the VS Code and selec
 
 ## Testing
 
-Bitbake and Yocto docs are required for some features to work, They need to be fetched before testing and development:
+BitBake and Yocto docs are required for some features to work. They need to be fetched before testing and development:
 ``` sh
 npm run fetch:docs
 ```
@@ -77,7 +77,7 @@ See [the individual grammar tests README](client/test/grammars/README.md).
 
 ### Integration tests
 
-These tests allow running the bitbake extension in a live VSCode environment.
+These tests allow running the BitBake extension in a live VSCode environment.
 See [the individual integration tests README](integration-tests/README.md).
 
 ## Tree-sitter

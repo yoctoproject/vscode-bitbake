@@ -19,7 +19,7 @@ Here's an example `settings.json` reflecting the default values:
 
 ### Syntax highlighting
 
-The extension provides syntax highlighting for BitBake recipes, classes, configuration and inc-files. Syntax highlighting also supports embedded languages inside bitbake recipes including inline Python variable expansion, shell code and Python code.
+The extension provides syntax highlighting for BitBake recipes, classes, configuration and inc-files. Syntax highlighting also supports embedded languages inside BitBake recipes including inline Python variable expansion, shell code and Python code.
 
 The BitBake language is automatically detected based on the file extension:
 [`.bb`, `.bbappend`, `.bbclass`]. [`.conf`, `.inc`] are also supported but may be used by other tools.
@@ -105,7 +105,7 @@ By default, this extension will run BitBake in parse only mode in the background
 
 ### BitBake status bar
 
-Bitbake parsing status is displayed in the status bar at the bottom of the screen. It will show wether the last BitBake run was successful or not. The bitbake server queues all BitBake commands and runs them sequentially. The status bar will show you if the extension is currently trying to access the bitbake server.
+Bitbake parsing status is displayed in the status bar at the bottom of the screen. It will show wether the last BitBake run was successful or not. The BitBake server queues all BitBake commands and runs them sequentially. The status bar will show you if the extension is currently trying to access the bitbake server.
 
 ![Status bar](doc/status-bar.gif)
 
