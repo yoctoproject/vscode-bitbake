@@ -25,6 +25,10 @@
   "engines": {
     "vscode": "^1.75.0"
   },
+  "extensionDependencies": [
+    "mads-hartmann.bash-ide-vscode",
+    "ms-python.python"
+  ],
   "categories": [
     "Programming Languages"
   ],

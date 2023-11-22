@@ -49,7 +49,6 @@
 			"args": [
 			  "--extensionDevelopmentPath=${workspaceRoot}/client",
 			  "--extensionTestsPath=${workspaceRoot}/integration-tests/out/index",
-			  "--disable-extensions",
 			  "--disable-workspace-trust",
 			  "${workspaceRoot}/integration-tests/project-folder"
 			],
