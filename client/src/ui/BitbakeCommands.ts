@@ -101,9 +101,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   if (uri !== undefined) {
     const extension = path.extname(uri.fsPath)
     if (['.bb', '.bbappend', '.inc'].includes(extension)) {
-      chosenRecipe = path.basename(uri.fsPath, extension)
-      // Remove PV from recipe name
-      chosenRecipe = chosenRecipe.split('_')[0]
+      chosenRecipe = extractRecipeName(uri.fsPath) as string
       bitbakeWorkspace.addActiveRecipe(chosenRecipe)
     }
   }
@@ -126,8 +124,9 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, recipe?: str
     bitbakeWorkspace.addActiveRecipe(recipe)
     return recipe
   }
-  const chosenRecipe = await vscode.window.showInputBox({ placeHolder: 'Recipe name to add' })
+  let chosenRecipe = await vscode.window.showInputBox({ placeHolder: 'Recipe name to add' })
   if (chosenRecipe !== undefined) {
+    chosenRecipe = extractRecipeName(chosenRecipe) as string
     bitbakeWorkspace.addActiveRecipe(chosenRecipe)
   }
   return chosenRecipe
@@ -150,4 +149,9 @@ async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvi
   } else {
     throw new Error(`Failed to resolve task for recipe ${task.definition.recipes[0]}`)
   }
+}
+
+function extractRecipeName (filename: string | undefined): string | undefined {
+  if (filename === undefined) { return undefined }
+  return path.basename(filename).split('.')[0].split('_')[0]
 }
