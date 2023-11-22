@@ -19,15 +19,15 @@ Manual installation takes place in two steps. The code must be installed via `np
 ### Commands
 
 To install the dependencies:
-```
+``` sh
 npm install
 ```
 To compile the typescript files:
-```
+``` sh
 npm run compile
 ```
 To clean up the project (This deletes node_modules):
-```
+``` sh
 npm run clean
 ```
 For more commands, refer to the `script` section in the root `package.json`.
@@ -38,31 +38,34 @@ Press `F5` or navigate to the debug section on the left of the VS Code and selec
 ## Testing
 
 Bitbake and Yocto docs are required for some features to work, They need to be fetched before testing and development:
-
- $ npm run fetch:docs
-
+``` sh
+npm run fetch:docs
+```
 Similar for the command that fetches poky, it needs to be run before running the integration tests:
-
-$ npm run fetch:poky
-
+``` sh
+npm run fetch:poky
+```
 A wrapper npm script allows running several kinds of tests. To run all tests, use:
-
- $ npm test
-
+``` sh
+npm test
+```
 All the tests mentionned are run in our GitHub CI.
 
 ### Linter tests
 
-One can check coding style using `npm run lint`.
+One can check coding style using
+``` sh
+npm run lint
+```
 Install the recommended extensions to automatically fix linting errors when possible.
 
 ### Unit tests
 
 Unit tests are powered by Jest. They allow mocking the behavior of VSCode
 and other external libraries. They can individually be run with:
-
- $ npm run jest
-
+```sh
+npm run jest
+```
 Unit tests are defined in the `__tests__` folders.
 
 If you have installed the recommended extensions, you'll find launch and debug

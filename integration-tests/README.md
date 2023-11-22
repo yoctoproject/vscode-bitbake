@@ -13,7 +13,9 @@ This can be done by running our `npm fetch:poky` script. It requires `curl` and
 The npm script `test:integration` will run the integration tests.
 
 It will run VSCode in headless mode. Make sure to have installed the dependency:
- $ apt install xvfb
+``` sh
+apt install xvfb
+```
 
 ## Debugging the integration tests
 
