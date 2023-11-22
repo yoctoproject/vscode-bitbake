@@ -2,9 +2,13 @@
   "name": "yocto-bitbake",
 	"displayName": "Yocto Project BitBake",
   "description": "Extended Yocto Project and BitBake language support",
-  "author": "Eugen Wiens",
+  "author": {
+    "name": "Savoir-faire Linux",
+    "email": "contact@savoirfairelinux.com",
+    "url": "https://www.savoirfairelinux.com/"
+  },
   "contributors": [
-    "Savoir-faire Linux"
+    "Eugen Wiens"
   ],
   "license": "MIT",
   "version": "2.0.0",
