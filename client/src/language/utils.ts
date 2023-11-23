@@ -3,31 +3,45 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import fs from 'fs'
+import { Position, Range, type TextDocument } from 'vscode'
 
-import { type TextDocument, Position } from 'vscode'
-
-import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
-import { logger } from '../lib/src/utils/OutputLogger'
-
-export const getEmbeddedLanguageDocPosition = async (
+export const getOriginalDocRange = (
   originalTextDocument: TextDocument,
-  embeddedLanguageDocInfos: EmbeddedLanguageDocInfos,
-  originalPosition: Position
-): Promise<Position | undefined> => {
-  const originalOffset = originalTextDocument.offsetAt(originalPosition)
-  const embeddedLanguageDocOffset = embeddedLanguageDocInfos.characterIndexes[originalOffset]
-  try {
-    const embeddedLanguageDocContent = await new Promise<string>((resolve, reject) => {
-      fs.readFile(embeddedLanguageDocInfos.uri.replace('file://', ''), { encoding: 'utf-8' },
-        (error, data) => { error !== null ? reject(error) : resolve(data) }
-      )
-    })
-    return getPosition(embeddedLanguageDocContent, embeddedLanguageDocOffset)
-  } catch (error) {
-    logger.error(`Failed to get embedded language document position: ${error as any}`)
-    return undefined
+  embeddedLanguageDocContent: string,
+  characterIndexes: number[],
+  embeddedRange: Range
+): Range | undefined => {
+  const start = getOriginalDocPosition(originalTextDocument, embeddedLanguageDocContent, characterIndexes, embeddedRange.start)
+  const end = getOriginalDocPosition(originalTextDocument, embeddedLanguageDocContent, characterIndexes, embeddedRange.end)
+  if (start === undefined || end === undefined) {
+    return
   }
+  return new Range(start, end)
+}
+
+const getOriginalDocPosition = (
+  originalTextDocument: TextDocument,
+  embeddedLanguageDocContent: string,
+  characterIndexes: number[],
+  embeddedPosition: Position
+): Position | undefined => {
+  const embeddedLanguageOffset = getOffset(embeddedLanguageDocContent, embeddedPosition)
+  const originalOffset = characterIndexes.findIndex(index => index === embeddedLanguageOffset)
+  if (originalOffset === -1) {
+    return
+  }
+  return originalTextDocument.positionAt(originalOffset)
+}
+
+export const getEmbeddedLanguageDocPosition = (
+  originalTextDocument: TextDocument,
+  embeddedLanguageDocContent: string,
+  characterIndexes: number[],
+  originalPosition: Position
+): Position => {
+  const originalOffset = originalTextDocument.offsetAt(originalPosition)
+  const embeddedLanguageDocOffset = characterIndexes[originalOffset]
+  return getPosition(embeddedLanguageDocContent, embeddedLanguageDocOffset)
 }
 
 const getPosition = (documentContent: string, offset: number): Position => {
@@ -42,4 +56,13 @@ const getPosition = (documentContent: string, offset: number): Position => {
     }
   }
   return new Position(line, character)
+}
+
+const getOffset = (documentContent: string, position: Position): number => {
+  let offset = 0
+  for (let i = 0; i < position.line; i++) {
+    offset = documentContent.indexOf('\n', offset) + 1
+  }
+  offset += position.character
+  return offset
 }
