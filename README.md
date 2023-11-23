@@ -1,6 +1,6 @@
 # BitBake recipe language support plugin for Visual Studio Code
 
-[![vscode-bitbake CI/CD](https://github.com/yoctoproject/vscode-bitbake/actions/workflows/main.yml/badge.svg?branch=master)](https://github.com/yoctoproject/vscode-bitbake/actions/workflows/main.yml?query=branch%3Amaster)
+[![vscode-bitbake CI/CD](https://github.com/yoctoproject/vscode-bitbake/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/yoctoproject/vscode-bitbake/actions/workflows/main.yml?query=branch%3Amain)
 
 **For a description of the extension itself, please see [the client's README](./client/README.md)**.
 
