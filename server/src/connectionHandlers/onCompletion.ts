@@ -108,17 +108,20 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     }
   }
 
-  let symbolCompletions: CompletionItem[] = []
+  let symbolCompletionItems: CompletionItem[] = []
   if (word !== null) {
     const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri)
     // Filter out duplicate BITBAKE_VARIABLES as they will be included as global declaration after running analyzer.analyze() in documents.onDidChangeContent() in server.ts
-    symbolCompletions = globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
-      {
-        label: symbol.name,
-        kind: symbolKindToCompletionKind(symbol.kind),
-        documentation: `${symbol.name}`
-      }
-    ))
+    symbolCompletionItems = [
+      ...globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
+        {
+          label: symbol.name,
+          kind: symbolKindToCompletionKind(symbol.kind),
+          documentation: `${symbol.name}`
+        }
+      )),
+      ...convertSymbolsToCompletionItems(documentUri)
+    ]
   }
 
   // Directive statements completion items. bbclass files, include files, recipe files etc
@@ -161,7 +164,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     ...reserverdKeywordCompletionItems,
     ...variableCompletionItems,
     ...yoctoTaskSnippets,
-    ...symbolCompletions
+    ...symbolCompletionItems
   ]
 
   return allCompletions
@@ -266,6 +269,24 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
     return pathAsString + '/' + path.base
   }
   return undefined
+}
+
+function convertSymbolsToCompletionItems (uri: string): CompletionItem[] {
+  logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
+  const completionItems: CompletionItem[] = []
+  analyzer.getSymbolsForUri(uri).forEach((symbol) => {
+    const completionItem: CompletionItem = {
+      label: symbol.symbolName,
+      labelDetails: {
+        description: 'Source: Symbol Scanner'
+      },
+      documentation: '',
+      data: symbol,
+      kind: CompletionItemKind.Variable
+    }
+    completionItems.push(completionItem)
+  })
+  return completionItems
 }
 
 // TBD: Recipe completion, the code from CompletionProvider.ts
