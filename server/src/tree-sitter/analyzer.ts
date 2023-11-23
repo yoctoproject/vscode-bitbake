@@ -12,7 +12,8 @@ import {
   type TextDocumentPositionParams,
   type Diagnostic,
   type SymbolInformation,
-  type Range
+  type Range,
+  type Definition
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import type { TextDocument } from 'vscode-languageserver-textdocument'
@@ -20,7 +21,11 @@ import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarations
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
 import { range } from './utils'
-import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
+import { DIRECTIVE_STATEMENT_KEYWORDS, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
+import { logger } from '../lib/src/utils/OutputLogger'
+import fs from 'fs'
+import { definitionProvider } from '../DefinitionProvider'
+
 const DEBOUNCE_TIME_MS = 500
 
 interface AnalyzedDocument {
@@ -28,12 +33,27 @@ interface AnalyzedDocument {
   globalDeclarations: GlobalDeclarations
   embeddedRegions: EmbeddedRegions
   tree: Parser.Tree
+  symbols: SymbolContent[]
+}
+
+interface IncludeFiles {
+  filePath: string
+  fileContent: string[]
+}
+
+interface SymbolContent {
+  symbolName: string
+  startPosition: number
+  endPostion: number
+  filePath?: string
+  lineNumber?: number
 }
 
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
   private debouncedExecuteAnalyzation?: ReturnType<typeof debounce>
+  private includeFiles: IncludeFiles[] = []
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -41,6 +61,10 @@ export default class Analyzer {
 
   public getAnalyzedDocument (uri: string): AnalyzedDocument | undefined {
     return this.uriToAnalyzedDocument[uri]
+  }
+
+  public getSymbolsForUri (uri: string): SymbolContent[] {
+    return this.uriToAnalyzedDocument[uri]?.symbols ?? []
   }
 
   public initialize (parser: Parser): void {
@@ -65,11 +89,17 @@ export default class Analyzer {
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
     const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
 
+    // Reset the include files for it to be re-populated by extendsFile()
+    this.includeFiles = []
+    this.extendsFile(this.convertUriStringToFilePath(uri))
+    const symbols = this.scanForSymbols()
+
     this.uriToAnalyzedDocument[uri] = {
       document,
       globalDeclarations,
       embeddedRegions,
-      tree
+      tree,
+      symbols
     }
     let debouncedExecuteAnalyzation = this.debouncedExecuteAnalyzation
     if (debouncedExecuteAnalyzation === undefined) {
@@ -342,6 +372,141 @@ export default class Analyzer {
     }
 
     return tree.rootNode.descendantForPosition({ row: line, column })
+  }
+
+  // The following functions are from SymbolScanner.ts
+  private extendsFile (filePath: string): void {
+    logger.debug(`extendsFile file: ${filePath}`)
+
+    try {
+      const data: Buffer = fs.readFileSync(filePath)
+      const file: string[] = data.toString().split(/\r?\n/g)
+
+      this.includeFiles.push({
+        filePath,
+        fileContent: file
+      })
+
+      for (const line of file) {
+        const words = line.split(' ')
+
+        if (new Set(DIRECTIVE_STATEMENT_KEYWORDS).has(words[0])) {
+          logger.debug(`Directive statement keyword found: ${words[0]}`)
+          this.handleKeyword(words[0], line)
+        }
+      }
+    } catch (error) {
+      if (error instanceof Error) { // Check if error is an instance of the native JavaScript Error class
+        logger.error(`Error reading file at ${filePath}: ${error.message}`)
+      } else if (typeof error === 'string') {
+        logger.error(`Error reading file at ${filePath}: ${error}`)
+      } else {
+        logger.error(`An unknown error occurred while reading the file at ${filePath}`)
+      }
+    }
+  }
+
+  private handleKeyword (keyword: string, line: string): void {
+    const restOfLine: string[] = line.split(keyword).filter(String)
+
+    if (restOfLine.length === 1) {
+      const listOfSymbols: string[] = restOfLine[0].split(' ').filter(String)
+      let definition: Definition = []
+
+      if (listOfSymbols.length === 1) {
+        definition = definition.concat(definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0]))
+      } else if (listOfSymbols.length > 1) {
+        for (const symbol of listOfSymbols) {
+          definition = definition.concat(definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0], symbol))
+        }
+      }
+
+      for (const location of definition) {
+        if (location !== null) {
+          this.extendsFile(this.convertUriStringToFilePath(location.uri))
+        }
+      }
+    }
+  }
+
+  private convertUriStringToFilePath (fileUrlAsString: string): string {
+    const fileUrl = new URL(fileUrlAsString)
+    // Use decodeURIComponent to properly decode each part of the URL
+    // This correctly decodes url in Windows such as %3A -> :
+    let filePath: string = decodeURIComponent(fileUrl.pathname)
+
+    // For Windows, remove the leading slash if it exists
+    if (process.platform === 'win32' && filePath.startsWith('/')) {
+      filePath = filePath.substring(1)
+    }
+
+    return filePath
+  }
+
+  private scanForSymbols (): SymbolContent[] {
+    const symbols: SymbolContent[] = []
+    for (const file of this.includeFiles) {
+      for (const line of file.fileContent) {
+        const lineIndex: number = file.fileContent.indexOf(line)
+        const regex = /^\s*(?:export)?\s*(\w*(?:\[\w*\])?)\s*(?:=|:=|\+=|=\+|-=|=-|\?=|\?\?=|\.=|=\.)/g
+        const symbol = this.investigateLine(line, regex)
+
+        if (symbol !== undefined) {
+          symbol.filePath = file.filePath
+          symbol.lineNumber = lineIndex
+
+          symbols.push(symbol)
+        }
+      }
+    }
+
+    return symbols
+  }
+
+  private investigateLine (lineString: string, regex: RegExp): SymbolContent | undefined {
+    let m
+
+    while ((m = regex.exec(lineString)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === regex.lastIndex) {
+        regex.lastIndex++
+      }
+
+      if (m.length === 2) {
+        const symbol: string = m[1]
+        const filterdSymbolName = this.filterSymbolName(symbol)
+        if (filterdSymbolName === undefined) {
+          return undefined
+        }
+        const symbolStartPosition: number = lineString.indexOf(symbol)
+        const symbolEndPosition: number = symbolStartPosition + symbol.length
+
+        return {
+          symbolName: filterdSymbolName,
+          startPosition: symbolStartPosition,
+          endPostion: symbolEndPosition
+        }
+      }
+    }
+
+    return undefined
+  }
+
+  private filterSymbolName (symbol: string): string | undefined {
+    const regex = /^\w*/g
+    let m
+    let filterdSymbolName: string | undefined
+
+    while ((m = regex.exec(symbol)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === regex.lastIndex) {
+        regex.lastIndex++
+      }
+
+      filterdSymbolName = m[0]
+    }
+
+    return filterdSymbolName
   }
 }
 
