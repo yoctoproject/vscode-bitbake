@@ -41,3 +41,5 @@ export const FIXTURE_DOCUMENT: Record<FIXTURE_URI_KEY, TextDocument> = (
   acc[cur] = getDocument(FIXTURE_URI[cur])
   return acc
 }, {})
+
+export const DUMMY_URI = 'file://dummy_uri.bb'

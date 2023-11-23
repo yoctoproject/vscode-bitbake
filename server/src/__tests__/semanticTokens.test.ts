@@ -6,9 +6,7 @@
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { getParsedTokens, TOKEN_LEGEND } from '../semanticTokens'
-import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
-
-const DUMMY_URI = 'dummy_uri'
+import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 
 describe('Semantic tokens', () => {
   beforeAll(async () => {

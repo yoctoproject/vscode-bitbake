@@ -6,10 +6,8 @@
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
-import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
+import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 import { onHoverHandler } from '../connectionHandlers/onHover'
-
-const DUMMY_URI = 'dummy_uri'
 
 describe('on hover', () => {
   beforeAll(async () => {

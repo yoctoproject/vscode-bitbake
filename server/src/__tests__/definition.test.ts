@@ -6,7 +6,7 @@
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { onDefinitionHandler } from '../connectionHandlers/onDefinition'
-import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
+import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 import { type Location } from 'vscode-languageserver'
 import { definitionProvider } from '../DefinitionProvider'
 // TODO: Current implementation of the definitionProvider needs to be improved, this test suite should be modified accordingly after
@@ -20,7 +20,6 @@ const mockDefinition = (path: string | undefined): void => {
   }
 }
 
-const DUMMY_URI = 'dummy_uri'
 describe('on definition', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {

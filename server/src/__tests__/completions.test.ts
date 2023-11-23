@@ -5,12 +5,10 @@
 
 import { onCompletionHandler } from '../connectionHandlers/onCompletion'
 import { analyzer } from '../tree-sitter/analyzer'
-import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
+import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 import { generateParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
-
-const DUMMY_URI = 'dummy_uri'
 
 /**
  * The onCompletion handler doesn't allow other parameters, so we can't pass the analyzer and therefore the same

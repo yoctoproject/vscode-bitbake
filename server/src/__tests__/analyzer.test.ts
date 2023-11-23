@@ -5,10 +5,8 @@
 
 import { generateParser } from '../tree-sitter/parser'
 import Analyzer from '../tree-sitter/analyzer'
-import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
-
+import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 // Needed as the param
-const DUMMY_URI = 'dummy_uri'
 
 async function getAnalyzer (): Promise<Analyzer> {
   const parser = await generateParser()
