@@ -54,4 +54,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: vscode-bitbake
-        path: client/bitbake*.vsix
+        path: client/yocto-bitbake*.vsix
