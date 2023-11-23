@@ -116,6 +116,25 @@ describe('On Completion', () => {
         }
       ])
     )
+    // Duplicate variables from bitbake docs should not be included
+    expect(resultAfterDocScan).not.toEqual(
+      expect.arrayContaining([
+        {
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   A long description for the recipe.\n\n\n[Reference](https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-ref-variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: 'Source: Bitbake'
+          },
+          insertText: undefined,
+          insertTextFormat: 1,
+          label: 'DESCRIPTION',
+          kind: 6
+        }
+      ])
+    )
+
     // Variables from bitbake docs after filtering the duplicates
     expect(resultAfterDocScan).toEqual(
       expect.arrayContaining([
