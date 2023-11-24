@@ -4,9 +4,11 @@
  * ------------------------------------------------------------------------------------------ */
 
 import childProcess from 'child_process'
+import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings } from '../lib/src/BitbakeSettings'
+import { clientNotificationManager } from '../ui/ClientNotificationManager'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
@@ -95,5 +97,30 @@ export class BitbakeDriver {
     }
 
     return script
+  }
+
+  async checkBitbakeSettingsSanity (): Promise<boolean> {
+    const bitbakeFolder = this.bitbakeSettings.pathToBitbakeFolder
+    const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
+
+    if (!fs.existsSync(bitbakeBinPath)) {
+      clientNotificationManager.showBitbakeError("Bitbake binary doesn't exist: " + bitbakeBinPath)
+      return false
+    }
+
+    const pathToEnvScript = this.bitbakeSettings.pathToEnvScript
+    if (pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
+      clientNotificationManager.showBitbakeError("Bitbake environment script doesn't exist: " + pathToEnvScript)
+      return false
+    }
+
+    // eslint-disable-next-line @typescript-eslint/await-thenable
+    const ret = await this.spawnBitbakeProcessSync('which bitbake')
+    if (ret.status !== 0) {
+      clientNotificationManager.showBitbakeError('Command "which bitbake" failed: \n' + ret.stdout.toString() + ret.stderr.toString())
+      return false
+    }
+
+    return true
   }
 }
