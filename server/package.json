@@ -25,9 +25,6 @@
     "web-tree-sitter": "^0.20.8",
     "winston": "^2.4.4"
   },
-  "devDependencies": {
-    "@types/find": "^0.2.2"
-  },
   "scripts": {
     "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json"
   },

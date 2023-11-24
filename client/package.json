@@ -397,10 +397,12 @@
     "package": "npm run vscode:prepublish && vsce package"
   },
   "dependencies": {
+    "find": "^0.2.7",
     "vscode-languageclient": "^8.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.6.2",
+    "@types/find": "^0.2.2",
     "@types/vscode": "^1.75.1"
   },
   "workspaces": [
