@@ -18,20 +18,13 @@ import {
   TransportKind,
   type ServerOptions
 } from 'vscode-languageclient/node'
-import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
 import { middlewareProvideCompletion } from './middlewareCompletion'
 import { middlewareProvideHover } from './middlewareHover'
 import { requestsManager } from './RequestManager'
 import { middlewareProvideDefinition } from './middlewareDefinition'
-
-const notifyFileRenameChanged = async (
-  client: LanguageClient,
-  oldUriString: string,
-  newUriString: string
-): Promise<void> => {
-  const params: NotificationParams['FilenameChanged'] = { oldUriString, newUriString }
-  await client.sendNotification(NotificationMethod.FilenameChanged, params)
-}
+import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { logger } from '../lib/src/utils/OutputLogger'
+import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -48,7 +41,13 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   workspace.onDidRenameFiles((params) => {
     params.files.forEach((file) => {
-      void notifyFileRenameChanged(client, file.oldUri.toString(), file.newUri.toString())
+      embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(file.oldUri.toString(), file.newUri.toString())
+    })
+  })
+
+  workspace.onDidDeleteFiles((params) => {
+    params.files.forEach((file) => {
+      void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(file.toString())
     })
   })
 
@@ -58,7 +57,6 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     // TODO: check new documentSelector
     documentSelector: [{ scheme: 'file', language: 'bitbake' }],
     initializationOptions: {
-      storagePath: context.storageUri?.fsPath,
       extensionPath: context.extensionPath
     },
     middleware: {
@@ -66,6 +64,12 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
       provideDefinition: middlewareProvideDefinition,
       provideHover: middlewareProvideHover
     }
+  }
+
+  if (context.storageUri?.fsPath === undefined) {
+    logger.error('Failed to get storage path')
+  } else {
+    void embeddedLanguageDocsManager.setStoragePath(context.storageUri.fsPath)
   }
 
   // Create the language client and start the client.
@@ -96,6 +100,10 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   client.onRequest('bitbake/rescanProject', async () => {
     return await commands.executeCommand('bitbake.rescan-project')
+  })
+
+  client.onNotification(NotificationMethod.EmbeddedLanguageDocs, (embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs']) => {
+    void embeddedLanguageDocsManager.saveEmbeddedLanguageDocs(embeddedLanguageDocs)
   })
 
   // Start the client and launch the server

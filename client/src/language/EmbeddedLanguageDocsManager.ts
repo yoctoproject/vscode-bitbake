@@ -7,10 +7,8 @@ import { randomUUID } from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
-
-import { type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
-import { type EmbeddedLanguageDoc } from './utils'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
@@ -45,7 +43,7 @@ export default class EmbeddedLanguageDocsManager {
         const newPathToEmbeddedLanguageDocsFolder = path.join(newStoragePath, EMBEDDED_DOCUMENTS_FOLDER)
         fs.mkdir(newPathToEmbeddedLanguageDocsFolder, { recursive: true }, (err) => {
           if (err !== null) {
-            logger.error(`Failed to create embedded language documents folder: ${JSON.stringify(err)}`)
+            logger.error(`Failed to create embedded language documents folder: ${err as any}`)
           }
           resolve()
         })
@@ -58,7 +56,7 @@ export default class EmbeddedLanguageDocsManager {
         const oldPathToEmbeddedLanguageDocsFolder = path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
         fs.rmdir(oldPathToEmbeddedLanguageDocsFolder, { recursive: true }, (err) => {
           if (err !== null) {
-            logger.error(`Failed to remove embedded language documents folder: ${JSON.stringify(err)}`)
+            logger.error(`Failed to remove embedded language documents folder: ${err as any}`)
           }
           resolve()
         })
@@ -97,6 +95,14 @@ export default class EmbeddedLanguageDocsManager {
     const embeddedLanguageDocFilename = randomName + fileExtension
     const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
     return `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
+  }
+
+  async saveEmbeddedLanguageDocs (
+    embeddedLanguageDocs: EmbeddedLanguageDoc[]
+  ): Promise<void> {
+    await Promise.all(embeddedLanguageDocs.map(async (embeddedLanguageDoc) => {
+      await this.saveEmbeddedLanguageDoc(embeddedLanguageDoc)
+    }))
   }
 
   async saveEmbeddedLanguageDoc (

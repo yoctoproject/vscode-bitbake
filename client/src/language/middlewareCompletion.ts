@@ -9,11 +9,16 @@ import { type CompletionMiddleware } from 'vscode-languageclient/node'
 import { requestsManager } from './RequestManager'
 import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
 import { getFileContent } from '../lib/src/utils/files'
+import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 
 export const middlewareProvideCompletion: CompletionMiddleware['provideCompletionItem'] = async (document, position, context, token, next) => {
-  const embeddedLanguageDocInfos = await requestsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), position)
-  if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
+  const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
+  if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
     return await next(document, position, context, token)
+  }
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
+  if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
+    return
   }
   const embeddedLanguageDocContent = await getFileContent(Uri.parse(embeddedLanguageDocInfos.uri).fsPath)
   if (embeddedLanguageDocContent === undefined) {
