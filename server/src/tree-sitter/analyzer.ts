@@ -8,23 +8,23 @@
  * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/analyser.ts
  */
 
-import {
-  type TextDocumentPositionParams,
-  type Diagnostic,
-  type SymbolInformation,
-  type Range,
-  type Definition
+import type {
+  TextDocumentPositionParams,
+  Diagnostic,
+  SymbolInformation,
+  Range
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
-import type { TextDocument } from 'vscode-languageserver-textdocument'
+import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarations, type GlobalDeclarations } from './declarations'
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
-import { range } from './utils'
-import { DIRECTIVE_STATEMENT_KEYWORDS, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
+import * as TreeSitterUtils from './utils'
+import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { logger } from '../lib/src/utils/OutputLogger'
 import fs from 'fs'
-import { definitionProvider } from '../DefinitionProvider'
+import path from 'path'
+import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
 
 const DEBOUNCE_TIME_MS = 500
 
@@ -33,7 +33,7 @@ interface AnalyzedDocument {
   globalDeclarations: GlobalDeclarations
   embeddedRegions: EmbeddedRegions
   tree: Parser.Tree
-  symbols: SymbolContent[]
+  symbols?: SymbolContent[]
 }
 
 interface IncludeFiles {
@@ -79,7 +79,7 @@ export default class Analyzer {
     uri: string
   }): Promise<Diagnostic[]> {
     if (this.parser === undefined) {
-      console.log('The analyzer is not initialized with a parser')
+      logger.debug('[Analyzer] The analyzer is not initialized with a parser')
       return await Promise.resolve([])
     }
 
@@ -89,9 +89,9 @@ export default class Analyzer {
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
     const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
 
-    // Reset the include files for it to be re-populated by extendsFile()
+    // Reset the include files for it to be re-populated
     this.includeFiles = []
-    this.extendsFile(this.convertUriStringToFilePath(uri))
+    this.sourceIncludeFiles(uri, { td: document, tree })
     const symbols = this.scanForSymbols()
 
     this.uriToAnalyzedDocument[uri] = {
@@ -101,6 +101,7 @@ export default class Analyzer {
       tree,
       symbols
     }
+
     let debouncedExecuteAnalyzation = this.debouncedExecuteAnalyzation
     if (debouncedExecuteAnalyzation === undefined) {
       debouncedExecuteAnalyzation = debounce(this.executeAnalyzation.bind(this), DEBOUNCE_TIME_MS)
@@ -327,7 +328,7 @@ export default class Analyzer {
       return undefined
     }
 
-    return range(n)
+    return TreeSitterUtils.range(n)
   }
 
   /**
@@ -374,73 +375,112 @@ export default class Analyzer {
     return tree.rootNode.descendantForPosition({ row: line, column })
   }
 
-  // The following functions are from SymbolScanner.ts
-  private extendsFile (filePath: string): void {
-    logger.debug(`extendsFile file: ${filePath}`)
-
+  /**
+   *
+   * @param uri
+   * @param document Main purpose of this param is to avoid re-reading the file from disk and re-parsing the tree when the file is opened for the first time since the same process will happen in the analyze() before calling this function.
+   */
+  public sourceIncludeFiles (uri: string, document?: { td: TextDocument, tree: Parser.Tree }): void {
+    if (this.parser === undefined) {
+      logger.error('[Analyzer] The analyzer is not initialized with a parser')
+      return
+    }
+    const filePath = uri.replace('file://', '')
+    logger.debug(`[Analyzer] Sourcing file: ${filePath}`)
     try {
-      const data: Buffer = fs.readFileSync(filePath)
-      const file: string[] = data.toString().split(/\r?\n/g)
+      let textDocument: TextDocument
+      let parsedTree: Parser.Tree
+      if (document !== undefined) {
+        textDocument = document.td
+        parsedTree = document.tree
+      } else {
+        const analyzedDocument = this.uriToAnalyzedDocument[uri]
+        if (analyzedDocument === undefined) {
+          textDocument = TextDocument.create(
+            uri,
+            'bitbake',
+            0,
+            fs.readFileSync(uri.replace('file://', ''), 'utf8')
+          )
+          parsedTree = this.parser.parse(textDocument.getText())
+          // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
+          this.uriToAnalyzedDocument[uri] = {
+            document: textDocument,
+            globalDeclarations: getGlobalDeclarations({ tree: parsedTree, uri }), // TODO: Aovid doing this operation as it is not needed during the sourcing process
+            embeddedRegions: getEmbeddedRegionsFromNode(parsedTree, uri), // TODO: Avoid doing this operation as it is not needed during the sourcing process
+            tree: parsedTree
+          }
+        } else {
+          logger.debug('[Analyzer] File already analyzed')
+          textDocument = analyzedDocument.document
+          parsedTree = analyzedDocument.tree
+        }
+      }
+      const fileContent = textDocument.getText().split(/\r?\n/g)
 
       this.includeFiles.push({
         filePath,
-        fileContent: file
+        fileContent
       })
 
-      for (const line of file) {
-        const words = line.split(' ')
-
-        if (new Set(DIRECTIVE_STATEMENT_KEYWORDS).has(words[0])) {
-          logger.debug(`Directive statement keyword found: ${words[0]}`)
-          this.handleKeyword(words[0], line)
-        }
+      // Recursively scan for files in the directive statements `inherit`, `include` and `require`
+      const fileUris = this.getDirectiveFileUris(parsedTree)
+      for (const fileUri of fileUris) {
+        this.sourceIncludeFiles(fileUri)
       }
     } catch (error) {
-      if (error instanceof Error) { // Check if error is an instance of the native JavaScript Error class
-        logger.error(`Error reading file at ${filePath}: ${error.message}`)
+      if (error instanceof Error) {
+        logger.error(`[Analyzer] Error reading file at ${filePath}: ${error.message}`)
       } else if (typeof error === 'string') {
-        logger.error(`Error reading file at ${filePath}: ${error}`)
+        logger.error(`[Analyzer] Error reading file at ${filePath}: ${error}`)
       } else {
-        logger.error(`An unknown error occurred while reading the file at ${filePath}`)
+        logger.error(`[Analyzer] An unknown error occurred while reading the file at ${filePath}`)
       }
     }
   }
 
-  private handleKeyword (keyword: string, line: string): void {
-    const restOfLine: string[] = line.split(keyword).filter(String)
+  public getDirectiveFileUris (parsedTree: Parser.Tree): string[] {
+    const fileUris: string[] = []
+    parsedTree.rootNode.children.forEach((childNode) => {
+      if (childNode.type === 'inherit_directive') {
+        childNode.children.forEach((n) => {
+          if (n.type === 'inherit_path') {
+            logger.debug(`[Analyzer] Found inherit path: ${n.text}`)
+            const bbclasses = bitBakeProjectScanner.classes.filter((bbclass) => {
+              return bbclass.name === n.text
+            })
+            for (const bbclass of bbclasses) {
+              if (bbclass.path !== undefined) {
+                const uri: string = 'file://' + bbclass.path.dir + '/' + bbclass.path.base
+                fileUris.push(encodeURI(uri))
+              }
+            }
+          }
+        })
+      } else if (childNode.type === 'require_directive' || childNode.type === 'include_directive') {
+        if (childNode.firstNamedChild !== null && childNode.firstNamedChild.type === 'include_path') {
+          logger.debug(`[Analyzer] Found include path: ${childNode.firstNamedChild.text}`)
+          const includeFile = path.parse(childNode.firstNamedChild.text)
+          let includes = bitBakeProjectScanner.includes.filter((inc) => {
+            return inc.name === includeFile.name
+          })
 
-    if (restOfLine.length === 1) {
-      const listOfSymbols: string[] = restOfLine[0].split(' ').filter(String)
-      let definition: Definition = []
+          if (includes.length === 0) {
+            includes = bitBakeProjectScanner.recipes.filter((recipe) => {
+              return recipe.name === includeFile.name
+            })
+          }
 
-      if (listOfSymbols.length === 1) {
-        definition = definition.concat(definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0]))
-      } else if (listOfSymbols.length > 1) {
-        for (const symbol of listOfSymbols) {
-          definition = definition.concat(definitionProvider.createDefinitionForKeyword(keyword, restOfLine[0], symbol))
+          for (const include of includes) {
+            if (include.path !== undefined) {
+              const uri: string = 'file://' + include.path.dir + '/' + include.path.base
+              fileUris.push(encodeURI(uri))
+            }
+          }
         }
       }
-
-      for (const location of definition) {
-        if (location !== null) {
-          this.extendsFile(this.convertUriStringToFilePath(location.uri))
-        }
-      }
-    }
-  }
-
-  private convertUriStringToFilePath (fileUrlAsString: string): string {
-    const fileUrl = new URL(fileUrlAsString)
-    // Use decodeURIComponent to properly decode each part of the URL
-    // This correctly decodes url in Windows such as %3A -> :
-    let filePath: string = decodeURIComponent(fileUrl.pathname)
-
-    // For Windows, remove the leading slash if it exists
-    if (process.platform === 'win32' && filePath.startsWith('/')) {
-      filePath = filePath.substring(1)
-    }
-
-    return filePath
+    })
+    return fileUris
   }
 
   private scanForSymbols (): SymbolContent[] {
