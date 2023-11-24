@@ -8,7 +8,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { generateParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
-import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
+import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 
 const DUMMY_URI = 'dummy_uri'
 
@@ -314,7 +314,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const spy = jest.spyOn(bitBakeProjectScanner, 'overrides', 'get').mockReturnValue(['class-target'])
+    bitBakeProjectScannerClient.bitbakeScanResult._overrides = ['class-target']
 
     const result = onCompletionHandler({
       textDocument: {
@@ -325,8 +325,6 @@ describe('On Completion', () => {
         character: 6
       }
     })
-
-    spy.mockRestore()
 
     expect(result).toEqual(
       expect.arrayContaining([
@@ -447,7 +445,7 @@ describe('On Completion', () => {
 
   it('provides suggestions for direcitive statement after keywords "include", "inherit" and "requrie" are typed', async () => {
     const documentUri = 'file:///home/projects/poky/meta/conf-2/path/to/dummy.bb'
-    jest.spyOn(bitBakeProjectScanner, 'includes', 'get').mockReturnValue([
+    bitBakeProjectScannerClient.bitbakeScanResult._includes = [
       {
         name: 'init-manager-none',
         path: {
@@ -480,9 +478,9 @@ describe('On Completion', () => {
           priority: 5
         }
       }
-    ])
+    ]
 
-    jest.spyOn(bitBakeProjectScanner, 'classes', 'get').mockReturnValue([{
+    bitBakeProjectScannerClient.bitbakeScanResult._classes = [{
       name: 'copyleft_filter',
       path: {
         root: '/',
@@ -497,7 +495,7 @@ describe('On Completion', () => {
         path: '/home/projects/poky/meta',
         priority: 5
       }
-    }])
+    }]
 
     await analyzer.analyze({
       uri: documentUri,

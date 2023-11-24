@@ -15,10 +15,6 @@ import {
 } from './lib/src/types/BitbakeScanResult'
 
 import {
-  bitBakeProjectScanner
-} from './BitBakeProjectScanner'
-
-import {
   type SymbolScanner,
   type SymbolContent
 } from './SymbolScanner'
@@ -26,6 +22,7 @@ import {
 import { logger } from './lib/src/utils/OutputLogger'
 
 import path from 'path'
+import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
 
 export class DefinitionProvider {
   private _symbolScanner: SymbolScanner | null = null
@@ -49,7 +46,7 @@ export class DefinitionProvider {
             searchString = selectedSympbol
           }
 
-          const elementInfos: ElementInfo[] = bitBakeProjectScanner.classes.filter((obj: ElementInfo): boolean => {
+          const elementInfos: ElementInfo[] = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((obj: ElementInfo): boolean => {
             return obj.name === searchString
           })
           definition = this.createDefinitionForElementInfo(elementInfos)
@@ -60,12 +57,12 @@ export class DefinitionProvider {
       case 'include':
         {
           const includeFile: PathInfo = path.parse(restOfLine)
-          let elementInfos: ElementInfo[] = bitBakeProjectScanner.includes.filter((obj: ElementInfo): boolean => {
+          let elementInfos: ElementInfo[] = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((obj: ElementInfo): boolean => {
             return obj.name === includeFile.name
           })
 
           if (elementInfos.length === 0) {
-            elementInfos = bitBakeProjectScanner.recipes.filter((obj: ElementInfo): boolean => {
+            elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((obj: ElementInfo): boolean => {
               return obj.name === includeFile.name
             })
           }
@@ -92,7 +89,7 @@ export class DefinitionProvider {
   private createDefinitionForSymbolRecipes (symbol: string): Definition {
     let definitions: Definition = []
 
-    const recipe: ElementInfo | undefined = bitBakeProjectScanner.recipes.find((obj: ElementInfo): boolean => {
+    const recipe: ElementInfo | undefined = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
       return obj.name === symbol
     })
 

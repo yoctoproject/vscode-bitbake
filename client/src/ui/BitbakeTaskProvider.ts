@@ -5,7 +5,7 @@
 
 import type * as child_process from 'child_process'
 import * as vscode from 'vscode'
-import { type BitbakeDriver } from '../lib/src/BitbakeDriver'
+import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { logger } from '../lib/src/utils/OutputLogger'
 
 const endOfLine: string = '\r\n'
@@ -23,7 +23,7 @@ interface BitbakeTaskDefinition extends vscode.TaskDefinition {
 }
 
 export class BitbakeTaskProvider implements vscode.TaskProvider {
-  private readonly bitbakeDriver: BitbakeDriver
+  readonly bitbakeDriver: BitbakeDriver
 
   constructor (bitbakeDriver: BitbakeDriver) {
     this.bitbakeDriver = bitbakeDriver

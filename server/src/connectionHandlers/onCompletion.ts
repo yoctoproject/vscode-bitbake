@@ -18,8 +18,8 @@ import { formatCompletionItems } from '../completions/snippet-utils'
 import { bitBakeDocScanner, type DocInfoType } from '../BitBakeDocScanner'
 import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
-import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
 import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 
 let documentUri = ''
 
@@ -62,7 +62,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
         }
       })
 
-      const bitbakeOverridesCompletionItems: CompletionItem[] = bitBakeProjectScanner.overrides.map((override, index) => {
+      const bitbakeOverridesCompletionItems: CompletionItem[] = bitBakeProjectScannerClient.bitbakeScanResult._overrides.map((override, index) => {
         let label = override
         if (override === 'pn-defaultpkgname') {
           // eslint-disable-next-line no-template-curly-in-string
@@ -196,7 +196,7 @@ function getCompletionItemForDirectiveStatementKeyword (keyword: string): Comple
     case 'inherit':
       completionItem = [
         ...convertElementInfoListToCompletionItemList(
-          bitBakeProjectScanner.classes,
+          bitBakeProjectScannerClient.bitbakeScanResult._classes,
           CompletionItemKind.Class,
           'bbclass'
         )]
@@ -205,7 +205,7 @@ function getCompletionItemForDirectiveStatementKeyword (keyword: string): Comple
     case 'include':
       completionItem = [
         ...convertElementInfoListToCompletionItemList(
-          bitBakeProjectScanner.includes,
+          bitBakeProjectScannerClient.bitbakeScanResult._includes,
           CompletionItemKind.Interface,
           'inc'
         )
@@ -272,7 +272,7 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
 // function createCompletionItemForRecipes (): CompletionItem[] {
 //   return [
 //     ...convertElementInfoListToCompletionItemList(
-//       bitBakeProjectScanner.recipes,
+//       bitBakeProjectScannerClient.bitbakeScanResult.recipes,
 //       CompletionItemKind.Method,
 //       'bb'
 //     )
