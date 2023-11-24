@@ -35,7 +35,7 @@ export class BitbakeDriver {
   async spawnBitbakeProcess (command: string): Promise<childProcess.ChildProcess> {
     const { shell, script } = this.prepareCommand(command)
     await this.waitForBitbakeToFinish()
-    logger.debug(`Executing Bitbake command: ${shell} -c ${script}`)
+    logger.debug(`Executing Bitbake command with ${shell}: ${script}`)
     this.bitbakeActive = true
     const child = childProcess.spawn(script, {
       shell,
@@ -51,7 +51,7 @@ export class BitbakeDriver {
   async spawnBitbakeProcessSync (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
     const { shell, script } = this.prepareCommand(command)
     await this.waitForBitbakeToFinish()
-    logger.debug(`Executing Bitbake command (sync): ${shell} -c ${command}`)
+    logger.debug(`Executing Bitbake command (sync) with ${shell}: ${script}`)
     this.bitbakeActive = true
     const ret = childProcess.spawnSync(script, {
       shell,
