@@ -6,31 +6,24 @@
 import type childProcess from 'child_process'
 import find from 'find'
 import path from 'path'
+import EventEmitter from 'events'
+import * as vscode from 'vscode'
 
-import { type Connection } from 'vscode-languageserver'
-
-import { logger } from './lib/src/utils/OutputLogger'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 import type {
   BitbakeScanResult,
   ElementInfo,
   LayerInfo,
   PathInfo
-} from './lib/src/types/BitbakeScanResult'
+} from '../lib/src/types/BitbakeScanResult'
 
-import { BitbakeDriver } from './lib/src/BitbakeDriver'
+import { type BitbakeDriver } from './BitbakeDriver'
+import { type LanguageClient } from 'vscode-languageclient/node'
+
 interface ScannStatus {
   scanIsRunning: boolean
   scanIsPending: boolean
-}
-
-let _connection: Connection | null = null
-
-/**
- * Set the connection. Should be done at startup.
- */
-export function setBitBakeProjectScannerConnection (connection: Connection): void {
-  _connection = connection
 }
 
 /**
@@ -40,17 +33,19 @@ export class BitBakeProjectScanner {
   private readonly _classFileExtension: string = 'bbclass'
   private readonly _includeFileExtension: string = 'inc'
   private readonly _recipesFileExtension: string = 'bb'
+  onChange: EventEmitter = new EventEmitter()
 
-  private _layers: LayerInfo[] = new Array < LayerInfo >()
-  private _classes: ElementInfo[] = new Array < ElementInfo >()
-  private _includes: ElementInfo[] = new Array < ElementInfo >()
-  private _recipes: ElementInfo[] = new Array < ElementInfo >()
-  private _overrides: string[] = []
+  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [] }
   private _shouldDeepExamine: boolean = false
-  private readonly _bitbakeDriver: BitbakeDriver = new BitbakeDriver()
+  private _bitbakeDriver: BitbakeDriver | undefined
+  private _languageClient: LanguageClient | undefined
 
-  loadSettings (settings: any, workspaceFolder: string = ''): void {
-    this._bitbakeDriver.loadSettings(settings, workspaceFolder)
+  setDriver (bitbakeDriver: BitbakeDriver): void {
+    this._bitbakeDriver = bitbakeDriver
+  }
+
+  setClient (languageClient: LanguageClient): void {
+    this._languageClient = languageClient
   }
 
   private readonly _scanStatus: ScannStatus = {
@@ -58,28 +53,8 @@ export class BitBakeProjectScanner {
     scanIsPending: false
   }
 
-  get overrides (): string[] {
-    return this._overrides
-  }
-
-  get bitbakeDriver (): BitbakeDriver {
-    return this._bitbakeDriver
-  }
-
-  get layers (): LayerInfo[] {
-    return this._layers
-  }
-
-  get classes (): ElementInfo[] {
-    return this._classes
-  }
-
-  get includes (): ElementInfo[] {
-    return this._includes
-  }
-
-  get recipes (): ElementInfo[] {
-    return this._recipes
+  get scanResult (): BitbakeScanResult {
+    return this._bitbakeScanResult
   }
 
   get shouldDeepExamine (): boolean {
@@ -90,13 +65,17 @@ export class BitBakeProjectScanner {
     this._shouldDeepExamine = shouldDeepExamine
   }
 
+  get bitbakeDriver (): BitbakeDriver | undefined {
+    return this._bitbakeDriver
+  }
+
   async rescanProject (): Promise<void> {
     logger.info('request rescanProject')
 
     if (!this._scanStatus.scanIsRunning) {
       this._scanStatus.scanIsRunning = true
       logger.info('start rescanProject')
-      void _connection?.sendNotification('bitbake/startScan')
+      this.onChange.emit('startScan')
 
       try {
         await this.scanAvailableLayers()
@@ -110,11 +89,8 @@ export class BitBakeProjectScanner {
         logger.info('scan ready')
         this.printScanStatistic()
 
-        const scanResult: BitbakeScanResult = {
-          recipes: this._recipes,
-          includes: this._includes
-        }
-        void _connection?.sendNotification('bitbake/scanReady', scanResult)
+        void this._languageClient?.sendNotification('bitbake/scanReady', this._bitbakeScanResult)
+        this.onChange.emit('scanReady', this._bitbakeScanResult)
       } catch (error) {
         logger.error(`scanning of project is abborted: ${error as any}`)
       }
@@ -134,23 +110,23 @@ export class BitBakeProjectScanner {
   private printScanStatistic (): void {
     logger.info('Scan results:')
     logger.info('******************************************************************')
-    logger.info(`Layer:     ${this._layers.length}`)
-    logger.info(`Recipes:   ${this._recipes.length}`)
-    logger.info(`Inc-Files: ${this._includes.length}`)
-    logger.info(`bbclass:   ${this._classes.length}`)
-    logger.info(`overrides:   ${this._overrides.length}`)
+    logger.info(`Layer:     ${this._bitbakeScanResult._layers.length}`)
+    logger.info(`Recipes:   ${this._bitbakeScanResult._recipes.length}`)
+    logger.info(`Inc-Files: ${this._bitbakeScanResult._includes.length}`)
+    logger.info(`bbclass:   ${this._bitbakeScanResult._classes.length}`)
+    logger.info(`overrides:   ${this._bitbakeScanResult._overrides.length}`)
   }
 
   private scanForClasses (): void {
-    this._classes = this.searchFiles(this._classFileExtension)
+    this._bitbakeScanResult._classes = this.searchFiles(this._classFileExtension)
   }
 
   private scanForIncludeFiles (): void {
-    this._includes = this.searchFiles(this._includeFileExtension)
+    this._bitbakeScanResult._includes = this.searchFiles(this._includeFileExtension)
   }
 
   private async scanAvailableLayers (): Promise<void> {
-    this._layers = new Array < LayerInfo >()
+    this._bitbakeScanResult._layers = new Array < LayerInfo >()
 
     const commandResult = await this.executeBitBakeCommand('bitbake-layers show-layers')
 
@@ -175,7 +151,7 @@ export class BitBakeProjectScanner {
         }
 
         if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && layerElement.priority !== undefined) {
-          this._layers.push(layerElement)
+          this._bitbakeScanResult._layers.push(layerElement)
         }
       }
     } else {
@@ -187,7 +163,7 @@ export class BitBakeProjectScanner {
   private searchFiles (pattern: string): ElementInfo[] {
     const elements: ElementInfo[] = new Array < ElementInfo >()
 
-    for (const layer of this._layers) {
+    for (const layer of this._bitbakeScanResult._layers) {
       try {
         const files = find.fileSync(new RegExp(`.${pattern}$`), layer.path)
         for (const file of files) {
@@ -212,7 +188,7 @@ export class BitBakeProjectScanner {
   }
 
   async scanForRecipes (): Promise<void> {
-    this._recipes = new Array < ElementInfo >()
+    this._bitbakeScanResult._recipes = new Array < ElementInfo >()
 
     const commandResult = await this.executeBitBakeCommand('bitbake-layers show-recipes')
     if (commandResult.status !== 0) {
@@ -240,7 +216,7 @@ export class BitBakeProjectScanner {
         extraInfoString.push(`version: ${matchInner[2]} `)
       }
 
-      const layer = this._layers.find((obj: LayerInfo): boolean => {
+      const layer = this._bitbakeScanResult._layers.find((obj: LayerInfo): boolean => {
         return obj.name === layerName
       })
 
@@ -251,7 +227,7 @@ export class BitBakeProjectScanner {
         version
       }
 
-      this._recipes.push(element)
+      this._bitbakeScanResult._recipes.push(element)
     }
 
     await this.scanForRecipesPath()
@@ -265,11 +241,11 @@ export class BitBakeProjectScanner {
     }
     const output = commandResult.output.toString()
     const outerReg = /\nOVERRIDES="(.*)"\n/
-    this._overrides = output.match(outerReg)?.[1].split(':') ?? []
+    this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
   parseAllRecipes (): void {
-    void _connection?.sendRequest('bitbake/parseAllRecipes')
+    void vscode.commands.executeCommand('bitbake.parse-recipes')
   }
 
   private async scanForRecipesPath (): Promise<void> {
@@ -278,7 +254,7 @@ export class BitBakeProjectScanner {
     for (const file of tmpFiles) {
       const recipeName: string = file.name.split(/[_]/g)[0]
 
-      const element: ElementInfo | undefined = this._recipes.find((obj: ElementInfo): boolean => {
+      const element: ElementInfo | undefined = this._bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
         return obj.name === recipeName
       })
 
@@ -288,7 +264,7 @@ export class BitBakeProjectScanner {
     }
 
     if (this._shouldDeepExamine) {
-      const recipesWithOutPath: ElementInfo[] = this._recipes.filter((obj: ElementInfo): boolean => {
+      const recipesWithOutPath: ElementInfo[] = this._bitbakeScanResult._recipes.filter((obj: ElementInfo): boolean => {
         return obj.path === undefined
       })
 
@@ -331,7 +307,7 @@ export class BitBakeProjectScanner {
         const recipeName: string = fullRecipeNameAsArray[0].split('.')[0]
         const recipeVersion: string | undefined = fullRecipeNameAsArray[1]?.split('.bb')[0]
 
-        const recipe: ElementInfo | undefined = this.recipes.find((obj: ElementInfo): boolean => {
+        const recipe: ElementInfo | undefined = this._bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
           return obj.name === recipeName
         })
 
@@ -352,8 +328,10 @@ export class BitBakeProjectScanner {
   }
 
   private async executeBitBakeCommand (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
-    // eslint-disable-next-line @typescript-eslint/return-await
-    return this._bitbakeDriver.spawnBitbakeProcessSync(command)
+    if (this._bitbakeDriver === undefined) {
+      throw new Error('Bitbake driver is not set')
+    }
+    return await this._bitbakeDriver.spawnBitbakeProcessSync(command)
   }
 }
 
