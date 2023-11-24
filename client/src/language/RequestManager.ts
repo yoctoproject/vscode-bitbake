@@ -11,12 +11,12 @@ import { RequestMethod, type RequestParams, type RequestResult } from '../lib/sr
 export class RequestManager {
   client: LanguageClient | undefined
 
-  getEmbeddedLanguageDocInfos = async (
+  getEmbeddedLanguageTypeOnPosition = async (
     uriString: string,
     position: Position
-  ): RequestResult['EmbeddedLanguageDocInfos'] => {
-    const params: RequestParams['EmbeddedLanguageDocInfos'] = { uriString, position }
-    return await this.client?.sendRequest(RequestMethod.EmbeddedLanguageDocInfos, params)
+  ): RequestResult['EmbeddedLanguageTypeOnPosition'] => {
+    const params: RequestParams['EmbeddedLanguageTypeOnPosition'] = { uriString, position }
+    return await this.client?.sendRequest(RequestMethod.EmbeddedLanguageTypeOnPosition, params)
   }
 }
 

@@ -11,6 +11,7 @@ import { requestsManager } from './RequestManager'
 import { changeDefinitionUri, checkIsDefinitionRangeEqual, checkIsDefinitionUriEqual, convertToSameDefinitionType, getDefinitionUri, getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
 import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
+import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 
 export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinition'] = async (document, position, token, next) => {
   logger.debug(`[middlewareProvideDefinition] ${document.uri.toString()}, line ${position.line}, character ${position.character}`)
@@ -19,7 +20,11 @@ export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinitio
     logger.debug('[middlewareProvideDefinition] returning nextResult')
     return nextResult
   }
-  const embeddedLanguageDocInfos = await requestsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), position)
+  const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
+  if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
+    return
+  }
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
   logger.debug(`[middlewareProvideDefinition] embeddedLanguageDoc ${embeddedLanguageDocInfos?.uri}`)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return

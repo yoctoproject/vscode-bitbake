@@ -8,25 +8,27 @@ import { type Position } from 'vscode-languageserver'
 
 import { generateBashEmbeddedLanguageDoc } from './bash-support'
 import { generatePythonEmbeddedLanguageDoc } from './python-support'
-import { embeddedLanguageDocsManager } from './documents-manager'
 import { isInsideBashRegion, isInsidePythonRegion } from './utils'
-import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { analyzer } from '../tree-sitter/analyzer'
 
-export const generateEmbeddedLanguageDocs = async (textDocument: TextDocument): Promise<void> => {
-  await Promise.all([
-    generateBashEmbeddedLanguageDoc(textDocument),
-    generatePythonEmbeddedLanguageDoc(textDocument)
-  ])
+export const generateEmbeddedLanguageDocs = (textDocument: TextDocument): EmbeddedLanguageDoc[] | undefined => {
+  const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
+  if (analyzedDocument === undefined) {
+    return
+  }
+  return [
+    generateBashEmbeddedLanguageDoc(analyzedDocument),
+    generatePythonEmbeddedLanguageDoc(analyzedDocument)
+  ]
 }
 
-export const getEmbeddedLanguageDocInfosOnPosition = (uriString: string, position: Position): EmbeddedLanguageDocInfos | undefined => {
+export const getEmbeddedLanguageTypeOnPosition = (uriString: string, position: Position): EmbeddedLanguageType | undefined => {
   if (isInsideBashRegion(uriString, position)) {
-    const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'bash')
-    return documentInfos
+    return 'bash'
   }
   if (isInsidePythonRegion(uriString, position)) {
-    const documentInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uriString, 'python')
-    return documentInfos
+    return 'python'
   }
   return undefined
 }

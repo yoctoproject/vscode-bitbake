@@ -3,19 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { type TextDocument } from 'vscode-languageserver-textdocument'
-
-import { analyzer } from '../tree-sitter/analyzer'
+import { type AnalyzedDocument } from '../tree-sitter/analyzer'
 import * as TreeSitterUtils from '../tree-sitter/utils'
-import { embeddedLanguageDocsManager } from './documents-manager'
 import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
+import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 
-export const generateBashEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
-  const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
-  if (analyzedDocument === undefined) {
-    return
-  }
-  const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'bash')
+export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
+  const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'bash')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
     switch (node.type) {
       case 'recipe':
@@ -27,5 +21,5 @@ export const generateBashEmbeddedLanguageDoc = async (textDocument: TextDocument
         return false
     }
   })
-  await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(embeddedLanguageDoc)
+  return embeddedLanguageDoc
 }

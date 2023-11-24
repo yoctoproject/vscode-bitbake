@@ -9,14 +9,7 @@ import { type TextDocument } from 'vscode-languageserver-textdocument'
 
 import { analyzer } from '../tree-sitter/analyzer'
 import { positionIsWithinRange } from '../utils/range'
-import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
-
-export interface EmbeddedLanguageDoc {
-  originalUri: string
-  language: EmbeddedLanguageType
-  content: string
-  characterIndexes: number[]
-}
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 
 const isInsideRegion = (position: Position, region: LSP.SymbolInformation): boolean => {
   return positionIsWithinRange(position, region.location.range)

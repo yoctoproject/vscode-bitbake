@@ -3,14 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { type TextDocument } from 'vscode-languageserver-textdocument'
 import { type SyntaxNode } from 'web-tree-sitter'
 
-import { analyzer } from '../tree-sitter/analyzer'
+import { type AnalyzedDocument } from '../tree-sitter/analyzer'
 import * as TreeSitterUtils from '../tree-sitter/utils'
 
-import { embeddedLanguageDocsManager } from './documents-manager'
-import { type EmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
+import { insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
+import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 
 export const imports = [
   'import bb',
@@ -23,12 +22,8 @@ export const imports = [
   ''
 ].join('\n')
 
-export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
-  const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
-  if (analyzedDocument === undefined) {
-    return
-  }
-  const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'python')
+export const generatePythonEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
+  const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'python')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
     switch (node.type) {
       case 'python_function_definition':
@@ -45,7 +40,7 @@ export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocume
     }
   })
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, imports)
-  await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(embeddedLanguageDoc)
+  return embeddedLanguageDoc
 }
 
 const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {

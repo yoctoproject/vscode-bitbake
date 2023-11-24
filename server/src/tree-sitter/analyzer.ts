@@ -28,7 +28,7 @@ import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 
-interface AnalyzedDocument {
+export interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   globalSymbolComments: GlobalSymbolComments
