@@ -4,31 +4,16 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type Memento, commands, window } from 'vscode'
-import { type LanguageClient, type Disposable } from 'vscode-languageclient/node'
 
 export class ClientNotificationManager {
-  private readonly _client: LanguageClient
-  private readonly _memento: Memento
+  private _memento: Memento | undefined
 
-  constructor (client: LanguageClient, memento: Memento) {
-    this._client = client
+  setMemento (memento: Memento): void {
     this._memento = memento
   }
 
-  buildHandlers (): Disposable[] {
-    const handlers = [
-      this.bitBakeSettingsErrorHandler()
-    ]
-
-    return handlers
-  }
-
-  private bitBakeSettingsErrorHandler (): Disposable {
-    const isNeverShowAgain = this.checkIsNeverShowAgain('custom/bitbakeSettingsError')
-    if (isNeverShowAgain) {
-      return { dispose: () => {} }
-    }
-    return this._client.onNotification('custom/bitbakeSettingsError', (message?: string) => {
+  showBitbakeError (message?: string): void {
+    if (this.checkIsNeverShowAgain('custom/bitbakeSettingsError')) {
       void window.showErrorMessage(
         'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,
         'Open Settings',
@@ -42,14 +27,22 @@ export class ClientNotificationManager {
             void this.neverShowAgain('custom/bitbakeSettingsError')
           }
         })
-    })
+    }
   }
 
   private neverShowAgain (method: string): Thenable<void> {
+    if (this._memento === undefined) {
+      throw new Error('ClientNotificationManager Memento not set')
+    }
     return this._memento.update(`neverShowAgain/${method}`, true)
   }
 
   private checkIsNeverShowAgain (method: string): boolean {
+    if (this._memento === undefined) {
+      throw new Error('ClientNotificationManager Memento not set')
+    }
     return this._memento.get(`neverShowAgain/${method}`, false)
   }
 }
+
+export const clientNotificationManager: ClientNotificationManager = new ClientNotificationManager()
