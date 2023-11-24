@@ -5,6 +5,13 @@
 
 export type EmbeddedLanguageType = 'bash' | 'python'
 
+export interface EmbeddedLanguageDoc {
+  originalUri: string
+  language: EmbeddedLanguageType
+  content: string
+  characterIndexes: number[]
+}
+
 export interface EmbeddedLanguageDocInfos {
   uri: string
   language: EmbeddedLanguageType

@@ -3,19 +3,16 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { type EmbeddedLanguageDoc } from './embedded-languages'
+
 enum NotificationType {
-  FilenameChanged = 'FilenameChanged'
+  EmbeddedLanguageDocs = 'EmbeddedLanguageDocs'
 }
 
 export const NotificationMethod: Record<NotificationType, string> = {
-  [NotificationType.FilenameChanged]: 'custom/fileNameChanged'
+  [NotificationType.EmbeddedLanguageDocs]: 'custom/EmbeddedLanguageDocs'
 }
 
 export interface NotificationParams {
-  [NotificationType.FilenameChanged]: NotifyFileNameChangeParams
-}
-
-interface NotifyFileNameChangeParams {
-  oldUriString: string
-  newUriString: string
+  [NotificationType.EmbeddedLanguageDocs]: EmbeddedLanguageDoc[]
 }

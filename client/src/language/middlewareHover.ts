@@ -6,16 +6,21 @@
 import { type HoverMiddleware } from 'vscode-languageclient'
 import { type Hover, Uri, commands } from 'vscode'
 
-import { requestsManager } from './RequestManager'
 import { getEmbeddedLanguageDocPosition } from './utils'
 import { getFileContent } from '../lib/src/utils/files'
+import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { requestsManager } from './RequestManager'
 
 export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (document, position, token, next) => {
   const nextResult = await next(document, position, token)
   if (nextResult !== undefined) {
     return nextResult
   }
-  const embeddedLanguageDocInfos = await requestsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), position)
+  const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
+  if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
+    return
+  }
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
   }

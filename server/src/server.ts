@@ -12,8 +12,7 @@ import {
   TextDocuments,
   ProposedFeatures,
   TextDocumentSyncKind,
-  type InitializeParams,
-  FileChangeType
+  type InitializeParams
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { SymbolScanner } from './SymbolScanner'
@@ -24,13 +23,12 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { onHoverHandler } from './connectionHandlers/onHover'
-import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from './embedded-languages/general-support'
-import { embeddedLanguageDocsManager } from './embedded-languages/documents-manager'
-import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
-import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
+import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from './embedded-languages/general-support'
 import { getSemanticTokens, legend } from './semanticTokens'
 import { definitionProvider } from './DefinitionProvider'
 import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
+import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
+import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -42,14 +40,10 @@ const disposables: Disposable[] = []
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   logger.level = 'debug'
   logger.info('[onInitialize] Initializing connection')
-
   bitBakeProjectScannerClient.setConnection(connection)
   disposables.push(...bitBakeProjectScannerClient.buildHandlers())
 
-  const storagePath = params.initializationOptions.storagePath as string
   const extensionPath = params.initializationOptions.extensionPath as string
-
-  await embeddedLanguageDocsManager.setStoragePath(storagePath)
 
   logger.info('[onInitialize] Setting yocto doc path and parsing doc files')
   bitBakeDocScanner.setDocPathAndParse(extensionPath)
@@ -88,11 +82,6 @@ connection.onDidChangeConfiguration(async (change) => {
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 connection.onDidChangeWatchedFiles(async (change) => {
   logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
-  change.changes?.forEach((change) => {
-    if (change.type === FileChangeType.Deleted) {
-      void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
-    }
-  })
   void connection.sendRequest('bitbake/parseAllRecipes')
 })
 
@@ -109,9 +98,9 @@ connection.onDefinition(onDefinitionHandler)
 connection.onHover(onHoverHandler)
 
 connection.onRequest(
-  RequestMethod.EmbeddedLanguageDocInfos,
-  async ({ uriString, position }: RequestParams['EmbeddedLanguageDocInfos']): RequestResult['EmbeddedLanguageDocInfos'] => {
-    return getEmbeddedLanguageDocInfosOnPosition(uriString, position)
+  RequestMethod.EmbeddedLanguageTypeOnPosition,
+  async ({ uriString, position }: RequestParams['EmbeddedLanguageTypeOnPosition']): RequestResult['EmbeddedLanguageTypeOnPosition'] => {
+    return getEmbeddedLanguageTypeOnPosition(uriString, position)
   }
 )
 // This request method 'textDocument/semanticTokens' will be sent when semanticTokensProvider capability is enabled
@@ -119,13 +108,6 @@ connection.onRequest('textDocument/semanticTokens/full', ({ textDocument }) => {
   logger.debug(`[OnRequest] <textDocument/semanticTokens/full> Document uri: ${textDocument.uri}`)
   return getSemanticTokens(textDocument.uri)
 })
-
-connection.onNotification(
-  NotificationMethod.FilenameChanged,
-  ({ oldUriString, newUriString }: NotificationParams['FilenameChanged']): void => {
-    embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(oldUriString, newUriString)
-  }
-)
 
 connection.listen()
 
@@ -136,7 +118,10 @@ documents.onDidChangeContent(async (event) => {
 
   if (textDocument.getText().length > 0) {
     const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
-    void generateEmbeddedLanguageDocs(event.document)
+    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document)
+    if (embeddedLanguageDocs !== undefined) {
+      void connection.sendNotification(NotificationMethod.EmbeddedLanguageDocs, embeddedLanguageDocs)
+    }
     void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
 

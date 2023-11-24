@@ -27,7 +27,7 @@ import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 const DEBOUNCE_TIME_MS = 500
 
-interface AnalyzedDocument {
+export interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   embeddedRegions: EmbeddedRegions
