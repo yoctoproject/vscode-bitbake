@@ -20,6 +20,7 @@ import { BITBAKE_OPERATOR } from '../completions/bitbake-operator'
 import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
+import path from 'path'
 
 let documentUri = ''
 
@@ -274,17 +275,18 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
 function convertSymbolsToCompletionItems (uri: string): CompletionItem[] {
   logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
   const completionItems: CompletionItem[] = []
-  analyzer.getSymbolsForUri(uri).forEach((symbol) => {
-    const completionItem: CompletionItem = {
-      label: symbol.symbolName,
-      labelDetails: {
-        description: 'Source: Symbol Scanner'
-      },
-      documentation: '',
-      data: symbol,
-      kind: CompletionItemKind.Variable
-    }
-    completionItems.push(completionItem)
+  analyzer.getExtraSymbolsForUri(uri).forEach((extraSymbols) => {
+    Object.keys(extraSymbols).forEach((key) => {
+      const completionItem: CompletionItem = {
+        label: extraSymbols[key].name,
+        labelDetails: {
+          description: path.relative(documentUri.replace('file://', ''), extraSymbols[key].location.uri.replace('file://', ''))
+        },
+        documentation: '',
+        kind: symbolKindToCompletionKind(extraSymbols[key].kind)
+      }
+      completionItems.push(completionItem)
+    })
   })
   return completionItems
 }
