@@ -33,27 +33,13 @@ interface AnalyzedDocument {
   globalDeclarations: GlobalDeclarations
   embeddedRegions: EmbeddedRegions
   tree: Parser.Tree
-  symbols?: SymbolContent[]
-}
-
-interface IncludeFiles {
-  filePath: string
-  fileContent: string[]
-}
-
-interface SymbolContent {
-  symbolName: string
-  startPosition: number
-  endPostion: number
-  filePath?: string
-  lineNumber?: number
+  extraSymbols?: GlobalDeclarations[] // symbols from the include files
 }
 
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
   private debouncedExecuteAnalyzation?: ReturnType<typeof debounce>
-  private includeFiles: IncludeFiles[] = []
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -63,8 +49,8 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]
   }
 
-  public getSymbolsForUri (uri: string): SymbolContent[] {
-    return this.uriToAnalyzedDocument[uri]?.symbols ?? []
+  public getExtraSymbolsForUri (uri: string): GlobalDeclarations[] {
+    return this.uriToAnalyzedDocument[uri]?.extraSymbols ?? []
   }
 
   public initialize (parser: Parser): void {
@@ -88,18 +74,16 @@ export default class Analyzer {
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
     const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
-
-    // Reset the include files for it to be re-populated
-    this.includeFiles = []
-    this.sourceIncludeFiles(uri, { td: document, tree })
-    const symbols = this.scanForSymbols()
+    /* eslint-disable-next-line prefer-const */
+    let extraSymbols: GlobalDeclarations[] = []
+    this.sourceIncludeFiles(uri, extraSymbols, { td: document, tree })
 
     this.uriToAnalyzedDocument[uri] = {
       document,
       globalDeclarations,
       embeddedRegions,
       tree,
-      symbols
+      extraSymbols
     }
 
     let debouncedExecuteAnalyzation = this.debouncedExecuteAnalyzation
@@ -380,7 +364,7 @@ export default class Analyzer {
    * @param uri
    * @param document Main purpose of this param is to avoid re-reading the file from disk and re-parsing the tree when the file is opened for the first time since the same process will happen in the analyze() before calling this function.
    */
-  public sourceIncludeFiles (uri: string, document?: { td: TextDocument, tree: Parser.Tree }): void {
+  public sourceIncludeFiles (uri: string, extraSymbols: GlobalDeclarations[], document?: { td: TextDocument, tree: Parser.Tree }): void {
     if (this.parser === undefined) {
       logger.error('[Analyzer] The analyzer is not initialized with a parser')
       return
@@ -395,6 +379,7 @@ export default class Analyzer {
         parsedTree = document.tree
       } else {
         const analyzedDocument = this.uriToAnalyzedDocument[uri]
+        let globalDeclarations: GlobalDeclarations
         if (analyzedDocument === undefined) {
           textDocument = TextDocument.create(
             uri,
@@ -404,9 +389,10 @@ export default class Analyzer {
           )
           parsedTree = this.parser.parse(textDocument.getText())
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
+          globalDeclarations = getGlobalDeclarations({ tree: parsedTree, uri })
           this.uriToAnalyzedDocument[uri] = {
             document: textDocument,
-            globalDeclarations: getGlobalDeclarations({ tree: parsedTree, uri }), // TODO: Aovid doing this operation as it is not needed during the sourcing process
+            globalDeclarations,
             embeddedRegions: getEmbeddedRegionsFromNode(parsedTree, uri), // TODO: Avoid doing this operation as it is not needed during the sourcing process
             tree: parsedTree
           }
@@ -414,19 +400,15 @@ export default class Analyzer {
           logger.debug('[Analyzer] File already analyzed')
           textDocument = analyzedDocument.document
           parsedTree = analyzedDocument.tree
+          globalDeclarations = analyzedDocument.globalDeclarations
         }
+        extraSymbols.push(globalDeclarations)
       }
-      const fileContent = textDocument.getText().split(/\r?\n/g)
 
-      this.includeFiles.push({
-        filePath,
-        fileContent
-      })
-
-      // Recursively scan for files in the directive statements `inherit`, `include` and `require`
+      // Recursively scan for files in the directive statements `inherit`, `include` and `require` and pass the same reference of extraSymbols to each recursive call
       const fileUris = this.getDirectiveFileUris(parsedTree)
       for (const fileUri of fileUris) {
-        this.sourceIncludeFiles(fileUri)
+        this.sourceIncludeFiles(fileUri, extraSymbols, undefined)
       }
     } catch (error) {
       if (error instanceof Error) {
@@ -481,72 +463,6 @@ export default class Analyzer {
       }
     })
     return fileUris
-  }
-
-  private scanForSymbols (): SymbolContent[] {
-    const symbols: SymbolContent[] = []
-    for (const file of this.includeFiles) {
-      for (const line of file.fileContent) {
-        const lineIndex: number = file.fileContent.indexOf(line)
-        const regex = /^\s*(?:export)?\s*(\w*(?:\[\w*\])?)\s*(?:=|:=|\+=|=\+|-=|=-|\?=|\?\?=|\.=|=\.)/g
-        const symbol = this.investigateLine(line, regex)
-
-        if (symbol !== undefined) {
-          symbol.filePath = file.filePath
-          symbol.lineNumber = lineIndex
-
-          symbols.push(symbol)
-        }
-      }
-    }
-
-    return symbols
-  }
-
-  private investigateLine (lineString: string, regex: RegExp): SymbolContent | undefined {
-    let m
-
-    while ((m = regex.exec(lineString)) !== null) {
-      // This is necessary to avoid infinite loops with zero-width matches
-      if (m.index === regex.lastIndex) {
-        regex.lastIndex++
-      }
-
-      if (m.length === 2) {
-        const symbol: string = m[1]
-        const filterdSymbolName = this.filterSymbolName(symbol)
-        if (filterdSymbolName === undefined) {
-          return undefined
-        }
-        const symbolStartPosition: number = lineString.indexOf(symbol)
-        const symbolEndPosition: number = symbolStartPosition + symbol.length
-
-        return {
-          symbolName: filterdSymbolName,
-          startPosition: symbolStartPosition,
-          endPostion: symbolEndPosition
-        }
-      }
-    }
-
-    return undefined
-  }
-
-  private filterSymbolName (symbol: string): string | undefined {
-    const regex = /^\w*/g
-    let m
-    let filterdSymbolName: string | undefined
-
-    while ((m = regex.exec(symbol)) !== null) {
-      // This is necessary to avoid infinite loops with zero-width matches
-      if (m.index === regex.lastIndex) {
-        regex.lastIndex++
-      }
-
-      filterdSymbolName = m[0]
-    }
-
-    return filterdSymbolName
   }
 }
 
