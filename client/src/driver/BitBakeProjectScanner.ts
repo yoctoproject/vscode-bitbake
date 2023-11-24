@@ -93,6 +93,8 @@ export class BitBakeProjectScanner {
         this.onChange.emit('scanReady', this._bitbakeScanResult)
       } catch (error) {
         logger.error(`scanning of project is abborted: ${error as any}`)
+        this.parseAllRecipes()
+        this.onChange.emit('scanReady', { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [] })
       }
 
       this._scanStatus.scanIsRunning = false
