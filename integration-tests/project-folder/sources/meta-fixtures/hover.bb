@@ -7,3 +7,9 @@ python do_foo(){
 do_bar(){
     echo '123'
 }
+
+python do_build() {
+}
+
+do_build() {
+}

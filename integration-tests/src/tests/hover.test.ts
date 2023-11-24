@@ -62,4 +62,16 @@ suite('Bitbake Hover Test Suite', () => {
     const expected = 'echo'
     await testHover(position, expected)
   }).timeout(300000)
+
+  test('Hover shows Yocto task description on python function declaration', async () => {
+    const position = new vscode.Position(10, 9)
+    const expected = 'The default task for all recipes. This task depends on all other normal'
+    await testHover(position, expected)
+  }).timeout(300000)
+
+  test('Hover shows Yocto task description on bash function declaration', async () => {
+    const position = new vscode.Position(13, 1)
+    const expected = 'The default task for all recipes. This task depends on all other normal'
+    await testHover(position, expected)
+  }).timeout(300000)
 })

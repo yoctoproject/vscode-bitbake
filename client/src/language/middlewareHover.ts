@@ -11,9 +11,13 @@ import { getEmbeddedLanguageDocPosition } from './utils'
 import { getFileContent } from '../lib/src/utils/files'
 
 export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (document, position, token, next) => {
+  const nextResult = await next(document, position, token)
+  if (nextResult !== undefined) {
+    return nextResult
+  }
   const embeddedLanguageDocInfos = await requestsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), position)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
-    return await next(document, position, token)
+    return
   }
   const embeddedLanguageDocContent = await getFileContent(Uri.parse(embeddedLanguageDocInfos.uri).fsPath)
   if (embeddedLanguageDocContent === undefined) {
