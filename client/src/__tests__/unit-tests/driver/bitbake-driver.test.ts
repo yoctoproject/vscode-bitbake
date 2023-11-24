@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as fs from 'fs'
-import { BitbakeDriver } from '../../BitbakeDriver'
+import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
