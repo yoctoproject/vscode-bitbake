@@ -28,6 +28,9 @@ export interface ElementInfo {
 }
 
 export interface BitbakeScanResult {
-  recipes: ElementInfo[]
-  includes: ElementInfo[]
+  _layers: LayerInfo[]
+  _classes: ElementInfo[]
+  _includes: ElementInfo[]
+  _recipes: ElementInfo[]
+  _overrides: string[]
 }
