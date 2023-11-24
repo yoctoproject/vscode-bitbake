@@ -12,16 +12,18 @@ import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
 import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
+import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
 let parsingPending = false
 
-export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider): void {
+export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitbakePorjectScanner: BitBakeProjectScanner): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitbakePorjectScanner) }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
@@ -35,8 +37,14 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     }))
 }
 
-async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider): Promise<void> {
+async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
   logger.debug('Command: parse-recipes')
+
+  if (!(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+    logger.warn('bitbake settings are not sane, skip parse')
+    return
+  }
+
   const parseAllRecipesTask = new vscode.Task(
     { type: 'bitbake', options: { parseOnly: true } },
     vscode.TaskScope.Workspace,
@@ -173,4 +181,13 @@ async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvi
 function extractRecipeName (filename: string | undefined): string | undefined {
   if (filename === undefined) { return undefined }
   return path.basename(filename).split('.')[0].split('_')[0]
+}
+
+async function rescanProject (bitbakePorjectScanner: BitBakeProjectScanner): Promise<void> {
+  if (await bitbakePorjectScanner.bitbakeDriver?.checkBitbakeSettingsSanity() !== true) {
+    logger.warn('bitbake settings are not sane, skip rescan')
+    return
+  }
+
+  await bitbakePorjectScanner.rescanProject()
 }

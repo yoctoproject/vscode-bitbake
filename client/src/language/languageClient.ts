@@ -97,6 +97,10 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     return await commands.executeCommand('bitbake.parse-recipes')
   })
 
+  client.onRequest('bitbake/rescanProject', async () => {
+    return await commands.executeCommand('bitbake.rescan-project')
+  })
+
   // Start the client and launch the server
   await client.start()
 
