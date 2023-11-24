@@ -3,11 +3,11 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import fs from 'fs'
 import {
   type Connection,
   type InitializeResult,
   type CompletionItem,
+  type Disposable,
   createConnection,
   TextDocuments,
   ProposedFeatures,
@@ -16,7 +16,6 @@ import {
   FileChangeType
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
-import { bitBakeProjectScanner, setBitBakeProjectScannerConnection } from './BitBakeProjectScanner'
 import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
@@ -24,7 +23,6 @@ import { generateParser } from './tree-sitter/parser'
 import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
-import { setNotificationManagerConnection, serverNotificationManager } from './ServerNotificationManager'
 import { onHoverHandler } from './connectionHandlers/onHover'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageDocInfosOnPosition } from './embedded-languages/general-support'
 import { embeddedLanguageDocsManager } from './embedded-languages/documents-manager'
@@ -32,18 +30,21 @@ import { RequestMethod, type RequestParams, type RequestResult } from './lib/src
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 import { getSemanticTokens, legend } from './semanticTokens'
 import { definitionProvider } from './DefinitionProvider'
+import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
+
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
-let workspaceRoot: string = ''
 let parseOnSave = true
+
+const disposables: Disposable[] = []
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   logger.level = 'debug'
   logger.info('[onInitialize] Initializing connection')
-  workspaceRoot = new URL(params.workspaceFolders?.[0]?.uri ?? '').pathname
-  setNotificationManagerConnection(connection)
-  setBitBakeProjectScannerConnection(connection)
+
+  bitBakeProjectScannerClient.setConnection(connection)
+  disposables.push(...bitBakeProjectScannerClient.buildHandlers())
 
   const storagePath = params.initializationOptions.storagePath as string
   const extensionPath = params.initializationOptions.extensionPath as string
@@ -64,11 +65,6 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
         triggerCharacters: [':', '[']
       },
       definitionProvider: true,
-      executeCommandProvider: {
-        commands: [
-          'bitbake.rescan-project'
-        ]
-      },
       hoverProvider: true,
       semanticTokensProvider: {
         legend,
@@ -78,38 +74,14 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   }
 })
 
-async function checkBitbakeSettingsSanity (): Promise<boolean> {
-  const bitbakeFolder = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder
-  const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
-
-  if (!fs.existsSync(bitbakeBinPath)) {
-    serverNotificationManager.sendBitBakeSettingsError("Bitbake binary doesn't exist: " + bitbakeBinPath)
-    return false
-  }
-
-  const pathToEnvScript = bitBakeProjectScanner.bitbakeDriver.bitbakeSettings.pathToEnvScript
-  if (pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
-    serverNotificationManager.sendBitBakeSettingsError("Bitbake environment script doesn't exist: " + pathToEnvScript)
-    return false
-  }
-
-  // eslint-disable-next-line @typescript-eslint/await-thenable
-  const ret = await bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcessSync('which bitbake')
-  if (ret.status !== 0) {
-    serverNotificationManager.sendBitBakeSettingsError('Command "which bitbake" failed: \n' + ret.stdout.toString() + ret.stderr.toString())
-    return false
-  }
-
-  return true
-}
+connection.onShutdown(() => {
+  disposables.forEach((disposable) => { disposable.dispose() })
+})
 
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 connection.onDidChangeConfiguration(async (change) => {
   logger.level = change.settings.bitbake.loggingLevel
-  bitBakeProjectScanner.loadSettings(change.settings.bitbake, workspaceRoot)
-  if (await checkBitbakeSettingsSanity()) {
-    await bitBakeProjectScanner.rescanProject()
-  }
+  void connection.sendRequest('bitbake/rescanProject')
   parseOnSave = change.settings.bitbake.parseOnSave
 })
 
@@ -121,9 +93,7 @@ connection.onDidChangeWatchedFiles(async (change) => {
       void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
     }
   })
-  if (await checkBitbakeSettingsSanity()) {
-    await bitBakeProjectScanner.rescanProject()
-  }
+  void connection.sendRequest('bitbake/parseAllRecipes')
 })
 
 connection.onCompletion(onCompletionHandler)
@@ -132,16 +102,6 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
   logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)
   // TODO: An alternative: Currently it just returns the completion items created when onCompletion fires. Maybe here can be good place to get the documentation for completion items instead of getting all of the documentation at startup.
   return item
-})
-
-connection.onExecuteCommand(async (params) => {
-  logger.info(`executeCommand ${JSON.stringify(params)}`)
-
-  if (params.command === 'bitbake.rescan-project') {
-    if (await checkBitbakeSettingsSanity()) {
-      await bitBakeProjectScanner.rescanProject()
-    }
-  }
 })
 
 connection.onDefinition(onDefinitionHandler)
@@ -195,9 +155,7 @@ documents.onDidClose((event) => {
 documents.onDidSave(async (event) => {
   if (parseOnSave) {
     logger.debug(`onDidSave ${JSON.stringify(event)}`)
-    if (await checkBitbakeSettingsSanity()) {
-      bitBakeProjectScanner.parseAllRecipes()
-    }
+    void connection.sendRequest('bitbake/parseAllRecipes')
   }
 })
 

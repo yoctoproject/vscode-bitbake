@@ -6,16 +6,16 @@
 import * as vscode from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 
-import { ClientNotificationManager } from './ui/ClientNotificationManager'
+import { clientNotificationManager } from './ui/ClientNotificationManager'
 import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
-import { BitbakeDriver } from './lib/src/BitbakeDriver'
+import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { registerBitbakeCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
-import { BitBakeProjectScannerClient } from './language/BitbakeProjectScannerClient'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
+import { bitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -48,21 +48,20 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   loadLoggerSettings()
   bitbakeExtensionContext = context
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
+  bitBakeProjectScanner.setDriver(bitbakeDriver)
   updatePythonPath(bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
+  bitBakeProjectScanner.setClient(client)
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 
-  const notificationManager = new ClientNotificationManager(client, context.workspaceState)
-  context.subscriptions.push(...notificationManager.buildHandlers())
-  const bitBakeProjectScannerClient = new BitBakeProjectScannerClient(client)
-  context.subscriptions.push(...bitBakeProjectScannerClient.buildHandlers())
-  bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScannerClient)
+  clientNotificationManager.setMemento(context.workspaceState)
+  bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
   bitbakeRecipesView.registerView(context)
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
-  const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScannerClient)
+  const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
 
   // Handle settings change for bitbake driver
@@ -82,9 +81,11 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   }))
 
-  registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider)
+  registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner)
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
+
+  void vscode.commands.executeCommand('bitbake.rescan-project')
 }
 
 export function deactivate (): Thenable<void> | undefined {
