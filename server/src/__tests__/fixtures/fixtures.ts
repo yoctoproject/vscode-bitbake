@@ -32,7 +32,11 @@ export const FIXTURE_URI = {
   HOVER: `file://${path.join(FIXTURE_FOLDER, 'hover.bb')}`,
   DEFINITION: `file://${path.join(FIXTURE_FOLDER, 'definition.bb')}`,
   EMBEDDED: `file://${path.join(FIXTURE_FOLDER, 'embedded.bb')}`,
-  SEMANTIC_TOKENS: `file://${path.join(FIXTURE_FOLDER, 'semanticTokens.bb')}`
+  SEMANTIC_TOKENS: `file://${path.join(FIXTURE_FOLDER, 'semanticTokens.bb')}`,
+  DIRECTIVE: `file://${path.join(FIXTURE_FOLDER, 'directive.bb')}`,
+  BAZ_BBCLASS: `file://${path.join(FIXTURE_FOLDER, 'bbclass', 'baz.bbclass')}`,
+  BAR_INC: `file://${path.join(FIXTURE_FOLDER, 'inc', 'bar.inc')}`,
+  FOO_INC: `file://${path.join(FIXTURE_FOLDER, 'inc', 'foo.inc')}`
 }
 
 export const FIXTURE_DOCUMENT: Record<FIXTURE_URI_KEY, TextDocument> = (
