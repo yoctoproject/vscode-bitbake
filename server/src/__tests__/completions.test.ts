@@ -5,10 +5,11 @@
 
 import { onCompletionHandler } from '../connectionHandlers/onCompletion'
 import { analyzer } from '../tree-sitter/analyzer'
-import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
+import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import { generateParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
+import path from 'path'
 
 /**
  * The onCompletion handler doesn't allow other parameters, so we can't pass the analyzer and therefore the same
@@ -587,6 +588,96 @@ describe('On Completion', () => {
             insertText: 'copyleft_filter'
           }
         )
+      ])
+    )
+  })
+
+  it('provides extra symbols from files in the directive statements', async () => {
+    const parsedBarPath = path.parse(FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', ''))
+    const parsedFooPath = path.parse(FIXTURE_DOCUMENT.FOO_INC.uri.replace('file://', ''))
+    const parsedBazPath = path.parse(FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', ''))
+
+    bitBakeProjectScannerClient.bitbakeScanResult = {
+      _classes: [
+        {
+          name: parsedBazPath.name,
+          path: parsedBazPath,
+          extraInfo: 'layer: core'
+        }
+      ],
+      _includes: [
+        {
+          name: parsedBarPath.name,
+          path: parsedBarPath,
+          extraInfo: 'layer: core'
+        },
+        {
+          name: parsedFooPath.name,
+          path: parsedFooPath,
+          extraInfo: 'layer: core'
+        }
+      ],
+      _layers: [],
+      _overrides: [],
+      _recipes: []
+    }
+
+    await analyzer.analyze({
+      uri: FIXTURE_URI.DIRECTIVE,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: FIXTURE_URI.DIRECTIVE
+      },
+      position: {
+        line: 0,
+        character: 0
+      }
+    })
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAR_INC.replace('file://', ''))
+          }
+        })
+      ])
+    )
+    // PYTHON is in export statement
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'PYTHON',
+          labelDetails: {
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAR_INC.replace('file://', ''))
+          }
+        })
+      ])
+    )
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.FOO_INC.replace('file://', ''))
+          }
+        })
+      ])
+    )
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAZ_BBCLASS.replace('file://', ''))
+          }
+        })
       ])
     )
   })

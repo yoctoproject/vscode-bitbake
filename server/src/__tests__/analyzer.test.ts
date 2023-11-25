@@ -5,8 +5,12 @@
 
 import { generateParser } from '../tree-sitter/parser'
 import Analyzer from '../tree-sitter/analyzer'
-import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
-// Needed as the param
+import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
+import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
+import path from 'path'
+import fs from 'fs'
+import { logger } from '../lib/src/utils/OutputLogger'
+import { type GlobalDeclarations } from '../tree-sitter/declarations'
 
 async function getAnalyzer (): Promise<Analyzer> {
   const parser = await generateParser()
@@ -105,5 +109,202 @@ describe('analyze', () => {
     expect(wordAtPoint).toHaveBeenCalled()
     expect(word1).toEqual('FOO')
     expect(word2).toEqual('BAR')
+  })
+})
+
+describe('getDirectiveFileUris', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('gets directive file URIs', async () => {
+    const parsedBarPath = path.parse(FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', ''))
+    const parsedFooPath = path.parse(FIXTURE_DOCUMENT.FOO_INC.uri.replace('file://', ''))
+    const parsedBazPath = path.parse(FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', ''))
+
+    jest.spyOn(bitBakeProjectScanner, 'includes', 'get').mockReturnValue([
+      {
+        name: parsedBarPath.name,
+        path: parsedBarPath,
+        extraInfo: 'layer: core'
+      },
+      {
+        name: parsedFooPath.name,
+        path: parsedFooPath,
+        extraInfo: 'layer: core'
+      }
+    ])
+
+    jest.spyOn(bitBakeProjectScanner, 'classes', 'get').mockReturnValue([{
+      name: parsedBazPath.name,
+      path: parsedBazPath,
+      extraInfo: 'layer: core'
+    }])
+
+    const parser = await generateParser()
+    const analyzer = await getAnalyzer()
+
+    const parsedTree = parser.parse(FIXTURE_DOCUMENT.DIRECTIVE.getText())
+    const fileUris = analyzer.getDirectiveFileUris(parsedTree)
+
+    expect(fileUris).toEqual(
+      expect.arrayContaining([
+        FIXTURE_URI.BAR_INC,
+        FIXTURE_URI.FOO_INC,
+        FIXTURE_URI.BAZ_BBCLASS
+      ])
+    )
+  })
+})
+describe('sourceIncludeFiles', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('finds and analyzes files in the directive statements for the first time', async () => {
+    const analyzer = await getAnalyzer()
+    const uri = FIXTURE_URI.DIRECTIVE
+
+    jest.spyOn(Analyzer.prototype, 'getDirectiveFileUris').mockReturnValueOnce([
+      FIXTURE_URI.BAR_INC,
+      FIXTURE_URI.FOO_INC,
+      FIXTURE_URI.BAZ_BBCLASS
+    ])
+
+    const fsReadFileSyncMock = jest.spyOn(fs, 'readFileSync')
+
+    analyzer.sourceIncludeFiles(uri, [])
+
+    expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.DIRECTIVE.replace('file://', ''), 'utf8')
+    expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.FOO_INC.replace('file://', ''), 'utf8')
+    expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.BAR_INC.replace('file://', ''), 'utf8')
+    expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.BAR_INC.replace('file://', ''), 'utf8')
+
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.FOO_INC)).not.toBeUndefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAR_INC)).not.toBeUndefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAZ_BBCLASS)).not.toBeUndefined()
+  })
+
+  it('does not read the files and parse the syntax tree when the documents were already analyzed ', async () => {
+    const analyzer = await getAnalyzer()
+    const uri = FIXTURE_URI.DIRECTIVE
+    // analyze 4 documents before calling sourceIncludeFiles
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.DIRECTIVE, uri: FIXTURE_URI.DIRECTIVE })
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAR_INC, uri: FIXTURE_URI.BAR_INC })
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.FOO_INC, uri: FIXTURE_URI.FOO_INC })
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAZ_BBCLASS, uri: FIXTURE_URI.BAZ_BBCLASS })
+
+    jest.spyOn(Analyzer.prototype, 'getDirectiveFileUris').mockReturnValueOnce([
+      FIXTURE_URI.BAR_INC,
+      FIXTURE_URI.FOO_INC,
+      FIXTURE_URI.BAZ_BBCLASS
+    ])
+
+    const loggerMock = jest.spyOn(logger, 'debug')
+
+    analyzer.sourceIncludeFiles(uri, [])
+
+    let loggerDebugCalledTimes = 0
+    loggerMock.mock.calls.forEach((call) => {
+      if (call[0].includes('[Analyzer] File already analyzed')) {
+        loggerDebugCalledTimes++
+      }
+    })
+
+    // All 4 files were analyzed before, so the logger should be called 4 times
+    expect(loggerDebugCalledTimes).toEqual(4)
+
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.FOO_INC)).not.toBeUndefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAR_INC)).not.toBeUndefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAZ_BBCLASS)).not.toBeUndefined()
+  })
+
+  it('gets symbols from the include files', async () => {
+    const analyzer = await getAnalyzer()
+    const uri = FIXTURE_URI.DIRECTIVE
+
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.DIRECTIVE, uri: FIXTURE_URI.DIRECTIVE })
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAR_INC, uri: FIXTURE_URI.BAR_INC })
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.FOO_INC, uri: FIXTURE_URI.FOO_INC })
+    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAZ_BBCLASS, uri: FIXTURE_URI.BAZ_BBCLASS })
+
+    jest.spyOn(Analyzer.prototype, 'getDirectiveFileUris').mockReturnValueOnce([
+      FIXTURE_URI.BAR_INC,
+      FIXTURE_URI.FOO_INC,
+      FIXTURE_URI.BAZ_BBCLASS
+    ])
+
+    /* eslint-disable-next-line prefer-const */
+    let symbols: GlobalDeclarations[] = []
+    analyzer.sourceIncludeFiles(uri, symbols)
+
+    expect(symbols).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          DESCRIPTION: expect.objectContaining({
+            name: 'DESCRIPTION',
+            location: {
+              uri: FIXTURE_URI.BAR_INC,
+              range: {
+                start: {
+                  line: 0,
+                  character: 0
+                },
+                end: {
+                  line: 0,
+                  character: 23
+                }
+              }
+            }
+          })
+        })
+      ])
+    )
+
+    expect(symbols).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          DESCRIPTION: expect.objectContaining({
+            name: 'DESCRIPTION',
+            location: {
+              uri: FIXTURE_URI.FOO_INC,
+              range: {
+                start: {
+                  line: 0,
+                  character: 0
+                },
+                end: {
+                  line: 0,
+                  character: 23
+                }
+              }
+            }
+          })
+        })
+      ])
+    )
+
+    expect(symbols).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          DESCRIPTION: expect.objectContaining({
+            name: 'DESCRIPTION',
+            location: {
+              uri: FIXTURE_URI.BAZ_BBCLASS,
+              range: {
+                start: {
+                  line: 0,
+                  character: 0
+                },
+                end: {
+                  line: 0,
+                  character: 27
+                }
+              }
+            }
+          })
+        })
+      ])
+    )
   })
 })
