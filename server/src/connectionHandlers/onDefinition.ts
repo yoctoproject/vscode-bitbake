@@ -10,12 +10,22 @@ import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywor
 import { definitionProvider } from '../DefinitionProvider'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Definition | null {
-  const { textDocument, position } = textDocumentPositionParams
+  const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
   logger.debug(`[onDefinition] Position: Line ${position.line} Character ${position.character}`)
 
-  const documentAsText = analyzer.getDocumentTexts(textDocument.uri)
+  const wordPosition = {
+    line: position.line,
+    character: Math.max(position.character - 1, 0)
+  }
+
+  const word = analyzer.wordAtPointFromTextPosition({
+    ...textDocumentPositionParams,
+    position: wordPosition
+  })
+
+  const documentAsText = analyzer.getDocumentTexts(documentUri)
   if (documentAsText === undefined) {
-    logger.debug(`[onDefinition] Document not found for ${textDocument.uri}`)
+    logger.debug(`[onDefinition] Document not found for ${documentUri}`)
     return []
   }
 
@@ -26,6 +36,22 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     const definition = getDefinitionForDirectives(directiveStatementKeyword, textDocumentPositionParams, documentAsText)
     logger.debug(`[onDefinition] definition item: ${JSON.stringify(definition)}`)
     return definition
+  }
+
+  if (word !== null) {
+    if (analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams)) {
+      const definitions: Definition = []
+      analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
+        if (globalDeclaration[word] !== undefined) {
+          definitions.push({
+            uri: globalDeclaration[word].location.uri,
+            range: globalDeclaration[word].location.range
+          })
+        }
+      })
+
+      return definitions
+    }
   }
 
   return getDefinition(textDocumentPositionParams, documentAsText)
