@@ -13,7 +13,6 @@ import type * as Parser from 'web-tree-sitter'
 import * as TreeSitterUtil from './utils'
 
 const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> = {
-  environment_variable_assignment: LSP.SymbolKind.Variable,
   function_definition: LSP.SymbolKind.Function,
   python_function_definition: LSP.SymbolKind.Function,
   anonymous_python_function: LSP.SymbolKind.Function,
