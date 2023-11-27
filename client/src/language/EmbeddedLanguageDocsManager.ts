@@ -7,14 +7,21 @@ import { randomUUID } from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
-import { type EmbeddedLanguageDoc, type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
+import { Range, Uri, WorkspaceEdit, workspace } from 'vscode'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
 const fileExtensionsMap = {
   bash: '.sh',
   python: '.py'
+}
+
+export interface EmbeddedLanguageDocInfos {
+  uri: Uri
+  language: EmbeddedLanguageType
+  characterIndexes: number[]
 }
 
 type EmbeddedLanguageDocsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedLanguageDocInfos>>
@@ -65,10 +72,14 @@ export default class EmbeddedLanguageDocsManager {
     this._storagePath = newStoragePath
   }
 
-  private registerEmbeddedLanguageDocInfos (originalUriString: string, embeddedLanguageDocInfos: EmbeddedLanguageDocInfos): void {
-    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
-    embeddedLanguageDocs[embeddedLanguageDocInfos.language] = embeddedLanguageDocInfos
-    this.embeddedLanguageDocsInfos.set(originalUriString, embeddedLanguageDocs)
+  private registerEmbeddedLanguageDocInfos (embeddedLanguageDoc: EmbeddedLanguageDoc, uri: Uri): void {
+    const embeddedLanguageDocInfos: EmbeddedLanguageDocInfos = {
+      ...embeddedLanguageDoc,
+      uri
+    }
+    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(embeddedLanguageDoc.originalUri) ?? {}
+    embeddedLanguageDocs[embeddedLanguageDoc.language] = embeddedLanguageDocInfos
+    this.embeddedLanguageDocsInfos.set(embeddedLanguageDoc.originalUri, embeddedLanguageDocs)
   }
 
   getEmbeddedLanguageDocInfos (
@@ -79,22 +90,15 @@ export default class EmbeddedLanguageDocsManager {
     return embeddedLanguageDocs?.[languageType]
   }
 
-  private getPathToEmbeddedLanguageDoc (embeddedLanguageDoc: EmbeddedLanguageDoc): string | undefined {
+  private createEmbeddedLanguageDocUri (embeddedLanguageDoc: EmbeddedLanguageDoc): Uri | undefined {
     if (this.storagePath === undefined) {
       return undefined
-    }
-    const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(
-      embeddedLanguageDoc.originalUri,
-      embeddedLanguageDoc.language
-    )
-    if (embeddedLanguageDocInfos !== undefined) {
-      return embeddedLanguageDocInfos.uri.replace('file://', '')
     }
     const randomName = randomUUID()
     const fileExtension = fileExtensionsMap[embeddedLanguageDoc.language]
     const embeddedLanguageDocFilename = randomName + fileExtension
     const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
-    return `${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`
+    return Uri.parse(`file://${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`)
   }
 
   async saveEmbeddedLanguageDocs (
@@ -105,39 +109,52 @@ export default class EmbeddedLanguageDocsManager {
     }))
   }
 
+  private async updateEmbeddedLanguageDocFile (embeddedLanguageDoc: EmbeddedLanguageDoc, uri: Uri): Promise<void> {
+    const document = await workspace.openTextDocument(uri)
+    const fullRange = new Range(
+      document.positionAt(0),
+      document.positionAt(document.getText().length)
+    )
+    const workspaceEdit = new WorkspaceEdit()
+    workspaceEdit.replace(uri, fullRange, embeddedLanguageDoc.content)
+    await workspace.applyEdit(workspaceEdit)
+    await document.save()
+    this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc, uri)
+  }
+
+  private async createEmbeddedLanguageDocFile (embeddedLanguageDoc: EmbeddedLanguageDoc): Promise<void> {
+    const uri = this.createEmbeddedLanguageDocUri(embeddedLanguageDoc)
+    if (uri === undefined) {
+      return undefined
+    }
+    try {
+      await workspace.fs.writeFile(uri, Buffer.from(embeddedLanguageDoc.content))
+    } catch (err) {
+      logger.error(`Failed to create embedded document: ${err as any}`)
+    }
+    this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc, uri)
+  }
+
   async saveEmbeddedLanguageDoc (
     embeddedLanguageDoc: EmbeddedLanguageDoc
   ): Promise<void> {
     logger.debug(`Save embedded document (${embeddedLanguageDoc.language}) for ${embeddedLanguageDoc.originalUri}`)
-    const pathToEmbeddedLanguageDoc = this.getPathToEmbeddedLanguageDoc(embeddedLanguageDoc)
-    if (pathToEmbeddedLanguageDoc === undefined) {
-      return
+    const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(
+      embeddedLanguageDoc.originalUri,
+      embeddedLanguageDoc.language
+    )
+    if (embeddedLanguageDocInfos !== undefined) {
+      await this.updateEmbeddedLanguageDocFile(embeddedLanguageDoc, embeddedLanguageDocInfos.uri)
+    } else {
+      await this.createEmbeddedLanguageDocFile(embeddedLanguageDoc)
     }
-    await new Promise<void>((resolve, reject) => {
-      fs.writeFile(pathToEmbeddedLanguageDoc, embeddedLanguageDoc.content, (err) => {
-        err !== null ? reject(err) : resolve()
-      })
-    }).then(() => {
-      const embeddedLanguageDocInfos: EmbeddedLanguageDocInfos = {
-        ...embeddedLanguageDoc,
-        uri: `file://${pathToEmbeddedLanguageDoc}`
-      }
-      this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc.originalUri, embeddedLanguageDocInfos)
-    }).catch((err) => {
-      logger.error(`Failed to create embedded document: ${err}`)
-    })
   }
 
   async deleteEmbeddedLanguageDocs (originalUriString: string): Promise<void> {
     logger.debug(`Delete embedded documents for ${originalUriString}`)
     const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
     await Promise.all(Object.values(embeddedLanguageDocs).map(async ({ uri }) => {
-      await new Promise<void>((resolve, reject) => {
-        const pathToEmbeddedLanguageDoc = uri.replace('file://', '')
-        fs.unlink(pathToEmbeddedLanguageDoc, (err) => {
-          err !== null ? reject(err) : resolve()
-        })
-      })
+      await workspace.fs.delete(uri)
     })).then(() => {
       this.embeddedLanguageDocsInfos.delete(originalUriString)
     }).catch((err) => {

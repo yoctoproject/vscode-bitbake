@@ -3,15 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { Location, Position, Range, Uri, commands, type LocationLink, type TextDocument } from 'vscode'
+import { Location, Position, Range, commands, type LocationLink, type TextDocument, workspace } from 'vscode'
 import { type DefinitionMiddleware } from 'vscode-languageclient'
 
-import { getFileContent } from '../lib/src/utils/files'
 import { requestsManager } from './RequestManager'
 import { changeDefinitionUri, checkIsDefinitionRangeEqual, checkIsDefinitionUriEqual, convertToSameDefinitionType, getDefinitionUri, getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
-import { type EmbeddedLanguageDocInfos } from '../lib/src/types/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
-import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 
 export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinition'] = async (document, position, token, next) => {
   logger.debug(`[middlewareProvideDefinition] ${document.uri.toString()}, line ${position.line}, character ${position.character}`)
@@ -25,33 +23,29 @@ export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinitio
     return
   }
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
-  logger.debug(`[middlewareProvideDefinition] embeddedLanguageDoc ${embeddedLanguageDocInfos?.uri}`)
+  logger.debug(`[middlewareProvideDefinition] embeddedLanguageDoc ${embeddedLanguageDocInfos?.uri as any}`)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
   }
-  const embeddedLanguageDocContent = await getFileContent(Uri.parse(embeddedLanguageDocInfos.uri).fsPath)
-  if (embeddedLanguageDocContent === undefined) {
-    return
-  }
+  const embeddedLanguageTextDocument = await workspace.openTextDocument(embeddedLanguageDocInfos.uri)
   const adjustedPosition = getEmbeddedLanguageDocPosition(
     document,
-    embeddedLanguageDocContent,
+    embeddedLanguageTextDocument,
     embeddedLanguageDocInfos.characterIndexes,
     position
   )
-  const vdocUri = Uri.parse(embeddedLanguageDocInfos.uri)
   const tempResult = await commands.executeCommand<Location[] | LocationLink[]>(
     'vscode.executeDefinitionProvider',
-    vdocUri,
+    embeddedLanguageDocInfos.uri,
     adjustedPosition
   )
 
   // This check's purpose is only to please TypeScript.
   // We'd rather have a pointless check than losing the type assurance provided by TypeScript.
   if (checkIsArrayLocation(tempResult)) {
-    return await processDefinitions(tempResult, document, embeddedLanguageDocContent, embeddedLanguageDocInfos)
+    return await processDefinitions(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
   } else {
-    return await processDefinitions(tempResult, document, embeddedLanguageDocContent, embeddedLanguageDocInfos)
+    return await processDefinitions(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
   }
 }
 
@@ -62,12 +56,12 @@ const checkIsArrayLocation = (array: Location[] | LocationLink[]): array is Loca
 const processDefinitions = async <DefinitionType extends Location | LocationLink>(
   definitions: DefinitionType[],
   originalTextDocument: TextDocument,
-  embeddedLanguageDocContent: string,
+  embeddedLanguageTextDocument: TextDocument,
   embeddedLanguageDocInfos: EmbeddedLanguageDocInfos
 ): Promise<DefinitionType[]> => {
   const result: DefinitionType[] = []
   await Promise.all(definitions.map(async (definition) => {
-    if (!checkIsDefinitionUriEqual(definition, Uri.parse(embeddedLanguageDocInfos.uri))) {
+    if (!checkIsDefinitionUriEqual(definition, embeddedLanguageDocInfos.uri)) {
       result.push(definition) // only definitions located on the embedded language documents need ajustments
       return
     }
@@ -81,7 +75,7 @@ const processDefinitions = async <DefinitionType extends Location | LocationLink
       }
     }
     changeDefinitionUri(definition, originalTextDocument.uri)
-    ajustDefinitionRange(definition, originalTextDocument, embeddedLanguageDocContent, embeddedLanguageDocInfos.characterIndexes)
+    ajustDefinitionRange(definition, originalTextDocument, embeddedLanguageTextDocument, embeddedLanguageDocInfos.characterIndexes)
     result.push(definition)
   }))
   return result
@@ -91,21 +85,21 @@ const processDefinitions = async <DefinitionType extends Location | LocationLink
 const ajustDefinitionRange = (
   definition: Location | LocationLink,
   originalTextDocument: TextDocument,
-  embeddedLanguageDocContent: string,
+  embeddedLanguageTextDocument: TextDocument,
   characterIndexes: number[]
 ): void => {
   if (definition instanceof Location) {
-    const newRange = getOriginalDocRange(originalTextDocument, embeddedLanguageDocContent, characterIndexes, definition.range)
+    const newRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.range)
     if (newRange !== undefined) {
       definition.range = newRange
     }
   } else {
-    const newTargetRange = getOriginalDocRange(originalTextDocument, embeddedLanguageDocContent, characterIndexes, definition.targetRange)
+    const newTargetRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.targetRange)
     if (newTargetRange !== undefined) {
       definition.targetRange = newTargetRange
     }
     if (definition.targetSelectionRange !== undefined) {
-      const newTargetSelectionRange = getOriginalDocRange(originalTextDocument, embeddedLanguageDocContent, characterIndexes, definition.targetSelectionRange)
+      const newTargetSelectionRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.targetSelectionRange)
       if (newTargetSelectionRange !== undefined) {
         definition.targetSelectionRange = newTargetRange
       }

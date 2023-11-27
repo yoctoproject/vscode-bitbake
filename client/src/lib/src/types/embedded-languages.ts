@@ -11,9 +11,3 @@ export interface EmbeddedLanguageDoc {
   content: string
   characterIndexes: number[]
 }
-
-export interface EmbeddedLanguageDocInfos {
-  uri: string
-  language: EmbeddedLanguageType
-  characterIndexes: number[]
-}
