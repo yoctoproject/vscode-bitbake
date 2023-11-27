@@ -101,6 +101,25 @@
         "string": {
             "patterns": [
                 {
+                    "name": "string.quoted.triple.bb",
+                    "begin": "(\"\"\")",
+                    "end": "(\"\"\")",
+                    "patterns": [
+                        {
+                            "include": "#escaped-single-quote"
+                        },
+                        {
+                            "include": "#escaped-double-quote"
+                        },
+                        {
+                            "include": "#inline-python"
+                        },
+                        {
+                            "include": "#variable-expansion"
+                        }
+                    ]
+                },
+                {
                     "name": "string.quoted.double.bb",
                     "begin": "(\")",
                     "end": "(\")",

@@ -51,3 +51,9 @@ INHERIT += "autotools pkgconfig"
 MYVAR = "This string contains escaped double quote \" and it should not break the highlight"
 
 MYVAR = 'This string contains escaped single quote \' and it should not break the highlight'
+
+MYVAR = """
+nested " quotes shoudn't change the highlighting
+"""
+
+TEST_TRIPLE_QUOTES = 'the highlighting for this line which follows the triple quotes should still work correctly'

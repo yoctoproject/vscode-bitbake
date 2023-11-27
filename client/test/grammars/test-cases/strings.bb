@@ -143,3 +143,18 @@
 #                                                   ^^ source.bb string.quoted.single.bb constant.character.escape.bb
 #                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.single.bb
 #                                                                                           ^ source.bb string.quoted.single.bb
+
+>MYVAR = """
+#        ^^^ source.bb string.quoted.triple.bb
+>nested " quotes shoudn't change the highlighting
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.triple.bb
+>"""
+#^^^ source.bb string.quoted.triple.bb
+>
+>TEST_TRIPLE_QUOTES = 'the highlighting for this line which follows the triple quotes should still work correctly'
+#^^^^^^^^^^^^^^^^^^ source.bb variable.other.names.bb
+#                   ^ source.bb keyword.operator.bb
+#                     ^ source.bb string.quoted.single.bb
+#                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ source.bb string.quoted.single.bb
+#                                                                                                                ^ source.bb string.quoted.single.bb
+>
