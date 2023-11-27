@@ -680,5 +680,51 @@ describe('On Completion', () => {
         })
       ])
     )
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    bitBakeDocScanner.parseYoctoVariablesFile()
+
+    const result2 = onCompletionHandler({
+      textDocument: {
+        uri: FIXTURE_URI.DIRECTIVE
+      },
+      position: {
+        line: 0,
+        character: 0
+      }
+    })
+    // When it is a variable existing in the docs, the completion item should have documentation etc.
+    expect(result2).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAZ_BBCLASS.replace('file://', ''))
+          },
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          insertText: undefined,
+          insertTextFormat: 1
+        })
+      ])
+    )
+    // The variables from docs should be filtered out if they exist in the extra symbols
+    expect(result2).not.toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: 'Source: Yocto'
+          },
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          insertText: undefined,
+          insertTextFormat: 1
+        })
+      ])
+    )
   })
 })

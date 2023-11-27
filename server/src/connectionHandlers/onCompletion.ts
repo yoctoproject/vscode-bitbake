@@ -121,7 +121,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
           documentation: `${symbol.name}`
         }
       )),
-      ...convertSymbolsToCompletionItems(documentUri)
+      ...formatCompletionItems(convertExtraSymbolsToCompletionItems(documentUri))
     ]
   }
 
@@ -155,11 +155,11 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   const yoctoVariableCompletionItems: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoVariableInfo), CompletionItemKind.Variable)
 
-  // Remove the duplicate variables by their names. It still keeps the fallback variables from BITBAKE_VARIABLES before scanning the docs since yoctoVariableCompletionItems will be [] in that case
-  const variableCompletionItems: CompletionItem[] = [
-    ...bitBakeVariableCompletionItems.filter((bitbakeVariable) => !yoctoVariableCompletionItems.some(yoctoVariable => yoctoVariable.label === bitbakeVariable.label)),
+  // 1. Remove the duplicate variables by their names. It still keeps the fallback variables from BITBAKE_VARIABLES before scanning the docs since yoctoVariableCompletionItems will be [] in that case
+  // 2. Remove the duplicates in variable completion items if they exist in the extra symbols. Keep the ones in the extra symbols as they contain information about the relative path.
+  const variableCompletionItems: CompletionItem[] = [...bitBakeVariableCompletionItems.filter((bitbakeVariable) => !yoctoVariableCompletionItems.some(yoctoVariable => yoctoVariable.label === bitbakeVariable.label)),
     ...yoctoVariableCompletionItems
-  ]
+  ].filter((variableCompletionItem) => !symbolCompletionItems.some((symbolCompletionItem) => symbolCompletionItem.label === variableCompletionItem.label))
 
   const allCompletions = [
     ...reserverdKeywordCompletionItems,
@@ -272,18 +272,27 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
   return undefined
 }
 
-function convertSymbolsToCompletionItems (uri: string): CompletionItem[] {
+function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
   const completionItems: CompletionItem[] = []
   analyzer.getExtraSymbolsForUri(uri).forEach((extraSymbols) => {
     Object.keys(extraSymbols).forEach((key) => {
+      const variableInfo = [
+        ...bitBakeDocScanner.bitbakeVariableInfo.filter((bitbakeVariable) => !bitBakeDocScanner.yoctoVariableInfo.some(yoctoVariable => yoctoVariable.name === bitbakeVariable.name)),
+        ...bitBakeDocScanner.yoctoVariableInfo
+      ]
+      const foundInVariableInfo = variableInfo.find((variable) => variable.name === extraSymbols[key].name)
       const completionItem: CompletionItem = {
         label: extraSymbols[key].name,
         labelDetails: {
           description: path.relative(documentUri.replace('file://', ''), extraSymbols[key].location.uri.replace('file://', ''))
         },
-        documentation: '',
-        kind: symbolKindToCompletionKind(extraSymbols[key].kind)
+        documentation: foundInVariableInfo?.definition ?? '',
+        kind: symbolKindToCompletionKind(extraSymbols[key].kind),
+        data: {
+          referenceUrl: foundInVariableInfo?.referenceUrl
+        },
+        insertText: foundInVariableInfo?.insertText
       }
       completionItems.push(completionItem)
     })
