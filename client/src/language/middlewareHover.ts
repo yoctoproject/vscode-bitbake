@@ -4,10 +4,9 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type HoverMiddleware } from 'vscode-languageclient'
-import { type Hover, Uri, commands } from 'vscode'
+import { type Hover, commands, workspace } from 'vscode'
 
 import { getEmbeddedLanguageDocPosition } from './utils'
-import { getFileContent } from '../lib/src/utils/files'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { requestsManager } from './RequestManager'
 
@@ -24,20 +23,16 @@ export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (do
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
   }
-  const embeddedLanguageDocContent = await getFileContent(Uri.parse(embeddedLanguageDocInfos.uri).fsPath)
-  if (embeddedLanguageDocContent === undefined) {
-    return
-  }
+  const embeddedLanguageTextDocument = await workspace.openTextDocument(embeddedLanguageDocInfos.uri)
   const adjustedPosition = getEmbeddedLanguageDocPosition(
     document,
-    embeddedLanguageDocContent,
+    embeddedLanguageTextDocument,
     embeddedLanguageDocInfos.characterIndexes,
     position
   )
-  const vdocUri = Uri.parse(embeddedLanguageDocInfos.uri)
   const result = await commands.executeCommand<Hover[]>(
     'vscode.executeHoverProvider',
-    vdocUri,
+    embeddedLanguageDocInfos.uri,
     adjustedPosition
   )
   return result[0]
