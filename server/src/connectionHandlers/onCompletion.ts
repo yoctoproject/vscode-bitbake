@@ -26,7 +26,7 @@ let documentUri = ''
 export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
   const wordPosition = {
     line: textDocumentPositionParams.position.line,
-    // Go one character back to get completion on the current word. This is used as a parameter in descendantForPosition()
+    // Go one character back to get completion on the current word.
     character: Math.max(textDocumentPositionParams.position.character - 1, 0)
   }
 
