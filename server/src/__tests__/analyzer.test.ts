@@ -6,7 +6,7 @@
 import { generateParser } from '../tree-sitter/parser'
 import Analyzer from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
-import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
+import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
 import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
@@ -122,7 +122,7 @@ describe('getDirectiveFileUris', () => {
     const parsedFooPath = path.parse(FIXTURE_DOCUMENT.FOO_INC.uri.replace('file://', ''))
     const parsedBazPath = path.parse(FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', ''))
 
-    jest.spyOn(bitBakeProjectScanner, 'includes', 'get').mockReturnValue([
+    bitBakeProjectScannerClient.bitbakeScanResult._includes = [
       {
         name: parsedBarPath.name,
         path: parsedBarPath,
@@ -133,13 +133,13 @@ describe('getDirectiveFileUris', () => {
         path: parsedFooPath,
         extraInfo: 'layer: core'
       }
-    ])
+    ]
 
-    jest.spyOn(bitBakeProjectScanner, 'classes', 'get').mockReturnValue([{
+    bitBakeProjectScannerClient.bitbakeScanResult._classes = [{
       name: parsedBazPath.name,
       path: parsedBazPath,
       extraInfo: 'layer: core'
-    }])
+    }]
 
     const parser = await generateParser()
     const analyzer = await getAnalyzer()
