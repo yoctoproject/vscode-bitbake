@@ -13,6 +13,7 @@ import { generateParser } from '../tree-sitter/parser'
 import { FIXTURE_DOCUMENT } from './fixtures/fixtures'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { imports } from '../embedded-languages/python-support'
 
 describe('Embedded Language Documents file management', () => {
   beforeAll(async () => {
@@ -117,22 +118,22 @@ describe('Create various basic embedded python documents', () => {
     [
       'anonymous',
       'python(){\n  pass\n}',
-      'def _ ():\n  pass\n '
+      `${imports}def _ ():\n  pass\n `
     ],
     [
       'named with python keyword',
       'python foo (){\n  pass\n}',
-      'def foo ():\n  pass\n '
+      `${imports}def foo ():\n  pass\n `
     ],
     [
       'empty',
       'python(){\n}',
-      'def _ ():\n  pass\n '
+      `${imports}def _ ():\n  pass\n `
     ],
     [
       'with def keyword',
       'def foo():\n  pass',
-      'def foo():\n  pass'
+      `${imports}def foo():\n  pass`
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
@@ -155,31 +156,31 @@ describe('Create Python embedded language content with inline Python', () => {
       'basic',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}\'',
-      '         \n\n"BAR"\n '
+      `${imports}         \n\n"BAR"\n `
     ],
     [
       'with spacing',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@  "BAR"  }\'',
-      '         \n  \n"BAR"  \n '
+      `${imports}         \n  \n"BAR"  \n `
     ],
     [
       'multiline',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}\' \\\n1 \\\n2"',
-      '         \n\n"BAR"\n   \n   \n  '
+      `${imports}         \n\n"BAR"\n   \n   \n  `
     ],
     [
       'with two embedded python regions',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}${@"BAR"}\'',
-      '         \n\n"BAR"\n  \n\n"BAR"\n '
+      `${imports}         \n\n"BAR"\n  \n\n"BAR"\n `
     ],
     [
       'without surrounding quotes',
       // eslint-disable-next-line no-template-curly-in-string
       'inherit ${@"test"}',
-      '          \n\n"test"\n'
+      `${imports}          \n\n"test"\n`
     ]
     /* // This is not yet supported by tree-sitter
     [
@@ -188,48 +189,6 @@ describe('Create Python embedded language content with inline Python', () => {
       'foo(){\necho ${@"bar"}\n}\n',
       '      \n       \n"bar"\n\n \n'
     ] */
-  ])('%s', async (description, input, result) => {
-    const embeddedContent = await createEmbeddedContent(input, 'python')
-    expect(embeddedContent).toEqual(result)
-  })
-})
-
-describe('Create Python embedded language content with imports', () => {
-  beforeAll(async () => {
-    if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
-    }
-    analyzer.resetAnalyzedDocuments()
-    await embeddedLanguageDocsManager.setStoragePath(__dirname)
-  })
-
-  test.each([
-    [
-      'with bb',
-      'python(){\n  bb.parse.vars_from_file("test")\n}',
-      'import bb\nfrom bb import parse\nbb.parse = parse\ndef _ ():\n  bb.parse.vars_from_file("test")\n '
-    ],
-    [
-      'with d',
-      'python(){\n  d.getVar("test")\n}',
-      'from bb import data_smart\nd = data_smart.DataSmart()\ndef _ ():\n  d.getVar("test")\n '
-    ],
-    [
-      'with e',
-      'python(){\n  e.data.getVar("test")\n}',
-      'from bb import data_smart\nd = data_smart.DataSmart()\nfrom bb import event\ne = event.Event()\ne.data = d\ndef _ ():\n  e.data.getVar("test")\n '
-    ],
-    [
-      'with os',
-      'python(){\n  os.path.dirname("test")\n}',
-      'import os\ndef _ ():\n  os.path.dirname("test")\n '
-    ],
-    [
-      'with combination (d and bb)',
-      'python(){\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n}',
-      'from bb import data_smart\nd = data_smart.DataSmart()\nimport bb\nfrom bb import parse\nbb.parse = parse\ndef _ ():\n  d.getVar("test")\n  bb.parse.vars_from_file("test")\n '
-    ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
     expect(embeddedContent).toEqual(result)
@@ -253,7 +212,7 @@ const createEmbeddedContent = async (content: string, language: EmbeddedLanguage
 }
 
 const expectedPythonEmbeddedLanguageDoc =
-`                                    
+`${imports}                                    
 
 def do_foo():
     print('123')

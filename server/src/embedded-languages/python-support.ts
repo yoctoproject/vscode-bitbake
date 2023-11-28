@@ -12,44 +12,52 @@ import * as TreeSitterUtils from '../tree-sitter/utils'
 import { embeddedLanguageDocsManager } from './documents-manager'
 import { type EmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
 
+export const imports = [
+  'import bb',
+  'from bb import data_smart',
+  'd = data_smart.DataSmart()',
+  'from bb import event',
+  'e = event.Event()',
+  'e.data = d',
+  'import os',
+  ''
+].join('\n')
+
 export const generatePythonEmbeddedLanguageDoc = async (textDocument: TextDocument): Promise<void> => {
   const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
   if (analyzedDocument === undefined) {
     return
   }
-  const imports = new Set<string>()
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'python')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
     switch (node.type) {
       case 'python_function_definition':
-        handlePythonFunctionDefinition(node, embeddedLanguageDoc, imports)
+        handlePythonFunctionDefinition(node, embeddedLanguageDoc)
         return false
       case 'anonymous_python_function':
-        handleAnonymousPythonFunction(node, embeddedLanguageDoc, imports)
+        handleAnonymousPythonFunction(node, embeddedLanguageDoc)
         return false
       case 'inline_python':
-        handleInlinePythonNode(node, embeddedLanguageDoc, imports)
+        handleInlinePythonNode(node, embeddedLanguageDoc)
         return false
       default:
         return true
     }
   })
-  if (imports.size !== 0) {
-    insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, [...imports].join('\n') + '\n')
-  }
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, imports)
   await embeddedLanguageDocsManager.saveEmbeddedLanguageDoc(embeddedLanguageDoc)
 }
 
-const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
+const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     if (child.type === 'block') {
-      handleBlockNode(child, embeddedLanguageDoc, imports)
+      handleBlockNode(child, embeddedLanguageDoc)
     }
   })
 }
 
-const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
+const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     switch (child.type) {
@@ -72,7 +80,7 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ' ')
         break
       case 'block':
-        handleBlockNode(child, embeddedLanguageDoc, imports)
+        handleBlockNode(child, embeddedLanguageDoc)
         break
       default:
         break
@@ -80,7 +88,7 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
   })
 }
 
-const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
+const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   const openingNode = inlinePythonNode.child(0)
   const pythonContentNode = inlinePythonNode.child(1)
   const closingNode = inlinePythonNode.child(2)
@@ -98,56 +106,13 @@ const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDo
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, pythonContentNode.startIndex, pythonContentNode.startIndex, '\n') // prevent trailing spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, pythonContentNode.startIndex, pythonContentNode.endIndex, pythonContentNode.text)
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, closingNode.startIndex, closingNode.endIndex, '\n')
-  handleBlockNode(pythonContentNode, embeddedLanguageDoc, imports)
+  handleBlockNode(pythonContentNode, embeddedLanguageDoc)
 }
 
-const handleBlockNode = (blockNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc, imports: Set<string>): void => {
+const handleBlockNode = (blockNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   if (blockNode.text === '') {
     insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, blockNode.startIndex, blockNode.endIndex, '\n  pass')
   }
-  handleImports(blockNode, imports)
-}
-
-const handleImports = (blockNode: SyntaxNode, imports: Set<string>): void => {
-  const importBb = (bbNode: SyntaxNode): void => {
-    if (bbNode.nextSibling?.type === '.' && bbNode.nextNamedSibling?.type === 'python_identifier') {
-      const importName = bbNode.nextNamedSibling.text
-      imports.add('import bb')
-      imports.add(`from bb import ${importName}`)
-      imports.add(`bb.${importName} = ${importName}`)
-    }
-  }
-
-  const importD = (): void => {
-    imports.add('from bb import data_smart')
-    imports.add('d = data_smart.DataSmart()')
-  }
-
-  const importE = (): void => {
-    importD()
-    imports.add('from bb import event')
-    imports.add('e = event.Event()')
-    imports.add('e.data = d')
-  }
-
-  const importOs = (): void => {
-    imports.add('import os')
-  }
-
-  TreeSitterUtils.forEach(blockNode, (child) => {
-    if (child.type === 'python_identifier') {
-      if (child.text === 'bb') {
-        importBb(child)
-      } else if (child.text === 'd') {
-        importD()
-      } else if (child.text === 'e') {
-        importE()
-      } else if (child.text === 'os') {
-        importOs()
-      }
-    }
-    return true
-  })
 }
 
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
