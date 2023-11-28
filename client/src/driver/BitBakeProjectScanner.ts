@@ -20,6 +20,7 @@ import type {
 
 import { type BitbakeDriver } from './BitbakeDriver'
 import { type LanguageClient } from 'vscode-languageclient/node'
+import fs from 'fs'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -39,6 +40,7 @@ export class BitBakeProjectScanner {
   private _shouldDeepExamine: boolean = false
   private _bitbakeDriver: BitbakeDriver | undefined
   private _languageClient: LanguageClient | undefined
+  private containerWorkdir: string | undefined
 
   setDriver (bitbakeDriver: BitbakeDriver): void {
     this._bitbakeDriver = bitbakeDriver
@@ -109,6 +111,37 @@ export class BitBakeProjectScanner {
     }
   }
 
+  private async getContainerInode (filepath: string): Promise<number> {
+    const commandResult = await this.executeBitBakeCommand(`stat -c %i ${filepath}`)
+    const inode = parseInt(commandResult.stdout.toString().trim())
+    return inode
+  }
+
+  private async scanContainerWorkdir (layerPath: string, hostWorkdir: string): Promise<void> {
+    if (fs.existsSync(layerPath)) {
+      // We're not inside a container, or the container is not using a different workdir
+      return
+    }
+
+    // Get inode of hostWorkdir
+    const hostWorkdirStats = fs.statSync(hostWorkdir)
+    const hostWorkdirInode = hostWorkdirStats.ino
+
+    // Find inode in layerPath and all parents
+    let parentInode = NaN
+    let parentPath = layerPath
+    while (parentPath !== '/') {
+      parentInode = await this.getContainerInode(parentPath)
+      if (parentInode === hostWorkdirInode) {
+        this.containerWorkdir = parentPath
+        return
+      }
+      parentPath = path.dirname(parentPath)
+    }
+
+    this.containerWorkdir = undefined
+  }
+
   private printScanStatistic (): void {
     logger.info('Scan results:')
     logger.info('******************************************************************')
@@ -129,6 +162,7 @@ export class BitBakeProjectScanner {
 
   private async scanAvailableLayers (): Promise<void> {
     this._bitbakeScanResult._layers = new Array < LayerInfo >()
+    this.containerWorkdir = undefined
 
     const commandResult = await this.executeBitBakeCommand('bitbake-layers show-layers')
 
@@ -145,21 +179,41 @@ export class BitBakeProjectScanner {
       }
 
       for (const element of outputLines.slice(layersFirstLine + 2)) {
-        const tempElement: string[] = element.split(/\s+/)
+        const tempElement = element.split(/\s+/)
         const layerElement = {
           name: tempElement[0],
-          path: tempElement[1],
+          path: await this.resolveContainerPath(tempElement[1]),
           priority: parseInt(tempElement[2])
         }
 
-        if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && layerElement.priority !== undefined) {
-          this._bitbakeScanResult._layers.push(layerElement)
+        if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && (layerElement.priority !== undefined)) {
+          this._bitbakeScanResult._layers.push(layerElement as LayerInfo)
         }
       }
     } else {
       const error = commandResult.stderr.toString()
       logger.error(`can not scan available layers error: ${error}`)
     }
+  }
+
+  /// If a docker container is used, the workdir may be different from the host system.
+  /// This function resolves the path to the host system.
+  private async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
+    if (layerPath === undefined) {
+      return undefined
+    }
+    const hostWorkdir = this.bitbakeDriver?.bitbakeSettings.workingDirectory
+    if (hostWorkdir === undefined) {
+      throw new Error('hostWorkdir is undefined')
+    }
+    if (this.containerWorkdir === undefined) {
+      await this.scanContainerWorkdir(layerPath, hostWorkdir)
+    }
+    if (this.containerWorkdir === undefined) {
+      return layerPath
+    }
+    const relativePath = path.relative(this.containerWorkdir, layerPath)
+    return path.resolve(hostWorkdir, relativePath)
   }
 
   private searchFiles (pattern: string): ElementInfo[] {
