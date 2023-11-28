@@ -24,8 +24,7 @@ import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywor
 import { logger } from '../lib/src/utils/OutputLogger'
 import fs from 'fs'
 import path from 'path'
-import { bitBakeProjectScanner } from '../BitBakeProjectScanner'
-
+import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 const DEBOUNCE_TIME_MS = 500
 
 interface AnalyzedDocument {
@@ -428,7 +427,7 @@ export default class Analyzer {
         childNode.children.forEach((n) => {
           if (n.type === 'inherit_path') {
             logger.debug(`[Analyzer] Found inherit path: ${n.text}`)
-            const bbclasses = bitBakeProjectScanner.classes.filter((bbclass) => {
+            const bbclasses = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((bbclass) => {
               return bbclass.name === n.text
             })
             for (const bbclass of bbclasses) {
@@ -443,12 +442,12 @@ export default class Analyzer {
         if (childNode.firstNamedChild !== null && childNode.firstNamedChild.type === 'include_path') {
           logger.debug(`[Analyzer] Found include path: ${childNode.firstNamedChild.text}`)
           const includeFile = path.parse(childNode.firstNamedChild.text)
-          let includes = bitBakeProjectScanner.includes.filter((inc) => {
+          let includes = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((inc) => {
             return inc.name === includeFile.name
           })
 
           if (includes.length === 0) {
-            includes = bitBakeProjectScanner.recipes.filter((recipe) => {
+            includes = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((recipe) => {
               return recipe.name === includeFile.name
             })
           }
