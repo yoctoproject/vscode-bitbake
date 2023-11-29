@@ -111,7 +111,14 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   let symbolCompletionItems: CompletionItem[] = []
   if (word !== null) {
-    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri)
+    const uniqueSymbolSet = new Set()
+    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri).filter(symbol => {
+      if (!uniqueSymbolSet.has(symbol.name)) {
+        uniqueSymbolSet.add(symbol.name)
+        return true
+      }
+      return false
+    })
     // Filter out duplicate BITBAKE_VARIABLES as they will be included as global declaration after running analyzer.analyze() in documents.onDidChangeContent() in server.ts
     symbolCompletionItems = [
       ...globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
@@ -274,21 +281,21 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
 
 function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
-  const completionItems: CompletionItem[] = []
+  let completionItems: CompletionItem[] = []
   analyzer.getExtraSymbolsForUri(uri).forEach((extraSymbols) => {
     Object.keys(extraSymbols).forEach((key) => {
       const variableInfo = [
         ...bitBakeDocScanner.bitbakeVariableInfo.filter((bitbakeVariable) => !bitBakeDocScanner.yoctoVariableInfo.some(yoctoVariable => yoctoVariable.name === bitbakeVariable.name)),
         ...bitBakeDocScanner.yoctoVariableInfo
       ]
-      const foundInVariableInfo = variableInfo.find((variable) => variable.name === extraSymbols[key].name)
+      const foundInVariableInfo = variableInfo.find((variable) => variable.name === key)
       const completionItem: CompletionItem = {
-        label: extraSymbols[key].name,
+        label: key,
         labelDetails: {
-          description: path.relative(documentUri.replace('file://', ''), extraSymbols[key].location.uri.replace('file://', ''))
+          description: path.relative(documentUri.replace('file://', ''), extraSymbols[key][0].location.uri.replace('file://', ''))
         },
         documentation: foundInVariableInfo?.definition ?? '',
-        kind: symbolKindToCompletionKind(extraSymbols[key].kind),
+        kind: symbolKindToCompletionKind(extraSymbols[key][0].kind),
         data: {
           referenceUrl: foundInVariableInfo?.referenceUrl
         },

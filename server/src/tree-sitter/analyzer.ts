@@ -103,11 +103,13 @@ export default class Analyzer {
   }
 
   public getGlobalDeclarationSymbols (uri: string): SymbolInformation[] {
-    const symbols: SymbolInformation[] = []
+    let symbols: SymbolInformation[] = []
     const analyzedDocument = this.uriToAnalyzedDocument[uri]
     if (analyzedDocument !== undefined) {
       const { globalDeclarations } = analyzedDocument
-      Object.values(globalDeclarations).forEach((symbol) => symbols.push(symbol))
+      Object.values(globalDeclarations).forEach((symbolArray) => {
+        symbols = symbols.concat(symbolArray)
+      })
       return symbols
     }
     return []

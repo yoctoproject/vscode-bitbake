@@ -48,6 +48,44 @@ describe('analyze', () => {
 
     const globalDeclarations = analyzer.getGlobalDeclarationSymbols(DUMMY_URI)
 
+    expect(globalDeclarations).toEqual(
+      expect.arrayContaining([
+        {
+          kind: 13,
+          location: {
+            range: {
+              end: {
+                character: 11,
+                line: 1
+              },
+              start: {
+                character: 0,
+                line: 1
+              }
+            },
+            uri: DUMMY_URI
+          },
+          name: 'BAR'
+        },
+        {
+          kind: 13,
+          location: {
+            range: {
+              end: {
+                character: 11,
+                line: 0
+              },
+              start: {
+                character: 0,
+                line: 0
+              }
+            },
+            uri: DUMMY_URI
+          },
+          name: 'FOO'
+        }
+      ])
+    )
     expect(globalDeclarations).toMatchInlineSnapshot(`
       [
         {
@@ -241,22 +279,24 @@ describe('sourceIncludeFiles', () => {
     expect(symbols).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          DESCRIPTION: expect.objectContaining({
-            name: 'DESCRIPTION',
-            location: {
-              uri: FIXTURE_URI.BAR_INC,
-              range: {
-                start: {
-                  line: 0,
-                  character: 0
-                },
-                end: {
-                  line: 0,
-                  character: 23
+          DESCRIPTION: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'DESCRIPTION',
+              location: {
+                uri: FIXTURE_URI.BAR_INC,
+                range: {
+                  start: {
+                    line: 0,
+                    character: 0
+                  },
+                  end: {
+                    line: 0,
+                    character: 23
+                  }
                 }
               }
-            }
-          })
+            })
+          ])
         })
       ])
     )
@@ -264,22 +304,24 @@ describe('sourceIncludeFiles', () => {
     expect(symbols).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          DESCRIPTION: expect.objectContaining({
-            name: 'DESCRIPTION',
-            location: {
-              uri: FIXTURE_URI.FOO_INC,
-              range: {
-                start: {
-                  line: 0,
-                  character: 0
-                },
-                end: {
-                  line: 0,
-                  character: 23
+          DESCRIPTION: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'DESCRIPTION',
+              location: {
+                uri: FIXTURE_URI.FOO_INC,
+                range: {
+                  start: {
+                    line: 0,
+                    character: 0
+                  },
+                  end: {
+                    line: 0,
+                    character: 23
+                  }
                 }
               }
-            }
-          })
+            })
+          ])
         })
       ])
     )
@@ -287,22 +329,24 @@ describe('sourceIncludeFiles', () => {
     expect(symbols).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          DESCRIPTION: expect.objectContaining({
-            name: 'DESCRIPTION',
-            location: {
-              uri: FIXTURE_URI.BAZ_BBCLASS,
-              range: {
-                start: {
-                  line: 0,
-                  character: 0
-                },
-                end: {
-                  line: 0,
-                  character: 27
+          DESCRIPTION: expect.arrayContaining([
+            expect.objectContaining({
+              name: 'DESCRIPTION',
+              location: {
+                uri: FIXTURE_URI.BAZ_BBCLASS,
+                range: {
+                  start: {
+                    line: 0,
+                    character: 0
+                  },
+                  end: {
+                    line: 0,
+                    character: 27
+                  }
                 }
               }
-            }
-          })
+            })
+          ])
         })
       ])
     )
