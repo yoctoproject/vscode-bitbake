@@ -304,6 +304,15 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
       completionItems.push(completionItem)
     })
   })
+  // Filter duplicates from the included files, current goal is to show only one item for one symbol even though it occurs in multiple included files. The one that remains will still contain the path in its label details but it doesn't necessarily indicate the location of the very first occurance as this feature will require extra info from bitbake and it is not yet planned.
+  const uniqueItems = new Set()
+  completionItems = completionItems.filter(item => {
+    if (!uniqueItems.has(item.label)) {
+      uniqueItems.add(item.label)
+      return true
+    }
+    return false
+  })
   return completionItems
 }
 
