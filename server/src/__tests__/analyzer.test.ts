@@ -352,3 +352,31 @@ describe('sourceIncludeFiles', () => {
     )
   })
 })
+
+describe('declarations', () => {
+  beforeEach(() => {
+    jest.clearAllMocks()
+  })
+
+  it('gets all symbols in the declaration statements with duplicates', async () => {
+    const analyzer = await getAnalyzer()
+    const document = FIXTURE_DOCUMENT.COMPLETION
+    const uri = FIXTURE_URI.COMPLETION
+
+    await analyzer.analyze({
+      document,
+      uri
+    })
+
+    const symbols = analyzer.getGlobalDeclarationSymbols(uri)
+
+    let occurances = 0
+    symbols.forEach((symbol) => {
+      if (symbol.name === 'MYVAR') {
+        occurances++
+      }
+    })
+
+    expect(occurances).toEqual(5)
+  })
+})
