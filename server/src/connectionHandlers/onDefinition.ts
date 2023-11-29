@@ -40,7 +40,9 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
 
   if (word !== null) {
     const definitions: Definition = []
-    if (analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams)) {
+    const canProvideGoToDefinitionForSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
+    (analyzer.isVariableExpansion(documentUri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
+    if (canProvideGoToDefinitionForSymbol) {
       analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
         if (globalDeclaration[word] !== undefined) {
           globalDeclaration[word].forEach((symbol) => {
@@ -51,9 +53,16 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
           })
         }
       })
-    }
 
-      return definitions
+      const ownSymbol = analyzer.getAnalyzedDocument(documentUri)?.globalDeclarations[word]
+      if (ownSymbol !== undefined) {
+        ownSymbol.forEach((symbol) => {
+          definitions.push({
+            uri: symbol.location.uri,
+            range: symbol.location.range
+          })
+        })
+      }
     }
 
     return definitions
