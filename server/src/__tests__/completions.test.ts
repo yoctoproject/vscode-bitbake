@@ -196,6 +196,32 @@ describe('On Completion', () => {
     expect(result).toEqual([])
   })
 
+  it("doesn't provide duplicate completion items for local custom variables", async () => {
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 0,
+        character: 0
+      }
+    })
+
+    let occurances = 0
+    result.forEach((item) => {
+      if (item.label === 'MYVAR') {
+        occurances++
+      }
+    })
+
+    expect(occurances).toBe(1)
+  })
+
   it('provides necessary suggestions when it is in variable expansion', async () => {
     await analyzer.analyze({
       uri: DUMMY_URI,
