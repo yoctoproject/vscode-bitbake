@@ -39,19 +39,24 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   }
 
   if (word !== null) {
+    const definitions: Definition = []
     if (analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams)) {
-      const definitions: Definition = []
       analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
         if (globalDeclaration[word] !== undefined) {
-          definitions.push({
-            uri: globalDeclaration[word].location.uri,
-            range: globalDeclaration[word].location.range
+          globalDeclaration[word].forEach((symbol) => {
+            definitions.push({
+              uri: symbol.location.uri,
+              range: symbol.location.range
+            })
           })
         }
       })
+    }
 
       return definitions
     }
+
+    return definitions
   }
 
   return getDefinition(textDocumentPositionParams, documentAsText)

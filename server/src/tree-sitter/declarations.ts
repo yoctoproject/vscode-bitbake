@@ -23,7 +23,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
  * An object that contains the symbol information of all the global declarations.
  * Referenced by the symbol name
  */
-export type GlobalDeclarations = Record<string, LSP.SymbolInformation>
+export type GlobalDeclarations = Record<string, LSP.SymbolInformation[]>
 
 const GLOBAL_DECLARATION_NODE_TYPES = new Set([
   'function_definition',
@@ -54,7 +54,10 @@ export function getGlobalDeclarations ({
     if (symbol !== null) {
       const word = symbol.name
       // Note that this can include BITBAKE_VARIABLES (e.g DESCRIPTION = ''), it will be used for completion later. But BITBAKE_VARIABLES are also added as completion from doc scanner. The remove of duplicates will happen there.
-      globalDeclarations[word] = symbol
+      if (globalDeclarations[word] === undefined) {
+        globalDeclarations[word] = []
+      }
+      globalDeclarations[word].push(symbol)
     }
 
     return followChildren
