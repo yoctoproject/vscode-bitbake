@@ -9,7 +9,8 @@ import {
   workspace,
   type ExtensionContext,
   window,
-  commands
+  commands,
+  languages
 } from 'vscode'
 
 import {
@@ -25,6 +26,7 @@ import { middlewareProvideDefinition } from './middlewareDefinition'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
+import { updateDiagnostics } from './diagnosticsSupport'
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -65,6 +67,12 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
       provideHover: middlewareProvideHover
     }
   }
+
+  languages.onDidChangeDiagnostics(e => {
+    e.uris.forEach(uri => {
+      void updateDiagnostics(uri)
+    })
+  })
 
   if (context.storageUri?.fsPath === undefined) {
     logger.error('Failed to get storage path')
