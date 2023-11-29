@@ -90,6 +90,19 @@ export default class EmbeddedLanguageDocsManager {
     return embeddedLanguageDocs?.[languageType]
   }
 
+  getOriginalUri (embeddedLanguageDocUri: Uri): Uri | undefined {
+    let originalUri: Uri | undefined
+    this.embeddedLanguageDocsInfos.forEach((embeddedLanguageDocs, stringUri) => {
+      if (
+        embeddedLanguageDocs.bash?.uri.toString() === embeddedLanguageDocUri.toString() ||
+        embeddedLanguageDocs.python?.uri.toString() === embeddedLanguageDocUri.toString()
+      ) {
+        originalUri = Uri.parse(stringUri)
+      }
+    })
+    return originalUri
+  }
+
   private createEmbeddedLanguageDocUri (embeddedLanguageDoc: EmbeddedLanguageDoc): Uri | undefined {
     if (this.storagePath === undefined) {
       return undefined
@@ -129,6 +142,7 @@ export default class EmbeddedLanguageDocsManager {
     }
     try {
       await workspace.fs.writeFile(uri, Buffer.from(embeddedLanguageDoc.content))
+      await workspace.openTextDocument(uri)
     } catch (err) {
       logger.error(`Failed to create embedded document: ${err as any}`)
     }
