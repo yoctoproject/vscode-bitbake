@@ -662,13 +662,19 @@ describe('On Completion', () => {
         character: 0
       }
     })
+    // Show only one completion item for each symbol
+    let occurances = 0
+    result.forEach(item => {
+      item.label === 'DESCRIPTION' && occurances++
+    })
 
+    expect(occurances).toEqual(1)
     expect(result).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: 'DESCRIPTION',
           labelDetails: {
-            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAR_INC.replace('file://', ''))
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.FOO_INC.replace('file://', '')) // In this test case, the one that remains after the filtering is the relative path from directive.bb to foo.inc
           }
         })
       ])
@@ -685,27 +691,6 @@ describe('On Completion', () => {
       ])
     )
 
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          label: 'DESCRIPTION',
-          labelDetails: {
-            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.FOO_INC.replace('file://', ''))
-          }
-        })
-      ])
-    )
-
-    expect(result).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          label: 'DESCRIPTION',
-          labelDetails: {
-            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAZ_BBCLASS.replace('file://', ''))
-          }
-        })
-      ])
-    )
     bitBakeDocScanner.parseBitbakeVariablesFile()
     bitBakeDocScanner.parseYoctoVariablesFile()
 
@@ -724,7 +709,7 @@ describe('On Completion', () => {
         expect.objectContaining({
           label: 'DESCRIPTION',
           labelDetails: {
-            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.BAZ_BBCLASS.replace('file://', ''))
+            description: path.relative(FIXTURE_URI.DIRECTIVE.replace('file://', ''), FIXTURE_URI.FOO_INC.replace('file://', ''))
           },
           documentation: {
             value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
