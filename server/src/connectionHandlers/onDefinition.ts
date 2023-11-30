@@ -4,10 +4,13 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type TextDocumentPositionParams, type Definition } from 'vscode-languageserver/node'
+import { type TextDocumentPositionParams, type Definition, Location, Range } from 'vscode-languageserver/node'
 import { analyzer } from '../tree-sitter/analyzer'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { definitionProvider } from '../DefinitionProvider'
+import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
+import path, { type ParsedPath } from 'path'
+import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Definition | null {
   const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
@@ -68,13 +71,78 @@ function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStateme
     if (words[0] === directiveStatementKeyword) {
       logger.debug(`getDefinitionForKeyWord: ${JSON.stringify(words)}`)
       if (words.length === 2) {
-        definition = definitionProvider.createDefinitionForKeyword(directiveStatementKeyword, words[1])
+        definition = createDefinitionForKeyword(directiveStatementKeyword, words[1])
       } else {
-        definition = definitionProvider.createDefinitionForKeyword(directiveStatementKeyword, words[1], symbol)
+        definition = createDefinitionForKeyword(directiveStatementKeyword, words[1], symbol)
       }
     }
   }
   return definition
+}
+
+function createDefinitionForKeyword (keyword: string, restOfLine: string, selectedSympbol?: string): Definition {
+  let definition: Definition = []
+  restOfLine = restOfLine.trim()
+
+  switch (keyword) {
+    case 'inherit':
+      {
+        let searchString: string
+        if (selectedSympbol === undefined) {
+          searchString = restOfLine
+        } else {
+          searchString = selectedSympbol
+        }
+
+        const elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((obj): boolean => {
+          return obj.name === searchString
+        })
+        definition = createDefinitionForElementInfo(elementInfos)
+      }
+      break
+
+    case 'require':
+    case 'include':
+      {
+        const includeFile = path.parse(restOfLine)
+        let elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((obj): boolean => {
+          return obj.name === includeFile.name
+        })
+
+        if (elementInfos.length === 0) {
+          elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((obj): boolean => {
+            return obj.name === includeFile.name
+          })
+        }
+        definition = createDefinitionForElementInfo(elementInfos)
+      }
+      break
+
+    default:
+  }
+
+  return definition
+}
+
+function createDefinitionForElementInfo (elementInfos: ElementInfo[]): Definition {
+  const definition: Definition = []
+
+  for (const elementInfo of elementInfos) {
+    logger.debug(`definition ${JSON.stringify(elementInfo)}`)
+    if (elementInfo.path !== undefined) {
+      const location: Location = createDefinitionLocationForPathInfo(elementInfo.path)
+      definition.push(location)
+    }
+  }
+
+  return definition
+}
+
+function createDefinitionLocationForPathInfo (path: ParsedPath): Location {
+  const url: string = 'file://' + path.dir + '/' + path.base
+  const location: Location = Location.create(encodeURI(url), Range.create(0, 0, 0, 0))
+
+  return location
 }
 
 function getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
