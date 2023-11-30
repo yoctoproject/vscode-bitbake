@@ -198,6 +198,22 @@ export default class Analyzer {
     }
   }
 
+  public getDirectivePathForPosition (
+    params: TextDocumentPositionParams
+  ): string | undefined {
+    const n = this.nodeAtPoint(
+      params.textDocument.uri,
+      params.position.line,
+      params.position.character
+    )
+
+    if (n?.type === 'inherit_path' || n?.type === 'include_path') {
+      return n.text
+    }
+
+    return undefined
+  }
+
   public isIdentifier (
     params: TextDocumentPositionParams
   ): boolean {
