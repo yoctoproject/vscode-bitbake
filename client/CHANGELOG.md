@@ -1,3 +1,6 @@
+# 2.0.1 - 2023.11.30
+ - Fixed extension logo for white themes
+
 # 2.0.0 - 2023.11.17
  - Fixed highlighting errors
  - Added more diagnostics to the Problems view
