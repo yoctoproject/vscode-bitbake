@@ -30,7 +30,6 @@ export const FIXTURE_URI = {
   DECLARATION: `file://${path.join(FIXTURE_FOLDER, 'declarations.bb')}`,
   COMPLETION: `file://${path.join(FIXTURE_FOLDER, 'completion.bb')}`,
   HOVER: `file://${path.join(FIXTURE_FOLDER, 'hover.bb')}`,
-  DEFINITION: `file://${path.join(FIXTURE_FOLDER, 'definition.bb')}`,
   EMBEDDED: `file://${path.join(FIXTURE_FOLDER, 'embedded.bb')}`,
   SEMANTIC_TOKENS: `file://${path.join(FIXTURE_FOLDER, 'semanticTokens.bb')}`,
   DIRECTIVE: `file://${path.join(FIXTURE_FOLDER, 'directive.bb')}`,
