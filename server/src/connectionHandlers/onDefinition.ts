@@ -7,10 +7,9 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type TextDocumentPositionParams, type Definition, Location, Range } from 'vscode-languageserver/node'
 import { analyzer } from '../tree-sitter/analyzer'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
-import { definitionProvider } from '../DefinitionProvider'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path, { type ParsedPath } from 'path'
-import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import { type PathInfo, type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Definition | null {
   const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
@@ -122,7 +121,51 @@ function getDefinition (textDocumentPositionParams: TextDocumentPositionParams, 
   const currentLine = documentAsText[textDocumentPositionParams.position.line]
   const symbol = extractSymbolFromLine(textDocumentPositionParams, currentLine)
 
-  definition = definitionProvider.createDefinitionForSymbol(symbol)
+  definition = createDefinitionForSymbol(symbol)
+  return definition
+}
+
+function createDefinitionForSymbol (symbol: string): Definition {
+  return createDefinitionForSymbolRecipes(symbol)
+}
+
+function createDefinitionForSymbolRecipes (symbol: string): Definition {
+  let definitions: Definition = []
+
+  const recipe: ElementInfo | undefined = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
+    return obj.name === symbol
+  })
+
+  if (recipe?.path !== undefined) {
+    let definitionsList: PathInfo[] = new Array < PathInfo >(recipe.path)
+
+    if ((recipe.appends !== undefined) && (recipe.appends.length > 0)) {
+      definitionsList = definitionsList.concat(recipe.appends)
+    }
+    definitions = createDefinitionLocationForPathInfoList(definitionsList)
+  }
+
+  return definitions
+}
+
+function createDefinitionLocationForPathInfoList (pathInfoList: PathInfo[]): Definition {
+  let definition: Definition = []
+
+  if ((pathInfoList !== undefined) && (pathInfoList.length > 0)) {
+    if (pathInfoList.length > 1) {
+      definition = new Array < Location >()
+
+      for (const pathInfo of pathInfoList) {
+        logger.debug(`definition ${JSON.stringify(pathInfo)}`)
+        const location: Location = createDefinitionLocationForPathInfo(pathInfo)
+
+        definition.push(location)
+      }
+    } else {
+      definition = createDefinitionLocationForPathInfo(pathInfoList[0])
+    }
+  }
+
   return definition
 }
 
