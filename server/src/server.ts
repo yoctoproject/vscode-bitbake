@@ -16,7 +16,6 @@ import {
   FileChangeType
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
-import { SymbolScanner } from './SymbolScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
 import { generateParser } from './tree-sitter/parser'
@@ -29,7 +28,6 @@ import { embeddedLanguageDocsManager } from './embedded-languages/documents-mana
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 import { getSemanticTokens, legend } from './semanticTokens'
-import { definitionProvider } from './DefinitionProvider'
 import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
@@ -143,8 +141,6 @@ connection.listen()
 
 documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
-  logger.debug('[onDidChangeContent] Set new symbol scanner')
-  definitionProvider.symbolScanner = new SymbolScanner(textDocument.uri, definitionProvider)
 
   if (textDocument.getText().length > 0) {
     const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
@@ -159,11 +155,6 @@ documents.onDidChangeContent(async (event) => {
     logger.debug('verifyConfigurationFileAssociation')
     await connection.sendRequest('custom/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
   }
-})
-
-documents.onDidClose((event) => {
-  logger.debug('[onDidClose] Set symbol scanner to null')
-  definitionProvider.symbolScanner = null
 })
 
 documents.onDidSave(async (event) => {
