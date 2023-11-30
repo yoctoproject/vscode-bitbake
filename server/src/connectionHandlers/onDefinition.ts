@@ -34,9 +34,10 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
 
   // require, inherit & include directives
   const directiveStatementKeyword = analyzer.getDirectiveStatementKeywordByNodeType(textDocumentPositionParams)
-  if (directiveStatementKeyword !== undefined) {
+  const directivePath = analyzer.getDirectivePathForPosition(textDocumentPositionParams)
+  if (directiveStatementKeyword !== undefined && directivePath !== undefined) {
     logger.debug(`[onDefinition] Found directive: ${directiveStatementKeyword}`)
-    const definition = getDefinitionForDirectives(directiveStatementKeyword, textDocumentPositionParams, documentAsText)
+    const definition = getDefinitionForDirectives(directiveStatementKeyword, directivePath)
     logger.debug(`[onDefinition] definition item: ${JSON.stringify(definition)}`)
     return definition
   }
@@ -74,42 +75,14 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   return getDefinition(textDocumentPositionParams, documentAsText)
 }
 
-function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
+function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, symbol: string): Definition {
   let definition: Definition = []
-  const currentLine: string = documentAsText[textDocumentPositionParams.position.line]
-  const symbol: string = extractSymbolFromLine(textDocumentPositionParams, currentLine)
 
-  const words: string[] = currentLine.split(' ')
-
-  if (words.length >= 2) {
-    if (words[0] === directiveStatementKeyword) {
-      logger.debug(`getDefinitionForKeyWord: ${JSON.stringify(words)}`)
-      if (words.length === 2) {
-        definition = createDefinitionForKeyword(directiveStatementKeyword, words[1])
-      } else {
-        definition = createDefinitionForKeyword(directiveStatementKeyword, words[1], symbol)
-      }
-    }
-  }
-  return definition
-}
-
-function createDefinitionForKeyword (keyword: string, restOfLine: string, selectedSympbol?: string): Definition {
-  let definition: Definition = []
-  restOfLine = restOfLine.trim()
-
-  switch (keyword) {
+  switch (directiveStatementKeyword) {
     case 'inherit':
       {
-        let searchString: string
-        if (selectedSympbol === undefined) {
-          searchString = restOfLine
-        } else {
-          searchString = selectedSympbol
-        }
-
-        const elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((obj): boolean => {
-          return obj.name === searchString
+        const elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((bbclass): boolean => {
+          return bbclass.name === symbol
         })
         definition = createDefinitionForElementInfo(elementInfos)
       }
@@ -118,14 +91,14 @@ function createDefinitionForKeyword (keyword: string, restOfLine: string, select
     case 'require':
     case 'include':
       {
-        const includeFile = path.parse(restOfLine)
-        let elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((obj): boolean => {
-          return obj.name === includeFile.name
+        const includeFile = path.parse(symbol)
+        let elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((incFile): boolean => {
+          return incFile.name === includeFile.name
         })
 
         if (elementInfos.length === 0) {
-          elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((obj): boolean => {
-            return obj.name === includeFile.name
+          elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((recipe): boolean => {
+            return recipe.name === includeFile.name
           })
         }
         definition = createDefinitionForElementInfo(elementInfos)
@@ -134,7 +107,6 @@ function createDefinitionForKeyword (keyword: string, restOfLine: string, select
 
     default:
   }
-
   return definition
 }
 
@@ -142,7 +114,6 @@ function createDefinitionForElementInfo (elementInfos: ElementInfo[]): Definitio
   const definition: Definition = []
 
   for (const elementInfo of elementInfos) {
-    logger.debug(`definition ${JSON.stringify(elementInfo)}`)
     if (elementInfo.path !== undefined) {
       const location: Location = createDefinitionLocationForPathInfo(elementInfo.path)
       definition.push(location)
