@@ -75,23 +75,19 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
 }
 
 function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, symbol: string): Definition {
-  let definition: Definition = []
-
+  let elementInfos: ElementInfo[] = []
   switch (directiveStatementKeyword) {
     case 'inherit':
-      {
-        const elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((bbclass): boolean => {
-          return bbclass.name === symbol
-        })
-        definition = createDefinitionForElementInfo(elementInfos)
-      }
+      elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((bbclass): boolean => {
+        return bbclass.name === symbol
+      })
       break
 
     case 'require':
     case 'include':
       {
         const includeFile = path.parse(symbol)
-        let elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((incFile): boolean => {
+        elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((incFile): boolean => {
           return incFile.name === includeFile.name
         })
 
@@ -100,25 +96,20 @@ function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStateme
             return recipe.name === includeFile.name
           })
         }
-        definition = createDefinitionForElementInfo(elementInfos)
       }
       break
 
     default:
+      return []
   }
-  return definition
-}
 
-function createDefinitionForElementInfo (elementInfos: ElementInfo[]): Definition {
   const definition: Definition = []
-
   for (const elementInfo of elementInfos) {
     if (elementInfo.path !== undefined) {
       const location: Location = createDefinitionLocationForPathInfo(elementInfo.path)
       definition.push(location)
     }
   }
-
   return definition
 }
 
