@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
-import logger from 'winston'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 import { type EmbeddedLanguageDocInfos, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { type EmbeddedLanguageDoc } from './utils'
@@ -45,7 +45,7 @@ export default class EmbeddedLanguageDocsManager {
         const newPathToEmbeddedLanguageDocsFolder = path.join(newStoragePath, EMBEDDED_DOCUMENTS_FOLDER)
         fs.mkdir(newPathToEmbeddedLanguageDocsFolder, { recursive: true }, (err) => {
           if (err !== null) {
-            logger.error('Failed to create embedded language documents folder:', err)
+            logger.error(`Failed to create embedded language documents folder: ${JSON.stringify(err)}`)
           }
           resolve()
         })
@@ -58,7 +58,7 @@ export default class EmbeddedLanguageDocsManager {
         const oldPathToEmbeddedLanguageDocsFolder = path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
         fs.rmdir(oldPathToEmbeddedLanguageDocsFolder, { recursive: true }, (err) => {
           if (err !== null) {
-            logger.error('Failed to remove embedded language documents folder:', err)
+            logger.error(`Failed to remove embedded language documents folder: ${JSON.stringify(err)}`)
           }
           resolve()
         })
@@ -102,7 +102,7 @@ export default class EmbeddedLanguageDocsManager {
   async saveEmbeddedLanguageDoc (
     embeddedLanguageDoc: EmbeddedLanguageDoc
   ): Promise<void> {
-    logger.debug(`Save embedded document (${embeddedLanguageDoc.language}) for`, embeddedLanguageDoc.originalUri)
+    logger.debug(`Save embedded document (${embeddedLanguageDoc.language}) for ${embeddedLanguageDoc.originalUri}`)
     const pathToEmbeddedLanguageDoc = this.getPathToEmbeddedLanguageDoc(embeddedLanguageDoc)
     if (pathToEmbeddedLanguageDoc === undefined) {
       return
@@ -118,12 +118,12 @@ export default class EmbeddedLanguageDocsManager {
       }
       this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc.originalUri, embeddedLanguageDocInfos)
     }).catch((err) => {
-      logger.error('Failed to create embedded document:', err)
+      logger.error(`Failed to create embedded document: ${err}`)
     })
   }
 
   async deleteEmbeddedLanguageDocs (originalUriString: string): Promise<void> {
-    logger.debug('Delete embedded documents for', originalUriString)
+    logger.debug(`Delete embedded documents for ${originalUriString}`)
     const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString) ?? {}
     await Promise.all(Object.values(embeddedLanguageDocs).map(async ({ uri }) => {
       await new Promise<void>((resolve, reject) => {
@@ -135,7 +135,7 @@ export default class EmbeddedLanguageDocsManager {
     })).then(() => {
       this.embeddedLanguageDocsInfos.delete(originalUriString)
     }).catch((err) => {
-      logger.error('Failed to delete embedded document:', err)
+      logger.error(`Failed to delete embedded document: ${err}`)
     })
   }
 
