@@ -35,7 +35,8 @@ const notifyFileRenameChanged = async (
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
   // The debug options for the server
-  const debugOptions = { execArgv: ['--nolazy', '--inspect=6009'] }
+  // Use --inspect-brk instead of --inspect if you want to debug the server startup code
+  const debugOptions = { execArgv: ['--nolazy', '--inspect=localhost:6010'] }
 
   // If the extension is launched in debug mode then the debug server options are used
   // Otherwise the run options are used
