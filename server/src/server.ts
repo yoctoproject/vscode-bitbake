@@ -39,6 +39,13 @@ let parseOnSave = true
 
 const disposables: Disposable[] = []
 
+let currentActiveTextDocument: TextDocument = TextDocument.create(
+  'file://dummy_uri',
+  'bitbake',
+  0,
+  ''
+)
+
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   logger.level = 'debug'
   logger.info('[onInitialize] Initializing connection')
@@ -56,6 +63,11 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   const parser = await generateParser()
   analyzer.initialize(parser)
+
+  bitBakeProjectScannerClient.onChange.on('scanReady', () => {
+    logger.debug('[On scanReady] Analyzing the current document again...')
+    void analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
+  })
 
   return {
     capabilities: {
@@ -139,6 +151,8 @@ documents.onDidChangeContent(async (event) => {
     void generateEmbeddedLanguageDocs(event.document)
     void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }
+
+  currentActiveTextDocument = textDocument
 
   // Other language extensions might also associate .conf files with their langauge modes
   if (textDocument.uri.endsWith('.conf')) {
