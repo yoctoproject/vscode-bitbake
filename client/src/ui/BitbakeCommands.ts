@@ -16,14 +16,14 @@ import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
 let parsingPending = false
 
-export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitbakePorjectScanner: BitBakeProjectScanner): void {
+export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitbakeProjectScanner: BitBakeProjectScanner): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitbakePorjectScanner) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitbakeProjectScanner) }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
@@ -183,11 +183,11 @@ function extractRecipeName (filename: string | undefined): string | undefined {
   return path.basename(filename).split('.')[0].split('_')[0]
 }
 
-async function rescanProject (bitbakePorjectScanner: BitBakeProjectScanner): Promise<void> {
-  if (await bitbakePorjectScanner.bitbakeDriver?.checkBitbakeSettingsSanity() !== true) {
+async function rescanProject (bitbakeProjectScanner: BitBakeProjectScanner): Promise<void> {
+  if (await bitbakeProjectScanner.bitbakeDriver?.checkBitbakeSettingsSanity() !== true) {
     logger.warn('bitbake settings are not sane, skip rescan')
     return
   }
 
-  await bitbakePorjectScanner.rescanProject()
+  await bitbakeProjectScanner.rescanProject()
 }
