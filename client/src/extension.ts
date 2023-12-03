@@ -31,10 +31,17 @@ function loadLoggerSettings (): void {
   logger.info('Bitbake logging level: ' + logger.level)
 }
 
-function updatePythonPath (pathToBitbakeFolder: string): void {
+function updatePythonPath (): void {
+  // Deliberately load the workspace configuration here instead of using
+  // bitbakeDriver.bitbakeSettings, because the latter contains resolved
+  // (absolute) paths, which is not very portable for settings.json. We want
+  // something like "${workspaceFolder}/poky/bitbake/lib" instead of
+  // "/home/<user>/<project>/poky/bitbake/lib"
+  const bitbakeConfig = vscode.workspace.getConfiguration('bitbake')
   const pythonConfig = vscode.workspace.getConfiguration('python')
-  const extraPaths = pythonConfig.get<string[]>('autoComplete.extraPaths') ?? []
+  const pathToBitbakeFolder = bitbakeConfig.pathToBitbakeFolder
   const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
+  const extraPaths = pythonConfig.get<string[]>('autoComplete.extraPaths') ?? []
   if (!extraPaths.includes(pathToBitbakeLib)) {
     extraPaths.push(`${pathToBitbakeFolder}/lib`)
   }
@@ -47,9 +54,10 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   loadLoggerSettings()
   bitbakeExtensionContext = context
+  logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   bitBakeProjectScanner.setDriver(bitbakeDriver)
-  updatePythonPath(bitbakeDriver.bitbakeSettings.pathToBitbakeFolder)
+  updatePythonPath()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
