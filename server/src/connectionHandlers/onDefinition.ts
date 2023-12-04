@@ -9,7 +9,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path, { type ParsedPath } from 'path'
-import { type PathInfo, type ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Definition | null {
   const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
@@ -45,6 +45,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     const definitions: Definition = []
     const canProvideGoToDefinitionForSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
     (analyzer.isVariableExpansion(documentUri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
+    // Variables in declartion and variable expansion syntax
     if (canProvideGoToDefinitionForSymbol) {
       analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
         if (globalDeclaration[word] !== undefined) {
@@ -66,12 +67,25 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
           })
         })
       }
-    }
 
-    return definitions
+      return definitions
+    }
+    // Symbols in string content
+    if (analyzer.isStringContent(documentUri, position.line, position.character)) {
+      const allSymbolsFoundAtPosition = analyzer.getSymbolInStringContentForPosition(documentUri, position.line, position.character)
+      if (allSymbolsFoundAtPosition !== undefined) {
+        allSymbolsFoundAtPosition.forEach((symbol) => {
+          definitions.push({
+            uri: symbol.location.uri,
+            range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
+          })
+        })
+        return definitions
+      }
+    }
   }
 
-  return getDefinition(textDocumentPositionParams, documentAsText)
+  return []
 }
 
 function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, symbol: string): Definition {
@@ -118,99 +132,4 @@ function createDefinitionLocationForPathInfo (path: ParsedPath): Location {
   const location: Location = Location.create(encodeURI(url), Range.create(0, 0, 0, 0))
 
   return location
-}
-
-function getDefinition (textDocumentPositionParams: TextDocumentPositionParams, documentAsText: string[]): Definition {
-  let definition: Definition = []
-
-  const currentLine = documentAsText[textDocumentPositionParams.position.line]
-  const symbol = extractSymbolFromLine(textDocumentPositionParams, currentLine)
-
-  definition = createDefinitionForSymbol(symbol)
-  return definition
-}
-
-function createDefinitionForSymbol (symbol: string): Definition {
-  return createDefinitionForSymbolRecipes(symbol)
-}
-
-function createDefinitionForSymbolRecipes (symbol: string): Definition {
-  let definitions: Definition = []
-
-  const recipe: ElementInfo | undefined = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
-    return obj.name === symbol
-  })
-
-  if (recipe?.path !== undefined) {
-    let definitionsList: PathInfo[] = new Array < PathInfo >(recipe.path)
-
-    if ((recipe.appends !== undefined) && (recipe.appends.length > 0)) {
-      definitionsList = definitionsList.concat(recipe.appends)
-    }
-    definitions = createDefinitionLocationForPathInfoList(definitionsList)
-  }
-
-  return definitions
-}
-
-function createDefinitionLocationForPathInfoList (pathInfoList: PathInfo[]): Definition {
-  let definition: Definition = []
-
-  if ((pathInfoList !== undefined) && (pathInfoList.length > 0)) {
-    if (pathInfoList.length > 1) {
-      definition = new Array < Location >()
-
-      for (const pathInfo of pathInfoList) {
-        logger.debug(`definition ${JSON.stringify(pathInfo)}`)
-        const location: Location = createDefinitionLocationForPathInfo(pathInfo)
-
-        definition.push(location)
-      }
-    } else {
-      definition = createDefinitionLocationForPathInfo(pathInfoList[0])
-    }
-  }
-
-  return definition
-}
-
-function extractSymbolFromLine (textDocumentPositionParams: TextDocumentPositionParams, currentLine: string): string {
-  logger.debug(`getDefinitionForSymbol ${currentLine}`)
-  const linePosition: number = textDocumentPositionParams.position.character
-  let symbolEndPosition: number = currentLine.length
-  let symbolStartPosition: number = 0
-  const rightBorderCharacter: string[] = [' ', '=', '/', '$', '+', '}', '\'', '\'', ']', '[']
-  const leftBorderCharacter: string[] = [' ', '=', '/', '+', '{', '\'', '\'', '[', ']']
-
-  for (const character of rightBorderCharacter) {
-    let temp: number = currentLine.indexOf(character, linePosition)
-    if (temp === -1) {
-      temp = currentLine.length
-    }
-    symbolEndPosition = Math.min(symbolEndPosition, temp)
-  }
-
-  const symbolRightTrimed = currentLine.substring(0, symbolEndPosition)
-  logger.debug(`symbolRightTrimed ${symbolRightTrimed}`)
-
-  for (const character of leftBorderCharacter) {
-    let temp: number = symbolRightTrimed.lastIndexOf(character, linePosition)
-    if (temp === -1) {
-      temp = 0
-    }
-    symbolStartPosition = Math.max(symbolStartPosition, temp)
-  }
-
-  let symbol: string = symbolRightTrimed.substring(symbolStartPosition)
-
-  for (const character of leftBorderCharacter.concat('-')) {
-    if (symbol.startsWith(character)) {
-      symbol = symbol.substring(1)
-      break
-    }
-  }
-
-  logger.debug(`symbol ${symbol}`)
-
-  return symbol
 }
