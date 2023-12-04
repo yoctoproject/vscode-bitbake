@@ -7,6 +7,7 @@ import { type HoverParams, type Hover } from 'vscode-languageserver'
 import { analyzer } from '../tree-sitter/analyzer'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { logger } from '../lib/src/utils/OutputLogger'
+import { DIRECTIVE_STATEMENT_KEYWORDS } from '../lib/src/types/directiveKeywords'
 
 export async function onHoverHandler (params: HoverParams): Promise<Hover | null> {
   const { position, textDocument } = params
@@ -84,5 +85,21 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     logger.debug(`[onHover] Hover item: ${JSON.stringify(hover)}`)
     return hover
   }
+
+  // Keywords
+  const keyword = analyzer.getKeywordForPosition(textDocument.uri, position.line, position.character)
+  if (keyword !== undefined && DIRECTIVE_STATEMENT_KEYWORDS.includes(word)) {
+    const keywordInfo = bitBakeDocScanner.keywordInfo.find(item => item.name === word)
+    if (keywordInfo === undefined) {
+      return null
+    }
+    return {
+      contents: {
+        kind: 'markdown',
+        value: `**${keywordInfo.name}**\n___\n${keywordInfo.definition}`
+      }
+    }
+  }
+
   return null
 }
