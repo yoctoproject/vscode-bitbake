@@ -158,4 +158,84 @@ describe('on definition', () => {
       ])
     )
   })
+
+  it('provides go to definition for symbols found in the string content', async () => {
+    const parsedHoverPath = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', ''))
+
+    bitBakeProjectScannerClient.bitbakeScanResult._recipes = [
+      {
+        name: parsedHoverPath.name,
+        path: parsedHoverPath,
+        appends: [
+          {
+            root: parsedHoverPath.root,
+            dir: parsedHoverPath.dir,
+            base: 'hover-append.bbappend',
+            ext: 'bbappend',
+            name: 'hover-append'
+          }
+        ],
+        extraInfo: 'layer: core'
+      }
+    ]
+
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const shouldWork1 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 7,
+        character: 21
+      }
+    })
+
+    const shouldWork2 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 8,
+        character: 22
+      }
+    })
+
+    const shouldWork3 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 9,
+        character: 14
+      }
+    })
+
+    const shouldNotWork = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 9,
+        character: 31
+      }
+    })
+
+    expect(shouldWork1).toEqual([
+      {
+        uri: FIXTURE_URI.HOVER,
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
+      },
+      { range: { end: { character: 0, line: 0 }, start: { character: 0, line: 0 } }, uri: 'file://' + parsedHoverPath.dir + '/hover-append.bbappend' }
+    ])
+
+    expect(shouldWork2).toEqual(shouldWork1)
+
+    expect(shouldWork3).toEqual(shouldWork1)
+
+    expect(shouldNotWork).toEqual([])
+  })
 })
