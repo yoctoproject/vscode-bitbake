@@ -254,4 +254,65 @@ describe('on hover', () => {
     expect(shouldNotShow1).toBe(null)
     expect(shouldNotShow2).toBe(null)
   })
+
+  it('should show hover definition for keywords', async () => {
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 30,
+        character: 1
+      }
+    })
+
+    const shouldShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 31,
+        character: 1
+      }
+    })
+
+    const shouldShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 32,
+        character: 1
+      }
+    })
+
+    expect(shouldShow1).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('inherit')
+        })
+      })
+    )
+
+    expect(shouldShow2).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('include')
+        })
+      })
+    )
+
+    expect(shouldShow3).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('require')
+        })
+      })
+    )
+  })
 })

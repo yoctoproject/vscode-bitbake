@@ -27,3 +27,7 @@ def do_build():
 my_do_build(){
     VAR = 'do_build'
 }
+
+inherit dummy
+include dummy.inc
+require dummy.inc
