@@ -355,6 +355,33 @@ export default class Analyzer {
   }
 
   /**
+   * Get the keyword based on the node type in the tree
+   */
+  public getKeywordForPosition (
+    uri: string,
+    line: number,
+    column: number
+  ): string | undefined {
+    const n = this.nodeAtPoint(uri, line, column)
+
+    const parentNodeType = n?.parent?.type
+    if (parentNodeType !== undefined) {
+      switch (parentNodeType) {
+        case 'inherit_directive':
+          return 'inherit'
+        case 'include_directive':
+          return 'include'
+        case 'require_directive':
+          return 'require'
+        // other keywords...
+        default:
+          return undefined
+      }
+    }
+    return undefined
+  }
+
+  /**
    * Find the node at the given point.
    */
   private nodeAtPoint (
