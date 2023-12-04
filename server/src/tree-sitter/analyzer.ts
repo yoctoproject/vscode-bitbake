@@ -8,11 +8,12 @@
  * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/analyser.ts
  */
 
-import type {
-  TextDocumentPositionParams,
-  Diagnostic,
-  SymbolInformation,
-  Range
+import {
+  type TextDocumentPositionParams,
+  type Diagnostic,
+  type SymbolInformation,
+  type Range,
+  SymbolKind
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -33,6 +34,7 @@ interface AnalyzedDocument {
   embeddedRegions: EmbeddedRegions
   tree: Parser.Tree
   extraSymbols?: GlobalDeclarations[] // symbols from the include files
+  symbolsInStringContent?: SymbolInformation[]
 }
 
 export default class Analyzer {
@@ -72,6 +74,7 @@ export default class Analyzer {
 
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
+    const symbolsInStringContent = this.getSymbolsInStringContent(tree, uri)
     const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
     /* eslint-disable-next-line prefer-const */
     let extraSymbols: GlobalDeclarations[] = []
@@ -82,7 +85,8 @@ export default class Analyzer {
       globalDeclarations,
       embeddedRegions,
       tree,
-      extraSymbols
+      extraSymbols,
+      symbolsInStringContent
     }
 
     let debouncedExecuteAnalyzation = this.debouncedExecuteAnalyzation
@@ -507,6 +511,90 @@ export default class Analyzer {
       }
     })
     return fileUris
+  }
+
+  /**
+   * Extract symbols from the string content of the tree
+   */
+  public getSymbolsInStringContent (tree: Parser.Tree, uri: string): SymbolInformation[] {
+    const symbolInformation: SymbolInformation[] = []
+    const wholeWordRegex = /(?<![-.:])\b(\w+)\b(?![-.:])/g
+    TreeSitterUtils.forEach(tree.rootNode, (n) => {
+      if (n.type === 'string_content') {
+        const splittedStringContent = n.text.split(/\n/g)
+        for (let i = 0; i < splittedStringContent.length; i++) {
+          const line = splittedStringContent[i]
+          for (const match of line.matchAll(wholeWordRegex)) {
+            if (match !== undefined && uri !== undefined) {
+              const start = {
+                line: n.startPosition.row + i,
+                character: match.index !== undefined ? match.index + n.startPosition.column : 0
+              }
+              const end = {
+                line: n.startPosition.row + i,
+                character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
+              }
+              if (i > 0) {
+                start.character = match.index ?? 0
+                end.character = (match.index ?? 0) + match[0].length
+              }
+              const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
+                return recipe.name === match[0]
+              })
+              if (foundRecipe !== undefined) {
+                if (foundRecipe?.path !== undefined) {
+                  symbolInformation.push({
+                    name: match[0],
+                    kind: SymbolKind.Variable,
+                    location: {
+                      range: {
+                        start,
+                        end
+                      },
+                      uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
+                    }
+                  })
+                }
+                if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
+                  foundRecipe.appends.forEach((append) => {
+                    symbolInformation.push({
+                      name: append.name,
+                      kind: SymbolKind.Variable,
+                      location: {
+                        range: {
+                          start,
+                          end
+                        },
+                        uri: 'file://' + append.dir + '/' + append.base
+                      }
+                    })
+                  })
+                }
+              }
+            }
+          }
+        }
+      }
+      return true
+    })
+
+    return symbolInformation
+  }
+
+  public getSymbolInStringContentForPosition (uri: string, line: number, column: number): SymbolInformation[] | undefined {
+    const analyzedDocument = this.uriToAnalyzedDocument[uri]
+    if (analyzedDocument?.symbolsInStringContent !== undefined) {
+      const { symbolsInStringContent } = analyzedDocument
+      const allSymbolsFoundAtPosition: SymbolInformation[] = [] // recipe + appends
+      for (const symbol of symbolsInStringContent) {
+        const { location: { range } } = symbol
+        if (line === range.start.line && column >= range.start.character && column <= range.end.character) {
+          allSymbolsFoundAtPosition.push(symbol)
+        }
+      }
+      return allSymbolsFoundAtPosition
+    }
+    return undefined
   }
 }
 
