@@ -48,12 +48,34 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
   }
 }
 
+const KEYWORDS = [
+  {
+    name: 'require',
+    definition: 'BitBake understands the require directive. This directive behaves just like the include directive with the exception that BitBake raises a parsing error if the file to be included cannot be found. Thus, any file you require is inserted into the file that is being parsed at the location of the directive. \n\nThe require directive, like the include directive previously described, is a more generic method of including functionality as compared to the inherit directive, which is restricted to class (i.e. .bbclass) files. The require directive is applicable for any other kind of shared or encapsulated functionality or configuration that does not suit a .bbclass file. \n\nSimilar to how BitBake handles include, if the path specified on the require line is a relative path, BitBake locates the first file it can find within BBPATH. \n\nAs an example, suppose you have two versions of a recipe (e.g. foo_1.2.2.bb and foo_2.0.0.bb) where each version contains some identical functionality that could be shared. You could create an include file named foo.inc that contains the common definitions needed to build “foo”. You need to be sure foo.inc is located in the same directory as your two recipe files as well. Once these conditions are set up, you can share the functionality using a require directive from within each recipe: \n ```require foo.inc```',
+    referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html?highlight=require#require-directive',
+    docSource: 'Bitbake'
+  },
+  {
+    name: 'include',
+    definition: 'BitBake understands the include directive. This directive causes BitBake to parse whatever file you specify, and to insert that file at that location. The directive is much like its equivalent in Make except that if the path specified on the include line is a relative path, BitBake locates the first file it can find within BBPATH. \n\nThe include directive is a more generic method of including functionality as compared to the inherit directive, which is restricted to class (i.e. .bbclass) files. The include directive is applicable for any other kind of shared or encapsulated functionality or configuration that does not suit a .bbclass file. \n\nAs an example, suppose you needed a recipe to include some self-test definitions: \n ```include test_defs.inc```',
+    referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html?highlight=require#include-directive',
+    docSource: 'Bitbake'
+  },
+  {
+    name: 'inherit',
+    definition: 'When writing a recipe or class file, you can use the inherit directive to inherit the functionality of a class (.bbclass). BitBake only supports this directive when used within recipe and class files (i.e. .bb and .bbclass).\n\nThe inherit directive is a rudimentary means of specifying functionality contained in class files that your recipes require. For example, you can easily abstract out the tasks involved in building a package that uses Autoconf and Automake and put those tasks into a class file and then have your recipe inherit that class file. \n\nAs an example, your recipes could use the following directive to inherit an autotools.bbclass file. The class file would contain common functionality for using Autotools that could be shared across recipes: \n```inherit autotools```',
+    referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html?highlight=require#inherit-directive',
+    docSource: 'Bitbake'
+  }
+]
+
 export class BitBakeDocScanner {
   private _bitbakeVariableInfo: VariableInfo[] = []
   private _yoctoVariableInfo: VariableInfo[] = []
   private _variableFlagInfo: VariableFlagInfo[] = []
   private _yoctoTaskInfo: DocInfo[] = []
   private _docPath: string = path.join(__dirname, '../../client/resources/docs') // This default path is for the test. The path after the compilation can be different
+  private readonly _keywordInfo: DocInfo[] = KEYWORDS
 
   get bitbakeVariableInfo (): VariableInfo[] {
     return this._bitbakeVariableInfo
@@ -69,6 +91,10 @@ export class BitBakeDocScanner {
 
   get yoctoTaskInfo (): DocInfo[] {
     return this._yoctoTaskInfo
+  }
+
+  get keywordInfo (): DocInfo[] {
+    return this._keywordInfo
   }
 
   public clearScannedDocs (): void {
