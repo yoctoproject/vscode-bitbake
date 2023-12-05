@@ -515,61 +515,72 @@ export default class Analyzer {
   /**
    * Extract symbols from the string content of the tree
    */
-  public getSymbolsInStringContent (uri: string, line: number, character: number): SymbolInformation[] {
+  public getSymbolsInStringContent (uri: string, line: number, character: number, regex: RegExp): SymbolInformation[] {
     const allSymbolsAtPosition: SymbolInformation[] = []
-    const wholeWordRegex = /(?<![-.:])\b(\w+)\b(?![-.:])/g
     const n = this.nodeAtPoint(uri, line, character)
     if (n?.type === 'string_content') {
       const splittedStringContent = n.text.split(/\n/g)
       for (let i = 0; i < splittedStringContent.length; i++) {
         const lineText = splittedStringContent[i]
-        for (const match of lineText.matchAll(wholeWordRegex)) {
-          if (match !== undefined && uri !== undefined) {
-            const start = {
-              line: n.startPosition.row + i,
-              character: match.index !== undefined ? match.index + n.startPosition.column : 0
+        for (const match of lineText.matchAll(regex)) {
+          const matchedUri = match.groups?.uri
+          const start = {
+            line: n.startPosition.row + i,
+            character: match.index !== undefined ? match.index + n.startPosition.column : 0
+          }
+          const end = {
+            line: n.startPosition.row + i,
+            character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
+          }
+          if (i > 0) {
+            start.character = match.index ?? 0
+            end.character = (match.index ?? 0) + match[0].length
+          }
+          if (this.positionIsInRange(line, character, { start, end })) {
+            if (matchedUri !== undefined) {
+              return [{
+                name: matchedUri,
+                kind: SymbolKind.String,
+                location: {
+                  range: {
+                    start,
+                    end
+                  },
+                  uri
+                }
+              }]
             }
-            const end = {
-              line: n.startPosition.row + i,
-              character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
-            }
-            if (i > 0) {
-              start.character = match.index ?? 0
-              end.character = (match.index ?? 0) + match[0].length
-            }
-            if (this.positionIsInRange(line, character, { start, end })) {
-              const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
-                return recipe.name === match[0]
-              })
-              if (foundRecipe !== undefined) {
-                if (foundRecipe?.path !== undefined) {
+            const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
+              return recipe.name === match[0]
+            })
+            if (foundRecipe !== undefined) {
+              if (foundRecipe?.path !== undefined) {
+                allSymbolsAtPosition.push({
+                  name: match[0],
+                  kind: SymbolKind.Variable,
+                  location: {
+                    range: {
+                      start,
+                      end
+                    },
+                    uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
+                  }
+                })
+              }
+              if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
+                foundRecipe.appends.forEach((append) => {
                   allSymbolsAtPosition.push({
-                    name: match[0],
+                    name: append.name,
                     kind: SymbolKind.Variable,
                     location: {
                       range: {
                         start,
                         end
                       },
-                      uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
+                      uri: 'file://' + append.dir + '/' + append.base
                     }
                   })
-                }
-                if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
-                  foundRecipe.appends.forEach((append) => {
-                    allSymbolsAtPosition.push({
-                      name: append.name,
-                      kind: SymbolKind.Variable,
-                      location: {
-                        range: {
-                          start,
-                          end
-                        },
-                        uri: 'file://' + append.dir + '/' + append.base
-                      }
-                    })
-                  })
-                }
+                })
               }
             }
           }

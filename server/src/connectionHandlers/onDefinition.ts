@@ -10,6 +10,7 @@ import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywor
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path, { type ParsedPath } from 'path'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import fs from 'fs'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Definition | null {
   const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
@@ -72,7 +73,29 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     }
     // Symbols in string content
     if (analyzer.isStringContent(documentUri, position.line, position.character)) {
-      const allSymbolsAtPosition = analyzer.getSymbolsInStringContent(documentUri, position.line, position.character)
+      const wholeWordRegex = /(?<![-.:])\b(\w+)\b(?![-.:])/g
+      const uriRegex = /(file:\/\/)(?<uri>.*)\b/g
+      const [uriAtPosition] = analyzer.getSymbolsInStringContent(documentUri, position.line, position.character, uriRegex)
+      if (uriAtPosition !== undefined) {
+        const { workspaceFolders } = analyzer
+        if (workspaceFolders !== undefined && workspaceFolders !== null) {
+          for (const workspaceFolder of workspaceFolders) {
+            const filePath = findFileInDirectory(workspaceFolder.uri.replace('file://', ''), uriAtPosition.name)
+            if (filePath !== null) {
+              definitions.push(
+                {
+                  uri: 'file://' + filePath,
+                  range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
+                }
+              )
+              break
+            }
+          }
+          return definitions
+        }
+      }
+
+      const allSymbolsAtPosition = analyzer.getSymbolsInStringContent(documentUri, position.line, position.character, wholeWordRegex)
 
       allSymbolsAtPosition.forEach((symbol) => {
         definitions.push({
@@ -80,6 +103,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
           range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
         })
       })
+
       return definitions
     }
   }
@@ -131,4 +155,23 @@ function createDefinitionLocationForPathInfo (path: ParsedPath): Location {
   const location: Location = Location.create(encodeURI(url), Range.create(0, 0, 0, 0))
 
   return location
+}
+
+function findFileInDirectory (dir: string, fileName: string): string | null {
+  try {
+    const filePaths = fs.readdirSync(dir).map(name => path.join(dir, name))
+    for (const filePath of filePaths) {
+      if (fs.statSync(filePath).isDirectory()) {
+        const result = findFileInDirectory(filePath, fileName)
+        if (result !== null) return result
+      } else if (path.basename(filePath) === fileName) {
+        return filePath
+      }
+    }
+  } catch {
+    logger.debug(`[findFileInDirectory] ${dir} not found`)
+    return null
+  }
+
+  return null
 }
