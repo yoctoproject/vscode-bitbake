@@ -12,7 +12,7 @@ import path from 'path'
 import fs from 'fs'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 
-const FIXTURE_FOLDER = path.join(__dirname, './')
+export const FIXTURE_FOLDER = path.join(__dirname, './')
 
 type FIXTURE_URI_KEY = keyof typeof FIXTURE_URI
 

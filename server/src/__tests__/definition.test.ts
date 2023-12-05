@@ -6,7 +6,7 @@
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { onDefinitionHandler } from '../connectionHandlers/onDefinition'
-import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
+import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI, FIXTURE_FOLDER } from './fixtures/fixtures'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 
@@ -237,5 +237,43 @@ describe('on definition', () => {
     expect(shouldWork3).toEqual(shouldWork1)
 
     expect(shouldNotWork).toEqual([])
+  })
+
+  it('provides go to definition for uris found in the string content', async () => {
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    analyzer.workspaceFolders = [{ uri: FIXTURE_FOLDER, name: 'test' }]
+
+    const shouldWork1 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 12,
+        character: 13
+      }
+    })
+
+    const shouldWork2 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 13,
+        character: 10
+      }
+    })
+
+    expect(shouldWork1).toEqual([
+      {
+        uri: FIXTURE_URI.FOO_INC,
+        range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
+      }
+    ])
+
+    expect(shouldWork2).toEqual(shouldWork1)
   })
 })

@@ -9,3 +9,6 @@ SYMBOL_IN_STRING = 'hover is a package ${FOO} \
         parentFolder/hover should also be seen as symbol \
         this hover too, other words should not. \
         '
+
+SRC_URI = 'file://foo.inc \
+        file://foo.inc'
