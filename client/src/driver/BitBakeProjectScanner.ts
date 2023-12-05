@@ -142,6 +142,13 @@ export class BitBakeProjectScanner {
       parentPath = path.dirname(parentPath)
     }
 
+    /*
+     * FIXME This works in most cases.
+     * We could provide an additional bitbake.containerWorkdir setting to provide path resolution hints if this fails.
+     * One example is having a layer that is a symlink to an external directory from the working directory.
+     * Ex: 'commandWrapper': 'docker run --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c'
+    */
+
     this.containerWorkdir = undefined
   }
 
