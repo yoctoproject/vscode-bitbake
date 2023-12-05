@@ -12,6 +12,7 @@ export interface BitbakeSettings {
   pathToEnvScript?: string
   commandWrapper?: string
   workingDirectory: string
+  shellEnv?: NodeJS.Dict<string>
 }
 
 export function loadBitbakeSettings (settings: any, workspaceFolder: string): BitbakeSettings {
@@ -29,7 +30,8 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
     pathToBuildFolder: settings.pathToBuildFolder !== '' ? resolveSettingsPath(settings.pathToBuildFolder, workspaceFolder) : undefined,
     pathToEnvScript: settings.pathToEnvScript !== '' ? resolveSettingsPath(settings.pathToEnvScript, workspaceFolder) : undefined,
     commandWrapper: settings.commandWrapper !== '' ? expandWorkspaceFolder(settings.commandWrapper, workspaceFolder) : undefined,
-    workingDirectory: settings.workingDirectory !== '' ? resolveSettingsPath(settings.workingDirectory, workspaceFolder) : workspaceFolder
+    workingDirectory: settings.workingDirectory !== '' ? resolveSettingsPath(settings.workingDirectory, workspaceFolder) : workspaceFolder,
+    shellEnv: toStringDict(settings.shellEnv)
   }
 }
 
@@ -47,4 +49,8 @@ function sanitizeForShell (command: string | undefined): string | undefined {
     return undefined
   }
   return command.replace(/[;`&|<>\\$(){}!#*?"']/g, '')
+}
+
+function toStringDict (dict: object | undefined): NodeJS.Dict<string> | undefined {
+  return dict as NodeJS.Dict<string> | undefined
 }

@@ -39,7 +39,8 @@ export class BitbakeDriver {
     this.bitbakeActive = true
     const child = childProcess.spawn(script, {
       shell,
-      cwd: this.bitbakeSettings.workingDirectory
+      cwd: this.bitbakeSettings.workingDirectory,
+      env: { ...process.env, ...this.bitbakeSettings.shellEnv }
     })
     child.on('close', () => {
       this.bitbakeActive = false
@@ -55,7 +56,8 @@ export class BitbakeDriver {
     this.bitbakeActive = true
     const ret = childProcess.spawnSync(script, {
       shell,
-      cwd: this.bitbakeSettings.workingDirectory
+      cwd: this.bitbakeSettings.workingDirectory,
+      env: { ...process.env, ...this.bitbakeSettings.shellEnv }
     })
     this.bitbakeActive = false
     return ret

@@ -124,6 +124,11 @@
           "type": "string",
           "default": "${workspaceFolder}",
           "description": "Set the working directory for running BitBake command."
+        },
+        "bitbake.shellEnv": {
+          "type": "object",
+          "default": {},
+          "description": "Environment variables to set before running the BitBake command."
         }
       }
     },
