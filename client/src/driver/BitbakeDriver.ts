@@ -109,7 +109,7 @@ export class BitbakeDriver {
     }
 
     const pathToEnvScript = this.bitbakeSettings.pathToEnvScript
-    if (pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
+    if (this.bitbakeSettings.commandWrapper === undefined && pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
       clientNotificationManager.showBitbakeError("Bitbake environment script doesn't exist: " + pathToEnvScript)
       return false
     }
