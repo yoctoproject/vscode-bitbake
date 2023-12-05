@@ -72,16 +72,15 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     }
     // Symbols in string content
     if (analyzer.isStringContent(documentUri, position.line, position.character)) {
-      const allSymbolsFoundAtPosition = analyzer.getSymbolInStringContentForPosition(documentUri, position.line, position.character)
-      if (allSymbolsFoundAtPosition !== undefined) {
-        allSymbolsFoundAtPosition.forEach((symbol) => {
-          definitions.push({
-            uri: symbol.location.uri,
-            range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
-          })
+      const allSymbolsAtPosition = analyzer.getSymbolsInStringContent(documentUri, position.line, position.character)
+
+      allSymbolsAtPosition.forEach((symbol) => {
+        definitions.push({
+          uri: symbol.location.uri,
+          range: { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
         })
-        return definitions
-      }
+      })
+      return definitions
     }
   }
 
