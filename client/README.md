@@ -26,8 +26,9 @@ Or, if `pathToEnvScript` and `pathToBuildFolder` are defined:
 ```shell
  $ $commandWrapper ". $pathToEnvScript $pathToBuildFolder && bitbake core-image-minimal"
 ```
+You can also control the directory from which they are started by using the `bitbake.workingDirectory` option as well as the shell environment variables with `bitbake.shellEnv`.
 
-Here are some examples using the most popular bitbake wrappers. You can also control the directory from which they are started by using the `bitbake.workingDirectory` option:
+Here are some examples using the most popular bitbake wrappers:
 ```json
 {
     "bitbake.commandWrapper": "docker run --rm -v ${workspaceFolder}:${workspaceFolder} crops/poky --workdir=${workspaceFolder} /bin/bash -c",
@@ -38,7 +39,12 @@ Here are some examples using the most popular bitbake wrappers. You can also con
     "bitbake.commandWrapper": "kas shell -c",
     "bitbake.workingDirectory": "${workspaceFolder}/yocto"
 }
-{ "bitbake.commandWrapper": "cqfd run" }
+{
+    "bitbake.commandWrapper": "cqfd run",
+    "bitbake.shellEnv": {
+        "CQFD_EXTRA_RUN_ARGS": "-e DISPLAY=:0 -v /tmp/.X11-unix:/tmp/.X11-unix"
+    }
+}
 { "bitbake.commandWrapper": "${workspaceFolder}/build.sh --" }
 ```
 
