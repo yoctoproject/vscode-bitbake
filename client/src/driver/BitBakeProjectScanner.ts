@@ -113,7 +113,10 @@ export class BitBakeProjectScanner {
 
   private async getContainerInode (filepath: string): Promise<number> {
     const commandResult = await this.executeBitBakeCommand(`stat -c %i ${filepath}`)
-    const inode = parseInt(commandResult.stdout.toString().trim())
+    const stdout = commandResult.stdout.toString().trim()
+    const regex = /^\d+$/m
+    const match = stdout.match(regex)
+    const inode = (match != null) ? parseInt(match[0]) : NaN
     return inode
   }
 
