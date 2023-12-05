@@ -61,6 +61,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   const parser = await generateParser()
   analyzer.initialize(parser)
+  analyzer.workspaceFolders = params.workspaceFolders
 
   bitBakeProjectScannerClient.onChange.on('scanReady', () => {
     logger.debug('[On scanReady] Analyzing the current document again...')

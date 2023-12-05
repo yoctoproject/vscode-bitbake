@@ -13,7 +13,8 @@ import {
   type Diagnostic,
   type SymbolInformation,
   type Range,
-  SymbolKind
+  SymbolKind,
+  type WorkspaceFolder
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -40,6 +41,7 @@ export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
   private debouncedExecuteAnalyzation?: ReturnType<typeof debounce>
+  public workspaceFolders: WorkspaceFolder[] | undefined | null = []
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
