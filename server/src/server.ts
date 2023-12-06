@@ -129,6 +129,10 @@ connection.onRequest('textDocument/semanticTokens/full', ({ textDocument }) => {
   return getSemanticTokens(textDocument.uri)
 })
 
+connection.onRequest(RequestMethod.getLinksInDocument, (params: RequestParams['getLinksInDocument']) => {
+  return analyzer.getLinksInStringContent(params.documentUri)
+})
+
 connection.onNotification(
   NotificationMethod.FilenameChanged,
   ({ oldUriString, newUriString }: NotificationParams['FilenameChanged']): void => {
