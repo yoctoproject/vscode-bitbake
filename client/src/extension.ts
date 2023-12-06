@@ -78,6 +78,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     if (event.affectsConfiguration('bitbake')) {
       bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
       logger.debug('Bitbake settings changed')
+      updatePythonPath()
       void vscode.commands.executeCommand('bitbake.rescan-project')
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
@@ -88,6 +89,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     logger.debug('Bitbake workspace changed: ' + JSON.stringify(event))
     loadLoggerSettings()
     bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
+    updatePythonPath()
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   }))
 
