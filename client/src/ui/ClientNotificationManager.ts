@@ -15,15 +15,15 @@ export class ClientNotificationManager {
   showBitbakeError (message?: string): void {
     if (!this.checkIsNeverShowAgain('custom/bitbakeSettingsError')) {
       void window.showErrorMessage(
-        'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,
+        'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.',
+        { detail: message, modal: true },
         'Open Settings',
-        'Close',
-        'Never Show Again'
+        'Don\'t show again'
       )
         .then((item) => {
           if (item === 'Open Settings') {
             void commands.executeCommand('workbench.action.openWorkspaceSettings', '@ext:yocto-project.yocto-bitbake')
-          } else if (item === 'Never Show Again') {
+          } else if (item === 'Don\'t show again') {
             void this.neverShowAgain('custom/bitbakeSettingsError')
           }
         })
