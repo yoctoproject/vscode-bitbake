@@ -41,12 +41,13 @@ function updatePythonPath (): void {
   const pythonConfig = vscode.workspace.getConfiguration('python')
   const pathToBitbakeFolder = bitbakeConfig.pathToBitbakeFolder
   const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
-  const extraPaths = pythonConfig.get<string[]>('autoComplete.extraPaths') ?? []
-  if (!extraPaths.includes(pathToBitbakeLib)) {
-    extraPaths.push(`${pathToBitbakeFolder}/lib`)
+  for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
+    const extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
+    if (!extraPaths.includes(pathToBitbakeLib)) {
+      extraPaths.push(`${pathToBitbakeFolder}/lib`)
+      void pythonConfig.update(pythonSubConf, extraPaths, vscode.ConfigurationTarget.Workspace)
+    }
   }
-  void pythonConfig.update('autoComplete.extraPaths', extraPaths, vscode.ConfigurationTarget.Workspace)
-  void pythonConfig.update('analysis.extraPaths', extraPaths, vscode.ConfigurationTarget.Workspace)
 }
 
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
