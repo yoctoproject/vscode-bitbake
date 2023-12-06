@@ -578,6 +578,49 @@ export default class Analyzer {
     return allSymbolsAtPosition
   }
 
+  public getLinksInStringContent (uri: string): Array<{ value: string, range: Range }> {
+    const links: Array<{ value: string, range: Range }> = []
+    const uriRegex = /(file:\/\/)(?<uri>.*)\b/g
+    const parsedTree = this.getAnalyzedDocument(uri)?.tree
+    if (parsedTree !== undefined) {
+      TreeSitterUtils.forEach(parsedTree.rootNode, (n) => {
+        if (n?.type === 'string_content') {
+          const splittedStringContent = n.text.split(/\n/g)
+          for (let i = 0; i < splittedStringContent.length; i++) {
+            const lineText = splittedStringContent[i]
+            for (const match of lineText.matchAll(uriRegex)) {
+              const matchedUri = match.groups?.uri
+              const start = {
+                line: n.startPosition.row + i,
+                character: match.index !== undefined ? match.index + n.startPosition.column : 0
+              }
+              const end = {
+                line: n.startPosition.row + i,
+                character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
+              }
+              if (i > 0) {
+                start.character = match.index ?? 0
+                end.character = (match.index ?? 0) + match[0].length
+              }
+              if (matchedUri !== undefined) {
+                links.push({
+                  value: matchedUri,
+                  range: {
+                    start,
+                    end
+                  }
+                })
+              }
+            }
+          }
+        }
+        return true
+      })
+    }
+
+    return links
+  }
+
   public positionIsInRange (line: number, character: number, range: Range): boolean {
     return line === range.start.line && character >= range.start.character && character <= range.end.character
   }
