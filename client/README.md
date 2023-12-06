@@ -48,6 +48,31 @@ Here are some examples using the most popular bitbake wrappers:
 { "bitbake.commandWrapper": "${workspaceFolder}/build.sh --" }
 ```
 
+### Additional settings recommendations
+
+If your workspace contains a Yocto build directory, some other extensions may
+be hogging lots of resources to parse it's contents and stall your machine. Here are
+some example settings to improve your experience (assuming your build directory
+is called `build`). You can add them to your `settings.json` file, or your global
+user settings.
+
+```json
+{
+    "files.watcherExclude": {
+        "**/build/**": true
+    },
+    "search.exclude": {
+        "**/build/**": true
+    },
+    "C_Cpp.files.exclude": {
+        "**/build": true
+    },
+    "python.analysis.exclude": [
+        "**/build/**"
+    ]
+}
+```
+
 ## Features
 
 ### Syntax highlighting
