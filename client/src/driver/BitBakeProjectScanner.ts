@@ -40,7 +40,10 @@ export class BitBakeProjectScanner {
   private _shouldDeepExamine: boolean = false
   private _bitbakeDriver: BitbakeDriver | undefined
   private _languageClient: LanguageClient | undefined
-  private containerWorkdir: string | undefined
+
+  /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
+  private containerMountPoint: string | undefined
+  private hostMountPoint: string | undefined
 
   setDriver (bitbakeDriver: BitbakeDriver): void {
     this._bitbakeDriver = bitbakeDriver
@@ -120,36 +123,36 @@ export class BitBakeProjectScanner {
     return inode
   }
 
-  private async scanContainerWorkdir (layerPath: string, hostWorkdir: string): Promise<void> {
+  private async scanContainerMountPoint (layerPath: string, hostWorkdir: string): Promise<void> {
+    this.containerMountPoint = undefined
+    this.hostMountPoint = undefined
+
     if (fs.existsSync(layerPath)) {
       // We're not inside a container, or the container is not using a different workdir
       return
     }
 
-    // Get inode of hostWorkdir
-    const hostWorkdirStats = fs.statSync(hostWorkdir)
-    const hostWorkdirInode = hostWorkdirStats.ino
+    let hostDir = hostWorkdir
 
-    // Find inode in layerPath and all parents
-    let parentInode = NaN
-    let parentPath = layerPath
-    while (parentPath !== '/') {
-      parentInode = await this.getContainerInode(parentPath)
-      if (parentInode === hostWorkdirInode) {
-        this.containerWorkdir = parentPath
-        return
+    while (hostDir !== '/') {
+      const hostDirInode = fs.statSync(hostDir).ino
+
+      // Find inode in layerPath and all parents
+      // OPTIM we could run stat on all parent directories in one (find?) command, and store the result in a map
+      let containerDirInode = NaN
+      let containerDir = layerPath
+      while (containerDir !== '/') {
+        containerDirInode = await this.getContainerInode(containerDir)
+        logger.debug('Comparing container inodes: ' + containerDir + ':' + containerDirInode + ' ' + hostDir + ':' + hostDirInode)
+        if (containerDirInode === hostDirInode) {
+          this.containerMountPoint = containerDir
+          this.hostMountPoint = hostDir
+          return
+        }
+        containerDir = path.dirname(containerDir)
       }
-      parentPath = path.dirname(parentPath)
+      hostDir = path.dirname(hostDir)
     }
-
-    /*
-     * FIXME This works in most cases.
-     * We could provide an additional bitbake.containerWorkdir setting to provide path resolution hints if this fails.
-     * One example is having a layer that is a symlink to an external directory from the working directory.
-     * Ex: 'commandWrapper': 'docker run --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c'
-    */
-
-    this.containerWorkdir = undefined
   }
 
   private printScanStatistic (): void {
@@ -172,7 +175,7 @@ export class BitBakeProjectScanner {
 
   private async scanAvailableLayers (): Promise<void> {
     this._bitbakeScanResult._layers = new Array < LayerInfo >()
-    this.containerWorkdir = undefined
+    this.containerMountPoint = undefined
 
     const commandResult = await this.executeBitBakeCommand('bitbake-layers show-layers')
 
@@ -216,14 +219,14 @@ export class BitBakeProjectScanner {
     if (hostWorkdir === undefined) {
       throw new Error('hostWorkdir is undefined')
     }
-    if (this.containerWorkdir === undefined) {
-      await this.scanContainerWorkdir(layerPath, hostWorkdir)
+    if (this.containerMountPoint === undefined) {
+      await this.scanContainerMountPoint(layerPath, hostWorkdir)
     }
-    if (this.containerWorkdir === undefined) {
+    if (this.containerMountPoint === undefined || this.hostMountPoint === undefined) {
       return layerPath
     }
-    const relativePath = path.relative(this.containerWorkdir, layerPath)
-    return path.resolve(hostWorkdir, relativePath)
+    const relativePath = path.relative(this.containerMountPoint, layerPath)
+    return path.resolve(this.hostMountPoint, relativePath)
   }
 
   private searchFiles (pattern: string): ElementInfo[] {
