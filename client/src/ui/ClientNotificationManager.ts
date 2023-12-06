@@ -43,6 +43,13 @@ export class ClientNotificationManager {
     }
     return this._memento.get(`neverShowAgain/${method}`, false)
   }
+
+  async resetNeverShowAgain (method: string): Promise<void> {
+    if (this._memento === undefined) {
+      throw new Error('ClientNotificationManager Memento not set')
+    }
+    await this._memento.update(`neverShowAgain/${method}`, false)
+  }
 }
 
 export const clientNotificationManager: ClientNotificationManager = new ClientNotificationManager()
