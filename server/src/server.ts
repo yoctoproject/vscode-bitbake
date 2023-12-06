@@ -91,7 +91,6 @@ connection.onShutdown(() => {
 // eslint-disable-next-line @typescript-eslint/no-misused-promises
 connection.onDidChangeConfiguration(async (change) => {
   logger.level = change.settings.bitbake.loggingLevel
-  void connection.sendRequest('bitbake/rescanProject')
   parseOnSave = change.settings.bitbake.parseOnSave
 })
 
