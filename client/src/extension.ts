@@ -65,8 +65,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
 
   // Handle settings change for bitbake driver
-  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration((event) => {
+  context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
     if (event.affectsConfiguration('bitbake')) {
+      await clientNotificationManager.resetNeverShowAgain('custom/bitbakeSettingsError')
       bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
       logger.debug('Bitbake settings changed')
       void vscode.commands.executeCommand('bitbake.rescan-project')
