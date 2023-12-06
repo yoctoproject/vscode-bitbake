@@ -114,15 +114,15 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private async getContainerInode (filepath: string): Promise<number> {
-    const commandResult = await this.executeBitBakeCommand(`stat -c %i ${filepath}`)
+  private async getContainerParentInodes (filepath: string): Promise<number[]> {
+    const commandResult = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(dirname "$f"); done;`)
     const stdout = commandResult.stdout.toString().trim()
-    const regex = /^\d+$/m
-    const match = stdout.match(regex)
-    const inode = (match != null) ? parseInt(match[0]) : NaN
-    return inode
+    const regex = /^\d+$/gm
+    const matches = stdout.match(regex)
+    return (matches != null) ? matches.map((match) => parseInt(match)) : [NaN]
   }
 
+  /// Find corresponding mount point inode in layerPath/hostWorkdir and all parents
   private async scanContainerMountPoint (layerPath: string, hostWorkdir: string): Promise<void> {
     this.containerMountPoint = undefined
     this.hostMountPoint = undefined
@@ -132,17 +132,16 @@ export class BitBakeProjectScanner {
       return
     }
 
+    let containerDir = layerPath
+    const containerDirInodes = await this.getContainerParentInodes(containerDir)
     let hostDir = hostWorkdir
 
     while (hostDir !== '/') {
       const hostDirInode = fs.statSync(hostDir).ino
 
-      // Find inode in layerPath and all parents
-      // OPTIM we could run stat on all parent directories in one (find?) command, and store the result in a map
-      let containerDirInode = NaN
-      let containerDir = layerPath
+      let containerIdx = 0
       while (containerDir !== '/') {
-        containerDirInode = await this.getContainerInode(containerDir)
+        const containerDirInode = containerDirInodes[containerIdx]
         logger.debug('Comparing container inodes: ' + containerDir + ':' + containerDirInode + ' ' + hostDir + ':' + hostDirInode)
         if (containerDirInode === hostDirInode) {
           this.containerMountPoint = containerDir
@@ -150,6 +149,7 @@ export class BitBakeProjectScanner {
           return
         }
         containerDir = path.dirname(containerDir)
+        containerIdx++
       }
       hostDir = path.dirname(hostDir)
     }
