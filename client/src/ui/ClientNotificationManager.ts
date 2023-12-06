@@ -13,7 +13,7 @@ export class ClientNotificationManager {
   }
 
   showBitbakeError (message?: string): void {
-    if (this.checkIsNeverShowAgain('custom/bitbakeSettingsError')) {
+    if (!this.checkIsNeverShowAgain('custom/bitbakeSettingsError')) {
       void window.showErrorMessage(
         'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,
         'Open Settings',
