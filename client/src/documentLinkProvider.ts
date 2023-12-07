@@ -3,14 +3,14 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import vscode, { type Uri } from 'vscode'
+import vscode from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { RequestMethod, type RequestResult } from './lib/src/types/requests'
 import { logger } from './lib/src/utils/OutputLogger'
 import path from 'path'
 import { extractRecipeName } from './lib/src/utils/files'
 
-export class DocumentLinkProvider implements vscode.DocumentLinkProvider {
+export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider {
   private readonly client: LanguageClient
 
   constructor (client: LanguageClient) {

@@ -16,7 +16,7 @@ import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
 import { bitBakeProjectScanner } from './driver/BitBakeProjectScanner'
-import { DocumentLinkProvider } from './documentLinkProvider'
+import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -74,7 +74,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
 
-  const provider = new DocumentLinkProvider(client)
+  const provider = new BitbakeDocumentLinkProvider(client)
   const selector = { scheme: 'file', language: 'bitbake' }
   context.subscriptions.push(vscode.languages.registerDocumentLinkProvider(selector, provider))
 
