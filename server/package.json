@@ -19,7 +19,6 @@
     "url": "https://github.com/yoctoproject/vscode-bitbake.git"
   },
   "dependencies": {
-    "find": "^0.2.7",
     "vscode-languageserver": "^8.1.0",
     "vscode-languageserver-textdocument": "^1.0.8",
     "web-tree-sitter": "^0.20.8"
