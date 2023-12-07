@@ -6,6 +6,6 @@ docker build --tag=vscode-bitbake-test './docker-image'
 # of the poky symlink
 docker run --rm \
     -p2222:22 \
-    -v "$(realpath ../..)":'/home/yoctouser/vscode-bitbake' \
-    --workdir '/home/yoctouser/vscode-bitbake/integration-tests/project-folder' \
+    -v "$(realpath ../..)":"$(realpath ../..)" \
+    --workdir "$(realpath .)" \
     -it vscode-bitbake-test
