@@ -380,3 +380,48 @@ describe('declarations', () => {
     expect(occurances).toEqual(5)
   })
 })
+
+describe('getLinksInStringContent', () => {
+  it('returns an array of links in the string content', async () => {
+    const analyzer = await getAnalyzer()
+    const document = FIXTURE_DOCUMENT.CORRECT
+    const uri = FIXTURE_URI.CORRECT
+
+    await analyzer.analyze({
+      document,
+      uri
+    })
+
+    const expectedLinks = [
+      {
+        value: 'foo.inc',
+        range: {
+          start: { line: 6, character: 11 },
+          end: { line: 6, character: 25 }
+        }
+      }
+    ]
+
+    const links = analyzer.getLinksInStringContent(uri)
+
+    expect(links).toEqual(expectedLinks)
+  })
+
+  it('returns an empty array if the parsed tree is undefined', async () => {
+    const analyzer = await getAnalyzer()
+    const document = FIXTURE_DOCUMENT.CORRECT
+    const uri = FIXTURE_URI.CORRECT
+
+    await analyzer.analyze({
+      document,
+      uri
+    })
+
+    // Mock the getAnalyzedDocument method to return undefined
+    analyzer.getAnalyzedDocument = jest.fn().mockReturnValue(undefined)
+
+    const links = analyzer.getLinksInStringContent(uri)
+
+    expect(links).toEqual([])
+  })
+})
