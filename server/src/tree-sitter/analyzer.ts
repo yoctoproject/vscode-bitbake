@@ -13,7 +13,8 @@ import {
   type Diagnostic,
   type SymbolInformation,
   type Range,
-  SymbolKind
+  SymbolKind,
+  type Position
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -518,61 +519,43 @@ export default class Analyzer {
     const wholeWordRegex = /(?<![-.:])\b(\w+)\b(?![-.:])/g
     const n = this.nodeAtPoint(uri, line, character)
     if (n?.type === 'string_content') {
-      const splittedStringContent = n.text.split(/\n/g)
-      for (let i = 0; i < splittedStringContent.length; i++) {
-        const lineText = splittedStringContent[i]
-        for (const match of lineText.matchAll(wholeWordRegex)) {
-          if (match !== undefined && uri !== undefined) {
-            const start = {
-              line: n.startPosition.row + i,
-              character: match.index !== undefined ? match.index + n.startPosition.column : 0
-            }
-            const end = {
-              line: n.startPosition.row + i,
-              character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
-            }
-            if (i > 0) {
-              start.character = match.index ?? 0
-              end.character = (match.index ?? 0) + match[0].length
-            }
-            if (this.positionIsInRange(line, character, { start, end })) {
-              const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
-                return recipe.name === match[0]
+      this.processSymbolsInStringContent(n, wholeWordRegex, (start, end, match) => {
+        if (this.positionIsInRange(line, character, { start, end })) {
+          const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
+            return recipe.name === match[0]
+          })
+          if (foundRecipe !== undefined) {
+            if (foundRecipe?.path !== undefined) {
+              allSymbolsAtPosition.push({
+                name: match[0],
+                kind: SymbolKind.Variable,
+                location: {
+                  range: {
+                    start,
+                    end
+                  },
+                  uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
+                }
               })
-              if (foundRecipe !== undefined) {
-                if (foundRecipe?.path !== undefined) {
-                  allSymbolsAtPosition.push({
-                    name: match[0],
-                    kind: SymbolKind.Variable,
-                    location: {
-                      range: {
-                        start,
-                        end
-                      },
-                      uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
-                    }
-                  })
-                }
-                if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
-                  foundRecipe.appends.forEach((append) => {
-                    allSymbolsAtPosition.push({
-                      name: append.name,
-                      kind: SymbolKind.Variable,
-                      location: {
-                        range: {
-                          start,
-                          end
-                        },
-                        uri: 'file://' + append.dir + '/' + append.base
-                      }
-                    })
-                  })
-                }
-              }
+            }
+            if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
+              foundRecipe.appends.forEach((append) => {
+                allSymbolsAtPosition.push({
+                  name: append.name,
+                  kind: SymbolKind.Variable,
+                  location: {
+                    range: {
+                      start,
+                      end
+                    },
+                    uri: 'file://' + append.dir + '/' + append.base
+                  }
+                })
+              })
             }
           }
         }
-      }
+      })
     }
 
     return allSymbolsAtPosition
@@ -582,47 +565,71 @@ export default class Analyzer {
     const links: Array<{ value: string, range: Range }> = []
     const uriRegex = /(file:\/\/)(?<uri>.*)\b/g
     const parsedTree = this.getAnalyzedDocument(uri)?.tree
-    if (parsedTree !== undefined) {
-      TreeSitterUtils.forEach(parsedTree.rootNode, (n) => {
-        if (n?.type === 'string_content') {
-          const splittedStringContent = n.text.split(/\n/g)
-          for (let i = 0; i < splittedStringContent.length; i++) {
-            const lineText = splittedStringContent[i]
-            for (const match of lineText.matchAll(uriRegex)) {
-              const matchedUri = match.groups?.uri
-              const start = {
-                line: n.startPosition.row + i,
-                character: match.index !== undefined ? match.index + n.startPosition.column : 0
-              }
-              const end = {
-                line: n.startPosition.row + i,
-                character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
-              }
-              if (i > 0) {
-                start.character = match.index ?? 0
-                end.character = (match.index ?? 0) + match[0].length
-              }
-              if (matchedUri !== undefined) {
-                links.push({
-                  value: matchedUri,
-                  range: {
-                    start,
-                    end
-                  }
-                })
-              }
-            }
-          }
-        }
-        return true
-      })
+    if (parsedTree === undefined) {
+      return []
     }
+    TreeSitterUtils.forEach(parsedTree.rootNode, (n) => {
+      if (n?.type === 'string_content') {
+        this.processSymbolsInStringContent(n, uriRegex, (start, end, match) => {
+          const matchedUri = match.groups?.uri
+          if (matchedUri !== undefined) {
+            links.push({
+              value: matchedUri,
+              range: {
+                start,
+                end
+              }
+            })
+          }
+          return []
+        })
+      }
+      return true
+    })
 
     return links
   }
 
   public positionIsInRange (line: number, character: number, range: Range): boolean {
     return line === range.start.line && character >= range.start.character && character <= range.end.character
+  }
+
+  private calculateSymbolPositionInStringContent (n: Parser.SyntaxNode, index: number, match: RegExpMatchArray): Range {
+    const start = {
+      line: n.startPosition.row + index,
+      character: match.index !== undefined ? match.index + n.startPosition.column : 0
+    }
+    const end = {
+      line: n.startPosition.row + index,
+      character: match.index !== undefined ? match.index + n.startPosition.column + match[0].length : 0
+    }
+    if (index > 0) {
+      start.character = match.index ?? 0
+      end.character = (match.index ?? 0) + match[0].length
+    }
+    return {
+      start,
+      end
+    }
+  }
+
+  /**
+   *
+   * @param n The syntax node of type `string_content`
+   * @param regex The regex to match the symbols
+   * @param func The custom function to process the matched symbols
+   */
+  private processSymbolsInStringContent (n: Parser.SyntaxNode, regex: RegExp, func: (start: Position, end: Position, match: RegExpMatchArray) => void): void {
+    const splittedStringContent = n.text.split(/\n/g)
+    for (let i = 0; i < splittedStringContent.length; i++) {
+      const lineText = splittedStringContent[i]
+      for (const match of lineText.matchAll(regex)) {
+        if (match !== undefined) {
+          const { start, end } = this.calculateSymbolPositionInStringContent(n, i, match)
+          func(start, end, match)
+        }
+      }
+    }
   }
 }
 
