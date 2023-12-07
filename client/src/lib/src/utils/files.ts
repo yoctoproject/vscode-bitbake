@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import fs from 'fs'
+import path from 'path'
 
 import { logger } from './OutputLogger'
 
@@ -17,4 +18,9 @@ export const getFileContent = async (path: string): Promise<string | undefined> 
     return undefined
   })
   return fileContent
+}
+
+export function extractRecipeName (filename: string | undefined): string | undefined {
+  if (filename === undefined) { return undefined }
+  return path.basename(filename).split('.')[0].split('_')[0]
 }
