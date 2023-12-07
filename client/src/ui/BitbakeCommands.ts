@@ -13,6 +13,7 @@ import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
 import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 let parsingPending = false
 
@@ -176,11 +177,6 @@ async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvi
   } else {
     throw new Error(`Failed to resolve task for recipe ${task.definition.recipes[0]}`)
   }
-}
-
-function extractRecipeName (filename: string | undefined): string | undefined {
-  if (filename === undefined) { return undefined }
-  return path.basename(filename).split('.')[0].split('_')[0]
 }
 
 async function rescanProject (bitbakeProjectScanner: BitBakeProjectScanner): Promise<void> {
