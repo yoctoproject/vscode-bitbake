@@ -36,9 +36,10 @@ suite('Bitbake Commands Test Suite', () => {
     let taskExecuted = false
 
     disposables.push(vscode.tasks.onDidEndTask(async (e) => {
-      assert.strictEqual(e.execution.task.definition.recipes[0], 'base-files')
-      assert.strictEqual(e.execution.task.definition.task, 'unpack')
-      taskExecuted = true
+      if (e.execution.task.definition.recipes !== undefined && e.execution.task.definition.recipes[0] === 'base-files') {
+        assert.strictEqual(e.execution.task.definition.task, 'unpack')
+        taskExecuted = true
+      }
     }))
 
     await vscode.commands.executeCommand('bitbake.run-task', 'base-files', 'unpack')
@@ -55,9 +56,10 @@ suite('Bitbake Commands Test Suite', () => {
     let taskExecuted = false
 
     disposables.push(vscode.tasks.onDidEndTask(async (e) => {
-      assert.strictEqual(e.execution.task.definition.recipes[0], 'base-files')
-      assert.strictEqual(e.execution.task.definition.task, 'clean')
-      taskExecuted = true
+      if (e.execution.task.definition.recipes !== undefined && e.execution.task.definition.recipes[0] === 'base-files') {
+        assert.strictEqual(e.execution.task.definition.task, 'clean')
+        taskExecuted = true
+      }
     }))
 
     await vscode.commands.executeCommand('bitbake.clean-recipe', 'base-files')
@@ -74,9 +76,10 @@ suite('Bitbake Commands Test Suite', () => {
     let taskExecuted = false
 
     disposables.push(vscode.tasks.onDidEndTask(async (e) => {
-      assert.strictEqual(e.execution.task.definition.recipes[0], 'base-files')
-      assert.strictEqual(e.execution.task.definition.task, 'fetch')
-      taskExecuted = true
+      if (e.execution.task.definition.recipes !== undefined && e.execution.task.definition.recipes[0] === 'base-files') {
+        assert.strictEqual(e.execution.task.definition.task, 'fetch')
+        taskExecuted = true
+      }
     }))
 
     const availableTasks = await vscode.tasks.fetchTasks()
