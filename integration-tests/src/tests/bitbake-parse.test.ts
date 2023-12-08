@@ -47,6 +47,7 @@ suite('Bitbake Commands Test Suite', () => {
   })
 
   suiteTeardown(async function (this: Mocha.Context) {
+    this.timeout(10000)
     await vscode.workspace.fs.delete(buildFolder, { recursive: true })
   })
 

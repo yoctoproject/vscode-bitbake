@@ -45,6 +45,7 @@ suite('Bitbake Command Wrapper', () => {
   })
 
   suiteTeardown(async function (this: Mocha.Context) {
+    this.timeout(300000)
     await vscode.workspace.fs.delete(buildFolder, { recursive: true })
 
     const bitbakeConfiguration = vscode.workspace.getConfiguration('bitbake')
