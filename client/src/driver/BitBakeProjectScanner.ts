@@ -115,7 +115,7 @@ export class BitBakeProjectScanner {
   }
 
   private async getContainerParentInodes (filepath: string): Promise<number[]> {
-    const commandResult = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(dirname "$f"); done;`)
+    const commandResult = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`)
     const stdout = commandResult.stdout.toString().trim()
     const regex = /^\d+$/gm
     const matches = stdout.match(regex)
