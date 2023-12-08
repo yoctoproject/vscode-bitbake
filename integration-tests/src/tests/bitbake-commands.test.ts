@@ -26,6 +26,8 @@ suite('Bitbake Commands Test Suite', () => {
   })
 
   suiteTeardown(async function (this: Mocha.Context) {
+    this.timeout(10000)
+
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const workspaceURI: vscode.Uri = vscode.workspace.workspaceFolders![0].uri
     const buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')
