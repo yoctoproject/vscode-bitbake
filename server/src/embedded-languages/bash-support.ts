@@ -8,6 +8,8 @@ import * as TreeSitterUtils from '../tree-sitter/utils'
 import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 
+export const shebang = '#!/bin/sh\n'
+
 export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'bash')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
@@ -21,5 +23,6 @@ export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocume
         return false
     }
   })
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, shebang)
   return embeddedLanguageDoc
 }
