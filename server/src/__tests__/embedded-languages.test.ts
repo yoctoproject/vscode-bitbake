@@ -11,6 +11,28 @@ import { generateParser } from '../tree-sitter/parser'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { imports } from '../embedded-languages/python-support'
+import { shebang } from '../embedded-languages/bash-support'
+
+describe('Create basic embedded bash documents', () => {
+  beforeAll(async () => {
+    if (!analyzer.hasParser()) {
+      const parser = await generateParser()
+      analyzer.initialize(parser)
+    }
+    analyzer.resetAnalyzedDocuments()
+  })
+
+  test.each([
+    [
+      'basic',
+      'foo(){\nBAR=""\n}',
+      `${shebang}foo(){\nBAR=""\n}`
+    ]
+  ])('%s', async (description, input, result) => {
+    const embeddedContent = await createEmbeddedContent(input, 'bash')
+    expect(embeddedContent).toEqual(result)
+  })
+})
 
 describe('Create various basic embedded python documents', () => {
   beforeAll(async () => {
