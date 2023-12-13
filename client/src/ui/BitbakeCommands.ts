@@ -29,7 +29,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
     vscode.tasks.onDidEndTask((e) => {
-      if (e.execution.task.name === 'Parse all recipes') {
+      if (e.execution.task.name === 'Bitbake: Parse') {
         if (parsingPending) {
           parsingPending = false
           void parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider)
@@ -49,12 +49,12 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
   const parseAllRecipesTask = new vscode.Task(
     { type: 'bitbake', options: { parseOnly: true } },
     vscode.TaskScope.Workspace,
-    'Parse all recipes',
+    'Bitbake: Parse',
     'bitbake'
   )
   const runningTasks = vscode.tasks.taskExecutions
   if (runningTasks.some((execution) => execution.task.name === parseAllRecipesTask.name)) {
-    logger.debug('Parse all recipes task is already running')
+    logger.debug('Bitbake parsing task is already running')
     parsingPending = true
     return
   }
@@ -68,7 +68,7 @@ async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvi
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe] },
       vscode.TaskScope.Workspace,
-      `Build recipe: ${chosenRecipe}`,
+      `Bitbake: Build: ${chosenRecipe}`,
       'bitbake'
     )
     await runBitbakeTask(task, taskProvider)
@@ -82,7 +82,7 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvi
     const task = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], task: 'clean' },
       vscode.TaskScope.Workspace,
-      `Clean recipe: ${chosenRecipe}`,
+      `Bitbake: Clean: ${chosenRecipe}`,
       'bitbake'
     )
     await runBitbakeTask(task, taskProvider)
@@ -103,7 +103,7 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider:
       const task = new vscode.Task(
         { type: 'bitbake', recipes: [chosenRecipe], task: chosenTask },
         vscode.TaskScope.Workspace,
-        `Run task ${chosenTask} for ${chosenRecipe}`,
+        `Bitbake: Task ${chosenTask}: ${chosenRecipe}`,
         'bitbake'
       )
       await runBitbakeTask(task, taskProvider)
