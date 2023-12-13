@@ -10,6 +10,8 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings } from '../lib/src/BitbakeSettings'
 import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
+import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
+import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
@@ -47,21 +49,6 @@ export class BitbakeDriver {
       this.bitbakeActive = false
     })
     return child
-  }
-
-  /// Execute a command in the bitbake environment and wait for completion
-  async spawnBitbakeProcessSync (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
-    const { shell, script } = this.prepareCommand(command)
-    await this.waitForBitbakeToFinish()
-    logger.debug(`Executing Bitbake command (sync) with ${shell}: ${script}`)
-    this.bitbakeActive = true
-    const ret = childProcess.spawnSync(script, {
-      shell,
-      cwd: this.bitbakeSettings.workingDirectory,
-      env: { ...process.env, ...this.bitbakeSettings.shellEnv }
-    })
-    this.bitbakeActive = false
-    return ret
   }
 
   private prepareCommand (command: string): {
@@ -117,10 +104,21 @@ export class BitbakeDriver {
       return false
     }
 
-    // eslint-disable-next-line @typescript-eslint/await-thenable
-    const ret = await this.spawnBitbakeProcessSync('which bitbake')
+    const command = 'which bitbake'
+    const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
+    const ret = await finishProcessExecution(process)
     if (ret.status !== 0) {
-      clientNotificationManager.showBitbakeError('Command "which bitbake" failed: \n' + ret.stdout.toString() + ret.stderr.toString())
+      const errorLines = [...ret.stdout.toString().split('\n'), ...ret.stderr.toString().split('\n')]
+      let errorMsg = `Command "${command}" failed: \n`
+      if (errorLines.length <= 10) {
+        errorMsg += errorLines.join('\n')
+      } else {
+        errorMsg += errorLines.slice(0, 5).join('\n')
+        errorMsg += '\n...\n'
+        errorMsg += errorLines.slice(-5).join('\n')
+        errorMsg += '\nOutput trimmed, see Bitbake Terminal for full output.'
+      }
+      clientNotificationManager.showBitbakeError(errorMsg)
       return false
     }
 
