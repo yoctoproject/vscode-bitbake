@@ -9,6 +9,7 @@ import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings } from '../lib/src/BitbakeSettings'
 import { clientNotificationManager } from '../ui/ClientNotificationManager'
+import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
@@ -124,5 +125,31 @@ export class BitbakeDriver {
     }
 
     return true
+  }
+
+  composeBitbakeCommand (bitbakeTaskDefinition: BitbakeTaskDefinition): string {
+    function appendCommandParam (command: string, param: string): string {
+      return command + ' ' + param
+    }
+
+    let command = 'bitbake'
+
+    bitbakeTaskDefinition.recipes?.forEach(recipe => {
+      command = appendCommandParam(command, `${recipe}`)
+    })
+    if (bitbakeTaskDefinition.task !== undefined) {
+      command = appendCommandParam(command, `-c ${bitbakeTaskDefinition.task}`)
+    }
+    if (bitbakeTaskDefinition.options?.continue === true) {
+      command = appendCommandParam(command, '-k')
+    }
+    if (bitbakeTaskDefinition.options?.force === true) {
+      command = appendCommandParam(command, '-f')
+    }
+    if (bitbakeTaskDefinition.options?.parseOnly === true) {
+      command = appendCommandParam(command, '-p')
+    }
+
+    return command
   }
 }
