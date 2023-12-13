@@ -9,19 +9,22 @@ import * as vscode from 'vscode'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
-import { type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import path from 'path'
 import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { runBitbakeTerminal } from './BitbakeTerminal'
+import { type BitbakeDriver } from '../driver/BitbakeDriver'
+import { sanitizeForShell } from '../lib/src/BitbakeSettings'
+import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
 
 let parsingPending = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitbakeProjectScanner: BitBakeProjectScanner): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider, uri, task) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitbakeProjectScanner) }))
@@ -46,6 +49,7 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
     return
   }
 
+  // We have to use tasks instead of BitbakeTerminal because we want the problemMatchers to detect parsing errors
   const parseAllRecipesTask = new vscode.Task(
     { type: 'bitbake', options: { parseOnly: true } },
     vscode.TaskScope.Workspace,
@@ -61,35 +65,30 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
   await runBitbakeTask(parseAllRecipesTask, taskProvider)
 }
 
-async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
+async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: build-recipe: ${chosenRecipe}`)
-    const task = new vscode.Task(
-      { type: 'bitbake', recipes: [chosenRecipe] },
-      vscode.TaskScope.Workspace,
-      `Bitbake: Build: ${chosenRecipe}`,
-      'bitbake'
-    )
-    await runBitbakeTask(task, taskProvider)
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    await runBitbakeTerminal(bitbakeDriver, bitbakeDriver.composeBitbakeCommand({
+      recipes: [chosenRecipe]
+    } as BitbakeTaskDefinition))
   }
 }
 
-async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any): Promise<void> {
+async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
-    const task = new vscode.Task(
-      { type: 'bitbake', recipes: [chosenRecipe], task: 'clean' },
-      vscode.TaskScope.Workspace,
-      `Bitbake: Clean: ${chosenRecipe}`,
-      'bitbake'
-    )
-    await runBitbakeTask(task, taskProvider)
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+    await runBitbakeTerminal(bitbakeDriver, bitbakeDriver.composeBitbakeCommand({
+      recipes: [chosenRecipe],
+      task: 'clean'
+    } as BitbakeTaskDefinition))
   }
 }
 
-async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: vscode.TaskProvider, uri?: any, task?: any): Promise<void> {
+async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any, task?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     let chosenTask: string | undefined
@@ -99,14 +98,12 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider:
       chosenTask = await selectTask()
     }
     if (chosenTask !== undefined) {
-      logger.debug(`Command: run-task: ${chosenRecipe} -c ${chosenTask}`)
-      const task = new vscode.Task(
-        { type: 'bitbake', recipes: [chosenRecipe], task: chosenTask },
-        vscode.TaskScope.Workspace,
-        `Bitbake: Task ${chosenTask}: ${chosenRecipe}`,
-        'bitbake'
-      )
-      await runBitbakeTask(task, taskProvider)
+      logger.debug(`Command: run-task: ${chosenRecipe}, ${chosenTask}`)
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      await runBitbakeTerminal(bitbakeDriver, bitbakeDriver.composeBitbakeCommand({
+        recipes: [chosenRecipe],
+        task: chosenTask
+      } as BitbakeTaskDefinition))
     }
   }
 }
