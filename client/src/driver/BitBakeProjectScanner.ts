@@ -21,6 +21,8 @@ import type {
 import { type BitbakeDriver } from './BitbakeDriver'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import fs from 'fs'
+import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
+import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -400,7 +402,7 @@ export class BitBakeProjectScanner {
     if (this._bitbakeDriver === undefined) {
       throw new Error('Bitbake driver is not set')
     }
-    return await this._bitbakeDriver.spawnBitbakeProcessSync(command)
+    return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true))
   }
 }
 
