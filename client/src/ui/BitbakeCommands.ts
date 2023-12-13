@@ -113,7 +113,7 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider:
 
 async function selectTask (): Promise<string | undefined> {
   const chosenTask = await vscode.window.showInputBox({ placeHolder: 'Bitbake task to run (bitbake -c)' })
-  return chosenTask
+  return sanitizeForShell(chosenTask)
 }
 
 async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canCreate: boolean = true): Promise<string | undefined> {
@@ -154,7 +154,7 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, recipe?: str
   }
   let chosenRecipe = await vscode.window.showInputBox({ placeHolder: 'Recipe name to add' })
   if (chosenRecipe !== undefined) {
-    chosenRecipe = extractRecipeName(chosenRecipe) as string
+    chosenRecipe = sanitizeForShell(extractRecipeName(chosenRecipe) as string) as string
     bitbakeWorkspace.addActiveRecipe(chosenRecipe)
   }
   return chosenRecipe
