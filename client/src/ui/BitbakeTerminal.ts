@@ -8,14 +8,16 @@ import type * as child_process from 'child_process'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
+import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, command: string, isBackground: boolean = true): Promise<child_process.ChildProcess> {
+export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = true): Promise<child_process.ChildProcess> {
+  const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
   const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), `Bitbake: ${command}`, script, isBackground)
+  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), terminalName, script, isBackground)
 }
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
