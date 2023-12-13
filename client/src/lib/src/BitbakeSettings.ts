@@ -44,7 +44,7 @@ function expandWorkspaceFolder (configuration: string, workspaceFolder: string):
 }
 
 /// Santitize a string to be passed in a shell command (remove special characters)
-function sanitizeForShell (command: string | undefined): string | undefined {
+export function sanitizeForShell (command: string | undefined): string | undefined {
   if (command === undefined) {
     return undefined
   }
