@@ -34,13 +34,13 @@ export class BitbakeStatusBar {
     })
 
     vscode.tasks.onDidStartTask((e: vscode.TaskStartEvent) => {
-      if (e.execution.task.name === 'Parse all recipes' && e.execution.task.source === 'bitbake') {
+      if (e.execution.task.name === 'Bitbake: Parse' && e.execution.task.source === 'bitbake') {
         this.parsingInProgress = true
         this.updateStatusBar()
       }
     })
     vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
-      if (e.execution.task.name === 'Parse all recipes' && e.execution.task.source === 'bitbake') {
+      if (e.execution.task.name === 'Bitbake: Parse' && e.execution.task.source === 'bitbake') {
         this.parsingInProgress = false
         this.scanExitCode = lastParsingExitCode
         this.updateStatusBar()
