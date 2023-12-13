@@ -69,10 +69,13 @@ async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: build-recipe: ${chosenRecipe}`)
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    await runBitbakeTerminal(bitbakeDriver, bitbakeDriver.composeBitbakeCommand({
-      recipes: [chosenRecipe]
-    } as BitbakeTaskDefinition))
+    await runBitbakeTerminal(
+      bitbakeDriver,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {
+        recipes: [chosenRecipe]
+      } as BitbakeTaskDefinition,
+    `Bitbake: Build: ${chosenRecipe}`)
   }
 }
 
@@ -80,11 +83,14 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-    await runBitbakeTerminal(bitbakeDriver, bitbakeDriver.composeBitbakeCommand({
-      recipes: [chosenRecipe],
-      task: 'clean'
-    } as BitbakeTaskDefinition))
+    await runBitbakeTerminal(
+      bitbakeDriver,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {
+        recipes: [chosenRecipe],
+        task: 'clean'
+      } as BitbakeTaskDefinition,
+    `Bitbake: Clean: ${chosenRecipe}`)
   }
 }
 
@@ -99,11 +105,13 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver
     }
     if (chosenTask !== undefined) {
       logger.debug(`Command: run-task: ${chosenRecipe}, ${chosenTask}`)
+      await runBitbakeTerminal(bitbakeDriver,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      await runBitbakeTerminal(bitbakeDriver, bitbakeDriver.composeBitbakeCommand({
-        recipes: [chosenRecipe],
-        task: chosenTask
-      } as BitbakeTaskDefinition))
+        {
+          recipes: [chosenRecipe],
+          task: chosenTask
+        } as BitbakeTaskDefinition,
+      `Bitbake: Task: ${chosenTask}: ${chosenRecipe}`)
     }
   }
 }
