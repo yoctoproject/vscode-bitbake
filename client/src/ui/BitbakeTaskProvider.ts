@@ -8,7 +8,7 @@ import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { BitbakePseudoTerminal } from './BitbakeTerminal'
 
 /// Reflects the task definition in package.json
-interface BitbakeTaskDefinition extends vscode.TaskDefinition {
+export interface BitbakeTaskDefinition extends vscode.TaskDefinition {
   recipes?: string[]
   task?: string
   options?: {
@@ -36,6 +36,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
   resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
     if (bitbakeTaskDefinition.recipes?.[0] !== undefined || bitbakeTaskDefinition.options?.parseOnly === true) {
+      const bitbakeCommand = this.bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
       const resolvedTask = new vscode.Task(
         task.definition,
         task.scope ?? vscode.TaskScope.Workspace,
@@ -44,7 +45,9 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
         new BitbakeCustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> => {
           const pty = new BitbakePseudoTerminal();
           (resolvedTask.execution as BitbakeCustomExecution).pty = pty
-          void pty.runProcess(this.bitbakeDriver.spawnBitbakeProcess(this.composeBitbakeCommand(bitbakeTaskDefinition)), this.bitbakeDriver.composeBitbakeScript(this.composeBitbakeCommand(bitbakeTaskDefinition)))
+          void pty.runProcess(
+            this.bitbakeDriver.spawnBitbakeProcess(bitbakeCommand),
+            this.bitbakeDriver.composeBitbakeScript(bitbakeCommand))
           return pty
         }),
         ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
@@ -63,31 +66,5 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
       return resolvedTask
     }
     return undefined
-  }
-
-  private composeBitbakeCommand (bitbakeTaskDefinition: BitbakeTaskDefinition): string {
-    let command = 'bitbake'
-
-    bitbakeTaskDefinition.recipes?.forEach(recipe => {
-      command = this.appendCommandParam(command, `${recipe}`)
-    })
-    if (bitbakeTaskDefinition.task !== undefined) {
-      command = this.appendCommandParam(command, `-c ${bitbakeTaskDefinition.task}`)
-    }
-    if (bitbakeTaskDefinition.options?.continue === true) {
-      command = this.appendCommandParam(command, '-k')
-    }
-    if (bitbakeTaskDefinition.options?.force === true) {
-      command = this.appendCommandParam(command, '-f')
-    }
-    if (bitbakeTaskDefinition.options?.parseOnly === true) {
-      command = this.appendCommandParam(command, '-p')
-    }
-
-    return command
-  }
-
-  private appendCommandParam (command: string, param: string): string {
-    return command + ' ' + param
   }
 }
