@@ -6,7 +6,7 @@
 import * as vscode from 'vscode'
 
 import { type BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
-import { lastParsingExitCode } from './BitbakeTaskProvider'
+import { type BitbakeCustomExecution } from './BitbakeTaskProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
 export class BitbakeStatusBar {
@@ -42,7 +42,7 @@ export class BitbakeStatusBar {
     vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
       if (e.execution.task.name === 'Bitbake: Parse' && e.execution.task.source === 'bitbake') {
         this.parsingInProgress = false
-        this.scanExitCode = lastParsingExitCode
+        this.scanExitCode = (e.execution.task.execution as BitbakeCustomExecution).pty?.lastExitCode ?? -1
         this.updateStatusBar()
       }
     })
