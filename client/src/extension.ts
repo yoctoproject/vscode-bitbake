@@ -11,7 +11,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
-import { registerBitbakeCommands } from './ui/BitbakeCommands'
+import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
@@ -104,6 +104,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   }))
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner)
+  registerDevtoolCommands(context, bitbakeWorkspace, bitbakeDriver)
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 
