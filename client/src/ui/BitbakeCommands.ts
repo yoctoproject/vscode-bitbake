@@ -11,12 +11,14 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import path from 'path'
 import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
-import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { type BitBakeProjectScanner, bitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { extractRecipeName } from '../lib/src/utils/files'
-import { runBitbakeTerminal } from './BitbakeTerminal'
+import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTerminal'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
+import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
+import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 
 let parsingPending = false
 
@@ -39,6 +41,13 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
         }
       }
     }))
+}
+
+export function registerDevtoolCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver): void {
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-modify', async (uri) => { await devtoolModifyCommand(bitbakeWorkspace, bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -130,6 +139,9 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   if (uri instanceof BitbakeRecipeTreeItem) {
     return uri.label
   }
+  if (uri instanceof DevtoolWorkspaceTreeItem) {
+    return uri.label as string
+  }
   // A vscode.Uri is provided when the command is called through the context menu of a .bb file
   if (uri !== undefined) {
     const extension = path.extname(uri.fsPath)
@@ -191,4 +203,79 @@ async function rescanProject (bitbakeProjectScanner: BitBakeProjectScanner): Pro
   }
 
   await bitbakeProjectScanner.rescanProject()
+}
+
+async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-modify: ${chosenRecipe}`)
+    const command = `devtool modify ${chosenRecipe}`
+    const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
+    process.on('exit', (code) => {
+      if (code === 0) {
+        void bitBakeProjectScanner.rescanProject()
+      }
+    })
+  }
+}
+
+async function pickLayer (extraOption: string): Promise<LayerInfo | undefined> {
+  const layers = bitBakeProjectScanner.scanResult._layers
+  const chosenLayer = await vscode.window.showQuickPick([...layers.map(layer => layer.name), extraOption], { placeHolder: 'Choose target BitBake layer' })
+  if (chosenLayer === undefined) { return }
+
+  if (chosenLayer === extraOption) {
+    return { name: extraOption, path: '', priority: 0 }
+  } else {
+    return layers.find(layer => layer.name === chosenLayer)
+  }
+}
+
+async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe === undefined) { return }
+  const chosenLayer = await pickLayer('Original recipe\'s layer')
+  let command = ''
+
+  if (chosenLayer?.name === 'Original recipe\'s layer') {
+    command = `devtool update-recipe ${chosenRecipe}`
+  } else {
+    command = `devtool update-recipe ${chosenRecipe} --append ${chosenLayer?.path}`
+  }
+
+  logger.debug(`Command: devtool-update: ${chosenRecipe}`)
+  await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool Update: ${chosenRecipe}`)
+}
+
+async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-reset: ${chosenRecipe}`)
+    const command = `devtool reset ${chosenRecipe}`
+    const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool Reset: ${chosenRecipe}`)
+    process.on('exit', (code) => {
+      if (code === 0) {
+        void bitBakeProjectScanner.rescanProject()
+      }
+    })
+  }
+}
+
+async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe === undefined) { return }
+  if (bitbakeProjectScanner.bitbakeDriver === undefined) { throw new Error('bitbakeDriver is undefined') }
+
+  if (bitbakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe) === undefined) {
+    await devtoolModifyCommand(bitbakeWorkspace, bitbakeProjectScanner.bitbakeDriver, chosenRecipe)
+  }
+
+  logger.debug(`Command: devtool-open-workspace: ${chosenRecipe}`)
+  const workspacePath = bitbakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)?.path
+  if (workspacePath === undefined) {
+    logger.error('Devtool workspace not found')
+    return
+  }
+  // TODO convert URL outside of container. good luck!
+  await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(workspacePath), { forceNewWindow: true })
 }
