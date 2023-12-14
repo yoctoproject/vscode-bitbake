@@ -108,16 +108,8 @@ export class BitbakeDriver {
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
     const ret = await finishProcessExecution(process)
     if (ret.status !== 0) {
-      const errorLines = [...ret.stdout.toString().split('\n'), ...ret.stderr.toString().split('\n')]
-      let errorMsg = `Command "${command}" failed: \n`
-      if (errorLines.length <= 10) {
-        errorMsg += errorLines.join('\n')
-      } else {
-        errorMsg += errorLines.slice(0, 5).join('\n')
-        errorMsg += '\n...\n'
-        errorMsg += errorLines.slice(-5).join('\n')
-        errorMsg += '\nOutput trimmed, see Bitbake Terminal for full output.'
-      }
+      const errorMsg = `Command "${command}" returned ${ret.status}.\n See Bitbake Terminal for command output.`
+      // The BitbakeTerminal focuses on it's own on error
       clientNotificationManager.showBitbakeError(errorMsg)
       return false
     }
