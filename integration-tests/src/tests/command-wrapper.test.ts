@@ -6,7 +6,7 @@
 import * as assert from 'assert'
 import * as vscode from 'vscode'
 
-import { delay } from '../utils/async'
+import { assertWillComeTrue, assertWorkspaceWillBeOpen } from '../utils/async'
 import path from 'path'
 
 suite('Bitbake Command Wrapper', () => {
@@ -20,10 +20,8 @@ suite('Bitbake Command Wrapper', () => {
   suiteSetup(async function (this: Mocha.Context) {
     /* eslint-disable no-template-curly-in-string */
     this.timeout(100000)
-    while (vscode.workspace.workspaceFolders === undefined || vscode.workspace.workspaceFolders?.length === 0) {
-      await delay(100)
-    }
-    workspaceURI = vscode.workspace.workspaceFolders[0].uri
+    await assertWorkspaceWillBeOpen()
+    workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
     buildFolder = vscode.Uri.joinPath(workspaceURI, 'build-crops')
 
     const vscodeBitbake = vscode.extensions.getExtension('yocto-project.yocto-bitbake')
@@ -61,15 +59,13 @@ suite('Bitbake Command Wrapper', () => {
 
     await vscode.workspace.openTextDocument(docUri)
 
-    while (definitions.length !== 1) {
+    await assertWillComeTrue(async () => {
       definitions = await vscode.commands.executeCommand(
         'vscode.executeDefinitionProvider',
         docUri,
         new vscode.Position(0, 10)
       )
-
-      // We cannot get an event when the BitBake scan is complete, so we have to wait for it to finish and hope for the best
-      await delay(100)
-    }
+      return definitions.length === 1
+    })
   }).timeout(300000)
 })

@@ -9,19 +9,17 @@ import { afterEach } from 'mocha'
 
 import path from 'path'
 import { addLayer, resetLayer } from '../utils/bitbake'
-import { delay } from '../utils/async'
+import { assertWillComeTrue, assertWorkspaceWillBeOpen, delay } from '../utils/async'
 
-suite('Bitbake Commands Test Suite', () => {
+suite('Bitbake Parsing Test Suite', () => {
   let disposables: vscode.Disposable[] = []
   let workspaceURI: vscode.Uri
   let buildFolder: vscode.Uri
 
   suiteSetup(async function (this: Mocha.Context) {
     this.timeout(100000)
-    while (vscode.workspace.workspaceFolders === undefined || vscode.workspace.workspaceFolders?.length === 0) {
-      await delay(100)
-    }
-    workspaceURI = vscode.workspace.workspaceFolders[0].uri
+    await assertWorkspaceWillBeOpen()
+    workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
     buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')
 
     // Generate the build directory for the addLayer functions to work
@@ -32,10 +30,7 @@ suite('Bitbake Commands Test Suite', () => {
       }
     })
     await vscode.commands.executeCommand('bitbake.parse-recipes')
-    // eslint-disable-next-line no-unmodified-loop-condition
-    while (!taskExecuted) {
-      await delay(100)
-    }
+    await assertWillComeTrue(async () => taskExecuted)
     disposable.dispose()
   })
 
@@ -63,10 +58,7 @@ suite('Bitbake Commands Test Suite', () => {
     await delay(500)
 
     await vscode.commands.executeCommand('bitbake.parse-recipes')
-    // eslint-disable-next-line no-unmodified-loop-condition
-    while (!taskExecuted) {
-      await delay(100)
-    }
+    await assertWillComeTrue(async () => taskExecuted)
 
     const diagnostics = vscode.languages.getDiagnostics()
     assert.strictEqual(diagnostics.length, 0)
@@ -84,11 +76,7 @@ suite('Bitbake Commands Test Suite', () => {
     await addLayer(path.resolve(__dirname, '../../project-folder/sources/meta-error'), workspacePath)
 
     await vscode.commands.executeCommand('bitbake.parse-recipes')
-
-    // eslint-disable-next-line no-unmodified-loop-condition
-    while (!taskExecuted) {
-      await delay(100)
-    }
+    await assertWillComeTrue(async () => taskExecuted)
 
     await resetLayer(path.resolve(__dirname, '../../project-folder/sources/meta-error'), workspacePath)
 
