@@ -285,6 +285,29 @@
         "command": "bitbake.parse-recipes",
         "title": "BitBake: Parse all recipes",
         "description": "This command runs bitbake in parse-only mode."
+      },
+      {
+        "command": "bitbake.devtool-modify",
+        "title": "BitBake: Devtool: Modify recipe",
+        "description": "Open a new devtool workspace to modify a recipe's sources."
+      },
+      {
+        "command": "bitbake.devtool-open-workspace",
+        "title": "BitBake: Devtool: Open Workspace",
+        "description": "Open a devtool sources workspace in a new VSCode window.",
+        "icon": "$(file-symlink-directory)"
+      },
+      {
+        "command": "bitbake.devtool-reset",
+        "title": "BitBake: Devtool: Reset",
+        "description": "Remove a devtool workspace.",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "bitbake.devtool-update",
+        "title": "BitBake: Devtool: Update recipe",
+        "description": "Update a recipe from a devtool workspace's modifications.",
+        "icon": "$(save-as)"
       }
     ],
     "viewsContainers": {
@@ -324,15 +347,19 @@
       "bitbake/main": [
         {
           "command": "bitbake.clean-recipe",
-          "group": "bitbake_recipe@1"
+          "group": "0@bitbake_recipe@1"
         },
         {
           "command": "bitbake.build-recipe",
-          "group": "bitbake_recipe@0"
+          "group": "0@bitbake_recipe@0"
         },
         {
           "command": "bitbake.run-task",
-          "group": "bitbake_recipe@2"
+          "group": "0@bitbake_recipe@2"
+        },
+        {
+          "command": "bitbake.devtool-modify",
+          "group": "1@bitbake_devtool@0"
         }
       ],
       "explorer/context": [
@@ -398,6 +425,36 @@
           "command": "bitbake.drop-recipe",
           "group": "inline@2",
           "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.devtool-modify",
+          "group": "1@bitbake_devtool@0",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.devtool-open-workspace",
+          "group": "1@bitbake_devtool@1",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-reset",
+          "group": "1@bitbake_devtool@3",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-update",
+          "group": "1@bitbake_devtool@2",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-reset",
+          "group": "inline@5",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-update",
+          "group": "inline@4",
+          "when": "viewItem == devtoolWorskpaceCtx"
         }
       ]
     }
