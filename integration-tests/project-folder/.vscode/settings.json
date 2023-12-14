@@ -8,5 +8,6 @@
     ],
     "python.analysis.extraPaths": [
         "${workspaceFolder}/sources/poky/bitbake/lib"
-    ]
+    ],
+    "task.saveBeforeRun": "always"
 }
