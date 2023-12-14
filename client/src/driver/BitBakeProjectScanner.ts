@@ -13,6 +13,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 
 import type {
   BitbakeScanResult,
+  DevtoolWorkspaceInfo,
   ElementInfo,
   LayerInfo,
   PathInfo
@@ -38,7 +39,7 @@ export class BitBakeProjectScanner {
   private readonly _recipesFileExtension: string = 'bb'
   onChange: EventEmitter = new EventEmitter()
 
-  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [] }
+  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [] }
   private _shouldDeepExamine: boolean = false
   private _bitbakeDriver: BitbakeDriver | undefined
   private _languageClient: LanguageClient | undefined
@@ -91,6 +92,7 @@ export class BitBakeProjectScanner {
         await this.scanForRecipes()
         await this.scanRecipesAppends()
         await this.scanOverrides()
+        await this.scanDevtoolWorkspaces()
         this.parseAllRecipes()
 
         logger.info('scan ready')
@@ -165,6 +167,7 @@ export class BitBakeProjectScanner {
     logger.info(`Inc-Files: ${this._bitbakeScanResult._includes.length}`)
     logger.info(`bbclass:   ${this._bitbakeScanResult._classes.length}`)
     logger.info(`overrides:   ${this._bitbakeScanResult._overrides.length}`)
+    logger.info(`Devtool-workspaces:   ${this._bitbakeScanResult._workspaces.length}`)
   }
 
   private scanForClasses (): void {
@@ -313,6 +316,21 @@ export class BitBakeProjectScanner {
     const output = commandResult.output.toString()
     const outerReg = /\nOVERRIDES="(.*)"\n/
     this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
+  }
+
+  private async scanDevtoolWorkspaces (): Promise<void> {
+    this._bitbakeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
+    const commandResult = await this.executeBitBakeCommand('devtool status')
+    if (commandResult.status !== 0) {
+      logger.error(`Failed to scan devtool workspaces: ${commandResult.stderr.toString()}`)
+      return
+    }
+    const output = commandResult.output.toString()
+    const regex = /^([^\s]+):\s([^\s]+)$/gm
+    let match
+    while ((match = regex.exec(output)) !== null) {
+      this._bitbakeScanResult._workspaces.push({ name: match[1], path: match[2] })
+    }
   }
 
   parseAllRecipes (): void {

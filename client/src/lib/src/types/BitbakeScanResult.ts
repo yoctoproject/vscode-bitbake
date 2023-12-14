@@ -27,10 +27,16 @@ export interface ElementInfo {
   version?: string
 }
 
+export interface DevtoolWorkspaceInfo {
+  name: string
+  path: string
+}
+
 export interface BitbakeScanResult {
   _layers: LayerInfo[]
   _classes: ElementInfo[]
   _includes: ElementInfo[]
   _recipes: ElementInfo[]
   _overrides: string[]
+  _workspaces: DevtoolWorkspaceInfo[]
 }
