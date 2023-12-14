@@ -125,6 +125,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     item.command = { command: 'bitbake.watch-recipe', title: 'Add a recipe to the active workspace', arguments: [undefined] }
     item.iconPath = new vscode.ThemeIcon('add')
     item.contextValue = undefined
+    item.tooltip = 'Add a recipe to the active workspace'
     return item
   }
 }

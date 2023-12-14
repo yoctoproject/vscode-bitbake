@@ -141,12 +141,12 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   // No recipe is provided when calling the command through the command pallette
   if (chosenRecipe === undefined) {
     if (canCreate) {
-      chosenRecipe = await vscode.window.showQuickPick([...bitbakeWorkspace.activeRecipes, 'Add another recipe...'], { placeHolder: 'Select recipe to build' })
+      chosenRecipe = await vscode.window.showQuickPick([...bitbakeWorkspace.activeRecipes, 'Add another recipe...'], { placeHolder: 'Select bitbake recipe' })
       if (chosenRecipe === 'Add another recipe...') {
         chosenRecipe = await addActiveRecipe(bitbakeWorkspace)
       }
     } else {
-      chosenRecipe = await vscode.window.showQuickPick(bitbakeWorkspace.activeRecipes, { placeHolder: 'Select recipe to build' })
+      chosenRecipe = await vscode.window.showQuickPick(bitbakeWorkspace.activeRecipes, { placeHolder: 'Select bitbake recipe' })
     }
   }
   return chosenRecipe
