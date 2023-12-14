@@ -6,7 +6,7 @@
 import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
-import { delay } from '../utils/async'
+import { assertWillComeTrue } from '../utils/async'
 
 suite('Bitbake Hover Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/hover.bb')
@@ -24,18 +24,15 @@ suite('Bitbake Hover Test Suite', () => {
 
   const testHover = async (position: vscode.Position, expected: string): Promise<void> => {
     let hoverResult: vscode.Hover[] = []
-    while (hoverResult.length === 0) {
+
+    await assertWillComeTrue(async () => {
       hoverResult = await vscode.commands.executeCommand<vscode.Hover[]>(
         'vscode.executeHoverProvider',
         docUri,
         position
       )
-      // For hover to work, an "embedded language document" needs to be generated.
-      // We have no practical way to know when it will be done.
-      // Attempts to wait for the "embedded language document" to be created in its folder still produced incorrect results.
-      // So here we are, just hoping everything is fine so our test won't take forever to fail.
-      await delay(100)
-    }
+      return hoverResult.length > 0
+    })
 
     assert.strictEqual(hoverResult.length, 1)
     const content = hoverResult[0]?.contents[0]
