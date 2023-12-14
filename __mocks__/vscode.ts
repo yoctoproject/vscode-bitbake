@@ -25,6 +25,7 @@ const languages = {
     createWebviewPanel: jest.fn(),
     registerTreeDataProvider: jest.fn(),
     createTreeView: jest.fn(),
+    createTerminal: jest.fn(),
   };
 
   const workspace = {
