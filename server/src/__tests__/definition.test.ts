@@ -54,7 +54,8 @@ describe('on definition', () => {
       ],
       _layers: [],
       _overrides: [],
-      _recipes: []
+      _recipes: [],
+      _workspaces: []
     }
 
     analyzer.analyze({
@@ -116,7 +117,8 @@ describe('on definition', () => {
           path: parsedBarPath,
           extraInfo: 'layer: core'
         }
-      ]
+      ],
+      _workspaces: []
     }
 
     analyzer.analyze({
