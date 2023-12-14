@@ -300,8 +300,9 @@
       "bitbakeView": [
         {
           "id": "bitbakeRecipes",
-          "name": "Recipes",
-          "contextualTitle": "Recipes Explorer",
+          "name": "Recipes Explorer",
+          "contextualTitle": "Recipes explorer",
+          "icon": "$(library)",
           "when": "bitbake.active"
         }
       ]
