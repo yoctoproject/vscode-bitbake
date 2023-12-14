@@ -30,13 +30,10 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     const filenames = linksData.map(link => link.value.split(';')[0])
     const filenamesRegex = '{' + filenames.join(',') + '}'
     const parentDir = document.uri.path.split('/').slice(0, -1).join('/')
-    const workspaceFolder = vscode.workspace.getWorkspaceFolder(document.uri)
     const pnDir = path.join(parentDir, extractRecipeName(document.uri.path) as string)
-    const pnDirRelative = pnDir.replace(workspaceFolder?.uri.path + '/', '')
     const filesDir = path.join(parentDir, 'files')
-    const filesDirRelative = filesDir.replace(workspaceFolder?.uri.path + '/', '')
-    return [...(await vscode.workspace.findFiles(pnDirRelative + '/**/' + filenamesRegex, undefined, filenames.length, token)),
-      ...(await vscode.workspace.findFiles(filesDirRelative + '/**/' + filenamesRegex, undefined, filenames.length, token))]
+    return [...(await vscode.workspace.findFiles(new vscode.RelativePattern(pnDir, '**/' + filenamesRegex), undefined, filenames.length, token)),
+      ...(await vscode.workspace.findFiles(new vscode.RelativePattern(filesDir, '**/' + filenamesRegex), undefined, filenames.length, token))]
   }
 
   async provideDocumentLinks (document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentLink[]> {
