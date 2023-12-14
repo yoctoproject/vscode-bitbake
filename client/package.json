@@ -304,6 +304,13 @@
           "contextualTitle": "Recipes explorer",
           "icon": "$(library)",
           "when": "bitbake.active"
+        },
+        {
+          "id": "devtoolWorkspaces",
+          "name": "Devtool Workspaces",
+          "contextualTitle": "Devtool workspaces",
+          "icon": "$(symbol-property)",
+          "when": "bitbake.active"
         }
       ]
     },
@@ -359,28 +366,28 @@
       "view/item/context": [
         {
           "command": "bitbake.clean-recipe",
-          "group": "bitbake_recipe@1",
-          "when": "view == bitbakeRecipeCtx"
+          "group": "0@bitbake_recipe@1",
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.build-recipe",
-          "group": "bitbake_recipe@0",
-          "when": "viewItem == bitbakeRecipeCtx"
+          "group": "0@bitbake_recipe@0",
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.run-task",
-          "group": "bitbake_recipe@2",
-          "when": "viewItem == bitbakeRecipeCtx"
+          "group": "0@bitbake_recipe@2",
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.drop-recipe",
-          "group": "bitbake_recipe@3",
+          "group": "0@bitbake_recipe@3",
           "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.build-recipe",
           "group": "inline@0",
-          "when": "viewItem == bitbakeRecipeCtx"
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.clean-recipe",
