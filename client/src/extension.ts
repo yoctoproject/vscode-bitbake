@@ -17,6 +17,7 @@ import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
 import { bitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
+import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -26,6 +27,7 @@ const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 export let bitbakeExtensionContext: vscode.ExtensionContext
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let bitbakeRecipesView: BitbakeRecipesView | undefined
+let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
 
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
@@ -70,6 +72,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
   bitbakeRecipesView.registerView(context)
+  devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
+  devtoolWorkspacesView.registerView(context)
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
