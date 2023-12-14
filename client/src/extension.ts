@@ -59,6 +59,16 @@ function updatePythonPath (): void {
   }
 }
 
+async function disableInteferingSettings (): Promise<void> {
+  const config = vscode.workspace.getConfiguration()
+  for (const languageKey of ['[python]', '[shellscript]']) {
+    const languageConfig = config.get<Record<string, unknown>>(languageKey) ?? {}
+    // 'files.trimTrailingWhitespace' modifies the embedded languages documents and breaks the mapping of the positions
+    languageConfig['files.trimTrailingWhitespace'] = false
+    await config.update(languageKey, languageConfig, vscode.ConfigurationTarget.Workspace)
+  }
+}
+
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
 
@@ -69,6 +79,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
   updatePythonPath()
+  await disableInteferingSettings()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)

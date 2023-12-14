@@ -73,6 +73,10 @@ user settings.
 }
 ```
 
+Note that the extension deactivates the "files.trimTrailingWhitespace" setting for
+Python and Shell script, as it interferes with the functioning of features related
+to embedded languages.
+
 ## Features
 
 ### Syntax highlighting
