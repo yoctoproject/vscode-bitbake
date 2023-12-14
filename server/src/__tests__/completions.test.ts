@@ -645,7 +645,8 @@ describe('On Completion', () => {
       ],
       _layers: [],
       _overrides: [],
-      _recipes: []
+      _recipes: [],
+      _workspaces: []
     }
 
     await analyzer.analyze({

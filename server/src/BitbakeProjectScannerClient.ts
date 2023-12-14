@@ -15,7 +15,8 @@ export class BitBakeProjectScannerClient {
     _classes: [],
     _includes: [],
     _recipes: [],
-    _overrides: []
+    _overrides: [],
+    _workspaces: []
   }
 
   private connection: Connection | undefined
