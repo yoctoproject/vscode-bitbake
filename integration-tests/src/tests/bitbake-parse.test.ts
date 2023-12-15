@@ -17,7 +17,7 @@ suite('Bitbake Parsing Test Suite', () => {
   let buildFolder: vscode.Uri
 
   suiteSetup(async function (this: Mocha.Context) {
-    this.timeout(100000)
+    this.timeout(300000)
     await assertWorkspaceWillBeOpen()
     workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
     buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')

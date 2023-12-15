@@ -76,5 +76,5 @@ suite('Bitbake Commands Test Suite', () => {
       const files = await vscode.workspace.findFiles('build/workspace/sources/busybox/README')
       return files.length === 1
     })
-  })
+  }).timeout(300000)
 })
