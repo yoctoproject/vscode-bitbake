@@ -31,7 +31,23 @@ describe('BitBakeProjectScanner', () => {
     bitBakeProjectScanner.onChange.on(('scanReady'), () => {
       DoneCallback()
     })
-    void bitBakeProjectScanner.rescanProject()
+    bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
+      child.on('close', () => {
+        void bitBakeProjectScanner.rescanProject()
+      })
+    }, (error) => {
+      throw error
+    })
+  }, 300000)
+
+  afterAll((done) => {
+    bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
+      child.on('close', () => {
+        done()
+      })
+    }, (error) => {
+      throw error
+    })
   }, 300000)
 
   it('can get a list of layers', async () => {
@@ -83,6 +99,20 @@ describe('BitBakeProjectScanner', () => {
     expect(overrides).toEqual(
       expect.arrayContaining([
         'class-target'
+      ])
+    )
+  })
+
+  it('can get a list of devtool workspaces', async () => {
+    const devtoolWorkspaces = bitBakeProjectScanner.scanResult._workspaces
+    expect(devtoolWorkspaces.length).toBeGreaterThan(0)
+    expect(devtoolWorkspaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            name: 'busybox'
+          }
+        )
       ])
     )
   })
