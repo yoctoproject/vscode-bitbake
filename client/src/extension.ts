@@ -15,7 +15,7 @@ import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCo
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
-import { bitBakeProjectScanner } from './driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 
@@ -60,7 +60,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeExtensionContext = context
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
-  bitBakeProjectScanner.setDriver(bitbakeDriver)
+  const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
   updatePythonPath()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
@@ -104,7 +104,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   }))
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner)
-  registerDevtoolCommands(context, bitbakeWorkspace, bitbakeDriver)
+  registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner)
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 

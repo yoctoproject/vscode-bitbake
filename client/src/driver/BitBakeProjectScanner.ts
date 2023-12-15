@@ -41,14 +41,14 @@ export class BitBakeProjectScanner {
 
   private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [] }
   private _shouldDeepExamine: boolean = false
-  private _bitbakeDriver: BitbakeDriver | undefined
+  private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 
   /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
   private containerMountPoint: string | undefined
   private hostMountPoint: string | undefined
 
-  setDriver (bitbakeDriver: BitbakeDriver): void {
+  constructor (bitbakeDriver: BitbakeDriver) {
     this._bitbakeDriver = bitbakeDriver
   }
 
@@ -73,7 +73,7 @@ export class BitBakeProjectScanner {
     this._shouldDeepExamine = shouldDeepExamine
   }
 
-  get bitbakeDriver (): BitbakeDriver | undefined {
+  get bitbakeDriver (): BitbakeDriver {
     return this._bitbakeDriver
   }
 
@@ -423,8 +423,6 @@ export class BitBakeProjectScanner {
     return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true))
   }
 }
-
-export const bitBakeProjectScanner = new BitBakeProjectScanner()
 
 function bbappendVersionMatches (bbappendVersion: string | undefined, recipeVersion: string | undefined): boolean {
   if (bbappendVersion === undefined) {
