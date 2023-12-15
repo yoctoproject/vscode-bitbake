@@ -25,12 +25,9 @@ export class DevtoolWorkspacesView {
 class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspaceTreeItem> {
   private readonly _onDidChangeTreeData: vscode.EventEmitter<DevtoolWorkspaceTreeItem | undefined> = new vscode.EventEmitter<DevtoolWorkspaceTreeItem | undefined>()
   readonly onDidChangeTreeData: vscode.Event<DevtoolWorkspaceTreeItem | undefined> = this._onDidChangeTreeData.event
-  private readonly bitbakeProjectScanner: BitBakeProjectScanner
   private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [] }
 
   constructor (bitbakeProjectScanner: BitBakeProjectScanner) {
-    this.bitbakeProjectScanner = bitbakeProjectScanner
-
     bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
       if (this.bitbakeScanResults._recipes.length === 0 || scanResults._recipes.length > 0) {

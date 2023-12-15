@@ -4,8 +4,10 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
-import { bitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+
+let bitBakeProjectScanner: BitBakeProjectScanner
 
 const pathToBitbakeFolder = path.join(__dirname, '../../../../../integration-tests/project-folder/sources/poky/bitbake')
 const pathToBuildFolder = path.join(__dirname, '../../../../../integration-tests/project-folder/build')
@@ -25,7 +27,7 @@ describe('BitBakeProjectScanner', () => {
       },
       workspaceFolder
     )
-    bitBakeProjectScanner.setDriver(bitbakeDriver)
+    bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
     bitBakeProjectScanner.onChange.on(('scanReady'), () => {
       DoneCallback()
     })
