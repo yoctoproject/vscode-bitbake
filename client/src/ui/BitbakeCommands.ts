@@ -19,6 +19,8 @@ import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
+import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
+import { type SpawnSyncReturns } from 'child_process'
 
 let parsingPending = false
 
@@ -232,19 +234,40 @@ async function pickLayer (extraOption: string): Promise<LayerInfo | undefined> {
 }
 
 async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const originalRecipeChoice = 'Update the original recipe'
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe === undefined) { return }
-  const chosenLayer = await pickLayer('Original recipe\'s layer')
+  const chosenLayer = await pickLayer(originalRecipeChoice)
   let command = ''
 
-  if (chosenLayer?.name === 'Original recipe\'s layer') {
+  if (chosenLayer?.name === originalRecipeChoice) {
     command = `devtool update-recipe ${chosenRecipe}`
   } else {
     command = `devtool update-recipe ${chosenRecipe} --append ${chosenLayer?.path}`
   }
 
   logger.debug(`Command: devtool-update: ${chosenRecipe}`)
-  await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool Update: ${chosenRecipe}`)
+  const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool Update: ${chosenRecipe}`)
+  const res = await finishProcessExecution(process)
+  if (res.status === 0 && chosenLayer?.name !== originalRecipeChoice) {
+    await openDevtoolUpdateBBAppend(res, bitBakeProjectScanner)
+    void bitBakeProjectScanner.rescanProject()
+  }
+}
+
+async function openDevtoolUpdateBBAppend (res: SpawnSyncReturns<Buffer>, bitbakeProjectScanner: BitBakeProjectScanner): Promise<void> {
+  const output = res.stdout.toString()
+  // Regex to extract path from: NOTE: Writing append file .../meta-poky/recipes-core/busybox/busybox_1.36.1.bbappend
+  const regex = /NOTE: Writing append file (.*)/g
+  const match = regex.exec(output)
+  if (match === null) {
+    logger.error('Could not find bbappend file')
+    return
+  }
+  const bbappendPath = match[1]
+  const bbappendUri = vscode.Uri.file(bbappendPath)
+  logger.debug(`Opening devtool-update-recipe bbappend file: ${bbappendPath}`)
+  await vscode.commands.executeCommand('vscode.open', bbappendUri)
 }
 
 async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
