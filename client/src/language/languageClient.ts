@@ -62,6 +62,7 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
       // Notify the server about file changes to '.clientrc files contain in the workspace
       fileEvents: [
         workspace.createFileSystemWatcher('**/*.bbclass', false, false, false),
+        workspace.createFileSystemWatcher('**/*.bbappend', false, false, false),
         workspace.createFileSystemWatcher('**/*.inc', false, false, false),
         workspace.createFileSystemWatcher('**/*.bb', false, false, false),
         workspace.createFileSystemWatcher('**/*.conf', false, false, false)
