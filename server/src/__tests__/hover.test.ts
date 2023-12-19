@@ -8,6 +8,8 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 import { onHoverHandler } from '../connectionHandlers/onHover'
+import path from 'path'
+import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 
 describe('on hover', () => {
   beforeAll(async () => {
@@ -453,5 +455,123 @@ describe('on hover', () => {
     expect(shouldNotShow2).toBe(null)
     expect(shouldNotShow3).toBe(null)
     expect(shouldNotShow4).toBe(null)
+  })
+
+  it('should show comments above the global declarations', async () => {
+    bitBakeDocScanner.parseYoctoTaskFile()
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+
+    const parsedBarPath = path.parse(FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', ''))
+    const parsedFooPath = path.parse(FIXTURE_DOCUMENT.FOO_INC.uri.replace('file://', ''))
+    const parsedBazPath = path.parse(FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', ''))
+
+    bitBakeProjectScannerClient.bitbakeScanResult = {
+      _classes: [
+        {
+          name: parsedBazPath.name,
+          path: parsedBazPath,
+          extraInfo: 'layer: core'
+        }
+      ],
+      _includes: [
+        {
+          name: parsedBarPath.name,
+          path: parsedBarPath,
+          extraInfo: 'layer: core'
+        },
+        {
+          name: parsedFooPath.name,
+          path: parsedFooPath,
+          extraInfo: 'layer: core'
+        }
+      ],
+      _layers: [],
+      _overrides: [],
+      _recipes: []
+    }
+
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 13,
+        character: 1
+      }
+    })
+
+    const shouldShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 17,
+        character: 1
+      }
+    })
+
+    const shouldShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 19,
+        character: 1
+      }
+    })
+
+    const shouldShow4 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 23,
+        character: 1
+      }
+    })
+
+    const DUMMY_URI_TRIMMED = DUMMY_URI.replace('file://', '')
+    // 1. should show all comments above
+    // 2. should show comments for all declarations for the same variable in the same file
+    // 3. TODO: should show comments for the same variable in the include files
+    expect(shouldShow1).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining(`**Comments**\n___\n comment 1 for DESCRIPTION line 1\n comment 1 for DESCRIPTION line 2\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 14\`\n___\n comment 2 for DESCRIPTION\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 16\``)
+        })
+      })
+    )
+
+    // show comments for custom variable and comments for this variable from the include file
+    expect(shouldShow2).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining(`**Comments**\n___\n comment 1 for custom variable MYVAR\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 18\`\n___\n comment 1 for MYVAR in bar.inc\n\nSource: ${FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', '')} \`L: 5\``)
+        })
+      })
+    )
+
+    // show comments for yocto task
+    expect(shouldShow3).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining(`**Comments**\n___\n comment 1 for do_build\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 20\``)
+        })
+      })
+    )
+
+    // show comments for custom function
+    expect(shouldShow4).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining(`**Comments**\n___\n comment 1 for my_func\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 24\``)
+        })
+      })
+    )
   })
 })
