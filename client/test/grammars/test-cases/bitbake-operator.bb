@@ -1,13 +1,13 @@
 # SYNTAX TEST "source.bb" "bitbake-operators"
 
 >KBRANCH:append
-#        ^^^^^^ source.bb keyword.other.bitbake-operator.bb
+#        ^^^^^^ source.bb keyword.control.bb
  
 >KBRANCH:prepend
-#        ^^^^^^^ source.bb keyword.other.bitbake-operator.bb
+#        ^^^^^^^ source.bb keyword.control.bb
  
 >KBRANCH:remove
-#        ^^^^^^ source.bb keyword.other.bitbake-operator.bb
+#        ^^^^^^ source.bb keyword.control.bb
  
 
 >python do_foo:append() {
