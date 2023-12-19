@@ -18,7 +18,7 @@ import {
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarations, type GlobalDeclarations } from './declarations'
+import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarationsAndComments, type GlobalDeclarations, type GlobalSymbolComments } from './declarations'
 import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
@@ -33,6 +33,7 @@ const DEBOUNCE_TIME_MS = 500
 interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
+  globalSymbolComments: GlobalSymbolComments
   embeddedRegions: EmbeddedRegions
   tree: Parser.Tree
   extraSymbols?: GlobalDeclarations[] // symbols from the include files
@@ -74,15 +75,15 @@ export default class Analyzer {
     const fileContent = document.getText()
 
     const tree = this.parser.parse(fileContent)
-    const globalDeclarations = getGlobalDeclarations({ tree, uri })
+    const [globalDeclarations, globalSymbolComments] = getGlobalDeclarationsAndComments({ tree, uri })
     const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
     /* eslint-disable-next-line prefer-const */
     let extraSymbols: GlobalDeclarations[] = []
-    this.sourceIncludeFiles(uri, extraSymbols, { td: document, tree })
-
+    this.sourceIncludeFiles(uri, extraSymbols, globalSymbolComments, { td: document, tree })
     this.uriToAnalyzedDocument[uri] = {
       document,
       globalDeclarations,
+      globalSymbolComments,
       embeddedRegions,
       tree,
       extraSymbols
@@ -455,7 +456,7 @@ export default class Analyzer {
    * @param uri
    * @param document Main purpose of this param is to avoid re-reading the file from disk and re-parsing the tree when the file is opened for the first time since the same process will happen in the analyze() before calling this function.
    */
-  public sourceIncludeFiles (uri: string, extraSymbols: GlobalDeclarations[], document?: { td: TextDocument, tree: Parser.Tree }): void {
+  public sourceIncludeFiles (uri: string, extraSymbols: GlobalDeclarations[], globalSymbolComments: GlobalSymbolComments, document?: { td: TextDocument, tree: Parser.Tree }): void {
     if (this.parser === undefined) {
       logger.error('[Analyzer] The analyzer is not initialized with a parser')
       return
@@ -469,6 +470,7 @@ export default class Analyzer {
         textDocument = document.td
         parsedTree = document.tree
       } else {
+        let globalSymbolCommentsForIncludeFile: GlobalSymbolComments
         const analyzedDocument = this.uriToAnalyzedDocument[uri]
         let globalDeclarations: GlobalDeclarations
         if (analyzedDocument === undefined) {
@@ -480,10 +482,13 @@ export default class Analyzer {
           )
           parsedTree = this.parser.parse(textDocument.getText())
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
-          globalDeclarations = getGlobalDeclarations({ tree: parsedTree, uri })
+          globalDeclarations = getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[0]
+          globalSymbolCommentsForIncludeFile = getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[1]
+
           this.uriToAnalyzedDocument[uri] = {
             document: textDocument,
             globalDeclarations,
+            globalSymbolComments: globalSymbolCommentsForIncludeFile,
             embeddedRegions: getEmbeddedRegionsFromNode(parsedTree, uri), // TODO: Avoid doing this operation as it is not needed during the sourcing process
             tree: parsedTree
           }
@@ -492,14 +497,21 @@ export default class Analyzer {
           textDocument = analyzedDocument.document
           parsedTree = analyzedDocument.tree
           globalDeclarations = analyzedDocument.globalDeclarations
+          globalSymbolCommentsForIncludeFile = analyzedDocument.globalSymbolComments
         }
         extraSymbols.push(globalDeclarations)
+        // Merge the variables exist in both globalSymbolCommentsForIncludeFile and globalSymbolComments
+        Object.keys(globalSymbolCommentsForIncludeFile).forEach((key) => {
+          if (globalSymbolComments[key] !== undefined) {
+            globalSymbolComments[key] = globalSymbolComments[key].concat(globalSymbolCommentsForIncludeFile[key])
+          }
+        })
       }
 
       // Recursively scan for files in the directive statements `inherit`, `include` and `require` and pass the same reference of extraSymbols to each recursive call
       const fileUris = this.getDirectiveFileUris(parsedTree)
       for (const fileUri of fileUris) {
-        this.sourceIncludeFiles(fileUri, extraSymbols, undefined)
+        this.sourceIncludeFiles(fileUri, extraSymbols, globalSymbolComments, undefined)
       }
     } catch (error) {
       if (error instanceof Error) {
