@@ -265,7 +265,7 @@
         },
         "bitbake-operator": {
             "match": "(?<=:)(append|prepend|remove)",
-            "name": "keyword.other.bitbake-operator.bb"
+            "name": "keyword.control.bb"
         },
         "parenthesis-open": {
             "match": "([\\w])*\\(",
