@@ -24,7 +24,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
  * Referenced by the symbol name
  */
 export type GlobalDeclarations = Record<string, LSP.SymbolInformation[]>
-
+export type GlobalSymbolComments = Record<string, Array<{ uri: string, line: number, comments: string[] }>>
 const GLOBAL_DECLARATION_NODE_TYPES = new Set([
   'function_definition',
   'python_function_definition',
@@ -32,20 +32,19 @@ const GLOBAL_DECLARATION_NODE_TYPES = new Set([
 ])
 
 /**
- * Returns declarations (functions or variables) from a given root node
- * This currently does not include global variables defined inside if statements or functions
- *
- * Will only return one declaration per symbol name.
+ * Returns declarations (functions or variables) from a given root node as well as the comments above the declaration
+ * This currently does not include global variables defined inside other code blocks (e.g. if statement & functions)
  *
  */
-export function getGlobalDeclarations ({
+export function getGlobalDeclarationsAndComments ({
   tree,
   uri
 }: {
   tree: Parser.Tree
   uri: string
-}): GlobalDeclarations {
+}): [GlobalDeclarations, GlobalSymbolComments] {
   const globalDeclarations: GlobalDeclarations = {}
+  const symbolComments: GlobalSymbolComments = {}
 
   TreeSitterUtil.forEach(tree.rootNode, (node) => {
     const followChildren = !GLOBAL_DECLARATION_NODE_TYPES.has(node.type)
@@ -58,12 +57,21 @@ export function getGlobalDeclarations ({
         globalDeclarations[word] = []
       }
       globalDeclarations[word].push(symbol)
+
+      const commentsAbove: string[] = []
+      extractCommentsAbove(node, commentsAbove)
+      if (commentsAbove.length > 0) {
+        if (symbolComments[word] === undefined) {
+          symbolComments[word] = []
+        }
+        symbolComments[word].push({ uri, line: node.startPosition.row, comments: commentsAbove })
+      }
     }
 
     return followChildren
   })
 
-  return globalDeclarations
+  return [globalDeclarations, symbolComments]
 }
 
 export interface EmbeddedRegions {
@@ -141,4 +149,16 @@ function getDeclarationSymbolFromNode ({
   }
 
   return null
+}
+
+function extractCommentsAbove (node: Parser.SyntaxNode, comments: string[]): void {
+  const previousSibling = node.previousSibling
+  if (previousSibling === null) {
+    return
+  }
+  if (previousSibling.type === 'comment' && previousSibling.startPosition.row + 1 === node.startPosition.row) {
+    const commentValue = previousSibling.text.trim()
+    comments.unshift(commentValue)
+    extractCommentsAbove(previousSibling, comments)
+  }
 }
