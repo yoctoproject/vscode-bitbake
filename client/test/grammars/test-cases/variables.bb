@@ -28,7 +28,7 @@
 >FOO:remove = "${FOOREMOVE}"
 #^^^ source.bb variable.other.names.bb
 #                ^^^^^^^^^ source.bb string.quoted.double.bb variable.other.names.bb
-#    ^^^^^^ source.bb keyword.other.bitbake-operator.bb - variable.other.names.bb
+#    ^^^^^^ source.bb keyword.control.bb - variable.other.names.bb
 
 >myfunc (var = '123', var2 = 123) {}
 #        ^^^ source.bb variable.other.names.bb

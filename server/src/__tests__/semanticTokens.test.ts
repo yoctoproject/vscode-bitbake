@@ -40,15 +40,15 @@ describe('Semantic tokens', () => {
         },
         {
           line: 2,
-          startCharacter: 18,
+          startCharacter: 29,
           length: 3,
           tokenType: TOKEN_LEGEND.types.variable,
           tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
         },
         {
           line: 2,
-          startCharacter: 5,
-          length: 7,
+          startCharacter: 13,
+          length: 10,
           tokenType: TOKEN_LEGEND.types.operator,
           tokenModifiers: [TOKEN_LEGEND.modifiers.readonly]
         },

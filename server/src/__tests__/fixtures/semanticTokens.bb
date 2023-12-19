@@ -1,6 +1,6 @@
 FOO = 'FOO'
 
-MYVAR:append = '${FOO}'
+MYVAR:append:myoverride = '${FOO}'
 
 do_build () {
     echo 'do build'
