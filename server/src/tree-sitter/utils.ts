@@ -77,20 +77,14 @@ export function isVariableReference (n: SyntaxNode): boolean {
   }
 }
 
+/**
+ * Check if the node is an override other than `append`, `preprend` or `remove`
+ */
 export function isOverride (n: SyntaxNode): boolean {
-  const parentTypes = [
-    'variable_assignment',
-    'function_definition',
-    'anonymous_python_function',
-    'python_function_definition'
-  ]
   const parentType = n?.parent?.type
   switch (n.type) {
-    case 'override':
-      if (parentType !== undefined) {
-        return parentTypes.includes(parentType)
-      }
-      return false
+    case 'identifier':
+      return parentType === 'override' // As per the tree-sitter grammar, an identifier which has a parent of type override is an override other than `append`, `preprend` or `remove`
     default:
       return false
   }
