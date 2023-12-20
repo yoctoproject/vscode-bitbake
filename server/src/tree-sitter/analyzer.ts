@@ -27,6 +27,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import fs from 'fs'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
+import { bitBakeDocScanner } from '../BitBakeDocScanner'
 const DEBOUNCE_TIME_MS = 500
 
 interface AnalyzedDocument {
@@ -272,6 +273,50 @@ export default class Analyzer {
     n?.parent?.parent?.type === 'override' ||
     (n?.type === ':' && n?.parent?.firstNamedChild?.type === 'identifier') || // when having something like "MYVAR:append:" at the last line of the document
     (n?.type === ':' && n?.parent?.type === 'ERROR' && n?.parent?.previousSibling?.type === 'override') // when having MYVAR:append: = '123' and the second or later colon is typed
+  }
+
+  public isInsidePythonRegion (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    let n = this.nodeAtPoint(uri, line, column)
+
+    while (n?.parent !== null && n?.parent !== undefined) {
+      if (TreeSitterUtils.isInlinePython(n.parent) || TreeSitterUtils.isPythonDefinition(n.parent)) {
+        return true
+      }
+      n = n.parent
+    }
+
+    return false
+  }
+
+  public isPythonDatastoreVariable (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    if (!this.isInsidePythonRegion(uri, line, column)) {
+      return false
+    }
+    // Example:
+    // n.text: FOO
+    // n.parent.text: 'FOO'
+    // n.parent.parent.text: ('FOO')
+    // n.parent.parent.parent.text: d.getVar('FOO')
+    const parentParentParent = n?.parent?.parent?.parent
+    if (parentParentParent?.type !== 'call') {
+      return false
+    }
+    const match = parentParentParent.text.match(/^(d|e\.data)\.(?<name>.*)\((?<params>.*)\)$/) // d.name(params), e.data.name(params)
+    const functionName = match?.groups?.name
+    if (functionName === undefined || !(bitBakeDocScanner.pythonDatastoreFunction.includes(functionName))) {
+      return false
+    }
+    const variable = match?.groups?.params?.split(',')[0]?.trim().replace(/('|")/g, '')
+    return variable === n?.text
   }
 
   /**

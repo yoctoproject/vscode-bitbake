@@ -31,3 +31,19 @@ my_do_build(){
 inherit dummy
 include dummy.inc
 require dummy.inc
+
+python (){
+    d.getVar("DESCRIPTION")
+    d.setVar('DESCRIPTION', 'value')
+    b.getVar('DESCRIPTION')
+    d.test('DESCRIPTION')
+    d.getVar("FOO")
+    e.data.getVar('DESCRIPTION')
+}
+
+def test ():
+    d.setVar('DESCRIPTION')
+
+VAR = "${@d.getVar("DESCRIPTION")}"
+
+d.getVar("DESCRIPTION")
