@@ -74,6 +74,7 @@ export class BitBakeDocScanner {
   private _yoctoVariableInfo: VariableInfo[] = []
   private _variableFlagInfo: VariableFlagInfo[] = []
   private _yoctoTaskInfo: DocInfo[] = []
+  private _pythonDatastoreFunction: string[] = []
   private _docPath: string = path.join(__dirname, '../../client/resources/docs') // This default path is for the test. The path after the compilation can be different
   private readonly _keywordInfo: DocInfo[] = KEYWORDS
 
@@ -97,11 +98,16 @@ export class BitBakeDocScanner {
     return this._keywordInfo
   }
 
+  get pythonDatastoreFunction (): string[] {
+    return this._pythonDatastoreFunction
+  }
+
   public clearScannedDocs (): void {
     this._bitbakeVariableInfo = []
     this._yoctoVariableInfo = []
     this._variableFlagInfo = []
     this._yoctoTaskInfo = []
+    this._pythonDatastoreFunction = []
   }
 
   public setDocPathAndParse (extensionPath: string): void {
@@ -110,6 +116,7 @@ export class BitBakeDocScanner {
     this.parseBitbakeVariablesFile()
     this.parseYoctoVariablesFile()
     this.parseYoctoTaskFile()
+    this.parsePythonDatastoreFunction()
   }
 
   // TODO: Generalize these parse functions. They all read a file, match some content and store it.
@@ -266,6 +273,26 @@ export class BitBakeDocScanner {
       }
     }
     this._variableFlagInfo = variableFlagInfo
+  }
+
+  public parsePythonDatastoreFunction (): void {
+    const filePath = path.join(this._docPath, 'bitbake-user-manual-metadata.rst')
+    const pattern = /^ {3}\* - ``d\.(?<name>.*)\("X"(.*)\)``/gm
+    let file = ''
+    try {
+      file = fs.readFileSync(filePath, 'utf8')
+    } catch {
+      logger.warn(`Failed to read file at ${filePath}`)
+    }
+    const pythonDatastoreFunction: string[] = []
+    for (const match of file.matchAll(pattern)) {
+      const name = match.groups?.name
+      if (name === undefined) {
+        return
+      }
+      pythonDatastoreFunction.push(name)
+    }
+    this._pythonDatastoreFunction = pythonDatastoreFunction
   }
 }
 

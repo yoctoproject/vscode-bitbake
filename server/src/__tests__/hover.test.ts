@@ -315,4 +315,143 @@ describe('on hover', () => {
       })
     )
   })
+
+  it('shows definition on hovering variable in Python functions for accessing datastore', async () => {
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    bitBakeDocScanner.parsePythonDatastoreFunction()
+    await analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 35,
+        character: 14
+      }
+    })
+
+    const shouldShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 36,
+        character: 14
+      }
+    })
+
+    const shouldShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 40,
+        character: 19
+      }
+    })
+
+    const shouldShow4 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 46,
+        character: 20
+      }
+    })
+
+    const shouldShow5 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 44,
+        character: 14
+      }
+    })
+
+    const shouldNotShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 37,
+        character: 14
+      }
+    })
+
+    const shouldNotShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 38,
+        character: 12
+      }
+    })
+
+    const shouldNotShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 39,
+        character: 19
+      }
+    })
+
+    const shouldNotShow4 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 48,
+        character: 10
+      }
+    })
+
+    expect(shouldShow1).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldShow2).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldShow3).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldShow4).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldShow5).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldNotShow1).toBe(null)
+    expect(shouldNotShow2).toBe(null)
+    expect(shouldNotShow3).toBe(null)
+    expect(shouldNotShow4).toBe(null)
+  })
 })
