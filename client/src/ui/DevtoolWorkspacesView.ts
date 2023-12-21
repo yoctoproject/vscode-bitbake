@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
-import { type BitbakeScanResult, type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
+import { scanContainsData, type BitbakeScanResult, type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
 export class DevtoolWorkspacesView {
@@ -21,7 +21,6 @@ export class DevtoolWorkspacesView {
   }
 }
 
-// TODO refactor common code between both views
 class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspaceTreeItem> {
   private readonly _onDidChangeTreeData: vscode.EventEmitter<DevtoolWorkspaceTreeItem | undefined> = new vscode.EventEmitter<DevtoolWorkspaceTreeItem | undefined>()
   readonly onDidChangeTreeData: vscode.Event<DevtoolWorkspaceTreeItem | undefined> = this._onDidChangeTreeData.event
@@ -30,7 +29,7 @@ class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspac
   constructor (bitbakeProjectScanner: BitBakeProjectScanner) {
     bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
-      if (this.bitbakeScanResults._recipes.length === 0 || scanResults._recipes.length > 0) {
+      if (!scanContainsData(this.bitbakeScanResults) || scanContainsData(scanResults)) {
         this.bitbakeScanResults = scanResults
       }
       this._onDidChangeTreeData.fire(undefined)
@@ -41,8 +40,13 @@ class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspac
     return element
   }
 
-  getChildren (element?: DevtoolWorkspaceTreeItem | undefined): vscode.ProviderResult<DevtoolWorkspaceTreeItem[]> {
+  async getChildren (element?: DevtoolWorkspaceTreeItem | undefined): Promise<DevtoolWorkspaceTreeItem[]> {
     if (element === undefined) {
+      if (!scanContainsData(this.bitbakeScanResults)) {
+        while (!scanContainsData(this.bitbakeScanResults)) {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        }
+      }
       const items = this.getDevtoolWorkspaces()
       items.push(this.getAddWorkspaceItem())
       return items
