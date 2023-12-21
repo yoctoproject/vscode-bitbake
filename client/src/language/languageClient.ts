@@ -22,6 +22,7 @@ import { NotificationMethod, type NotificationParams } from '../lib/src/types/no
 import { middlewareProvideCompletion } from './middlewareCompletion'
 import { middlewareProvideHover } from './middlewareHover'
 import { requestsManager } from './RequestManager'
+import { middlewareProvideDefinition } from './middlewareDefinition'
 
 const notifyFileRenameChanged = async (
   client: LanguageClient,
@@ -62,6 +63,7 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     },
     middleware: {
       provideCompletionItem: middlewareProvideCompletion,
+      provideDefinition: middlewareProvideDefinition,
       provideHover: middlewareProvideHover
     }
   }
