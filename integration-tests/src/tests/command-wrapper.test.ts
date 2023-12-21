@@ -53,7 +53,7 @@ suite('Bitbake Command Wrapper', () => {
   })
 
   test('Bitbake can properly scan includes inside a crops container', async () => {
-    const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/definition.bb')
+    const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/command-wrapper.bb')
     const docUri = vscode.Uri.parse(`file://${filePath}`)
     let definitions: vscode.Location[] = []
 
