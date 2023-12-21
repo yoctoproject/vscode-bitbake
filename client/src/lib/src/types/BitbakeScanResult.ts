@@ -40,3 +40,7 @@ export interface BitbakeScanResult {
   _overrides: string[]
   _workspaces: DevtoolWorkspaceInfo[]
 }
+
+export function scanContainsData (scanResult: BitbakeScanResult): boolean {
+  return scanResult._layers.length > 0
+}
