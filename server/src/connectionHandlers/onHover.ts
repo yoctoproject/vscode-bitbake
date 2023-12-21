@@ -75,7 +75,11 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   }
 
   const comments = getGlobalSymbolComments(textDocument.uri, word)
-  hoverValue += comments ?? ''
+
+  // Append comments for variables or tasks that don't have documentation from Yocto/BitBake
+  if (hoverValue === '' && comments !== null) {
+    hoverValue += comments ?? ''
+  }
 
   if (hoverValue !== '') {
     const hover: Hover = {
@@ -102,7 +106,7 @@ function getGlobalSymbolComments (uri: string, word: string): string | null {
     if (symbolComments[word] !== undefined) {
       const allCommentsForSymbol = symbolComments[word]
       if (allCommentsForSymbol.length > 0) {
-        return `\n___\n**Comments**\n___\n${allCommentsForSymbol.map((item) => item.comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${item.uri.replace('file://', '')} \`L: ${item.line + 1}\``).join('\n___\n')}`
+        return `${allCommentsForSymbol.map((item) => item.comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${item.uri.replace('file://', '')} \`L: ${item.line + 1}\``).join('\n___\n')}`
       }
     }
   }
