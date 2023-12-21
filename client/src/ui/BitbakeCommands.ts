@@ -23,6 +23,7 @@ import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
 
 let parsingPending = false
+let bitbakeSanity = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
@@ -55,10 +56,11 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
   logger.debug('Command: parse-recipes')
 
-  if (!(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+  if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
     logger.warn('bitbake settings are not sane, skip parse')
     return
   }
+  bitbakeSanity = true
 
   // We have to use tasks instead of BitbakeTerminal because we want the problemMatchers to detect parsing errors
   const parseAllRecipesTask = new vscode.Task(
@@ -199,10 +201,12 @@ async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvi
 }
 
 async function rescanProject (bitBakeProjectScanner: BitBakeProjectScanner): Promise<void> {
+  bitbakeSanity = false
   if (!(await bitBakeProjectScanner.bitbakeDriver?.checkBitbakeSettingsSanity())) {
     logger.warn('bitbake settings are not sane, skip rescan')
     return
   }
+  bitbakeSanity = true
 
   await bitBakeProjectScanner.rescanProject()
 }
