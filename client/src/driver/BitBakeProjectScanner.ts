@@ -216,7 +216,7 @@ export class BitBakeProjectScanner {
 
   /// If a docker container is used, the workdir may be different from the host system.
   /// This function resolves the path to the host system.
-  private async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
+  async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
     if (layerPath === undefined) {
       return undefined
     }
@@ -231,7 +231,18 @@ export class BitBakeProjectScanner {
       return layerPath
     }
     const relativePath = path.relative(this.containerMountPoint, layerPath)
-    return path.resolve(this.hostMountPoint, relativePath)
+    let resolvedPath = path.resolve(this.hostMountPoint, relativePath)
+    if (!fs.existsSync(resolvedPath)) {
+      // This makes it work with the default kas-container configuration (/work & /build volumes)
+      resolvedPath = path.resolve(this.hostMountPoint, relativePath.replace('../', ''))
+    }
+    if (!fs.existsSync(resolvedPath)) {
+      await vscode.window.showErrorMessage(`It seems you are using containers and the Bitbake extension can't
+        guess the corresponding mount points for ${layerPath}.\n\nYou should adjust your docker volumes to use the same
+        uris as those present on your host machine`, { modal: true })
+      return layerPath
+    }
+    return resolvedPath
   }
 
   private searchFiles (pattern: string): ElementInfo[] {
