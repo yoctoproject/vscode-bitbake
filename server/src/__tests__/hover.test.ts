@@ -500,7 +500,7 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 13,
+        line: 14,
         character: 1
       }
     })
@@ -510,66 +510,66 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 17,
+        line: 22,
         character: 1
       }
     })
 
-    const shouldShow3 = await onHoverHandler({
+    const shouldNotShow1 = await onHoverHandler({
       textDocument: {
         uri: DUMMY_URI
       },
       position: {
-        line: 19,
+        line: 12,
         character: 1
       }
     })
 
-    const shouldShow4 = await onHoverHandler({
+    const shouldNotShow2 = await onHoverHandler({
       textDocument: {
         uri: DUMMY_URI
       },
       position: {
-        line: 23,
+        line: 18,
         character: 1
       }
     })
 
     const DUMMY_URI_TRIMMED = DUMMY_URI.replace('file://', '')
-    // 1. should show all comments above
+
+    // 1. should show all comments above the symbols that don't have docs from yocto/bitbake
     // 2. should show comments for all declarations for the same variable in the same file
-    // 3. TODO: should show comments for the same variable in the include files
+    // 3. should show comments for the same variable in the include files
     expect(shouldShow1).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining(`**Comments**\n___\n comment 1 for DESCRIPTION line 1\n comment 1 for DESCRIPTION line 2\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 14\`\n___\n comment 2 for DESCRIPTION\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 16\``)
-        })
-      })
-    )
-
-    // show comments for custom variable and comments for this variable from the include file
-    expect(shouldShow2).toEqual(
-      expect.objectContaining({
-        contents: expect.objectContaining({
-          value: expect.stringContaining(`**Comments**\n___\n comment 1 for custom variable MYVAR\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 18\`\n___\n comment 1 for MYVAR in bar.inc\n\nSource: ${FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', '')} \`L: 5\``)
-        })
-      })
-    )
-
-    // show comments for yocto task
-    expect(shouldShow3).toEqual(
-      expect.objectContaining({
-        contents: expect.objectContaining({
-          value: expect.stringContaining(`**Comments**\n___\n comment 1 for do_build\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 20\``)
+          value: expect.stringContaining(` comment 1 for custom variable MYVAR\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 15\`\n___\n comment 2 for custom variable MYVAR\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 17\`\n___\n comment 1 for MYVAR in bar.inc\n\nSource: ${FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', '')} \`L: 5\``)
         })
       })
     )
 
     // show comments for custom function
-    expect(shouldShow4).toEqual(
+    expect(shouldShow2).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining(`**Comments**\n___\n comment 1 for my_func\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 24\``)
+          value: expect.stringContaining(` comment 1 for my_func\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 23\``)
+        })
+      })
+    )
+    // Don't show comments for variables/tasks that already have docs from yocto/bitbake
+
+    expect(shouldNotShow1).not.toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining(`comment 1 for my_func\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 23\``)
+        })
+      })
+    )
+
+    expect(shouldNotShow2).not.toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining(`comment 1 for do_build\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 19\``)
         })
       })
     )
