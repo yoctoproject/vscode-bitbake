@@ -294,11 +294,11 @@ async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, 
   }
 
   logger.debug(`Command: devtool-open-workspace: ${chosenRecipe}`)
-  const workspacePath = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)?.path
+  let workspacePath = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)?.path
+  workspacePath = await bitBakeProjectScanner.resolveContainerPath(workspacePath)
   if (workspacePath === undefined) {
     logger.error('Devtool workspace not found')
     return
   }
-  // TODO convert URL outside of container. good luck!
   await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(workspacePath), { forceNewWindow: true })
 }
