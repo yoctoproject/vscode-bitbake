@@ -150,6 +150,7 @@ export class BitBakeProjectScanner {
         if (containerDirInode === hostDirInode) {
           this.containerMountPoint = containerDir
           this.hostMountPoint = hostDir
+          logger.info(`Found container mount point: ${this.containerMountPoint} -> ${this.hostMountPoint}`)
           return
         }
         containerDir = path.dirname(containerDir)
@@ -214,35 +215,59 @@ export class BitBakeProjectScanner {
     }
   }
 
+  private async resolveCorrespondingPath (inputPath: string | undefined, hostToContainer: boolean): Promise<string | undefined> {
+    if (inputPath === undefined) {
+      return undefined
+    }
+    if (this.containerMountPoint === undefined && !hostToContainer) {
+      // Should only be called through scanAvailableLayers()
+      const hostWorkdir = this.bitbakeDriver?.bitbakeSettings.workingDirectory
+      if (hostWorkdir === undefined) {
+        throw new Error('hostWorkdir is undefined')
+      }
+      await this.scanContainerMountPoint(inputPath, hostWorkdir)
+    }
+    const origMountPoint = hostToContainer ? this.hostMountPoint : this.containerMountPoint
+    const destMountPoint = hostToContainer ? this.containerMountPoint : this.hostMountPoint
+    const fileExistsFn = hostToContainer ? this.existsInContainer.bind(this) : fs.existsSync
+    if (origMountPoint === undefined || destMountPoint === undefined) {
+      return inputPath
+    }
+    const relativePath = path.relative(origMountPoint, inputPath)
+    let resolvedPath = path.resolve(destMountPoint, relativePath)
+    if (!await fileExistsFn(resolvedPath)) {
+      // This makes it work with the default kas-container configuration (/work & /build volumes)
+      resolvedPath = path.resolve(destMountPoint, relativePath.replace('../', ''))
+    }
+    if (!await fileExistsFn(resolvedPath)) {
+      // Showing a modal here because this can only happend through the command devtool-update-recipe which is not used often
+      await vscode.window.showErrorMessage(
+        'Bitbake extension couldn\'t locate a file.', {
+          modal: true,
+          detail: `It looks like you are using the bitbake.commandWrapper setting to use a docker container.\n
+Couldn't find ${inputPath} corresponding paths inside and outside of the container.\n
+You should adjust your docker volumes to use the same URIs as those present on your host machine.`
+        })
+      return inputPath
+    }
+    return resolvedPath
+  }
+
   /// If a docker container is used, the workdir may be different from the host system.
   /// This function resolves the path to the host system.
   async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
-    if (layerPath === undefined) {
-      return undefined
-    }
-    const hostWorkdir = this.bitbakeDriver?.bitbakeSettings.workingDirectory
-    if (hostWorkdir === undefined) {
-      throw new Error('hostWorkdir is undefined')
-    }
-    if (this.containerMountPoint === undefined) {
-      await this.scanContainerMountPoint(layerPath, hostWorkdir)
-    }
-    if (this.containerMountPoint === undefined || this.hostMountPoint === undefined) {
-      return layerPath
-    }
-    const relativePath = path.relative(this.containerMountPoint, layerPath)
-    let resolvedPath = path.resolve(this.hostMountPoint, relativePath)
-    if (!fs.existsSync(resolvedPath)) {
-      // This makes it work with the default kas-container configuration (/work & /build volumes)
-      resolvedPath = path.resolve(this.hostMountPoint, relativePath.replace('../', ''))
-    }
-    if (!fs.existsSync(resolvedPath)) {
-      await vscode.window.showErrorMessage(`It seems you are using containers and the Bitbake extension can't
-        guess the corresponding mount points for ${layerPath}.\n\nYou should adjust your docker volumes to use the same
-        uris as those present on your host machine`, { modal: true })
-      return layerPath
-    }
-    return resolvedPath
+    return await this.resolveCorrespondingPath(layerPath, false)
+  }
+
+  /// This function mirrors resolveContainerPath, but for the other direction.
+  async resolveHostPath (containerPath: string | undefined): Promise<string | undefined> {
+    return await this.resolveCorrespondingPath(containerPath, true)
+  }
+
+  private async existsInContainer (containerPath: string): Promise<boolean> {
+    const process = runBitbakeTerminalCustomCommand(this._bitbakeDriver, 'test -e ' + containerPath, 'BitBake: Test file', true)
+    const res = finishProcessExecution(process)
+    return (await res).status === 0
   }
 
   private searchFiles (pattern: string): ElementInfo[] {
