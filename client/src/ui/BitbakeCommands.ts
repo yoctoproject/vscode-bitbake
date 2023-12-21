@@ -238,12 +238,13 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe === undefined) { return }
   const chosenLayer = await pickLayer(originalRecipeChoice, bitBakeProjectScanner)
+  const chosenLayerPath = await bitBakeProjectScanner.resolveHostPath(chosenLayer?.path)
   let command = ''
 
   if (chosenLayer?.name === originalRecipeChoice) {
     command = `devtool update-recipe ${chosenRecipe}`
   } else {
-    command = `devtool update-recipe ${chosenRecipe} --append ${chosenLayer?.path}`
+    command = `devtool update-recipe ${chosenRecipe} --append ${chosenLayerPath}`
   }
 
   logger.debug(`Command: devtool-update: ${chosenRecipe}`)
@@ -264,7 +265,8 @@ async function openDevtoolUpdateBBAppend (res: SpawnSyncReturns<Buffer>, bitBake
     logger.error('Could not find bbappend file')
     return
   }
-  const bbappendPath = match[1]
+  let bbappendPath = match[1]
+  bbappendPath = await bitBakeProjectScanner.resolveContainerPath(bbappendPath) as string
   const bbappendUri = vscode.Uri.file(bbappendPath)
   logger.debug(`Opening devtool-update-recipe bbappend file: ${bbappendPath}`)
   await vscode.commands.executeCommand('vscode.open', bbappendUri)
