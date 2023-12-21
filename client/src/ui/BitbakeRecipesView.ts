@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
-import { type ElementInfo, type BitbakeScanResult, type PathInfo } from '../lib/src/types/BitbakeScanResult'
+import { type ElementInfo, type BitbakeScanResult, type PathInfo, scanContainsData } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
@@ -64,7 +64,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     })
     bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduce, we keep the previous results to keep navigation functional
-      if (this.bitbakeScanResults._recipes.length === 0 || scanResults._recipes.length > 0) {
+      if (!scanContainsData(this.bitbakeScanResults) || scanContainsData(scanResults)) {
         this.bitbakeScanResults = scanResults
       }
       this._onDidChangeTreeData.fire(undefined)
@@ -75,13 +75,18 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     return element
   }
 
-  getChildren (element?: BitbakeRecipeTreeItem | undefined): vscode.ProviderResult<BitbakeRecipeTreeItem[]> {
+  async getChildren (element?: BitbakeRecipeTreeItem | undefined): Promise<BitbakeRecipeTreeItem[]> {
     if (element === undefined) {
       const items = this.getBitbakeRecipes()
       items.push(this.getAddRecipeItem())
       return items
     }
 
+    if (!scanContainsData(this.bitbakeScanResults)) {
+      while (!scanContainsData(this.bitbakeScanResults)) {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      }
+    }
     const fileItems: BitbakeRecipeTreeItem[] = []
     this.bitbakeScanResults._recipes.forEach((recipe: ElementInfo) => {
       if (recipe.name === element.label) {
@@ -103,7 +108,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
         }
       }
     })
-    if (fileItems.length === 0 && this.bitbakeScanResults._recipes.length > 0) {
+    if (fileItems.length === 0 && scanContainsData(this.bitbakeScanResults)) {
       const errorItem = new BitbakeRecipeTreeItem('Recipe not found', vscode.TreeItemCollapsibleState.None)
       errorItem.contextValue = undefined
       errorItem.iconPath = new vscode.ThemeIcon('warning')
