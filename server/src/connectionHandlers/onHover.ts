@@ -102,13 +102,24 @@ function getGlobalSymbolComments (uri: string, word: string): string | null {
   if (analyzer.getGlobalDeclarationSymbols(uri).some((symbol) => symbol.name === word)) {
     const analyzedDocument = analyzer.getAnalyzedDocument(uri)
     const symbolComments = analyzedDocument?.globalSymbolComments
+    const includeFileUris = analyzedDocument?.includeFileUris
     if (symbolComments === undefined) {
       return null
     }
     if (symbolComments[word] !== undefined) {
-      const allCommentsForSymbol = symbolComments[word]
+      const localCommentsForSymbol = symbolComments[word]
+
+      const otherCommentsForSymbol: GlobalSymbolComments[string] = []
+      includeFileUris?.forEach((includeFileUri) => {
+        const analyzedDocumentForIncludeFile = analyzer.getAnalyzedDocument(includeFileUri)
+        const symbolCommentsForIncludeFile = analyzedDocumentForIncludeFile?.globalSymbolComments
+        if (symbolCommentsForIncludeFile !== undefined) {
+          otherCommentsForSymbol.push(...(symbolCommentsForIncludeFile[word] ?? []))
+        }
+      })
       const priority = ['.bbclass', '.conf', '.inc', '.bb', '.bbappend']
 
+      const allCommentsForSymbol = [...localCommentsForSymbol, ...otherCommentsForSymbol]
       let commentsToShow: GlobalSymbolComments[string] = []
       // higher priority comments replace lower ones
       priority.reverse().forEach((ext) => {
