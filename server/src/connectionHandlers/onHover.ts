@@ -8,6 +8,8 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { DIRECTIVE_STATEMENT_KEYWORDS } from '../lib/src/types/directiveKeywords'
+import path from 'path'
+import { type GlobalSymbolComments } from '../tree-sitter/declarations'
 
 export async function onHoverHandler (params: HoverParams): Promise<Hover | null> {
   const { position, textDocument } = params
@@ -105,8 +107,19 @@ function getGlobalSymbolComments (uri: string, word: string): string | null {
     }
     if (symbolComments[word] !== undefined) {
       const allCommentsForSymbol = symbolComments[word]
-      if (allCommentsForSymbol.length > 0) {
-        return `${allCommentsForSymbol.map((item) => item.comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${item.uri.replace('file://', '')} \`L: ${item.line + 1}\``).join('\n___\n')}`
+      const priority = ['.bbclass', '.conf', '.inc', '.bb', '.bbappend']
+
+      let commentsToShow: GlobalSymbolComments[string] = []
+      // higher priority comments replace lower ones
+      priority.reverse().forEach((ext) => {
+        const commentsForExt = allCommentsForSymbol.filter((item) => path.parse(item.uri).ext === ext)
+        if (commentsForExt.length > 0) {
+          commentsToShow = commentsForExt
+        }
+      })
+
+      if (commentsToShow.length > 0) {
+        return `${commentsToShow.map((item) => item.comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${item.uri.replace('file://', '')} \`L: ${item.line + 1}\``).join('\n___\n')}`
       }
     }
   }
