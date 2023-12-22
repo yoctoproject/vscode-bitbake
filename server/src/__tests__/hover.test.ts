@@ -539,11 +539,12 @@ describe('on hover', () => {
 
     // 1. should show all comments above the symbols that don't have docs from yocto/bitbake
     // 2. should show comments for all declarations for the same variable in the same file
-    // 3. should show comments for the same variable in the include files
+    // 3. The higher priority comments replace the lower ones according to the order: .bbclass, .conf, .inc, .bb, .bbappend
+
     expect(shouldShow1).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining(` comment 1 for custom variable MYVAR\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 15\`\n___\n comment 2 for custom variable MYVAR\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 17\`\n___\n comment 1 for MYVAR in bar.inc\n\nSource: ${FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', '')} \`L: 5\``)
+          value: expect.stringContaining(` comment 1 for MYVAR in baz.bbclass\n\nSource: ${FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', '')} \`L: 4\``)
         })
       })
     )
