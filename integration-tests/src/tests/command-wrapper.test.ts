@@ -8,6 +8,7 @@ import * as vscode from 'vscode'
 
 import { assertWillComeTrue, assertWorkspaceWillBeOpen } from '../utils/async'
 import path from 'path'
+import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake Command Wrapper', () => {
   let workspaceURI: vscode.Uri
@@ -43,7 +44,7 @@ suite('Bitbake Command Wrapper', () => {
   })
 
   suiteTeardown(async function (this: Mocha.Context) {
-    this.timeout(300000)
+    this.timeout(BITBAKE_TIMEOUT)
     await vscode.workspace.fs.delete(buildFolder, { recursive: true })
 
     const bitbakeConfiguration = vscode.workspace.getConfiguration('bitbake')
@@ -67,5 +68,5 @@ suite('Bitbake Command Wrapper', () => {
       )
       return definitions.length === 1
     })
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 })

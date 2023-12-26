@@ -6,6 +6,7 @@
 import path from 'path'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import { BITBAKE_TIMEOUT } from '../../../lib/src/utils/ProcessUtils'
 
 let bitBakeProjectScanner: BitBakeProjectScanner
 
@@ -38,7 +39,7 @@ describe('BitBakeProjectScanner', () => {
     }, (error) => {
       throw error
     })
-  }, 300000)
+  }, BITBAKE_TIMEOUT)
 
   afterAll((done) => {
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
@@ -48,7 +49,7 @@ describe('BitBakeProjectScanner', () => {
     }, (error) => {
       throw error
     })
-  }, 300000)
+  }, BITBAKE_TIMEOUT)
 
   it('can get a list of layers', async () => {
     const layers = bitBakeProjectScanner.scanResult._layers
