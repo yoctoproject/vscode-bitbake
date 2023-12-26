@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 import { afterEach } from 'mocha'
 
 import path from 'path'
-import { addLayer, resetLayer } from '../utils/bitbake'
+import { BITBAKE_TIMEOUT, addLayer, resetLayer } from '../utils/bitbake'
 import { assertWillComeTrue, assertWorkspaceWillBeOpen, delay } from '../utils/async'
 
 suite('Bitbake Parsing Test Suite', () => {
@@ -17,7 +17,7 @@ suite('Bitbake Parsing Test Suite', () => {
   let buildFolder: vscode.Uri
 
   suiteSetup(async function (this: Mocha.Context) {
-    this.timeout(300000)
+    this.timeout(BITBAKE_TIMEOUT)
     await assertWorkspaceWillBeOpen()
     workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
     buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')
@@ -62,7 +62,7 @@ suite('Bitbake Parsing Test Suite', () => {
 
     const diagnostics = vscode.languages.getDiagnostics()
     assert.strictEqual(diagnostics.length, 0)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Bitbake can detect parsing errors', async () => {
     let taskExecuted = false
@@ -87,5 +87,5 @@ suite('Bitbake Parsing Test Suite', () => {
 
     const diagnostics = vscode.languages.getDiagnostics()
     assert.strictEqual(diagnostics.length, 1)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 })

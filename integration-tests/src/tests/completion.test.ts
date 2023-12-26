@@ -7,6 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
+import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake Completion Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/completion.bb')
@@ -47,17 +48,17 @@ suite('Bitbake Completion Test Suite', () => {
     const position = new vscode.Position(0, 2)
     const expected = 'DESCRIPTION'
     await testCompletion(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Completion appears properly on embedded python', async () => {
     const position = new vscode.Position(3, 6)
     const expected = 'print'
     await testCompletion(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Completion appears properly on embedded bash', async () => {
     const position = new vscode.Position(7, 6)
     const expected = 'echo'
     await testCompletion(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 })
