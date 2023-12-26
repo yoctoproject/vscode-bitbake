@@ -4,8 +4,10 @@
  * ------------------------------------------------------------------------------------------ */
 
 import type childProcess from 'child_process'
+import { logger } from './OutputLogger'
+
 export const BITBAKE_TIMEOUT = 300000
-export const BITBAKE_EXIT_TIMEOUT = 1000
+export const BITBAKE_EXIT_TIMEOUT = 30000
 
 /// Wait for an asynchronous process to finish and return its output
 export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>, timeout = BITBAKE_TIMEOUT): Promise<childProcess.SpawnSyncReturns<Buffer>> {
@@ -33,7 +35,7 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
         })
       })
       const timer = setTimeout(() => {
-        child.kill()
+        void killBitbake(child)
         logger.error(`Process ${child.pid} timed out after ${timeout}ms`)
         // TODO If we can't terminate, just resolve with the current output
       }, timeout)
@@ -42,4 +44,20 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
       reject(error)
     })
   })
+}
+
+/// Kill bitbake and agressively terminate it after a timeout
+export async function killBitbake (child: childProcess.ChildProcess, timeout: number = BITBAKE_EXIT_TIMEOUT): Promise<void> {
+  // The first SIGINT will wait for current build tasks to complete
+  child.kill('SIGINT')
+
+  // The second SIGINT will interrupt build tasks after a timeout
+  setTimeout(() => {
+    child.kill('SIGINT')
+  }, timeout)
+
+  // The third SIGINT will exit no matter what, but may require cleanup of bitbake.lock
+  setTimeout(() => {
+    child.kill('SIGINT')
+  }, timeout * 2)
 }

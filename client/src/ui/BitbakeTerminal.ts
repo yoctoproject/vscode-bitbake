@@ -9,6 +9,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
+import { killBitbake } from '../lib/src/utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
@@ -67,7 +68,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   close (): void {
-    this.process?.kill()
+    if (this.process !== undefined) { void killBitbake(this.process) }
     if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
   }
 
