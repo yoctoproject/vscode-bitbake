@@ -6,7 +6,7 @@
 import type childProcess from 'child_process'
 
 /// Wait for an asynchronous process to finish and return its output
-export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>): Promise<childProcess.SpawnSyncReturns<Buffer>> {
+export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>, timeout = BITBAKE_TIMEOUT): Promise<childProcess.SpawnSyncReturns<Buffer>> {
   return await new Promise<childProcess.SpawnSyncReturns<Buffer>>((resolve, reject) => {
     process.then((child) => {
       let stdout = ''
@@ -18,10 +18,11 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
         stderr += data
       })
       child.on('close', (code) => {
+        clearTimeout(timer)
         const stdoutBuffer = Buffer.from(stdout)
         const stderrBuffer = Buffer.from(stderr)
         resolve({
-          pid: -1,
+          pid: child.pid ?? -1,
           output: [stdoutBuffer, stderrBuffer],
           stdout: stdoutBuffer,
           stderr: stderrBuffer,
@@ -29,6 +30,11 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
           signal: null
         })
       })
+      const timer = setTimeout(() => {
+        child.kill()
+        logger.error(`Process ${child.pid} timed out after ${timeout}ms`)
+        // TODO If we can't terminate, just resolve with the current output
+      }, timeout)
     },
     (error) => {
       reject(error)
