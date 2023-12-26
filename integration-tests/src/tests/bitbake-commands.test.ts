@@ -7,6 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import { afterEach } from 'mocha'
 import { assertWillComeTrue, assertWorkspaceWillBeOpen } from '../utils/async'
+import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake Commands Test Suite', () => {
   let disposables: vscode.Disposable[] = []
@@ -38,7 +39,7 @@ suite('Bitbake Commands Test Suite', () => {
       const files = await vscode.workspace.findFiles('build/tmp/work/*/base-files/*/issue')
       return files.length === 1
     })
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Bitbake can clean a recipe', async () => {
     await vscode.commands.executeCommand('bitbake.clean-recipe', 'base-files')
@@ -46,7 +47,7 @@ suite('Bitbake Commands Test Suite', () => {
       const files = await vscode.workspace.findFiles('build/tmp/work/*/base-files')
       return files.length === 0
     })
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Bitbake can run from task.json', async () => {
     let taskExecuted = false
@@ -68,7 +69,7 @@ suite('Bitbake Commands Test Suite', () => {
 
     const files = await vscode.workspace.findFiles('build/tmp/work/*/base-files/*/temp/log.do_fetch')
     assert.strictEqual(files.length, 1)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Bitbake can create a devtool modify workspace', async () => {
     await vscode.commands.executeCommand('bitbake.devtool-modify', 'busybox')
@@ -76,5 +77,5 @@ suite('Bitbake Commands Test Suite', () => {
       const files = await vscode.workspace.findFiles('build/workspace/sources/busybox/README')
       return files.length === 1
     })
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 })

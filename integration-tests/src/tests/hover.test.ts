@@ -7,6 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
+import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake Hover Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/hover.bb')
@@ -46,29 +47,29 @@ suite('Bitbake Hover Test Suite', () => {
     const position = new vscode.Position(0, 2)
     const expected = 'The package description used by package managers'
     await testHover(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Hover appears properly on embedded python', async () => {
     const position = new vscode.Position(3, 6)
     const expected = 'def print'
     await testHover(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Hover appears properly on embedded bash', async () => {
     const position = new vscode.Position(7, 6)
     const expected = 'echo'
     await testHover(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Hover shows Yocto task description on python function declaration', async () => {
     const position = new vscode.Position(10, 9)
     const expected = 'The default task for all recipes. This task depends on all other normal'
     await testHover(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 
   test('Hover shows Yocto task description on bash function declaration', async () => {
     const position = new vscode.Position(13, 1)
     const expected = 'The default task for all recipes. This task depends on all other normal'
     await testHover(position, expected)
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 })

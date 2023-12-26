@@ -4,6 +4,8 @@
  * ------------------------------------------------------------------------------------------ */
 
 import type childProcess from 'child_process'
+export const BITBAKE_TIMEOUT = 300000
+export const BITBAKE_EXIT_TIMEOUT = 1000
 
 /// Wait for an asynchronous process to finish and return its output
 export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>, timeout = BITBAKE_TIMEOUT): Promise<childProcess.SpawnSyncReturns<Buffer>> {
