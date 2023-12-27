@@ -28,20 +28,24 @@ export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDri
 
 const bitbakeTerminals: BitbakeTerminal[] = []
 async function runBitbakeTerminalScript (process: Promise<child_process.ChildProcess>, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<child_process.ChildProcess> {
-  for (const terminal of bitbakeTerminals) {
-    if (!terminal.pty.isBusy()) {
-      if (!isBackground) {
-        terminal.terminal.show()
-      }
+  let terminal: BitbakeTerminal | undefined
+  for (const t of bitbakeTerminals) {
+    if (!t.pty.isBusy()) {
+      terminal = t
       terminal.pty.changeNameEmitter.fire(terminalName)
-      await terminal.pty.runProcess(process, bitbakeScript, terminalName)
-      return await process
+      break
     }
   }
-  const terminal = new BitbakeTerminal(terminalName, bitbakeDriver)
-  // All bitbake calls are serialized under one big lock to prevent bitbake server container issues
-  // We want to open another terminal right away to show the user that the command is queued
-  // But the process will have to wait for the previous one to finish (await process)
+  if (terminal === undefined) {
+    // All bitbake calls are serialized under one big lock to prevent bitbake server container issues
+    // We want to open another terminal right away to show the user that the command is queued
+    // But the process will have to wait for the previous one to finish (await process)
+    terminal = new BitbakeTerminal(terminalName, bitbakeDriver)
+  }
+
+  if (!isBackground) {
+    terminal.terminal.show()
+  }
   await terminal.pty.runProcess(process, bitbakeScript, terminalName)
   return await process
 }
