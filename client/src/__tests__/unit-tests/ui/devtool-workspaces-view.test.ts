@@ -20,7 +20,16 @@ describe('Devtool Worskapces View', () => {
     } as any
 
     const scanResult: BitbakeScanResult = {
-      _recipes: [],
+      _recipes: [{
+        name: 'dropbear',
+        path: {
+          root: '/',
+          dir: '/home/user/yocto/poky/meta/recipes-core/dropbear',
+          base: 'dropbear_2022.83',
+          ext: '.bb',
+          name: 'dropbear'
+        }
+      }],
       _includes: [],
       _layers: [],
       _classes: [],
