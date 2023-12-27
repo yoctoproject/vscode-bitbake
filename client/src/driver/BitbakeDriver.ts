@@ -5,6 +5,7 @@
 
 import childProcess from 'child_process'
 import fs from 'fs'
+import EventEmitter from 'events'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings } from '../lib/src/BitbakeSettings'
@@ -18,6 +19,7 @@ export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
   bitbakeProcess: childProcess.ChildProcess | undefined
   bitbakeProcessCommand: string | undefined
+  onBitbakeProcessChange: EventEmitter = new EventEmitter()
 
   loadSettings (settings: any, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -47,9 +49,13 @@ export class BitbakeDriver {
     })
     this.bitbakeProcess = child
     this.bitbakeProcessCommand = command
+    child.on('spawn', () => {
+      this.onBitbakeProcessChange.emit('spawn', command)
+    })
     child.on('close', () => {
       this.bitbakeProcess = undefined
       this.bitbakeProcessCommand = undefined
+      this.onBitbakeProcessChange.emit('close')
     })
     return child
   }
