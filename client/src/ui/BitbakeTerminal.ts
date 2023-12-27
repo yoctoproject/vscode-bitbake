@@ -9,7 +9,6 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
-import { killBitbake } from '../lib/src/utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
@@ -18,17 +17,17 @@ const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = true): Promise<child_process.ChildProcess> {
   const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
   const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), terminalName, script, isBackground)
+  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), bitbakeDriver, terminalName, script, isBackground)
 }
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
 export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = true): Promise<child_process.ChildProcess> {
   const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), terminalName, script, isBackground)
+  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), bitbakeDriver, terminalName, script, isBackground)
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
-async function runBitbakeTerminalScript (process: Promise<child_process.ChildProcess>, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<child_process.ChildProcess> {
+async function runBitbakeTerminalScript (process: Promise<child_process.ChildProcess>, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<child_process.ChildProcess> {
   for (const terminal of bitbakeTerminals) {
     if (!terminal.pty.isBusy()) {
       if (!isBackground) {
@@ -39,7 +38,7 @@ async function runBitbakeTerminalScript (process: Promise<child_process.ChildPro
       return await process
     }
   }
-  const terminal = new BitbakeTerminal(terminalName)
+  const terminal = new BitbakeTerminal(terminalName, bitbakeDriver)
   // All bitbake calls are serialized under one big lock to prevent bitbake server container issues
   // We want to open another terminal right away to show the user that the command is queued
   // But the process will have to wait for the previous one to finish (await process)
@@ -57,6 +56,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   lastExitCode: number = 0
 
   readonly parentTerminal: BitbakeTerminal | undefined
+  bitbakeDriver: BitbakeDriver
 
   private isTaskTerminal (): boolean {
     // If parentTerminal is undefined, we are running in a task terminal which handles some events itself
@@ -68,7 +68,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   close (): void {
-    if (this.process !== undefined) { void killBitbake(this.process) }
+    if (this.process !== undefined) void this.bitbakeDriver.killBitbake()
     if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
   }
 
@@ -89,8 +89,9 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     return this.process !== undefined
   }
 
-  constructor (parentTerminal?: BitbakeTerminal) {
+  constructor (bitbakeDriver: BitbakeDriver, parentTerminal?: BitbakeTerminal) {
     this.parentTerminal = parentTerminal
+    this.bitbakeDriver = bitbakeDriver
   }
 
   output (line: string): void {
@@ -155,8 +156,8 @@ class BitbakeTerminal {
   readonly terminal: vscode.Terminal
   readonly pty: BitbakePseudoTerminal
 
-  constructor (terminalName: string) {
-    this.pty = new BitbakePseudoTerminal(this)
+  constructor (terminalName: string, bitbakeDriver: BitbakeDriver) {
+    this.pty = new BitbakePseudoTerminal(bitbakeDriver, this)
     const extensionTerminalOptions: vscode.ExtensionTerminalOptions = {
       name: terminalName,
       pty: this.pty,
