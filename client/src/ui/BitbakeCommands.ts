@@ -219,7 +219,9 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
     const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
     process.on('exit', (code) => {
       if (code === 0) {
-        void bitBakeProjectScanner.rescanProject()
+        void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
+          void bitBakeProjectScanner.rescanProject()
+        })
       }
     })
   }
@@ -284,7 +286,9 @@ async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
     const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Reset: ${chosenRecipe}`)
     process.on('exit', (code) => {
       if (code === 0) {
-        void bitBakeProjectScanner.rescanProject()
+        void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
+          void bitBakeProjectScanner.rescanProject()
+        })
       }
     })
   }
