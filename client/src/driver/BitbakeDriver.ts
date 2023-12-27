@@ -149,6 +149,7 @@ export class BitbakeDriver {
   /// Try to stop bitbake or terminate it after a timeout
   async killBitbake (timeout: number = BITBAKE_EXIT_TIMEOUT): Promise<void> {
     if (this.bitbakeProcess === undefined) {
+      logger.warn('Tried to stop bitbake but no process was running')
       return
     }
     const processToStop = this.bitbakeProcess
