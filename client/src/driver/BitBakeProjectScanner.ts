@@ -266,7 +266,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
   private async existsInContainer (containerPath: string): Promise<boolean> {
     const process = runBitbakeTerminalCustomCommand(this._bitbakeDriver, 'test -e ' + containerPath, 'BitBake: Test file', true)
-    const res = finishProcessExecution(process)
+    const res = finishProcessExecution(process, async () => { await this.bitbakeDriver.killBitbake() })
     return (await res).status === 0
   }
 
@@ -456,7 +456,8 @@ You should adjust your docker volumes to use the same URIs as those present on y
     if (this._bitbakeDriver === undefined) {
       throw new Error('Bitbake driver is not set')
     }
-    return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true))
+    return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true),
+      async () => { await this.bitbakeDriver.killBitbake() })
   }
 }
 

@@ -11,12 +11,13 @@ import { type BitbakeSettings, loadBitbakeSettings } from '../lib/src/BitbakeSet
 import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
-import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
+import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
-  bitbakeActive = false
+  bitbakeProcess: childProcess.ChildProcess | undefined
+  bitbakeProcessCommand: string | undefined
 
   loadSettings (settings: any, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -26,7 +27,7 @@ export class BitbakeDriver {
   private async waitForBitbakeToFinish (): Promise<void> {
     await new Promise<void>((resolve) => {
       const interval = setInterval(() => {
-        if (!this.bitbakeActive) {
+        if (this.bitbakeProcess === undefined) {
           clearInterval(interval)
           resolve()
         }
@@ -39,14 +40,16 @@ export class BitbakeDriver {
     const { shell, script } = this.prepareCommand(command)
     await this.waitForBitbakeToFinish()
     logger.debug(`Executing Bitbake command with ${shell}: ${script}`)
-    this.bitbakeActive = true
     const child = childProcess.spawn(script, {
       shell,
       cwd: this.bitbakeSettings.workingDirectory,
       env: { ...process.env, ...this.bitbakeSettings.shellEnv }
     })
+    this.bitbakeProcess = child
+    this.bitbakeProcessCommand = command
     child.on('close', () => {
-      this.bitbakeActive = false
+      this.bitbakeProcess = undefined
+      this.bitbakeProcessCommand = undefined
     })
     return child
   }
@@ -106,7 +109,7 @@ export class BitbakeDriver {
 
     const command = 'which bitbake'
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
-    const ret = await finishProcessExecution(process)
+    const ret = await finishProcessExecution(process, async () => { await this.killBitbake() })
     if (ret.status !== 0) {
       const errorMsg = `Command "${command}" returned ${ret.status}.\n See Bitbake Terminal for command output.`
       // The BitbakeTerminal focuses on it's own on error
@@ -141,5 +144,80 @@ export class BitbakeDriver {
     }
 
     return command
+  }
+
+  /// Try to stop bitbake or terminate it after a timeout
+  async killBitbake (timeout: number = BITBAKE_EXIT_TIMEOUT): Promise<void> {
+    if (this.bitbakeProcess === undefined) {
+      return
+    }
+    const processToStop = this.bitbakeProcess
+    const commandToStop = this.bitbakeProcessCommand
+    if (commandToStop === undefined) {
+      throw Error('Bitbake process command is undefined')
+    }
+    let processStopped = false
+    processToStop.on('close', () => {
+      processStopped = true
+      logger.debug('Bitbake process successfully terminated')
+    })
+
+    // The first SIGINT will wait for current build tasks to complete
+    if (!await this.killDockerContainer(commandToStop)) {
+      processToStop?.kill('SIGINT')
+    }
+
+    // The second SIGINT will interrupt build tasks after a timeout
+    setTimeout(() => {
+      if (!processStopped) {
+        void this.killDockerContainer(commandToStop).then((result) => {
+          if (!result) {
+            processToStop.kill('SIGINT')
+          }
+        })
+      }
+    }, timeout)
+
+    // The third SIGINT will exit no matter what, but may require cleanup of bitbake.lock
+    setTimeout(() => {
+      if (!processStopped) {
+        void this.killDockerContainer(commandToStop).then((result) => {
+          if (!result) {
+            processToStop.kill('SIGINT')
+          }
+        })
+      }
+    }, timeout * 2)
+  }
+
+  private async killDockerContainer (command: string): Promise<boolean> {
+    // If the process is started through a docker commandWrapper
+    // then signals won't be propagated to the running process
+    // We instead find and kill the process directly
+
+    // Our process will look something like this in `ps`:
+    // deribau+  405680  405597 21 17:13 ?        00:00:00 python3 /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/bitbake/bin/bitbake linux-yocto
+    const ps = childProcess.spawn('ps', ['-ef'])
+    const ret = await finishProcessExecution(Promise.resolve(ps))
+
+    const stdout = ret.stdout.toString()
+    const lines = stdout.split('\n').slice(1, -1)
+    let bitbakeProcesses = lines.filter((line) => line.split(/\s+/)[7] === 'python3')
+    bitbakeProcesses = bitbakeProcesses.filter((line) => line.includes(command))
+    logger.debug('Bitbake process: ' + JSON.stringify(bitbakeProcesses))
+
+    if (bitbakeProcesses.length > 1) {
+      logger.warn('Multiple bitbake process found. Could not determine which one to stop.')
+      return false
+    }
+
+    if (bitbakeProcesses.length === 1) {
+      const pid = bitbakeProcesses[0].split(/\s+/)[1]
+      logger.info('Stopping bitbake process with PID: ' + pid)
+      childProcess.spawn('kill', ['-s', 'SIGINT', pid])
+      return true
+    }
+
+    return false
   }
 }
