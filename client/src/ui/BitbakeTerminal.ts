@@ -67,8 +67,12 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     if (!this.isTaskTerminal()) { bitbakeTerminals.push(this.parentTerminal as BitbakeTerminal) }
   }
 
-  close (): void {
-    if (this.process !== undefined) void this.bitbakeDriver.killBitbake()
+  async close (): Promise<void> {
+    if (this.isBusy()) {
+      // Wait for this process to be the one executed by bitbakeDriver
+      await this.process
+      void this.bitbakeDriver.killBitbake()
+    }
     if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
   }
 
@@ -79,11 +83,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     }
   }
 
-  private process: child_process.ChildProcess | undefined
-
-  getProcess (): child_process.ChildProcess | undefined {
-    return this.process
-  }
+  private process: Promise<child_process.ChildProcess> | undefined
 
   isBusy (): boolean {
     return this.process !== undefined
@@ -109,29 +109,30 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
       throw new Error('Bitbake process already running')
     }
 
-    this.process = await process
+    this.process = process
+    const processResolved = await this.process
 
-    this.process.stdout?.on('data', (data) => {
+    processResolved.stdout?.on('data', (data) => {
       this.output(data.toString())
       logger.debug(data.toString())
     })
-    this.process.stdout?.once('data', () => {
+    processResolved.stdout?.once('data', () => {
       // I wanted to use appropriate events like process.on('spawn') or terminal.open() but they are not triggered at the right time for
       // the terminal to be ready to receive input
       this.output(emphasisedAsterisk + ' Executing script: ' + bitbakeScript + '\n')
     })
-    this.process.stderr?.on('data', (data) => {
+    processResolved.stderr?.on('data', (data) => {
       this.error(data.toString())
       logger.error(data.toString())
     })
-    this.process.on('error', (error) => {
+    processResolved.on('error', (error) => {
       this.lastExitCode = -1
       this.error(error.toString())
       logger.error(error.toString())
       this.process = undefined
       if (this.isTaskTerminal()) { this.closeEmitter.fire(-1) }
     })
-    this.process.on('exit', (code) => {
+    processResolved.on('exit', (code) => {
       this.lastExitCode = code ?? -1
       this.process = undefined
       if (code !== 0) {
@@ -148,7 +149,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
       if (this.isTaskTerminal()) { this.closeEmitter.fire(code ?? -1) }
     })
 
-    return this.process
+    return processResolved
   }
 }
 
@@ -167,9 +168,5 @@ class BitbakeTerminal {
       }
     }
     this.terminal = vscode.window.createTerminal(extensionTerminalOptions)
-  }
-
-  getProcess (): child_process.ChildProcess | undefined {
-    return this.pty.getProcess()
   }
 }
