@@ -77,6 +77,13 @@ export class BitBakeProjectScanner {
     return this._bitbakeDriver
   }
 
+  /// A quick scan to present devtool modify/reset results. A full rescan is required for .bbappends.
+  async rescanDevtoolWorkspaces (): Promise<void> {
+    logger.info('request rescanDevtoolWorkspaces')
+    await this.scanDevtoolWorkspaces()
+    this.onChange.emit('scanReady', this._bitbakeScanResult)
+  }
+
   async rescanProject (): Promise<void> {
     logger.info('request rescanProject')
 
