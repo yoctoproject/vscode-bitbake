@@ -72,12 +72,12 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   async close (): Promise<void> {
+    if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
     if (this.isBusy()) {
       // Wait for this process to be the one executed by bitbakeDriver
       await this.process
       void this.bitbakeDriver.killBitbake()
     }
-    if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
   }
 
   handleInput (data: string): void {
