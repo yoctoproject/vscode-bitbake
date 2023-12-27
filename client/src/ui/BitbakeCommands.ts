@@ -253,7 +253,7 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
 
   logger.debug(`Command: devtool-update: ${chosenRecipe}`)
   const process = runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Update: ${chosenRecipe}`)
-  const res = await finishProcessExecution(process)
+  const res = await finishProcessExecution(process, async () => { await bitBakeProjectScanner.bitbakeDriver.killBitbake() })
   if (res.status === 0 && chosenLayer?.name !== originalRecipeChoice) {
     await openDevtoolUpdateBBAppend(res, bitBakeProjectScanner)
     void bitBakeProjectScanner.rescanProject()
