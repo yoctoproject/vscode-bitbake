@@ -127,10 +127,6 @@ export class BitbakeDriver {
   }
 
   composeBitbakeCommand (bitbakeTaskDefinition: BitbakeTaskDefinition): string {
-    function appendCommandParam (command: string, param: string): string {
-      return command + ' ' + param
-    }
-
     let command = 'bitbake'
 
     bitbakeTaskDefinition.recipes?.forEach(recipe => {
@@ -149,6 +145,17 @@ export class BitbakeDriver {
       command = appendCommandParam(command, '-p')
     }
 
+    return command
+  }
+
+  composeDevtoolIDECommand (recipe: string): string {
+    const sdkImage = this.bitbakeSettings.sdkImage
+    const sshTarget = this.bitbakeSettings.sshTarget
+    const address = sshTarget?.address
+    let command = `devtool ide-sdk -i code ${recipe} ${sdkImage}`
+    if (address !== undefined) {
+      command = appendCommandParam(command, `-t ${address}`)
+    }
     return command
   }
 
@@ -227,4 +234,8 @@ export class BitbakeDriver {
 
     return false
   }
+}
+
+function appendCommandParam (command: string, param: string): string {
+  return command + ' ' + param
 }
