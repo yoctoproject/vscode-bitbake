@@ -103,13 +103,13 @@ export class BitbakeDriver {
     const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
 
     if (!fs.existsSync(bitbakeBinPath)) {
-      clientNotificationManager.showBitbakeError("Bitbake binary doesn't exist: " + bitbakeBinPath)
+      clientNotificationManager.showBitbakeSettingsError("Bitbake binary doesn't exist: " + bitbakeBinPath)
       return false
     }
 
     const pathToEnvScript = this.bitbakeSettings.pathToEnvScript
     if (this.bitbakeSettings.commandWrapper === undefined && pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
-      clientNotificationManager.showBitbakeError("Bitbake environment script doesn't exist: " + pathToEnvScript)
+      clientNotificationManager.showBitbakeSettingsError("Bitbake environment script doesn't exist: " + pathToEnvScript)
       return false
     }
 
@@ -119,7 +119,7 @@ export class BitbakeDriver {
     if (ret.status !== 0) {
       const errorMsg = `Command "${command}" returned ${ret.status}.\n See Bitbake Terminal for command output.`
       // The BitbakeTerminal focuses on it's own on error
-      clientNotificationManager.showBitbakeError(errorMsg)
+      clientNotificationManager.showBitbakeSettingsError(errorMsg)
       return false
     }
 

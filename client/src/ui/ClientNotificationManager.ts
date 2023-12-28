@@ -13,7 +13,7 @@ export class ClientNotificationManager {
     this._memento = memento
   }
 
-  showBitbakeError (message?: string): void {
+  showBitbakeSettingsError (message?: string): void {
     if (!this.checkIsNeverShowAgain('custom/bitbakeSettingsError')) {
       void window.showErrorMessage(
         'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,
@@ -31,6 +31,10 @@ export class ClientNotificationManager {
           logger.warn('Could not show bitbake error dialog: ' + reason)
         })
     }
+  }
+
+  showSDKUnavailableError (): void {
+    void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to a more recent version to enable SDK features.')
   }
 
   private neverShowAgain (method: string): Thenable<void> {
