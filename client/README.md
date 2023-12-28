@@ -167,6 +167,28 @@ Bitbake parsing status is displayed in the status bar at the bottom of the scree
 
 ![Status bar](doc/status-bar.gif)
 
+### Devtool and eSDK integration
+
+The recipe's contextual menu provides shortcuts to open new `devtool` and configure the eSDK on a recipe.
+Start by right-clicking on a recipe in the recipe tree view, or in the editor's contextual menu and run the command `Bitbake: Devtool: Modify recipe`.
+This feature allows you to modify the recipe's source code and rebuild it from within VSCode.
+More information and `devtool` and the eSDK in Yocto's [Application Development and the Extensible SDK (eSDK)](https://docs.yoctoproject.org/sdk-manual/)
+
+Once the workspace is set up, it will appear in the left panel. Use the contextual menu or the action buttons to build, update the recipe, or close ("reset") the workspace.
+
+![Devtool Workspace](doc/devtool.png)
+
+Clicking on the workspace name will open the sources' workspace in a new window. You may edit the sources and generate patches in your Yocto recipes by following the devtool workflow described in [Yocto's documentation](https://docs.yoctoproject.org/sdk-manual/extensible.html#use-devtool-modify-to-modify-the-source-of-an-existing-component):
+ - Make changes to the sources
+ - Commit them in the local git repository
+ - Run the `Bitbake: Devtool: Update recipe` command to generate the patch and update the recipe
+
+You can also set up the SDK for the recipe by running the `Bitbake: Devtool: Configure SDK` command. This will create `.vscode/settings.json`, `.vscode/tasks.json` and `.vscode/launch.json` configurations to cross-compile, deploy and debug the recipe on a target machine through SSH. You'll need to configure this extension's settings to match your target machine's configuration:
+ - `bitbake.sdkImage`
+ - `bitbake.sshTarget`
+
+**Note:** This feature depends on poky versions 5.0 and above (`devtool ide-sdk` command). Some recipe classes may not be supported yet. At the time of writing, CMake and Meson recipes are supported.
+
 ## Contributing
 
 ### Reporting issues
