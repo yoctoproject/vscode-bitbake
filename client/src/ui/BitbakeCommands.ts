@@ -244,6 +244,7 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe === undefined) { return }
   const chosenLayer = await pickLayer(originalRecipeChoice, bitBakeProjectScanner)
+  if (chosenLayer === undefined) { return }
   const chosenLayerPath = await bitBakeProjectScanner.resolveHostPath(chosenLayer?.path)
   let command = ''
 
