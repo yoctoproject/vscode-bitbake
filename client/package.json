@@ -141,12 +141,12 @@
               ]
             }
           },
-          "description": "SSH target configuration"
+          "description": "SSH target configuration for deploying recipes or SDK builds to a remote target. (Optional)"
         },
         "bitbake.sdkImage": {
           "type": "string",
           "description": "SDK image to use for cross-compilation and debugging.",
-          "default": "core-image-minimal"
+          "examples": "core-image-minimal"
         }
       }
     },

@@ -52,7 +52,7 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -232,17 +232,20 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   }
 }
 
-async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-ide-sdk: ${chosenRecipe}`)
-    const command = bitBakeProjectScanner.bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
-    if (!await checkIdeSdkAvailable(bitBakeProjectScanner.bitbakeDriver)) {
+    if (!checkIdeSdkConfiguration(bitbakeDriver)) {
+      clientNotificationManager.showSDKConfigurationError()
+      return
+    }
+    if (!await checkIdeSdkAvailable(bitbakeDriver)) {
       clientNotificationManager.showSDKUnavailableError()
       return
     }
-    // TODO Check configuration and have a walkthrough (also document in README)
-    await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
+    const command = bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
+    await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
   }
 }
 
@@ -251,6 +254,11 @@ async function checkIdeSdkAvailable (bitbakeDriver: BitbakeDriver): Promise<bool
   const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool ide-sdk: check')
   const res = await finishProcessExecution(process)
   return res.status === 0
+}
+
+function checkIdeSdkConfiguration (bitbakeDriver: BitbakeDriver): boolean {
+  const sdkImage = bitbakeDriver.bitbakeSettings.sdkImage
+  return sdkImage !== undefined && sdkImage !== ''
 }
 
 async function pickLayer (extraOption: string, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LayerInfo | undefined> {
