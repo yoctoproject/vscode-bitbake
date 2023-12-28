@@ -222,7 +222,9 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
     process.on('exit', (code) => {
       if (code === 0) {
         void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
-          // TODO devtool-ide-sdk could be called here or the line above. But it's very slow. Suggest through a notification
+          // Running devtool-ide-sdk is very slow. Users may not want to start it all the time so we suggest it here.
+          // For instance, if they only need to make a quick patch to a recipe, they may not want to wait for the SDK to be built.
+          clientNotificationManager.showSDKSuggestion(chosenRecipe)
           void bitBakeProjectScanner.rescanProject()
         })
       }
