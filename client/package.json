@@ -129,6 +129,24 @@
           "type": "object",
           "default": {},
           "description": "Environment variables to set before running the BitBake command."
+        },
+        "bitbake.sshTarget": {
+          "type": "object",
+          "properties": {
+            "address": {
+              "type": "string",
+              "description": "Hostname or IP address of the SSH target",
+              "examples": [
+                "root@192.168.0.50"
+              ]
+            }
+          },
+          "description": "SSH target configuration"
+        },
+        "bitbake.sdkImage": {
+          "type": "string",
+          "description": "SDK image to use for cross-compilation and debugging.",
+          "default": "core-image-minimal"
         }
       }
     },
@@ -292,6 +310,11 @@
         "description": "Open a new devtool workspace to modify a recipe's sources."
       },
       {
+        "command": "bitbake.devtool-ide-sdk",
+        "title": "BitBake: Devtool: Configure SDK",
+        "description": "Configure a devtool sources' workspace for cross-compilation and debugging."
+      },
+      {
         "command": "bitbake.devtool-open-workspace",
         "title": "BitBake: Devtool: Open Workspace",
         "description": "Open a devtool sources workspace in a new VSCode window.",
@@ -438,11 +461,16 @@
         },
         {
           "command": "bitbake.devtool-reset",
-          "group": "1@bitbake_devtool@3",
+          "group": "1@bitbake_devtool@4",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.devtool-update",
+          "group": "1@bitbake_devtool@3",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-ide-sdk",
           "group": "1@bitbake_devtool@2",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
