@@ -131,21 +131,15 @@
           "description": "Environment variables to set before running the BitBake command."
         },
         "bitbake.sshTarget": {
-          "type": "object",
-          "properties": {
-            "address": {
-              "type": "string",
-              "description": "Hostname or IP address of the SSH target",
-              "examples": [
-                "root@192.168.0.50"
-              ]
-            }
-          },
-          "description": "SSH target configuration for deploying recipes or SDK builds to a remote target. (Optional)"
+          "type": "string",
+          "markdownDescription": "Hostname or IP address of the SSH target for deploying recipes or SDK builds to a remote target. _(Optional)_\n\nExample: `root@192.168.0.50`\n\nAdditional SSH options must be defined through your SSH configuration file (`~/.ssh/config`).",
+          "examples": [
+            "root@192.168.0.50"
+          ]
         },
         "bitbake.sdkImage": {
           "type": "string",
-          "description": "SDK image to use for cross-compilation and debugging.",
+          "markdownDescription": "SDK image to use for cross-compilation and debugging.\n\nExample: `core-image-minimal`",
           "examples": "core-image-minimal"
         }
       }
