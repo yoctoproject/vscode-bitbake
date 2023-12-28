@@ -58,6 +58,21 @@ You can configure the sources' workspace to use the Yocto SDK for cross-compilat
     }
   }
 
+  showSDKConfigurationError (): void {
+    void window.showErrorMessage(
+      'The BitBake SDK hasn\'t been fully configured yet, please complete your settings.',
+      'Open Settings',
+      'Close'
+    )
+      .then((item) => {
+        if (item === 'Open Settings') {
+          void commands.executeCommand('workbench.action.openWorkspaceSettings', '@ext:yocto-project.yocto-bitbake sdk')
+        }
+      }, (reason) => {
+        logger.warn('Could not show bitbake error dialog: ' + reason)
+      })
+  }
+
   private neverShowAgain (method: string): Thenable<void> {
     if (this._memento === undefined) {
       throw new Error('ClientNotificationManager Memento not set')
