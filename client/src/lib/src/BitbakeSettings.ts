@@ -5,10 +5,6 @@
 
 import path from 'path'
 
-export interface BitbakeSSHTargetSettings {
-  address?: string
-}
-
 /// Defines the context of a bitbake workspace with all information to call bitbake
 export interface BitbakeSettings {
   pathToBitbakeFolder: string
@@ -17,7 +13,7 @@ export interface BitbakeSettings {
   commandWrapper?: string
   workingDirectory?: string
   shellEnv?: NodeJS.Dict<string>
-  sshTarget?: BitbakeSSHTargetSettings
+  sshTarget?: string
   sdkImage?: string
 }
 
@@ -39,9 +35,7 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
     workingDirectory: settings.workingDirectory !== '' ? resolveSettingsPath(settings.workingDirectory, workspaceFolder) : workspaceFolder,
     shellEnv: toStringDict(settings.shellEnv),
     sdkImage: sanitizeForShell(settings.sdkImage),
-    sshTarget: {
-      address: sanitizeForShell(settings.sshTarget?.address)
-    }
+    sshTarget: sanitizeForShell(settings.sshTarget)
   }
 }
 

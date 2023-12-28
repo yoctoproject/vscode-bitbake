@@ -151,10 +151,9 @@ export class BitbakeDriver {
   composeDevtoolIDECommand (recipe: string): string {
     const sdkImage = this.bitbakeSettings.sdkImage
     const sshTarget = this.bitbakeSettings.sshTarget
-    const address = sshTarget?.address
     let command = `devtool ide-sdk -i code ${recipe} ${sdkImage}`
-    if (address !== undefined) {
-      command = appendCommandParam(command, `-t ${address}`)
+    if (sshTarget !== undefined && sshTarget !== '') {
+      command = appendCommandParam(command, `-t ${sshTarget}`)
     }
     return command
   }
