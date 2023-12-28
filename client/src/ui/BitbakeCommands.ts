@@ -51,6 +51,7 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -220,10 +221,21 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
     process.on('exit', (code) => {
       if (code === 0) {
         void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
+          // TODO devtool-ide-sdk could be called here or the line above. But it's very slow. Suggest through a notification
           void bitBakeProjectScanner.rescanProject()
         })
       }
     })
+  }
+}
+
+async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-ide-sdk: ${chosenRecipe}`)
+    const command = bitBakeProjectScanner.bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
+    // TODO Check configuration and have a walkthrough (also document in README)
+    await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
   }
 }
 
