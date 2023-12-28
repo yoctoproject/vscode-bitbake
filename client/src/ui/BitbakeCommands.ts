@@ -21,6 +21,7 @@ import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
+import { clientNotificationManager } from './ClientNotificationManager'
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -234,9 +235,20 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-ide-sdk: ${chosenRecipe}`)
     const command = bitBakeProjectScanner.bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
+    if (!await checkIdeSdkAvailable(bitBakeProjectScanner.bitbakeDriver)) {
+      clientNotificationManager.showSDKUnavailableError()
+      return
+    }
     // TODO Check configuration and have a walkthrough (also document in README)
     await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
   }
+}
+
+async function checkIdeSdkAvailable (bitbakeDriver: BitbakeDriver): Promise<boolean> {
+  const command = "devtool --help | grep 'ide-sdk'"
+  const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool ide-sdk: check')
+  const res = await finishProcessExecution(process)
+  return res.status === 0
 }
 
 async function pickLayer (extraOption: string, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LayerInfo | undefined> {
