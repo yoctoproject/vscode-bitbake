@@ -13,6 +13,10 @@ import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 jest.mock('vscode')
 
 describe('BitbakeDriver Recipes View', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('should list recipes', (done) => {
     const bitbakeWorkspace = new BitbakeWorkspace()
     const bitBakeProjectScanner = new BitBakeProjectScanner(new BitbakeDriver())
