@@ -37,6 +37,27 @@ export class ClientNotificationManager {
     void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to a more recent version to enable SDK features.')
   }
 
+  showSDKSuggestion (recipe: string): void {
+    if (!this.checkIsNeverShowAgain('bitbake/sdkSuggestion')) {
+      window.showInformationMessage(
+        `Would you like to configure the SDK for ${recipe}?
+It looks like you just configured a new devtool workspace.
+You can configure the sources' workspace to use the Yocto SDK for cross-compilation and debugging.`,
+        'Configure SDK',
+        'Don\'t Show Again'
+      )
+        .then((item) => {
+          if (item === 'Configure SDK') {
+            void commands.executeCommand('bitbake.devtool-ide-sdk', recipe)
+          } else if (item === 'Don\'t Show Again') {
+            void this.neverShowAgain('bitbake/sdkSuggestion')
+          }
+        }, (reason) => {
+          logger.warn('Could not show SDK suggestion dialog: ' + reason)
+        })
+    }
+  }
+
   private neverShowAgain (method: string): Thenable<void> {
     if (this._memento === undefined) {
       throw new Error('ClientNotificationManager Memento not set')
