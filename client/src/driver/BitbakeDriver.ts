@@ -8,7 +8,7 @@ import fs from 'fs'
 import EventEmitter from 'events'
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type BitbakeSettings, loadBitbakeSettings } from '../lib/src/BitbakeSettings'
+import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
@@ -127,13 +127,17 @@ export class BitbakeDriver {
   }
 
   composeBitbakeCommand (bitbakeTaskDefinition: BitbakeTaskDefinition): string {
+    if (bitbakeTaskDefinition.specialCommand !== undefined) {
+      return sanitizeForShell(bitbakeTaskDefinition.specialCommand) as string
+    }
+
     let command = 'bitbake'
 
     bitbakeTaskDefinition.recipes?.forEach(recipe => {
-      command = appendCommandParam(command, `${recipe}`)
+      command = appendCommandParam(command, `${sanitizeForShell(recipe)}`)
     })
     if (bitbakeTaskDefinition.task !== undefined) {
-      command = appendCommandParam(command, `-c ${bitbakeTaskDefinition.task}`)
+      command = appendCommandParam(command, `-c ${sanitizeForShell(bitbakeTaskDefinition.task)}`)
     }
     if (bitbakeTaskDefinition.options?.continue === true) {
       command = appendCommandParam(command, '-k')

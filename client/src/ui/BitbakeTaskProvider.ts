@@ -16,6 +16,7 @@ export interface BitbakeTaskDefinition extends vscode.TaskDefinition {
     force?: boolean
     parseOnly?: boolean
   }
+  specialCommand?: string
 }
 
 export class BitbakeCustomExecution extends vscode.CustomExecution {
@@ -35,7 +36,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 
   resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
-    if (bitbakeTaskDefinition.recipes?.[0] !== undefined || bitbakeTaskDefinition.options?.parseOnly === true) {
+    if (bitbakeTaskDefinition.recipes?.[0] !== undefined || bitbakeTaskDefinition.options?.parseOnly === true || bitbakeTaskDefinition.specialCommand !== undefined) {
       const bitbakeCommand = this.bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
       const resolvedTask = new vscode.Task(
         task.definition,
