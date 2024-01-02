@@ -102,7 +102,6 @@ connection.onDidChangeWatchedFiles(async (change) => {
       void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
     }
   })
-  void connection.sendRequest('bitbake/parseAllRecipes')
 })
 
 connection.onCompletion(onCompletionHandler)
