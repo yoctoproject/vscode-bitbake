@@ -34,7 +34,7 @@ export class ClientNotificationManager {
   }
 
   showSDKUnavailableError (): void {
-    void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to a more recent version to enable SDK features.')
+    void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to enable SDK features. Alternatively, use the "Devtool: SDK fallback" command with less features.')
   }
 
   showSDKSuggestion (recipe: string): void {
