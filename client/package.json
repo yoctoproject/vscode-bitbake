@@ -320,6 +320,11 @@
         "description": "Configure a devtool sources' workspace for cross-compilation and debugging."
       },
       {
+        "command": "bitbake.devtool-sdk-fallback",
+        "title": "BitBake: Devtool: Configure SDK fallback",
+        "description": "Configure a devtool sources' workspace to use `devtool build` and `devtool deploy-target` if `devtool ide-sdk` is not available."
+      },
+      {
         "command": "bitbake.devtool-open-workspace",
         "title": "BitBake: Devtool: Open Workspace",
         "description": "Open a devtool sources workspace in a new VSCode window.",
@@ -466,17 +471,22 @@
         },
         {
           "command": "bitbake.devtool-reset",
-          "group": "1@bitbake_devtool@4",
+          "group": "1@bitbake_devtool@5",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.devtool-update",
-          "group": "1@bitbake_devtool@3",
+          "group": "1@bitbake_devtool@4",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.devtool-ide-sdk",
           "group": "1@bitbake_devtool@2",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-sdk-fallback",
+          "group": "1@bitbake_devtool@3",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {

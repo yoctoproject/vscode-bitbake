@@ -22,6 +22,7 @@ import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
+import { configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -53,6 +54,7 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -229,6 +231,16 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
         })
       }
     })
+  }
+}
+
+async function devtoolSDKFallbackCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-sdk-fallback: ${chosenRecipe}`)
+    const workspace = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)
+    if (workspace === undefined) throw new Error('Devtool Workspace not found')
+    configureDevtoolSDKFallback(workspace, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings)
   }
 }
 
