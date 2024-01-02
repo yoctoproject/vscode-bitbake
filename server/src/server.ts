@@ -12,8 +12,7 @@ import {
   TextDocuments,
   ProposedFeatures,
   TextDocumentSyncKind,
-  type InitializeParams,
-  FileChangeType
+  type InitializeParams
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -92,16 +91,6 @@ connection.onShutdown(() => {
 connection.onDidChangeConfiguration(async (change) => {
   logger.level = change.settings.bitbake.loggingLevel
   parseOnSave = change.settings.bitbake.parseOnSave
-})
-
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-connection.onDidChangeWatchedFiles(async (change) => {
-  logger.debug(`onDidChangeWatchedFiles: ${JSON.stringify(change)}`)
-  change.changes?.forEach((change) => {
-    if (change.type === FileChangeType.Deleted) {
-      void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(change.uri)
-    }
-  })
 })
 
 connection.onCompletion(onCompletionHandler)
