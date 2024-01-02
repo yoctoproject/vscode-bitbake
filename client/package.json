@@ -182,6 +182,11 @@
                 "description": "Run bitbake in parse-only mode (-p)."
               }
             }
+          },
+          "specialCommand": {
+            "type": "string",
+            "description": "Special command to run instead of bitbake. Intended for internal use by the extension.",
+            "pattern": "^devtool\\s.*$"
           }
         }
       }
