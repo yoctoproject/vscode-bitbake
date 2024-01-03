@@ -130,7 +130,7 @@ function getGlobalSymbolComments (uri: string, word: string): string | null {
       })
 
       if (commentsToShow.length > 0) {
-        return `${commentsToShow.map((item) => item.comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${item.uri.replace('file://', '')} \`L: ${item.line + 1}\``).join('\n___\n')}`
+        return `${commentsToShow[0].comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${commentsToShow[0].uri.replace('file://', '')} \`L: ${commentsToShow[0].line + 1}\``}`
       }
     }
   }
