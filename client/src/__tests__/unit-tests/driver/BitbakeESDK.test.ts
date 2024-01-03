@@ -40,7 +40,8 @@ describe('Bitbake ESDK Test Suite', () => {
 
     expect(saveJsonMock).toHaveBeenCalledWith(vscodeSettingsPath, expect.objectContaining({
       'bitbake.pathToBitbakeFolder': 'newPath',
-      'bitbake.pathToEnvScript': 'should be created'
+      'bitbake.pathToEnvScript': 'should be created',
+      'bitbake.eSDKMode': true
     }))
   })
 
@@ -77,9 +78,9 @@ describe('Bitbake ESDK Test Suite', () => {
       tasks: expect.arrayContaining([
         expect.objectContaining({ label: 'Should not be overwritten' }),
         expect.objectContaining({ label: 'Devtool Deploy recipeName' }),
-        expect.objectContaining({ label: 'BitBake Build recipeName' }),
+        expect.objectContaining({ label: 'Devtool Build recipeName' }),
         expect.objectContaining({
-          label: 'BitBake Clean recipeName',
+          label: 'Devtool Clean recipeName',
           specialCommand: 'devtool build -c recipeName'
         })
       ])
