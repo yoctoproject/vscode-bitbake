@@ -56,17 +56,6 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     // Register the server for bitbake documents
     // TODO: check new documentSelector
     documentSelector: [{ scheme: 'file', language: 'bitbake' }],
-    synchronize: {
-      configurationSection: 'bitbake',
-
-      // Notify the server about file changes to '.clientrc files contain in the workspace
-      fileEvents: [
-        workspace.createFileSystemWatcher('**/*.bbclass', false, true, false),
-        workspace.createFileSystemWatcher('**/*.inc', false, true, false),
-        workspace.createFileSystemWatcher('**/*.bb', false, true, false),
-        workspace.createFileSystemWatcher('**/*.conf', false, true, false)
-      ]
-    },
     initializationOptions: {
       storagePath: context.storageUri?.fsPath,
       extensionPath: context.extensionPath
