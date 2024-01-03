@@ -55,6 +55,8 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-clean', async (uri) => { await devtoolCleanCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -358,4 +360,32 @@ async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, 
     return
   }
   await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(workspacePath), { forceNewWindow: true })
+}
+
+async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-build: ${chosenRecipe}`)
+    await runBitbakeTerminal(
+      bitbakeDriver,
+      {
+        specialCommand: `devtool build ${chosenRecipe}`,
+        type: 'bitbake'
+      } satisfies BitbakeTaskDefinition,
+    `Bitbake: Devtool Build: ${chosenRecipe}`)
+  }
+}
+
+async function devtoolCleanCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-clean: ${chosenRecipe}`)
+    await runBitbakeTerminal(
+      bitbakeDriver,
+      {
+        specialCommand: `devtool build -c ${chosenRecipe}`,
+        type: 'bitbake'
+      } satisfies BitbakeTaskDefinition,
+    `Bitbake: Devtool Clean: ${chosenRecipe}`)
+  }
 }
