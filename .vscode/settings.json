@@ -12,5 +12,6 @@
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": "explicit"
 	},
-	"jest.jestCommandLine": "node_modules/.bin/jest"
+	"jest.jestCommandLine": "node_modules/.bin/jest",
+    "jest.monitorLongRun": 300000
 }
