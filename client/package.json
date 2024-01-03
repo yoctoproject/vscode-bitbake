@@ -346,6 +346,18 @@
         "title": "BitBake: Devtool: Update recipe",
         "description": "Update a recipe from a devtool workspace's modifications.",
         "icon": "$(save-as)"
+      },
+      {
+        "command": "bitbake.devtool-build",
+        "title": "Bitbake: Devtool: Build recipe",
+        "description": "Build a recipe through devtool.",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "bitbake.devtool-clean",
+        "title": "BitBake: Devtool: Clean recipe",
+        "description": "Clean a recipe using devtool.",
+        "icon": "$(exclude)"
       }
     ],
     "viewsContainers": {
@@ -432,12 +444,12 @@
         {
           "command": "bitbake.clean-recipe",
           "group": "0@bitbake_recipe@1",
-          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.build-recipe",
           "group": "0@bitbake_recipe@0",
-          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.run-task",
@@ -502,6 +514,16 @@
         {
           "command": "bitbake.devtool-update",
           "group": "inline@4",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-build",
+          "group": "0@bitbake_recipe@0",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-clean",
+          "group": "0@bitbake_recipe@1",
           "when": "viewItem == devtoolWorskpaceCtx"
         }
       ]
