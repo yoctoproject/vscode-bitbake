@@ -39,7 +39,9 @@ export function copyBitbakeSettings (workspace: string, bitbakeSettings: Bitbake
   setJsonProperty(vscodeSettings, 'bitbake.pathToEnvScript', bitbakeSettings.pathToEnvScript)
   setJsonProperty(vscodeSettings, 'bitbake.workingDirectory', bitbakeSettings.workingDirectory)
   setJsonProperty(vscodeSettings, 'bitbake.commandWrapper', bitbakeSettings.commandWrapper)
-  setJsonProperty(vscodeSettings, 'bitbake.shellEnv', bitbakeSettings.shellEnv)
+  setJsonProperty(vscodeSettings, 'bitbake.shellEnv', bitbakeSettings.shellEnv ?? {})
+  // Disables features like the bitbake scan which is slow and not useful
+  setJsonProperty(vscodeSettings, 'bitbake.eSDKMode', true)
   saveJsonFile(vscodeSettingsPath, vscodeSettings)
   logger.info(`Generated ${vscodeSettingsPath}`)
   logger.debug(`Bitbake settings: ${JSON.stringify(vscodeSettings)}`)
@@ -53,7 +55,7 @@ export function generateTasksDefinitions (workspace: DevtoolWorkspaceInfo, bitba
   const recipeName = workspace.name
   const newTasks = []
   newTasks.push({
-    label: `BitBake Build ${recipeName}`,
+    label: `Devtool Build ${recipeName}`,
     type: 'bitbake',
     group: {
       kind: 'build'
@@ -61,7 +63,7 @@ export function generateTasksDefinitions (workspace: DevtoolWorkspaceInfo, bitba
     specialCommand: `devtool build ${recipeName}`
   })
   newTasks.push({
-    label: `BitBake Clean ${recipeName}`,
+    label: `Devtool Clean ${recipeName}`,
     type: 'bitbake',
     specialCommand: `devtool build -c ${recipeName}`
   })
