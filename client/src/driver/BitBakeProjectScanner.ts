@@ -24,6 +24,7 @@ import { type LanguageClient } from 'vscode-languageclient/node'
 import fs from 'fs'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
+import { bitbakeESDKMode } from './BitbakeESDK'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -93,14 +94,16 @@ export class BitBakeProjectScanner {
       this.onChange.emit('startScan')
 
       try {
-        await this.scanAvailableLayers()
-        this.scanForClasses()
-        this.scanForIncludeFiles()
-        await this.scanForRecipes()
-        await this.scanRecipesAppends()
-        await this.scanOverrides()
+        if (!bitbakeESDKMode) {
+          await this.scanAvailableLayers()
+          this.scanForClasses()
+          this.scanForIncludeFiles()
+          await this.scanForRecipes()
+          await this.scanRecipesAppends()
+          await this.scanOverrides()
+        }
         await this.scanDevtoolWorkspaces()
-        this.parseAllRecipes()
+        if (!bitbakeESDKMode) this.parseAllRecipes()
 
         logger.info('scan ready')
         this.printScanStatistic()
