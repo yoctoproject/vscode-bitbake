@@ -63,7 +63,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   bitBakeProjectScannerClient.onChange.on('scanReady', () => {
     logger.debug('[On scanReady] Analyzing the current document again...')
-    void analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
+    analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
   })
 
   return {
@@ -134,7 +134,7 @@ documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
 
   if (textDocument.getText().length > 0) {
-    const diagnostics = await analyzer.analyze({ document: textDocument, uri: textDocument.uri })
+    const diagnostics = analyzer.analyze({ document: textDocument, uri: textDocument.uri })
     void generateEmbeddedLanguageDocs(event.document)
     void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
   }

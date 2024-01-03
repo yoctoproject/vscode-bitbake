@@ -178,7 +178,7 @@ describe('On Completion', () => {
   })
 
   it("doesn't provide suggestions when it is pure string content", async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -197,7 +197,7 @@ describe('On Completion', () => {
   })
 
   it("doesn't provide duplicate completion items for local custom variables", async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -223,7 +223,7 @@ describe('On Completion', () => {
   })
 
   it('provides necessary suggestions when it is in variable expansion', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -269,7 +269,7 @@ describe('On Completion', () => {
   })
   // TODO: Add tests for the second and other overrides that come after. e.g. VAR:override1:override2:over...  And it is better after the tree-sitter library can properly handle it as mentioned in the issue: https://github.com/amaanq/tree-sitter-bitbake/issues/9
   it('provides suggestions for operators when a ":" is typed and it follows an identifier or in the middle of typing such syntax', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -353,7 +353,7 @@ describe('On Completion', () => {
   })
 
   it('provides suggestions for overrides when a ":" is typed and it follows an identifier', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -383,7 +383,7 @@ describe('On Completion', () => {
   })
 
   it('provides no suggestions when a ":" is typed but it is not part of a valid override syntax', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -402,7 +402,7 @@ describe('On Completion', () => {
   })
 
   it('provides suggestions for variable flags when a "[" is typed and it follows an identifier (Before and After scanning docs', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -458,7 +458,7 @@ describe('On Completion', () => {
   })
 
   it('provides no suggestions when a "[" is typed but it doesn\'t follow a bitbake identifier', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -541,7 +541,7 @@ describe('On Completion', () => {
       }
     }]
 
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: documentUri,
       document: FIXTURE_DOCUMENT.COMPLETION
     })
@@ -648,7 +648,7 @@ describe('On Completion', () => {
       _recipes: []
     }
 
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: FIXTURE_URI.DIRECTIVE,
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })

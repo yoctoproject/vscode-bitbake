@@ -57,7 +57,7 @@ describe('on definition', () => {
       _recipes: []
     }
 
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: FIXTURE_URI.DIRECTIVE,
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
@@ -119,7 +119,7 @@ describe('on definition', () => {
       ]
     }
 
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
@@ -179,7 +179,7 @@ describe('on definition', () => {
       }
     ]
 
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })

@@ -22,7 +22,7 @@ describe('Semantic tokens', () => {
   })
 
   it('gives approriate semantic tokens to symbols', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.SEMANTIC_TOKENS
     })

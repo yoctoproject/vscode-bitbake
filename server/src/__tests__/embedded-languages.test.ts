@@ -31,7 +31,7 @@ describe('Embedded Language Documents file management', () => {
 
   it('generate, rename and delete embedded language documents', async () => {
     // Setup
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: FIXTURE_DOCUMENT.EMBEDDED.uri,
       document: FIXTURE_DOCUMENT.EMBEDDED
     })
@@ -198,7 +198,7 @@ describe('Create Python embedded language content with inline Python', () => {
 const createEmbeddedContent = async (content: string, language: EmbeddedLanguageType): Promise<string | undefined> => {
   const uri = randomUUID()
   const document = TextDocument.create(uri, 'bitbake', 1, content)
-  await analyzer.analyze({ document, uri })
+  analyzer.analyze({ document, uri })
   await generateEmbeddedLanguageDocs(document)
   const pythonEmbeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(uri, language)
   if (pythonEmbeddedLanguageDocInfos === undefined) {

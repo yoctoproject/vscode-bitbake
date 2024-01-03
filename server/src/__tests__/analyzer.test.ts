@@ -32,7 +32,7 @@ describe('analyze', () => {
 
   it('analyzes simple correct bb file', async () => {
     const analyzer = await getAnalyzer()
-    const diagnostics = await analyzer.analyze({
+    const diagnostics = analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.CORRECT
     })
@@ -41,7 +41,7 @@ describe('analyze', () => {
 
   it('analyzes the document and returns global declarations', async () => {
     const analyzer = await getAnalyzer()
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.DECLARATION
     })
@@ -128,7 +128,7 @@ describe('analyze', () => {
 
   it('analyzes the document and returns word at point', async () => {
     const analyzer = await getAnalyzer()
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.DECLARATION
     })
@@ -227,10 +227,10 @@ describe('sourceIncludeFiles', () => {
     const analyzer = await getAnalyzer()
     const uri = FIXTURE_URI.DIRECTIVE
     // analyze 4 documents before calling sourceIncludeFiles
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.DIRECTIVE, uri: FIXTURE_URI.DIRECTIVE })
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAR_INC, uri: FIXTURE_URI.BAR_INC })
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.FOO_INC, uri: FIXTURE_URI.FOO_INC })
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAZ_BBCLASS, uri: FIXTURE_URI.BAZ_BBCLASS })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.DIRECTIVE, uri: FIXTURE_URI.DIRECTIVE })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.BAR_INC, uri: FIXTURE_URI.BAR_INC })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.FOO_INC, uri: FIXTURE_URI.FOO_INC })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.BAZ_BBCLASS, uri: FIXTURE_URI.BAZ_BBCLASS })
 
     jest.spyOn(Analyzer.prototype, 'getDirectiveFileUris').mockReturnValueOnce([
       FIXTURE_URI.BAR_INC,
@@ -261,10 +261,10 @@ describe('sourceIncludeFiles', () => {
     const analyzer = await getAnalyzer()
     const uri = FIXTURE_URI.DIRECTIVE
 
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.DIRECTIVE, uri: FIXTURE_URI.DIRECTIVE })
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAR_INC, uri: FIXTURE_URI.BAR_INC })
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.FOO_INC, uri: FIXTURE_URI.FOO_INC })
-    await analyzer.analyze({ document: FIXTURE_DOCUMENT.BAZ_BBCLASS, uri: FIXTURE_URI.BAZ_BBCLASS })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.DIRECTIVE, uri: FIXTURE_URI.DIRECTIVE })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.BAR_INC, uri: FIXTURE_URI.BAR_INC })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.FOO_INC, uri: FIXTURE_URI.FOO_INC })
+    analyzer.analyze({ document: FIXTURE_DOCUMENT.BAZ_BBCLASS, uri: FIXTURE_URI.BAZ_BBCLASS })
 
     jest.spyOn(Analyzer.prototype, 'getDirectiveFileUris').mockReturnValueOnce([
       FIXTURE_URI.BAR_INC,
@@ -363,7 +363,7 @@ describe('declarations', () => {
     const document = FIXTURE_DOCUMENT.COMPLETION
     const uri = FIXTURE_URI.COMPLETION
 
-    await analyzer.analyze({
+    analyzer.analyze({
       document,
       uri
     })
@@ -387,7 +387,7 @@ describe('getLinksInStringContent', () => {
     const document = FIXTURE_DOCUMENT.CORRECT
     const uri = FIXTURE_URI.CORRECT
 
-    await analyzer.analyze({
+    analyzer.analyze({
       document,
       uri
     })
@@ -412,7 +412,7 @@ describe('getLinksInStringContent', () => {
     const document = FIXTURE_DOCUMENT.CORRECT
     const uri = FIXTURE_URI.CORRECT
 
-    await analyzer.analyze({
+    analyzer.analyze({
       document,
       uri
     })
