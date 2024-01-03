@@ -13,6 +13,7 @@ import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution } from '../lib/src/utils/ProcessUtils'
+import { bitbakeESDKMode } from './BitbakeESDK'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
@@ -103,7 +104,7 @@ export class BitbakeDriver {
     const bitbakeFolder = this.bitbakeSettings.pathToBitbakeFolder
     const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
 
-    if (!fs.existsSync(bitbakeBinPath)) {
+    if (!fs.existsSync(bitbakeBinPath) && !bitbakeESDKMode) {
       clientNotificationManager.showBitbakeSettingsError("Bitbake binary doesn't exist: " + bitbakeBinPath)
       return false
     }
@@ -114,7 +115,8 @@ export class BitbakeDriver {
       return false
     }
 
-    const command = 'which bitbake'
+    // We could test for bitbake, but devtool exists also in the eSDK
+    const command = 'which devtool'
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
     const ret = await finishProcessExecution(process, async () => { await this.killBitbake() })
     if (ret.status !== 0) {
