@@ -183,11 +183,13 @@ Clicking on the workspace name will open the sources' workspace in a new window.
  - Commit them in the local git repository
  - Run the `Bitbake: Devtool: Update recipe` command to generate the patch and update the recipe
 
-You can also set up the SDK for the recipe by running the `Bitbake: Devtool: Configure SDK` command. This will create `.vscode/settings.json`, `.vscode/tasks.json` and `.vscode/launch.json` configurations to cross-compile, deploy and debug the recipe on a target machine through SSH. You'll need to configure this extension's settings to match your target machine's configuration:
+You can also set up the SDK for the recipe by running the `Bitbake: Devtool: Configure VSCode SDK` command. This will create `.vscode/settings.json`, `.vscode/tasks.json` and `.vscode/launch.json` configurations to cross-compile, deploy and debug the recipe on a target machine through SSH. You'll need to configure this extension's settings to match your target machine's configuration:
  - `bitbake.sdkImage`
  - `bitbake.sshTarget`
 
 **Note:** This feature depends on poky versions 5.0 and above (`devtool ide-sdk` command). Some recipe classes may not be supported yet. At the time of writing, CMake and Meson recipes are supported.
+
+If your recipe's class is not supported, or you have an older version of poky, the `Bitbake: Devtool: Configure devtool fallback` command will add tasks to build and deploy the package through `devtool build/deploy-target`. Linting, debugging, testing and other advanced features will not be available in this mode.
 
 ## Contributing
 

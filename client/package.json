@@ -98,7 +98,7 @@
         "bitbake.eSDKMode": {
           "type": "boolean",
           "default": false,
-          "description": "Activate eSDK only mode. This tells the extension that devtool is available but not bitbake, which will disable unavailable features."
+          "markdownDescription": "Activate eSDK only mode. This tells the extension that devtool is available but not bitbake, which will disable unavailable features. You should point the `bitbake.pathToEnvScript` setting to the environment script of the eSDK."
         },
         "bitbake.pathToEnvScript": {
           "type": "string",
@@ -321,7 +321,7 @@
       },
       {
         "command": "bitbake.devtool-ide-sdk",
-        "title": "BitBake: Devtool: Configure native SDK",
+        "title": "BitBake: Devtool: Configure VSCode SDK",
         "description": "Configure a devtool sources' workspace for cross-compilation and debugging."
       },
       {
