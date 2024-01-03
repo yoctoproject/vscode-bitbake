@@ -44,7 +44,7 @@ jobs:
       run: bash scripts/update-tree-sitter-wasm.sh
 
     - name: Verify file changes
-      uses: tj-actions/verify-changed-files@v16
+      uses: tj-actions/verify-changed-files@v17
       id: verify-changed-files
       with:
         # The script generates a new wasm file and replaces the existing one. Git will treat it as a different file even it is generated with the same commit and CLI  
