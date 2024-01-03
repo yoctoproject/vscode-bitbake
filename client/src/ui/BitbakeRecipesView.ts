@@ -8,6 +8,7 @@ import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { type ElementInfo, type BitbakeScanResult, type PathInfo, scanContainsData } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { bitbakeESDKMode } from '../driver/BitbakeESDK'
 
 export class BitbakeRecipesView {
   private readonly bitbakeTreeProvider: BitbakeTreeDataProvider
@@ -80,6 +81,9 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
       const items = this.getBitbakeRecipes()
       items.push(this.getAddRecipeItem())
       return items
+    }
+    if (bitbakeESDKMode) {
+      return []
     }
 
     if (!scanContainsData(this.bitbakeScanResults)) {

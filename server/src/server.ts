@@ -33,6 +33,7 @@ import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let parseOnSave = true
+let eSDKMode = false
 
 const disposables: Disposable[] = []
 
@@ -91,6 +92,7 @@ connection.onShutdown(() => {
 connection.onDidChangeConfiguration(async (change) => {
   logger.level = change.settings.bitbake.loggingLevel
   parseOnSave = change.settings.bitbake.parseOnSave
+  eSDKMode = change.settings.bitbake.eSDKMode
 })
 
 connection.onCompletion(onCompletionHandler)
@@ -149,7 +151,7 @@ documents.onDidChangeContent(async (event) => {
 })
 
 documents.onDidSave(async (event) => {
-  if (parseOnSave) {
+  if (parseOnSave && !eSDKMode) {
     logger.debug(`onDidSave ${JSON.stringify(event)}`)
     void connection.sendRequest('bitbake/parseAllRecipes')
   }
