@@ -10,6 +10,12 @@ import { loadJsonFile, setJsonProperty, saveJsonFile, mergeJsonArray } from '../
 import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
 
+export let bitbakeESDKMode: boolean = false
+
+export function setBitbakeESDKMode (mode: boolean): void {
+  bitbakeESDKMode = mode
+}
+
 function createVSCodeFolderIfNotExists (workspace: string): void {
   const vscodeFolderPath = path.join(workspace, '.vscode')
   if (!fs.existsSync(vscodeFolderPath)) {

@@ -18,6 +18,7 @@ import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
 import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
+import { bitbakeESDKMode, setBitbakeESDKMode } from './driver/BitbakeESDK'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -32,6 +33,11 @@ let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
   logger.info('Bitbake logging level: ' + logger.level)
+}
+
+function loadESDKSettings (): void {
+  setBitbakeESDKMode(vscode.workspace.getConfiguration('bitbake').get('eSDKMode') ?? false)
+  logger.info('Bitbake eSDK mode: ' + bitbakeESDKMode)
 }
 
 function updatePythonPath (): void {
@@ -57,6 +63,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
 
   loadLoggerSettings()
+  loadESDKSettings()
   bitbakeExtensionContext = context
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
@@ -93,6 +100,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       loadLoggerSettings()
+    }
+    if (event.affectsConfiguration('bitbake.eSDKMode')) {
+      loadESDKSettings()
     }
   }))
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {

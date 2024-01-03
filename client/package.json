@@ -95,6 +95,11 @@
           "default": true,
           "description": "Activate parsing on save. When a recipe is saved, bitbake will automatically be run to parse it."
         },
+        "bitbake.eSDKMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Activate eSDK only mode. This tells the extension that devtool is available but not bitbake, which will disable unavailable features."
+        },
         "bitbake.pathToEnvScript": {
           "type": "string",
           "examples": ["${workspaceFolder}/sources/poky/oe-init-build-env"],
@@ -316,12 +321,12 @@
       },
       {
         "command": "bitbake.devtool-ide-sdk",
-        "title": "BitBake: Devtool: Configure SDK",
+        "title": "BitBake: Devtool: Configure native SDK",
         "description": "Configure a devtool sources' workspace for cross-compilation and debugging."
       },
       {
         "command": "bitbake.devtool-sdk-fallback",
-        "title": "BitBake: Devtool: Configure SDK fallback",
+        "title": "BitBake: Devtool: Configure devtool SDK fallback",
         "description": "Configure a devtool sources' workspace to use `devtool build` and `devtool deploy-target` if `devtool ide-sdk` is not available."
       },
       {
