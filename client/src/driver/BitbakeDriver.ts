@@ -40,11 +40,12 @@ export class BitbakeDriver {
   /// Execute a command in the bitbake environment
   async spawnBitbakeProcess (command: string): Promise<childProcess.ChildProcess> {
     const { shell, script } = this.prepareCommand(command)
+    const cwd = this.bitbakeSettings.workingDirectory
     await this.waitForBitbakeToFinish()
-    logger.debug(`Executing Bitbake command with ${shell}: ${script}`)
+    logger.debug(`Executing Bitbake command with ${shell} in ${cwd}: ${script}`)
     const child = childProcess.spawn(script, {
       shell,
-      cwd: this.bitbakeSettings.workingDirectory,
+      cwd,
       env: { ...process.env, ...this.bitbakeSettings.shellEnv }
     })
     this.bitbakeProcess = child
