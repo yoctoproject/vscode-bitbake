@@ -19,7 +19,6 @@ import {
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarationsAndComments, type GlobalDeclarations, type GlobalSymbolComments } from './declarations'
-import { debounce } from '../utils/async'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
@@ -28,7 +27,6 @@ import fs from 'fs'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
-const DEBOUNCE_TIME_MS = 500
 
 interface AnalyzedDocument {
   document: TextDocument
@@ -43,7 +41,6 @@ interface AnalyzedDocument {
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
-  private debouncedExecuteAnalyzation?: ReturnType<typeof debounce>
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -61,16 +58,16 @@ export default class Analyzer {
     this.parser = parser
   }
 
-  public async analyze ({
+  public analyze ({
     document,
     uri
   }: {
     document: TextDocument
     uri: string
-  }): Promise<Diagnostic[]> {
+  }): Diagnostic[] {
     if (this.parser === undefined) {
       logger.debug('[Analyzer] The analyzer is not initialized with a parser')
-      return await Promise.resolve([])
+      return []
     }
 
     const fileContent = document.getText()
@@ -95,13 +92,7 @@ export default class Analyzer {
       extraSymbols
     }
 
-    let debouncedExecuteAnalyzation = this.debouncedExecuteAnalyzation
-    if (debouncedExecuteAnalyzation === undefined) {
-      debouncedExecuteAnalyzation = debounce(this.executeAnalyzation.bind(this), DEBOUNCE_TIME_MS)
-      this.debouncedExecuteAnalyzation = debouncedExecuteAnalyzation
-    }
-
-    return await debouncedExecuteAnalyzation(document, uri, tree)
+    return this.executeAnalyzation(document, uri, tree)
   }
 
   private executeAnalyzation (document: TextDocument, uri: string, tree: Tree): Diagnostic[] {

@@ -27,7 +27,7 @@ describe('on hover', () => {
 
   it('shows definition on hovering variable in variable assignment syntax or in variable expansion syntax after scanning the docs', async () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
     })
@@ -140,7 +140,7 @@ describe('on hover', () => {
 
   it('should show hover definition for variable flags after scanning the docs', async () => {
     bitBakeDocScanner.parseVariableFlagFile()
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
     })
@@ -177,7 +177,7 @@ describe('on hover', () => {
 
   it('should show hover definition for yocto tasks after scanning the docs', async () => {
     bitBakeDocScanner.parseYoctoTaskFile()
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
     })
@@ -258,7 +258,7 @@ describe('on hover', () => {
   })
 
   it('should show hover definition for keywords', async () => {
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
     })
@@ -321,7 +321,7 @@ describe('on hover', () => {
   it('shows definition on hovering variable in Python functions for accessing datastore', async () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     bitBakeDocScanner.parsePythonDatastoreFunction()
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
     })
@@ -490,7 +490,7 @@ describe('on hover', () => {
       _recipes: []
     }
 
-    await analyzer.analyze({
+    analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
