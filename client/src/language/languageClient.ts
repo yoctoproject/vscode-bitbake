@@ -10,7 +10,8 @@ import {
   type ExtensionContext,
   window,
   commands,
-  languages
+  languages,
+  TabInputText
 } from 'vscode'
 
 import {
@@ -112,6 +113,28 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   client.onNotification(NotificationMethod.EmbeddedLanguageDocs, (embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs']) => {
     void embeddedLanguageDocsManager.saveEmbeddedLanguageDocs(embeddedLanguageDocs)
+  })
+
+  window.tabGroups.onDidChangeTabs((event) => {
+    [...event.opened, ...event.changed].forEach((tab) => {
+      if (tab.input instanceof TabInputText) {
+        const uri = tab.input.uri
+        if (embeddedLanguageDocsManager.embeddedLanguageDocsFolder === undefined) {
+          return
+        }
+        // Close embedded document tabs when they open automatically
+        if (uri.fsPath.includes(embeddedLanguageDocsManager.embeddedLanguageDocsFolder)) {
+          if (
+            // Prevent prompt to appear on unsaved files
+            !tab.isDirty &&
+            // Make possible to open embedded documents in a tab
+            !tab.isPreview && !tab.isActive && !tab.isPinned
+          ) {
+            void window.tabGroups.close(tab, false)
+          }
+        }
+      }
+    })
   })
 
   // Start the client and launch the server
