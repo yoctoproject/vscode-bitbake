@@ -1,3 +1,16 @@
+# 2.1.0 - 2024.01.09
+
+ - Added definitions and diagnostics providers for embedded python and bash
+ - Added definitions provider for bitbake variables
+ - Improved bitbake operators highlighting and added hover documentation
+ - Fixed a bug where excessive file saving and parsing could be triggered
+ - Added new commandWrapper setting bitbake build tools like docker containers
+ - Improved bitbake activity report through terminals and the status bar
+ - Added definition provider for `"file://"` relative `SRC_URI`
+ - Added hover documentation for comments above bitbake variables and functions
+ - Added commands and view to manage devtool workspaces
+ - Minor bug fixes
+
 # 2.0.1 - 2023.11.30
  - Fixed extension logo for white themes
 
