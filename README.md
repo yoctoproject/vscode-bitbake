@@ -85,6 +85,19 @@ This extension uses tree-sitter to parse the documents. The `.wasm` file used fo
 
 For more information about the tree-sitter and its CLI, Check out the offical [site](https://tree-sitter.github.io/tree-sitter/) and [npm page](https://www.npmjs.com/package/tree-sitter-cli)
 
+## Publishing
+
+Publishing is automated via GitHub Actions and reserved to project maintainers. To publish a new version:
+ - Update all the `package.json` files with the new version number `X.Y.Z`.
+ - Document new changes in the `client/CHANGELOG.md` file.
+ - Make sure the `VSCE_PAT` secret is valid in the [GitHub repository settings](https://github.com/yoctoproject/vscode-bitbake/settings/secrets/actions).
+ - Create a [new release on GitHub](https://github.com/yoctoproject/vscode-bitbake/releases/new) with a tag in the format `vX.Y.Z`.
+ - Admin approval is required to run the GitHub Action.
+
+The release will be published to the VS Code Marketplace automatically by the GitHub Action. Admin approval is required to run the GitHub Action, and the `VSCE_PAT` must be updated to match a valid token for the `yocto-project` Azure DevOps publisher. See:
+ - https://code.visualstudio.com/api/working-with-extensions/publishing-extension
+ - https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+
 ## Contributing
 
 Development of this extension happens on [GitHub](https://github.com/yoctoproject/vscode-bitbake).
