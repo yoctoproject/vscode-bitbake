@@ -29,9 +29,17 @@ type EmbeddedLanguageDocsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedL
 export default class EmbeddedLanguageDocsManager {
   private readonly embeddedLanguageDocsInfos = new Map<string, EmbeddedLanguageDocsRecord>() // map of original uri to embedded documents infos
   private _storagePath: string | undefined
+  private readonly filesWaitingToUpdate = new Map<string, EmbeddedLanguageDoc>()
 
   get storagePath (): string | undefined {
     return this._storagePath
+  }
+
+  get embeddedLanguageDocsFolder (): string | undefined {
+    if (this._storagePath === undefined) {
+      return
+    }
+    return path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
   }
 
   async setStoragePath (newStoragePath: string | undefined): Promise<void> {
@@ -104,13 +112,13 @@ export default class EmbeddedLanguageDocsManager {
   }
 
   private createEmbeddedLanguageDocUri (embeddedLanguageDoc: EmbeddedLanguageDoc): Uri | undefined {
-    if (this.storagePath === undefined) {
+    if (this.embeddedLanguageDocsFolder === undefined) {
       return undefined
     }
     const randomName = randomUUID()
     const fileExtension = fileExtensionsMap[embeddedLanguageDoc.language]
     const embeddedLanguageDocFilename = randomName + fileExtension
-    const pathToEmbeddedLanguageDocsFolder = path.join(this.storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+    const pathToEmbeddedLanguageDocsFolder = this.embeddedLanguageDocsFolder
     return Uri.parse(`file://${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`)
   }
 
@@ -124,6 +132,10 @@ export default class EmbeddedLanguageDocsManager {
 
   private async updateEmbeddedLanguageDocFile (embeddedLanguageDoc: EmbeddedLanguageDoc, uri: Uri): Promise<void> {
     const document = await workspace.openTextDocument(uri)
+    if (document.isDirty) {
+      this.filesWaitingToUpdate.set(uri.toString(), embeddedLanguageDoc)
+      return
+    }
     const fullRange = new Range(
       document.positionAt(0),
       document.positionAt(document.getText().length)
@@ -133,6 +145,11 @@ export default class EmbeddedLanguageDocsManager {
     await workspace.applyEdit(workspaceEdit)
     await document.save()
     this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc, uri)
+    const fileWaitingToUpdate = this.filesWaitingToUpdate.get(uri.toString())
+    if (fileWaitingToUpdate !== undefined) {
+      this.filesWaitingToUpdate.delete(uri.toString())
+      await this.updateEmbeddedLanguageDocFile(fileWaitingToUpdate, uri)
+    }
   }
 
   private async createEmbeddedLanguageDocFile (embeddedLanguageDoc: EmbeddedLanguageDoc): Promise<void> {
