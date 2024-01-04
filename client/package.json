@@ -399,7 +399,7 @@
     "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
     "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u",
     "vscode:prepublish": "npm install --omit=dev && cd ../server && npm install --omit=dev && npm run installServer",
-    "package": "npm run vscode:prepublish && vsce package"
+    "package": "npm run vscode:prepublish && vsce package --target linux-x64 && vsce package --target linux-arm64 && vsce package --target linux-armhf"
   },
   "dependencies": {
     "find": "^0.2.7",
