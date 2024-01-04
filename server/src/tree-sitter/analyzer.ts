@@ -313,8 +313,31 @@ export default class Analyzer {
     if (functionName === undefined || !(bitBakeDocScanner.pythonDatastoreFunction.includes(functionName))) {
       return false
     }
-    const variable = match?.groups?.params?.split(',')[0]?.trim().replace(/('|")/g, '')
-    return variable === n?.text
+
+    // Example for d.getVar('FOO'):
+    // n.text: FOO
+    // n.parent.text: 'FOO'
+    // n.parent.previousSibling.text: (
+    const isFirstParameter = n?.parent?.previousSibling?.text === '('
+    if (isFirstParameter) {
+      const firstParameter = match?.groups?.params?.split(',')[0]?.trim().replace(/('|")/g, '')
+      return firstParameter === n?.text
+    }
+
+    // Example for d.renameVar('FOO', 'BAR'):
+    // n.text: BAR
+    // n.parent.text: 'BAR'
+    // n.parent.previousSibling.text: ,
+    // n.parent.previousSibling.previousSibling.text: 'FOO'
+    // n.parent.previousSibling.previousSibling.previousSibling.text: (
+    const isSecondParameter = n?.parent?.previousSibling?.previousSibling?.previousSibling?.text === '('
+    // d.renameVar is the only function for which the second parameter could be a Yocto defined variable
+    if (functionName === 'renameVar' && isSecondParameter) {
+      const secondParameter = match?.groups?.params?.split(',')[1]?.trim().replace(/('|")/g, '')
+      return secondParameter === n?.text
+    }
+
+    return false
   }
 
   /**

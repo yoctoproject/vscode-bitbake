@@ -33,8 +33,9 @@ include dummy.inc
 require dummy.inc
 
 python (){
-    d.getVar("DESCRIPTION")
+    d.getVar("DESCRIPTION", "DESCRIPTION")
     d.setVar('DESCRIPTION', 'value')
+    d.renameVar("DESCRIPTION", "DESCRIPTION")
     b.getVar('DESCRIPTION')
     d.test('DESCRIPTION')
     d.getVar("FOO")

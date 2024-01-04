@@ -351,8 +351,8 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 40,
-        character: 19
+        line: 37,
+        character: 37
       }
     })
 
@@ -361,8 +361,8 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 46,
-        character: 20
+        line: 41,
+        character: 19
       }
     })
 
@@ -371,7 +371,17 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 44,
+        line: 47,
+        character: 20
+      }
+    })
+
+    const shouldShow6 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 45,
         character: 14
       }
     })
@@ -381,8 +391,8 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 37,
-        character: 14
+        line: 35,
+        character: 33
       }
     })
 
@@ -392,7 +402,7 @@ describe('on hover', () => {
       },
       position: {
         line: 38,
-        character: 12
+        character: 14
       }
     })
 
@@ -402,7 +412,7 @@ describe('on hover', () => {
       },
       position: {
         line: 39,
-        character: 19
+        character: 12
       }
     })
 
@@ -411,7 +421,17 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 48,
+        line: 40,
+        character: 19
+      }
+    })
+
+    const shouldNotShow5 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 49,
         character: 10
       }
     })
@@ -451,10 +471,18 @@ describe('on hover', () => {
       }
     })
 
+    expect(shouldShow6).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
     expect(shouldNotShow1).toBe(null)
     expect(shouldNotShow2).toBe(null)
     expect(shouldNotShow3).toBe(null)
     expect(shouldNotShow4).toBe(null)
+    expect(shouldNotShow5).toBe(null)
   })
 
   it('should show comments above the global declarations', async () => {
