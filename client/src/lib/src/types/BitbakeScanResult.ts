@@ -27,10 +27,24 @@ export interface ElementInfo {
   version?: string
 }
 
+export interface DevtoolWorkspaceInfo {
+  name: string
+  path: string
+}
+
 export interface BitbakeScanResult {
   _layers: LayerInfo[]
   _classes: ElementInfo[]
   _includes: ElementInfo[]
   _recipes: ElementInfo[]
   _overrides: string[]
+  _workspaces: DevtoolWorkspaceInfo[]
+}
+
+export function scanContainsData (scanResult: BitbakeScanResult): boolean {
+  return scanResult._layers.length > 0 || scanResult._recipes.length > 0 || scanResult._workspaces.length > 0
+}
+
+export function scanContainsRecipes (scanResult: BitbakeScanResult): boolean {
+  return scanResult._layers.length > 0 || scanResult._recipes.length > 0
 }

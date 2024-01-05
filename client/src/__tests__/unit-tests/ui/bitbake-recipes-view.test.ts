@@ -6,14 +6,20 @@
 import * as vscode from 'vscode'
 import { type BitbakeRecipeTreeItem, BitbakeRecipesView } from '../../../ui/BitbakeRecipesView'
 import { BitbakeWorkspace } from '../../../ui/BitbakeWorkspace'
-import { bitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { type BitbakeScanResult } from '../../../lib/src/types/BitbakeScanResult'
+import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 
 jest.mock('vscode')
 
 describe('BitbakeDriver Recipes View', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('should list recipes', (done) => {
     const bitbakeWorkspace = new BitbakeWorkspace()
+    const bitBakeProjectScanner = new BitBakeProjectScanner(new BitbakeDriver())
     bitbakeWorkspace.addActiveRecipe('base-files')
 
     const contextMock: vscode.ExtensionContext = {
@@ -47,7 +53,8 @@ describe('BitbakeDriver Recipes View', () => {
       _includes: [],
       _layers: [],
       _classes: [],
-      _overrides: []
+      _overrides: [],
+      _workspaces: []
     }
 
     vscode.window.registerTreeDataProvider = jest.fn().mockImplementation(

@@ -11,12 +11,15 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
-import { registerBitbakeCommands } from './ui/BitbakeCommands'
+import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
-import { bitBakeProjectScanner } from './driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
+import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
+import { bitbakeESDKMode, setBitbakeESDKMode } from './driver/BitbakeESDK'
+import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -26,10 +29,17 @@ const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 export let bitbakeExtensionContext: vscode.ExtensionContext
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let bitbakeRecipesView: BitbakeRecipesView | undefined
+let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
+let terminalProvider: BitbakeTerminalProfileProvider | undefined
 
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
   logger.info('Bitbake logging level: ' + logger.level)
+}
+
+function loadESDKSettings (): void {
+  setBitbakeESDKMode(vscode.workspace.getConfiguration('bitbake').get('eSDKMode') ?? false)
+  logger.info('Bitbake eSDK mode: ' + bitbakeESDKMode)
 }
 
 function updatePythonPath (): void {
@@ -55,10 +65,11 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
 
   loadLoggerSettings()
+  loadESDKSettings()
   bitbakeExtensionContext = context
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
-  bitBakeProjectScanner.setDriver(bitbakeDriver)
+  const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
   updatePythonPath()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
@@ -70,9 +81,13 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
   bitbakeRecipesView.registerView(context)
+  devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
+  devtoolWorkspacesView.registerView(context)
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
+  terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
+  vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
 
   const provider = new BitbakeDocumentLinkProvider(client)
   const selector = { scheme: 'file', language: 'bitbake' }
@@ -80,7 +95,12 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
-    if (event.affectsConfiguration('bitbake')) {
+    if (event.affectsConfiguration('bitbake.shellEnv') ||
+        event.affectsConfiguration('bitbake.workingDirectory') ||
+        event.affectsConfiguration('bitbake.pathToEnvScript') ||
+        event.affectsConfiguration('bitbake.pathToBitbakeFolder') ||
+        event.affectsConfiguration('bitbake.pathToBuildFolder') ||
+        event.affectsConfiguration('bitbake.commandWrapper')) {
       await clientNotificationManager.resetNeverShowAgain('custom/bitbakeSettingsError')
       bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
       logger.debug('Bitbake settings changed')
@@ -89,6 +109,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       loadLoggerSettings()
+    }
+    if (event.affectsConfiguration('bitbake.eSDKMode')) {
+      loadESDKSettings()
     }
   }))
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {
@@ -100,6 +123,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   }))
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner)
+  registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner)
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 

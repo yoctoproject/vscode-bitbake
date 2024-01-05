@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type Connection, type Disposable } from 'vscode-languageserver'
-import { type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
+import { scanContainsRecipes, type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
 import EventEmitter from 'events'
 import { logger } from './lib/src/utils/OutputLogger'
 
@@ -15,7 +15,8 @@ export class BitBakeProjectScannerClient {
     _classes: [],
     _includes: [],
     _recipes: [],
-    _overrides: []
+    _overrides: [],
+    _workspaces: []
   }
 
   private connection: Connection | undefined
@@ -36,7 +37,7 @@ export class BitBakeProjectScannerClient {
     const subscriptions: Disposable[] = []
     subscriptions.push(this.connection.onNotification('bitbake/scanReady', (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduce, we keep the previous results to keep navigation functional
-      if (this.bitbakeScanResult._recipes.length === 0 || scanResults._recipes.length > 0) {
+      if (!scanContainsRecipes(this.bitbakeScanResult) || scanContainsRecipes(scanResults)) {
         this.bitbakeScanResult = scanResults
       }
       this.onChange.emit('scanReady', scanResults)

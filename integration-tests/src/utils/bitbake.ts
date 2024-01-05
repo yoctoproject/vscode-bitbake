@@ -5,6 +5,8 @@
 
 import * as vscode from 'vscode'
 
+export const BITBAKE_TIMEOUT = 300000
+
 // TODO If bitbake-layers vscode commands are added in the future, use them instead
 export async function addLayer (layer: string, workspaceFolder: string): Promise<void> {
   const buildFolder = vscode.Uri.joinPath(vscode.Uri.file(workspaceFolder), 'build')

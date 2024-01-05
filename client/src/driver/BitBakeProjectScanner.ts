@@ -13,6 +13,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 
 import type {
   BitbakeScanResult,
+  DevtoolWorkspaceInfo,
   ElementInfo,
   LayerInfo,
   PathInfo
@@ -23,6 +24,7 @@ import { type LanguageClient } from 'vscode-languageclient/node'
 import fs from 'fs'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
+import { bitbakeESDKMode } from './BitbakeESDK'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -38,16 +40,16 @@ export class BitBakeProjectScanner {
   private readonly _recipesFileExtension: string = 'bb'
   onChange: EventEmitter = new EventEmitter()
 
-  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [] }
+  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [] }
   private _shouldDeepExamine: boolean = false
-  private _bitbakeDriver: BitbakeDriver | undefined
+  private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 
   /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
   private containerMountPoint: string | undefined
   private hostMountPoint: string | undefined
 
-  setDriver (bitbakeDriver: BitbakeDriver): void {
+  constructor (bitbakeDriver: BitbakeDriver) {
     this._bitbakeDriver = bitbakeDriver
   }
 
@@ -72,8 +74,15 @@ export class BitBakeProjectScanner {
     this._shouldDeepExamine = shouldDeepExamine
   }
 
-  get bitbakeDriver (): BitbakeDriver | undefined {
+  get bitbakeDriver (): BitbakeDriver {
     return this._bitbakeDriver
+  }
+
+  /// A quick scan to present devtool modify/reset results. A full rescan is required for .bbappends.
+  async rescanDevtoolWorkspaces (): Promise<void> {
+    logger.info('request rescanDevtoolWorkspaces')
+    await this.scanDevtoolWorkspaces()
+    this.onChange.emit('scanReady', this._bitbakeScanResult)
   }
 
   async rescanProject (): Promise<void> {
@@ -85,13 +94,16 @@ export class BitBakeProjectScanner {
       this.onChange.emit('startScan')
 
       try {
-        await this.scanAvailableLayers()
-        this.scanForClasses()
-        this.scanForIncludeFiles()
-        await this.scanForRecipes()
-        await this.scanRecipesAppends()
-        await this.scanOverrides()
-        this.parseAllRecipes()
+        if (!bitbakeESDKMode) {
+          await this.scanAvailableLayers()
+          this.scanForClasses()
+          this.scanForIncludeFiles()
+          await this.scanForRecipes()
+          await this.scanRecipesAppends()
+          await this.scanOverrides()
+        }
+        await this.scanDevtoolWorkspaces()
+        if (!bitbakeESDKMode) this.parseAllRecipes()
 
         logger.info('scan ready')
         this.printScanStatistic()
@@ -100,8 +112,7 @@ export class BitBakeProjectScanner {
         this.onChange.emit('scanReady', this._bitbakeScanResult)
       } catch (error) {
         logger.error(`scanning of project is abborted: ${error as any}`)
-        this.parseAllRecipes()
-        this.onChange.emit('scanReady', { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [] })
+        this.onChange.emit('scanReady', this._bitbakeScanResult)
       }
 
       this._scanStatus.scanIsRunning = false
@@ -148,6 +159,7 @@ export class BitBakeProjectScanner {
         if (containerDirInode === hostDirInode) {
           this.containerMountPoint = containerDir
           this.hostMountPoint = hostDir
+          logger.info(`Found container mount point: ${this.containerMountPoint} -> ${this.hostMountPoint}`)
           return
         }
         containerDir = path.dirname(containerDir)
@@ -165,6 +177,7 @@ export class BitBakeProjectScanner {
     logger.info(`Inc-Files: ${this._bitbakeScanResult._includes.length}`)
     logger.info(`bbclass:   ${this._bitbakeScanResult._classes.length}`)
     logger.info(`overrides:   ${this._bitbakeScanResult._overrides.length}`)
+    logger.info(`Devtool-workspaces:   ${this._bitbakeScanResult._workspaces.length}`)
   }
 
   private scanForClasses (): void {
@@ -208,27 +221,63 @@ export class BitBakeProjectScanner {
     } else {
       const error = commandResult.stderr.toString()
       logger.error(`can not scan available layers error: ${error}`)
+      throw new Error('can not scan available layers')
     }
+  }
+
+  private async resolveCorrespondingPath (inputPath: string | undefined, hostToContainer: boolean): Promise<string | undefined> {
+    if (inputPath === undefined) {
+      return undefined
+    }
+    if (this.containerMountPoint === undefined && !hostToContainer) {
+      // Should only be called through scanAvailableLayers()
+      const hostWorkdir = this.bitbakeDriver?.bitbakeSettings.workingDirectory
+      if (hostWorkdir === undefined) {
+        throw new Error('hostWorkdir is undefined')
+      }
+      await this.scanContainerMountPoint(inputPath, hostWorkdir)
+    }
+    const origMountPoint = hostToContainer ? this.hostMountPoint : this.containerMountPoint
+    const destMountPoint = hostToContainer ? this.containerMountPoint : this.hostMountPoint
+    const fileExistsFn = hostToContainer ? this.existsInContainer.bind(this) : fs.existsSync
+    if (origMountPoint === undefined || destMountPoint === undefined) {
+      return inputPath
+    }
+    const relativePath = path.relative(origMountPoint, inputPath)
+    let resolvedPath = path.resolve(destMountPoint, relativePath)
+    if (!await fileExistsFn(resolvedPath)) {
+      // This makes it work with the default kas-container configuration (/work & /build volumes)
+      resolvedPath = path.resolve(destMountPoint, relativePath.replace('../', ''))
+    }
+    if (!await fileExistsFn(resolvedPath)) {
+      // Showing a modal here because this can only happend through the command devtool-update-recipe which is not used often
+      await vscode.window.showErrorMessage(
+        'Bitbake extension couldn\'t locate a file.', {
+          modal: true,
+          detail: `It looks like you are using the bitbake.commandWrapper setting to use a docker container.\n
+Couldn't find ${inputPath} corresponding paths inside and outside of the container.\n
+You should adjust your docker volumes to use the same URIs as those present on your host machine.`
+        })
+      return inputPath
+    }
+    return resolvedPath
   }
 
   /// If a docker container is used, the workdir may be different from the host system.
   /// This function resolves the path to the host system.
-  private async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
-    if (layerPath === undefined) {
-      return undefined
-    }
-    const hostWorkdir = this.bitbakeDriver?.bitbakeSettings.workingDirectory
-    if (hostWorkdir === undefined) {
-      throw new Error('hostWorkdir is undefined')
-    }
-    if (this.containerMountPoint === undefined) {
-      await this.scanContainerMountPoint(layerPath, hostWorkdir)
-    }
-    if (this.containerMountPoint === undefined || this.hostMountPoint === undefined) {
-      return layerPath
-    }
-    const relativePath = path.relative(this.containerMountPoint, layerPath)
-    return path.resolve(this.hostMountPoint, relativePath)
+  async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
+    return await this.resolveCorrespondingPath(layerPath, false)
+  }
+
+  /// This function mirrors resolveContainerPath, but for the other direction.
+  async resolveHostPath (containerPath: string | undefined): Promise<string | undefined> {
+    return await this.resolveCorrespondingPath(containerPath, true)
+  }
+
+  private async existsInContainer (containerPath: string): Promise<boolean> {
+    const process = runBitbakeTerminalCustomCommand(this._bitbakeDriver, 'test -e ' + containerPath, 'BitBake: Test file', true)
+    const res = finishProcessExecution(process, async () => { await this.bitbakeDriver.killBitbake() })
+    return (await res).status === 0
   }
 
   private searchFiles (pattern: string): ElementInfo[] {
@@ -264,7 +313,7 @@ export class BitBakeProjectScanner {
     const commandResult = await this.executeBitBakeCommand('bitbake-layers show-recipes')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan recipes: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan recipes')
     }
 
     const output = commandResult.output.toString()
@@ -308,11 +357,26 @@ export class BitBakeProjectScanner {
     const commandResult = await this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan overrides: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan overrides')
     }
     const output = commandResult.output.toString()
     const outerReg = /\nOVERRIDES="(.*)"\n/
     this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
+  }
+
+  private async scanDevtoolWorkspaces (): Promise<void> {
+    this._bitbakeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
+    const commandResult = await this.executeBitBakeCommand('devtool status')
+    if (commandResult.status !== 0) {
+      logger.error(`Failed to scan devtool workspaces: ${commandResult.stderr.toString()}`)
+      throw new Error('Failed to scan devtool workspaces')
+    }
+    const output = commandResult.output.toString()
+    const regex = /^([^\s]+):\s([^\s]+)$/gm
+    let match
+    while ((match = regex.exec(output)) !== null) {
+      this._bitbakeScanResult._workspaces.push({ name: match[1], path: match[2] })
+    }
   }
 
   parseAllRecipes (): void {
@@ -362,7 +426,7 @@ export class BitBakeProjectScanner {
 
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan appends: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan appends')
     }
 
     const output = commandResult.output.toString()
@@ -402,11 +466,10 @@ export class BitBakeProjectScanner {
     if (this._bitbakeDriver === undefined) {
       throw new Error('Bitbake driver is not set')
     }
-    return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true))
+    return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true),
+      async () => { await this.bitbakeDriver.killBitbake() })
   }
 }
-
-export const bitBakeProjectScanner = new BitBakeProjectScanner()
 
 function bbappendVersionMatches (bbappendVersion: string | undefined, recipeVersion: string | undefined): boolean {
   if (bbappendVersion === undefined) {

@@ -4,9 +4,15 @@
  * ------------------------------------------------------------------------------------------ */
 
 import type childProcess from 'child_process'
+import { logger } from './OutputLogger'
+
+export const BITBAKE_TIMEOUT = 300000
+export const BITBAKE_EXIT_TIMEOUT = 30000
+
+export type KillProcessFunction = (child: childProcess.ChildProcess) => Promise<void>
 
 /// Wait for an asynchronous process to finish and return its output
-export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>): Promise<childProcess.SpawnSyncReturns<Buffer>> {
+export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>, timeoutCallback: KillProcessFunction = async (child) => { child.kill() }, timeout = BITBAKE_TIMEOUT): Promise<childProcess.SpawnSyncReturns<Buffer>> {
   return await new Promise<childProcess.SpawnSyncReturns<Buffer>>((resolve, reject) => {
     process.then((child) => {
       let stdout = ''
@@ -18,10 +24,11 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
         stderr += data
       })
       child.on('close', (code) => {
+        clearTimeout(timer)
         const stdoutBuffer = Buffer.from(stdout)
         const stderrBuffer = Buffer.from(stderr)
         resolve({
-          pid: -1,
+          pid: child.pid ?? -1,
           output: [stdoutBuffer, stderrBuffer],
           stdout: stdoutBuffer,
           stderr: stderrBuffer,
@@ -29,6 +36,11 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
           signal: null
         })
       })
+      const timer = setTimeout(() => {
+        void timeoutCallback(child)
+        logger.error(`Process ${child.pid} timed out after ${timeout}ms`)
+        // TODO If we can't terminate, just resolve with the current output
+      }, timeout)
     },
     (error) => {
       reject(error)

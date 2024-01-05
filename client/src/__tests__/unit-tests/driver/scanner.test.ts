@@ -4,8 +4,11 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
-import { bitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import { BITBAKE_TIMEOUT } from '../../../lib/src/utils/ProcessUtils'
+
+let bitBakeProjectScanner: BitBakeProjectScanner
 
 const pathToBitbakeFolder = path.join(__dirname, '../../../../../integration-tests/project-folder/sources/poky/bitbake')
 const pathToBuildFolder = path.join(__dirname, '../../../../../integration-tests/project-folder/build')
@@ -25,12 +28,28 @@ describe('BitBakeProjectScanner', () => {
       },
       workspaceFolder
     )
-    bitBakeProjectScanner.setDriver(bitbakeDriver)
+    bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
     bitBakeProjectScanner.onChange.on(('scanReady'), () => {
       DoneCallback()
     })
-    void bitBakeProjectScanner.rescanProject()
-  }, 300000)
+    bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
+      child.on('close', () => {
+        void bitBakeProjectScanner.rescanProject()
+      })
+    }, (error) => {
+      throw error
+    })
+  }, BITBAKE_TIMEOUT)
+
+  afterAll((done) => {
+    bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
+      child.on('close', () => {
+        done()
+      })
+    }, (error) => {
+      throw error
+    })
+  }, BITBAKE_TIMEOUT)
 
   it('can get a list of layers', async () => {
     const layers = bitBakeProjectScanner.scanResult._layers
@@ -81,6 +100,20 @@ describe('BitBakeProjectScanner', () => {
     expect(overrides).toEqual(
       expect.arrayContaining([
         'class-target'
+      ])
+    )
+  })
+
+  it('can get a list of devtool workspaces', async () => {
+    const devtoolWorkspaces = bitBakeProjectScanner.scanResult._workspaces
+    expect(devtoolWorkspaces.length).toBeGreaterThan(0)
+    expect(devtoolWorkspaces).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            name: 'busybox'
+          }
+        )
       ])
     )
   })

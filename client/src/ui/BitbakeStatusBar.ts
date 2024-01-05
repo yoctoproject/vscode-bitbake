@@ -10,11 +10,12 @@ import { type BitbakeCustomExecution } from './BitbakeTaskProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
 export class BitbakeStatusBar {
-  private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [] }
+  private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [] }
   private readonly bitbakeProjectScanner: BitBakeProjectScanner
   readonly statusBarItem: vscode.StatusBarItem
   private scanInProgress = false
   private parsingInProgress = false
+  private commandInProgress: string | undefined
   private scanExitCode = 0
 
   constructor (bitbakeProjectScanner: BitBakeProjectScanner) {
@@ -30,6 +31,15 @@ export class BitbakeStatusBar {
     })
     this.bitbakeProjectScanner.onChange.on('startScan', () => {
       this.scanInProgress = true
+      this.updateStatusBar()
+    })
+
+    this.bitbakeProjectScanner.bitbakeDriver.onBitbakeProcessChange.on('spawn', (command) => {
+      this.commandInProgress = command
+      this.updateStatusBar()
+    })
+    this.bitbakeProjectScanner.bitbakeDriver.onBitbakeProcessChange.on('close', () => {
+      this.commandInProgress = undefined
       this.updateStatusBar()
     })
 
@@ -57,6 +67,16 @@ export class BitbakeStatusBar {
         this.statusBarItem.text = '$(loading~spin) BitBake: Parsing...'
         this.statusBarItem.tooltip = 'BitBake: Parsing...'
       }
+      this.statusBarItem.command = undefined
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
+      return
+    }
+    if (this.commandInProgress !== undefined) {
+      let displayText = 'Building...'
+      if (this.commandInProgress.includes('devtool')) displayText = 'Devtool...'
+      if (this.commandInProgress.includes('which devtool')) displayText = 'Scanning...'
+      this.statusBarItem.text = '$(loading~spin) BitBake: ' + displayText
+      this.statusBarItem.tooltip = 'BitBake: ' + displayText
       this.statusBarItem.command = undefined
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
       return
