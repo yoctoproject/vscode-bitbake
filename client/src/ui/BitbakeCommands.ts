@@ -56,6 +56,7 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-deploy', async (uri) => { await devtoolDeployCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-clean', async (uri) => { await devtoolCleanCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
 }
 
@@ -373,6 +374,25 @@ async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeD
         type: 'bitbake'
       } satisfies BitbakeTaskDefinition,
     `Bitbake: Devtool Build: ${chosenRecipe}`)
+  }
+}
+
+async function devtoolDeployCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: devtool-deploy: ${chosenRecipe}`)
+    const sshTarget = bitbakeDriver.bitbakeSettings.sshTarget
+    if (sshTarget === undefined || sshTarget === '') {
+      clientNotificationManager.showSDKConfigurationError()
+      return
+    }
+    await runBitbakeTerminal(
+      bitbakeDriver,
+      {
+        specialCommand: `devtool deploy-target ${chosenRecipe} ${sshTarget}`,
+        type: 'bitbake'
+      } satisfies BitbakeTaskDefinition,
+    `Bitbake: Devtool Deploy: ${chosenRecipe}`)
   }
 }
 
