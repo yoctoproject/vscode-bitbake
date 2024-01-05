@@ -31,6 +31,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
@@ -111,6 +112,23 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
         task: 'clean'
       } as BitbakeTaskDefinition,
     `Bitbake: Clean: ${chosenRecipe}`)
+  }
+}
+
+async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: scan-recipe-env: ${chosenRecipe}`)
+    await runBitbakeTerminal(
+      bitbakeDriver,
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {
+        recipes: [chosenRecipe],
+        options: {
+          env: true
+        }
+      } as BitbakeTaskDefinition,
+    `Bitbake: Scan recipe env: ${chosenRecipe}`)
   }
 }
 
