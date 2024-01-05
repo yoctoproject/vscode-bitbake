@@ -32,6 +32,12 @@ describe('Create basic embedded bash documents', () => {
       'with override',
       'foo:append(){\nBAR=""\n}',
       `${shebang}foo       (){\nBAR=""\n}`
+    ],
+    [
+      'with inline python',
+      // eslint-disable-next-line no-template-curly-in-string
+      'foo(){\n${@FOO}\n}',
+      `${shebang}foo(){\n\${?   }\n}`
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'bash')
@@ -114,14 +120,13 @@ describe('Create Python embedded language content with inline Python', () => {
       // eslint-disable-next-line no-template-curly-in-string
       'inherit ${@"test"}',
       `${imports}          \n\n"test"\n`
-    ]
-    /* // This is not yet supported by tree-sitter
+    ],
     [
       'inside bash function',
       // eslint-disable-next-line no-template-curly-in-string
-      'foo(){\necho ${@"bar"}\n}\n',
-      '      \n       \n"bar"\n\n \n'
-    ] */
+      'foo(){\n${@FOO}\n}',
+      `${imports}      \n  \n\nFOO\n\n `
+    ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
     expect(embeddedContent).toEqual(result)
