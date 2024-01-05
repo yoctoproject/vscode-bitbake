@@ -112,8 +112,7 @@ export class BitBakeProjectScanner {
         this.onChange.emit('scanReady', this._bitbakeScanResult)
       } catch (error) {
         logger.error(`scanning of project is abborted: ${error as any}`)
-        this.parseAllRecipes()
-        this.onChange.emit('scanReady', { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [] })
+        this.onChange.emit('scanReady', this._bitbakeScanResult)
       }
 
       this._scanStatus.scanIsRunning = false
@@ -222,6 +221,7 @@ export class BitBakeProjectScanner {
     } else {
       const error = commandResult.stderr.toString()
       logger.error(`can not scan available layers error: ${error}`)
+      throw new Error('can not scan available layers')
     }
   }
 
@@ -313,7 +313,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const commandResult = await this.executeBitBakeCommand('bitbake-layers show-recipes')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan recipes: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan recipes')
     }
 
     const output = commandResult.output.toString()
@@ -357,7 +357,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const commandResult = await this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan overrides: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan overrides')
     }
     const output = commandResult.output.toString()
     const outerReg = /\nOVERRIDES="(.*)"\n/
@@ -369,7 +369,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const commandResult = await this.executeBitBakeCommand('devtool status')
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan devtool workspaces: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan devtool workspaces')
     }
     const output = commandResult.output.toString()
     const regex = /^([^\s]+):\s([^\s]+)$/gm
@@ -426,7 +426,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
     if (commandResult.status !== 0) {
       logger.error(`Failed to scan appends: ${commandResult.stderr.toString()}`)
-      return
+      throw new Error('Failed to scan appends')
     }
 
     const output = commandResult.output.toString()
