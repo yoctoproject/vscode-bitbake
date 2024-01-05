@@ -454,7 +454,7 @@
         {
           "command": "bitbake.run-task",
           "group": "0@bitbake_recipe@2",
-          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.drop-recipe",
@@ -464,12 +464,17 @@
         {
           "command": "bitbake.build-recipe",
           "group": "inline@0",
-          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.clean-recipe",
           "group": "inline@1",
           "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.devtool-build",
+          "group": "inline@0",
+          "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.drop-recipe",
