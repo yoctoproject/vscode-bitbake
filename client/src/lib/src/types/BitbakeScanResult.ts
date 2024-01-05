@@ -44,3 +44,7 @@ export interface BitbakeScanResult {
 export function scanContainsData (scanResult: BitbakeScanResult): boolean {
   return scanResult._layers.length > 0 || scanResult._recipes.length > 0 || scanResult._workspaces.length > 0
 }
+
+export function scanContainsRecipes (scanResult: BitbakeScanResult): boolean {
+  return scanResult._layers.length > 0 || scanResult._recipes.length > 0
+}
