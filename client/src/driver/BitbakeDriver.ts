@@ -134,6 +134,13 @@ export class BitbakeDriver {
       return sanitizeForShell(bitbakeTaskDefinition.specialCommand) as string
     }
 
+    const OPTIONS_MAP: Record<keyof BitbakeTaskDefinition['options'], string> = {
+      continue: '-k',
+      force: '-f',
+      parseOnly: '-p',
+      env: '-e'
+    }
+
     let command = 'bitbake'
 
     bitbakeTaskDefinition.recipes?.forEach(recipe => {
@@ -142,14 +149,13 @@ export class BitbakeDriver {
     if (bitbakeTaskDefinition.task !== undefined) {
       command = appendCommandParam(command, `-c ${sanitizeForShell(bitbakeTaskDefinition.task)}`)
     }
-    if (bitbakeTaskDefinition.options?.continue === true) {
-      command = appendCommandParam(command, '-k')
-    }
-    if (bitbakeTaskDefinition.options?.force === true) {
-      command = appendCommandParam(command, '-f')
-    }
-    if (bitbakeTaskDefinition.options?.parseOnly === true) {
-      command = appendCommandParam(command, '-p')
+    const options = bitbakeTaskDefinition.options
+    if (options !== undefined) {
+      Object.keys(options).forEach(key => {
+        if (options[key as keyof BitbakeTaskDefinition['options']] === true) {
+          command = appendCommandParam(command, OPTIONS_MAP[key as keyof BitbakeTaskDefinition['options']])
+        }
+      })
     }
 
     return command
