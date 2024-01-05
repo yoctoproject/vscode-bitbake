@@ -45,6 +45,7 @@ export class BitbakeDriver {
     await this.waitForBitbakeToFinish()
     logger.debug(`Executing Bitbake command with ${shell} in ${cwd}: ${script}`)
     const child = childProcess.spawn(script, {
+      stdio: ['ipc', 'pipe', 'pipe'],
       shell,
       cwd,
       env: { ...process.env, ...this.bitbakeSettings.shellEnv }
@@ -153,6 +154,10 @@ export class BitbakeDriver {
     }
 
     return command
+  }
+
+  composeInteractiveCommand (): string {
+    return 'script -qec "bash -i"'
   }
 
   composeDevtoolIDECommand (recipe: string): string {

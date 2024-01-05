@@ -80,11 +80,14 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     }
   }
 
-  handleInput (data: string): void {
+  async handleInput (data: string): Promise<void> {
     if (this.process === undefined) {
       this.closeEmitter.fire(0)
       if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
     }
+    const child = await this.process
+    child?.stdin?.write(data)
+    child?.send(data)
   }
 
   private process: Promise<child_process.ChildProcess> | undefined

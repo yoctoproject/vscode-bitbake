@@ -76,4 +76,31 @@ describe('BitbakeDriver Tests', () => {
     const script = driver.composeBitbakeScript('bitbake busybox')
     expect(script).toEqual(expect.stringContaining("docker run --rm -it -v /home/user/yocto:/workdir crops/poky --workdir=/workdir /bin/bash -c '. /home/user/yocto/poky/oe-init-build-env && bitbake busybox'"))
   })
+
+  it('can spawn an interactive process', (done) => {
+    const driver = new BitbakeDriver()
+    driver.loadSettings({
+      pathToBitbakeFolder: '',
+      pathToEnvScript: '',
+      pathToBuildFolder: '',
+      workingDirectory: '',
+      commandWrapper: ''
+    })
+    const process = driver.spawnBitbakeProcess(driver.composeInteractiveCommand())
+    process.then((process) => {
+      process.send('echo "Hello World"')
+      process.stdout?.on('data', (data) => {
+        if (data.includes('Hello World') === true) {
+          done()
+        }
+      })
+      process.on('exit', (code) => {
+        if (code !== 0) {
+          done('Process exited with code ' + code)
+        }
+      })
+    }, (error) => {
+      done(error)
+    })
+  })
 })
