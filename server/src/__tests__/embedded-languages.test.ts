@@ -27,6 +27,11 @@ describe('Create basic embedded bash documents', () => {
       'basic',
       'foo(){\nBAR=""\n}',
       `${shebang}foo(){\nBAR=""\n}`
+    ],
+    [
+      'with override',
+      'foo:append(){\nBAR=""\n}',
+      `${shebang}foo       (){\nBAR=""\n}`
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'bash')
