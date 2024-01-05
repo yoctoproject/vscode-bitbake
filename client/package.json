@@ -354,6 +354,11 @@
         "icon": "$(gear)"
       },
       {
+        "command": "bitbake.devtool-deploy",
+        "title": "Bitbake: Devtool: Deploy recipe",
+        "description": "Deploy a devtool package on an SSH target."
+      },
+      {
         "command": "bitbake.devtool-clean",
         "title": "BitBake: Devtool: Clean recipe",
         "description": "Clean a recipe using devtool.",
@@ -524,6 +529,11 @@
         {
           "command": "bitbake.devtool-build",
           "group": "0@bitbake_recipe@0",
+          "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.devtool-deploy",
+          "group": "0@bitbake_recipe@2",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
