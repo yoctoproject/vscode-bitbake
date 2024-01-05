@@ -515,7 +515,8 @@ describe('on hover', () => {
       ],
       _layers: [],
       _overrides: [],
-      _recipes: []
+      _recipes: [],
+      _workspaces: []
     }
 
     analyzer.analyze({
