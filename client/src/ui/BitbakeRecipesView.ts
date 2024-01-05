@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
-import { type ElementInfo, type BitbakeScanResult, type PathInfo, scanContainsData } from '../lib/src/types/BitbakeScanResult'
+import { type ElementInfo, type BitbakeScanResult, type PathInfo, scanContainsData, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { bitbakeESDKMode } from '../driver/BitbakeESDK'
@@ -51,7 +51,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipeTreeItem | undefined> = new vscode.EventEmitter<BitbakeRecipeTreeItem | undefined>()
   readonly onDidChangeTreeData: vscode.Event<BitbakeRecipeTreeItem | undefined> = this._onDidChangeTreeData.event
   private readonly bitbakeProjectScanner: BitBakeProjectScanner
-  private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [] }
+  private bitbakeScanResults: BitbakeScanResult | undefined
 
   constructor (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScanner: BitBakeProjectScanner) {
     this.bitbakeWorkspace = bitbakeWorkspace
@@ -64,8 +64,8 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
       this._onDidChangeTreeData.fire(undefined)
     })
     bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
-      // In case a parsing error was just introduce, we keep the previous results to keep navigation functional
-      if (!scanContainsData(this.bitbakeScanResults) || scanContainsData(scanResults)) {
+      // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
+      if (this.bitbakeScanResults === undefined || !scanContainsRecipes(this.bitbakeScanResults) || scanContainsRecipes(scanResults)) {
         this.bitbakeScanResults = scanResults
       }
       this._onDidChangeTreeData.fire(undefined)
@@ -86,8 +86,8 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
       return []
     }
 
-    if (!scanContainsData(this.bitbakeScanResults)) {
-      while (!scanContainsData(this.bitbakeScanResults)) {
+    if (this.bitbakeScanResults === undefined) {
+      while (this.bitbakeScanResults === undefined) {
         await new Promise(resolve => setTimeout(resolve, 300))
       }
     }
