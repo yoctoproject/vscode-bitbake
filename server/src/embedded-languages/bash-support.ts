@@ -8,6 +8,7 @@ import * as TreeSitterUtils from '../tree-sitter/utils'
 import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 import { type SyntaxNode } from 'web-tree-sitter'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 export const shebang = '#!/bin/sh\n'
 
@@ -35,10 +36,31 @@ const handleFunctionDefinitionNode = (node: SyntaxNode, embeddedLanguageDoc: Emb
       case 'override':
         handleOverrideNode(child, embeddedLanguageDoc)
         break
+      case 'inline_python':
+        handleInlinePythonNode(child, embeddedLanguageDoc)
+        break
       default:
         break
     }
   })
+}
+
+const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  // Example:
+  // if [ "${@d.getVar('FOO')}" = "0" ] ;
+  // will become
+  // if [ "${?               }" = "0" ] ;
+  // Replacing the whole inline_python by spaces would create a constant string and might trigger a warning if the spellcheck
+  // extension is activated, since the comparison with "0" would always give the same result
+  // ${?} is an arbitrary value that is expected not to cause any trouble.
+  const trailingSpacesLength = inlinePythonNode.text.length - 4
+  if (trailingSpacesLength <= 0) {
+    // This is expected to never happen
+    logger.error(`[handleInlinePythonNode (Bash)] Invalid string length for node ${inlinePythonNode.toString()}`)
+    return
+  }
+  const replacement = `\${?${' '.repeat(trailingSpacesLength)}}`
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, inlinePythonNode.endIndex, replacement)
 }
 
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
