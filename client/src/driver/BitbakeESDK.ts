@@ -9,6 +9,7 @@ import { type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
 import { loadJsonFile, setJsonProperty, saveJsonFile, mergeJsonArray } from '../utils/JSONFile'
 import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
+import * as vscode from 'vscode'
 
 export let bitbakeESDKMode: boolean = false
 
@@ -28,6 +29,7 @@ export function configureDevtoolSDKFallback (workspace: DevtoolWorkspaceInfo, bi
   createVSCodeFolderIfNotExists(workspace.path)
   copyBitbakeSettings(workspace.path, bitbakeSettings)
   generateTasksDefinitions(workspace, bitbakeSettings)
+  void vscode.window.showInformationMessage(`Devtool workspace for ${workspace.name} successfully configured`)
 }
 
 // exported for testing only
