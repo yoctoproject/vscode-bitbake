@@ -195,6 +195,9 @@ You can also set up the SDK for the recipe by running the `Bitbake: Devtool: Con
 
 If your recipe's class is not supported, or you have an older version of poky, the `Bitbake: Devtool: Configure devtool fallback` command will add tasks to build and deploy the package through `devtool build/deploy-target`. Linting, debugging, testing and other advanced features will not be available in this mode.
 
+## Troubleshooting
+See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
+
 ## Contributing
 
 ### Reporting issues
