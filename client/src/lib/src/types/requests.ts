@@ -8,17 +8,20 @@ import { type EmbeddedLanguageDocInfos } from './embedded-languages'
 
 export enum RequestType {
   EmbeddedLanguageDocInfos = 'EmbeddedLanguageDocInfos',
-  getLinksInDocument = 'getLinksInDocument'
+  getLinksInDocument = 'getLinksInDocument',
+  ProcessRecipeScanResults = 'ProcessRecipeScanResults'
 }
 
 export const RequestMethod: Record<RequestType, string> = {
   [RequestType.EmbeddedLanguageDocInfos]: 'custom/requestEmbeddedLanguageDocInfos',
-  [RequestType.getLinksInDocument]: 'custom/getLinksInDocument'
+  [RequestType.getLinksInDocument]: 'custom/getLinksInDocument',
+  [RequestType.ProcessRecipeScanResults]: 'custom/ProcessRecipeScanResults'
 }
 
 export interface RequestParams {
   [RequestType.EmbeddedLanguageDocInfos]: RequestEmbeddedLanguageDocInfosParams
   [RequestType.getLinksInDocument]: { documentUri: string }
+  [RequestType.ProcessRecipeScanResults]: { scanResults: string }
 }
 
 export interface RequestResult {
