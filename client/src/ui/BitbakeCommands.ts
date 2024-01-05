@@ -256,7 +256,7 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitbake
       return
     }
     if (!await checkIdeSdkAvailable(bitbakeDriver)) {
-      clientNotificationManager.showSDKUnavailableError()
+      clientNotificationManager.showSDKUnavailableError(chosenRecipe)
       return
     }
     const command = bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
