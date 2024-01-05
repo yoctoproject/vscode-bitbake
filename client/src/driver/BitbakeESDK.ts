@@ -69,7 +69,7 @@ export function generateTasksDefinitions (workspace: DevtoolWorkspaceInfo, bitba
     type: 'bitbake',
     specialCommand: `devtool build -c ${recipeName}`
   })
-  if (bitbakeSettings.sshTarget !== undefined) {
+  if (bitbakeSettings.sshTarget !== undefined && bitbakeSettings.sshTarget !== '') {
     newTasks.push({
       label: `Devtool Deploy ${recipeName}`,
       type: 'bitbake',
