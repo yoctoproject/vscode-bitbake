@@ -33,8 +33,18 @@ export class ClientNotificationManager {
     }
   }
 
-  showSDKUnavailableError (): void {
-    void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to enable SDK features. Alternatively, use the "Devtool: SDK fallback" command with less features.')
+  showSDKUnavailableError (recipe: string): void {
+    void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to enable SDK features. Alternatively, use the "Devtool: SDK fallback" command with less features.',
+      'Run devtool SDK fallback',
+      'Close'
+    )
+      .then((item) => {
+        if (item === 'Run devtool SDK fallback') {
+          void commands.executeCommand('bitbake.devtool-sdk-fallback', recipe)
+        }
+      }, (reason) => {
+        logger.warn('Could not show bitbake error dialog: ' + reason)
+      })
   }
 
   showSDKSuggestion (recipe: string): void {
