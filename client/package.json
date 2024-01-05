@@ -320,6 +320,11 @@
         "description": "Run a specific task for a bitbake recipe."
       },
       {
+        "command": "bitbake.scan-recipe-env",
+        "title": "BitBake: Scan Recipe",
+        "description": "Scan the recipe for the complete information about the environment."
+      },
+      {
         "command": "bitbake.drop-recipe",
         "title": "BitBake: Drop a recipe from the active workspace",
         "description": "Stop watching or suggesting a recipe in bitbake commands.",
@@ -433,6 +438,10 @@
         {
           "command": "bitbake.run-task",
           "group": "0@bitbake_recipe@2"
+        },
+        {
+          "command": "bitbake.scan-recipe-env",
+          "group": "0@bitbake_recipe@3"
         },
         {
           "command": "bitbake.devtool-modify",
