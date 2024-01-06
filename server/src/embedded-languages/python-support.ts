@@ -13,14 +13,12 @@ import { embeddedLanguageDocsManager } from './documents-manager'
 import { type EmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
 
 export const imports = [
-  'import bb',
-  'from bb import data_smart',
-  'd = data_smart.DataSmart()',
-  'from bb import event',
-  'e = event.Event()',
+  'import bb, bb.build, bb.compress.zstd, bb.data, bb.data_smart, bb.event, bb.fetch2, bb.parse, bb.persist_data, bb.process, bb.progress, bb.runqueue, bb.siggen, bb.utils',
+  'import oe.data, oe.path, oe.utils, oe.types, oe.package, oe.packagegroup, oe.sstatesig, oe.lsb, oe.cachedpath, oe.license, oe.qa, oe.reproducible, oe.rust, oe.buildcfgoe',
+  'd = bb.data_smart.DataSmart()',
+  'e = bb.event.Event()',
   'e.data = d',
   'import os',
-  'import oe.data, oe.path, oe.utils, oe.types, oe.package, oe.packagegroup, oe.sstatesig, oe.lsb, oe.cachedpath, oe.license, oe.qa, oe.reproducible, oe.rust, oe.buildcfgoe',
   ''
 ].join('\n')
 
