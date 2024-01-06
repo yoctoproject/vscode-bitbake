@@ -77,8 +77,14 @@ suite('Bitbake Definition Test Suite', () => {
     await testDefinition(position, expectedPathEnding)
   }).timeout(300000)
 
+  test('Definition appears properly in Python on oe', async () => {
+    const position = new vscode.Position(11, 3)
+    const expectedPathEnding = 'meta/lib/oe/__init__.py'
+    await testDefinition(position, expectedPathEnding)
+  }).timeout(300000)
+
   test('Definition appears properly on Bash variable', async () => {
-    const position = new vscode.Position(14, 3)
+    const position = new vscode.Position(15, 3)
     const expectedPathEnding = filePath
     const expectedRange = new vscode.Range(13, 2, 13, 8)
     await testDefinition(position, expectedPathEnding, expectedRange)

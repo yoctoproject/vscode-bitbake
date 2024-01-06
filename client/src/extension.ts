@@ -19,6 +19,7 @@ import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './driver/BitbakeESDK'
+import path from 'path'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -50,10 +51,13 @@ function updatePythonPath (): void {
   const pythonConfig = vscode.workspace.getConfiguration('python')
   const pathToBitbakeFolder = bitbakeConfig.pathToBitbakeFolder
   const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
+  const pathToPokyMetaLib = path.join(pathToBitbakeFolder, '../meta/lib') // We assume BitBake is into Poky
   for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
     const extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
-    if (!extraPaths.includes(pathToBitbakeLib)) {
-      extraPaths.push(`${pathToBitbakeFolder}/lib`)
+    for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib]) {
+      if (!extraPaths.includes(pathToAdd)) {
+        extraPaths.push(pathToAdd)
+      }
       void pythonConfig.update(pythonSubConf, extraPaths, vscode.ConfigurationTarget.Workspace)
     }
   }

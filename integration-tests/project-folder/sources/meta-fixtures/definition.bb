@@ -9,6 +9,7 @@ TEST = "${@e.data.getVar()}"
 def test ():
   d = ''
   print(d)
+  oe
 
 test() {
   FOO=''
