@@ -138,8 +138,8 @@ const getDefinitionOfD = async <DefinitionType extends Location | LocationLink>(
   return await redirectDefinition(definition, dRange, dataSmartPosition)
 }
 
-export const eRange = new Range(4, 0, 4, 1) // Where `e` is located in the embedded language document
-export const eventPosition = new Position(4, 12) // Where `Event` (event.Event()) is reachable in the embedded language document
+export const eRange = new Range(3, 0, 3, 1) // Where `e` is located in the embedded language document
+export const eventPosition = new Position(3, 14) // Where `Event` (event.Event()) is reachable in the embedded language document
 
 // Handle `e` in `e.data.getVar('')`
 const getDefinitionOfE = async <DefinitionType extends Location | LocationLink>(
