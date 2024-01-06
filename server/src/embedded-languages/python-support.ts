@@ -19,6 +19,7 @@ export const imports = [
   'e = event.Event()',
   'e.data = d',
   'import os',
+  'import oe.data, oe.path, oe.utils, oe.types, oe.package, oe.packagegroup, oe.sstatesig, oe.lsb, oe.cachedpath, oe.license, oe.qa, oe.reproducible, oe.rust, oe.buildcfgoe',
   ''
 ].join('\n')
 
