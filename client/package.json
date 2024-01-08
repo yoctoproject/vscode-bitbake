@@ -209,7 +209,8 @@
           "regexp": "^.*ParseError (at|in) (.+?):(\\d+)?:? (.+)$",
           "file": 2,
           "line": 3,
-          "message": 4
+          "message": 4,
+          "column": 0
         }
       },
       {
