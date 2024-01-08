@@ -143,7 +143,7 @@ documents.onDidChangeContent(async (event) => {
 
 documents.onDidSave(async (event) => {
   if (parseOnSave && !eSDKMode) {
-    logger.debug(`onDidSave ${JSON.stringify(event)}`)
+    logger.debug('[onDidSave] Parsing all recipes...')
     void connection.sendRequest('bitbake/parseAllRecipes')
   }
 })
