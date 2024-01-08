@@ -307,6 +307,7 @@
       {
         "command": "bitbake.watch-recipe",
         "title": "BitBake: Add a recipe to the active workspace",
+        "icon": "$(add)",
         "description": "Start watching or suggesting a recipe in bitbake commands."
       },
       {
@@ -440,8 +441,13 @@
       ],
       "view/title": [
         {
-          "command": "bitbake.rescan-project",
+          "command": "bitbake.watch-recipe",
           "group": "navigation@0",
+          "when": "view == bitbakeRecipes"
+        },
+        {
+          "command": "bitbake.rescan-project",
+          "group": "navigation@1",
           "when": "view == bitbakeRecipes"
         }
       ],
