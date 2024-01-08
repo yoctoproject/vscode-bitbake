@@ -18,7 +18,7 @@ import {
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { type EmbeddedRegions, getEmbeddedRegionsFromNode, getGlobalDeclarationsAndComments, type GlobalDeclarations, type GlobalSymbolComments } from './declarations'
+import { getGlobalDeclarationsAndComments, type GlobalDeclarations, type GlobalSymbolComments } from './declarations'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
@@ -32,7 +32,6 @@ export interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   globalSymbolComments: GlobalSymbolComments
-  embeddedRegions: EmbeddedRegions
   includeFileUris?: string[]
   tree: Parser.Tree
   extraSymbols?: GlobalDeclarations[] // symbols from the include files
@@ -74,7 +73,6 @@ export default class Analyzer {
 
     const tree = this.parser.parse(fileContent)
     const [globalDeclarations, globalSymbolComments] = getGlobalDeclarationsAndComments({ tree, uri })
-    const embeddedRegions = getEmbeddedRegionsFromNode(tree, uri)
 
     // eslint-disable-next-line prefer-const
     let extraSymbols: GlobalDeclarations[] = []
@@ -86,7 +84,6 @@ export default class Analyzer {
       document,
       globalDeclarations,
       globalSymbolComments,
-      embeddedRegions,
       includeFileUris,
       tree,
       extraSymbols
@@ -112,24 +109,6 @@ export default class Analyzer {
         symbols = symbols.concat(symbolArray)
       })
       return symbols
-    }
-    return []
-  }
-
-  public getBashRegions (uri: string): SymbolInformation[] {
-    const analyzedDocument = this.uriToAnalyzedDocument[uri]
-    if (analyzedDocument !== undefined) {
-      const { embeddedRegions } = analyzedDocument
-      return embeddedRegions.bash
-    }
-    return []
-  }
-
-  public getPythonRegions (uri: string): SymbolInformation[] {
-    const analyzedDocument = this.uriToAnalyzedDocument[uri]
-    if (analyzedDocument !== undefined) {
-      const { embeddedRegions } = analyzedDocument
-      return embeddedRegions.python
     }
     return []
   }
@@ -273,13 +252,29 @@ export default class Analyzer {
     (n?.type === ':' && n?.parent?.type === 'ERROR' && n?.parent?.previousSibling?.type === 'override') // when having MYVAR:append: = '123' and the second or later colon is typed
   }
 
-  public isInsidePythonRegion (
+  public isInsideBashRegion (
     uri: string,
     line: number,
     column: number
   ): boolean {
     let n = this.nodeAtPoint(uri, line, column)
 
+    while (n?.parent !== null && n?.parent !== undefined) {
+      if (TreeSitterUtils.isShellDefinition(n.parent)) {
+        return true
+      }
+      n = n.parent
+    }
+
+    return false
+  }
+
+  public isInsidePythonRegion (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    let n = this.nodeAtPoint(uri, line, column)
     while (n?.parent !== null && n?.parent !== undefined) {
       if (TreeSitterUtils.isInlinePython(n.parent) || TreeSitterUtils.isPythonDefinition(n.parent)) {
         return true
@@ -507,7 +502,6 @@ export default class Analyzer {
             document: textDocument,
             globalDeclarations,
             globalSymbolComments: getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[1],
-            embeddedRegions: getEmbeddedRegionsFromNode(parsedTree, uri), // TODO: Avoid doing this operation as it is not needed during the sourcing process
             tree: parsedTree
           }
         } else {

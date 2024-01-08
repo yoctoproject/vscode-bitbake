@@ -74,38 +74,6 @@ export function getGlobalDeclarationsAndComments ({
   return [globalDeclarations, symbolComments]
 }
 
-export interface EmbeddedRegions {
-  bash: LSP.SymbolInformation[]
-  python: LSP.SymbolInformation[]
-}
-
-export const getEmbeddedRegionsFromNode = (tree: Parser.Tree, uri: string): EmbeddedRegions => {
-  const pythonRegions: LSP.SymbolInformation[] = []
-  const bashRegions: LSP.SymbolInformation[] = []
-
-  TreeSitterUtil.forEach(tree.rootNode, (node) => {
-    if (TreeSitterUtil.isShellDefinition(node)) {
-      const symbol = nodeToSymbolInformation({ node, uri })
-      if (symbol !== null) {
-        bashRegions.push(symbol)
-      }
-      return false
-    } else if (TreeSitterUtil.isPythonDefinition(node) || TreeSitterUtil.isInlinePython(node)) {
-      const symbol = nodeToSymbolInformation({ node, uri })
-      if (symbol !== null) {
-        pythonRegions.push(symbol)
-      }
-      return false
-    }
-    return true
-  })
-
-  return {
-    bash: bashRegions,
-    python: pythonRegions
-  }
-}
-
 export function nodeToSymbolInformation ({
   node,
   uri
