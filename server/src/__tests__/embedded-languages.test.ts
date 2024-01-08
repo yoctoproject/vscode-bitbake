@@ -5,7 +5,7 @@
 
 import { randomUUID } from 'crypto'
 
-import { generateEmbeddedLanguageDocs } from '../embedded-languages/general-support'
+import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from '../embedded-languages/general-support'
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateParser } from '../tree-sitter/parser'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -130,6 +130,62 @@ describe('Create Python embedded language content with inline Python', () => {
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
     expect(embeddedContent).toEqual(result)
+  })
+})
+
+describe('Finds proper embedded language type', () => {
+  beforeAll(async () => {
+    if (!analyzer.hasParser()) {
+      const parser = await generateParser()
+      analyzer.initialize(parser)
+    }
+    analyzer.resetAnalyzedDocuments()
+  })
+
+  test.each([
+    [
+      'BitBake variable',
+      'BAR = "TEST"',
+      { line: 0, character: 1 },
+      undefined
+    ],
+    [
+      'Bash function',
+      'foo(){\n  BAR=""\n}',
+      { line: 0, character: 3 },
+      'bash'
+    ],
+    [
+      'BitBake-Style Python Function',
+      'python(){\n  pass\n}',
+      { line: 1, character: 3 },
+      'python'
+    ],
+    [
+      'Python function',
+      'def foo():\n  pass',
+      { line: 1, character: 3 },
+      'python'
+    ],
+    [
+      'Inline Python',
+      // eslint-disable-next-line no-template-curly-in-string
+      'FOO = "${@BAR}"',
+      { line: 0, character: 11 },
+      'python'
+    ],
+    [
+      'Inline Python into Bash function',
+      // eslint-disable-next-line no-template-curly-in-string
+      'foo(){\n  ${@BAR}\n}',
+      { line: 1, character: 6 },
+      'python'
+    ]
+  ])('%s', async (description, content, position, result) => {
+    const uri = randomUUID()
+    analyzer.analyze({ document: TextDocument.create(uri, 'bitbake', 1, content), uri })
+    const type = getEmbeddedLanguageTypeOnPosition(uri.toString(), position)
+    expect(type).toEqual(result)
   })
 })
 

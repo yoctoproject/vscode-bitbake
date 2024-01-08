@@ -56,18 +56,6 @@ export function isShellDefinition (n: SyntaxNode): boolean {
   return n.type === 'function_definition'
 }
 
-export function containsInlinePython (n: SyntaxNode): boolean {
-  let contains = false
-  forEach(n, (node) => {
-    if (isInlinePython(node)) {
-      contains = true
-      return false
-    }
-    return true
-  })
-  return contains
-}
-
 export function isVariableReference (n: SyntaxNode): boolean {
   switch (n.type) {
     case 'identifier':
