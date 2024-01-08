@@ -19,8 +19,9 @@ import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './driver/BitbakeESDK'
+import { setLanguageClient } from './ui/BitbakeTerminal'
 
-let client: LanguageClient
+export let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
@@ -73,6 +74,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
   bitBakeProjectScanner.setClient(client)
+  setLanguageClient(client)
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 

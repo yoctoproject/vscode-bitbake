@@ -9,9 +9,16 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
-
+import { RequestMethod } from '../lib/src/types/requests'
+import { type LanguageClient } from 'vscode-languageclient/node'
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
+
+let _languageClient: LanguageClient
+
+export function setLanguageClient (client: LanguageClient): void {
+  _languageClient = client
+}
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
 export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<child_process.ChildProcess> {
@@ -58,6 +65,8 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   onDidClose = this.closeEmitter.event
   onDidChangeName = this.changeNameEmitter.event
   lastExitCode: number = 0
+  outputDataString: string = ''
+  terminalName: string = ''
 
   readonly parentTerminal: BitbakeTerminal | undefined
   bitbakeDriver: BitbakeDriver
@@ -116,9 +125,14 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     this.process = process
     const processResolved = await this.process
 
+    this.outputDataString = ''
+    this.terminalName = terminalName ?? ''
     processResolved.stdout?.on('data', (data) => {
       this.output(data.toString())
       logger.debug(data.toString())
+      if (terminalName !== undefined && terminalName.includes('Bitbake: Scan recipe env')) {
+        this.outputDataString += data.toString()
+      }
     })
     processResolved.stdout?.once('data', () => {
       // I wanted to use appropriate events like process.on('spawn') or terminal.open() but they are not triggered at the right time for
@@ -139,6 +153,10 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     processResolved.on('exit', (code) => {
       this.lastExitCode = code ?? -1
       this.process = undefined
+      if (this.terminalName.includes('Bitbake: Scan recipe env')) {
+        _languageClient === undefined && logger.error('Language client not set, unable to send request to the server to process scan results')
+        void _languageClient?.sendRequest(RequestMethod.ProcessRecipeScanResults, { scanResults: this.outputDataString })
+      }
       if (code !== 0) {
         this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + code + '\n')
         if (!this.isTaskTerminal()) {

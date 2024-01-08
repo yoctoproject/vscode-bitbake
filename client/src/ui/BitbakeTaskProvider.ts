@@ -15,6 +15,7 @@ export interface BitbakeTaskDefinition extends vscode.TaskDefinition {
     continue?: boolean
     force?: boolean
     parseOnly?: boolean
+    env?: boolean // Recipe environment
   }
   specialCommand?: string
 }

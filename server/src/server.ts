@@ -123,6 +123,10 @@ connection.onRequest(RequestMethod.getLinksInDocument, (params: RequestParams['g
   return analyzer.getLinksInStringContent(params.documentUri)
 })
 
+connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
+  logger.debug(`[OnRequest] <ProcessRecipeScanResults> ${param.scanResults.length}`)
+})
+
 connection.onNotification(
   NotificationMethod.FilenameChanged,
   ({ oldUriString, newUriString }: NotificationParams['FilenameChanged']): void => {

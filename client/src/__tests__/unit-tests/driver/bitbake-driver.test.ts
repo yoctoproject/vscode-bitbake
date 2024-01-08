@@ -5,6 +5,7 @@
 
 import * as fs from 'fs'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import { type BitbakeTaskDefinition } from '../../../ui/BitbakeTaskProvider'
 
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
@@ -75,5 +76,25 @@ describe('BitbakeDriver Tests', () => {
 
     const script = driver.composeBitbakeScript('bitbake busybox')
     expect(script).toEqual(expect.stringContaining("docker run --rm -it -v /home/user/yocto:/workdir crops/poky --workdir=/workdir /bin/bash -c '. /home/user/yocto/poky/oe-init-build-env && bitbake busybox'"))
+  })
+
+  describe('composeBitbakeCommand', () => {
+    let bitbakeDriver: BitbakeDriver
+    beforeEach(() => {
+      bitbakeDriver = new BitbakeDriver()
+    })
+
+    it('should compose bitbake command for scanning recipe environment', () => {
+      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      const bitbakeTaskDefinition = {
+        recipes: ['recipe1'],
+        options: {
+          env: true
+        }
+      } as BitbakeTaskDefinition
+
+      const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
+      expect(command).toEqual('bitbake recipe1 -e')
+    })
   })
 })
