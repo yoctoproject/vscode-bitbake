@@ -20,6 +20,7 @@ import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './driver/BitbakeESDK'
 import path from 'path'
+import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -30,6 +31,7 @@ export let bitbakeExtensionContext: vscode.ExtensionContext
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let bitbakeRecipesView: BitbakeRecipesView | undefined
 let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
+let terminalProvider: BitbakeTerminalProfileProvider | undefined
 
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
@@ -99,6 +101,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
+  terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
+  vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
 
   const provider = new BitbakeDocumentLinkProvider(client)
   const selector = { scheme: 'file', language: 'bitbake' }

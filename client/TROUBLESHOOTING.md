@@ -14,6 +14,38 @@ While typing, tabs with UUID names (ex. aa2a3ba2-769c-4900-8f5f-31ea16bfbc8f.sh)
 
 We haven't found a way to prevent these tabs from opening, but we try to close them as quickly as possible.
 
+### BrokenPipeError on BitBake commands
+
+If you are using a `bitbake.commandWrapper` that relies on docker containers, you may encounter the following error:
+
+```bash
+[Errno 32] Broken pipeTraceback (most recent call last):
+  File "/home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/bitbake/lib/bb/ui/knotty.py", line 647, in main
+    ret, error = server.runCommand(["ping"])
+[...]
+  File "/usr/lib/python3.8/multiprocessing/connection.py", line 368, in _send
+    n = write(self._handle, buf)
+BrokenPipeError: [Errno 32] Broken pipe
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/bitbake/bin/bitbake", line 36, in <module>
+    sys.exit(bitbake_main(BitBakeConfigParameters(sys.argv),
+[...]
+  File "/usr/lib/python3.8/multiprocessing/connection.py", line 368, in _send
+    n = write(self._handle, buf)
+BrokenPipeError: [Errno 32] Broken pipe
+```
+
+These are due to a limitation of the bitbake server when running through containers in parallel. You'll get this error
+when bitbake is started in multiple containers at the same time. To avoid this, wait for other bitbake processes to
+finish before starting a new bitbake command. This extension won't allow concurrent commands, but you may have other
+bitbake commands running in the background:
+ - From a terminal
+ - From another VSCode window
+ - From another user session
+
 ## Trade-offs
 
 ### Trade-offs on Diagnostics

@@ -548,6 +548,14 @@
           "when": "viewItem == devtoolWorskpaceCtx"
         }
       ]
+    },
+    "terminal": {
+      "profiles": [
+        {
+          "id": "bitbake.terminal",
+          "title": "bitbake"
+        }
+      ]
     }
   },
   "scripts": {

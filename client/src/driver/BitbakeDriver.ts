@@ -62,7 +62,7 @@ export class BitbakeDriver {
     return child
   }
 
-  private prepareCommand (command: string): {
+  prepareCommand (command: string): {
     shell: string
     script: string
   } {
@@ -153,6 +153,10 @@ export class BitbakeDriver {
     }
 
     return command
+  }
+
+  composeInteractiveCommand (): string {
+    return 'bash'
   }
 
   composeDevtoolIDECommand (recipe: string): string {
