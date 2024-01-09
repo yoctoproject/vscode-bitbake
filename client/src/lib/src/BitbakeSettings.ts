@@ -18,7 +18,6 @@ export interface BitbakeSettings {
 }
 
 export function loadBitbakeSettings (settings: any, workspaceFolder: string): BitbakeSettings {
-  /* eslint no-template-curly-in-string: "off" */
   // The default values are defined in package.json
   // Change the working directory to properly handle relative paths in the language client
   try {
@@ -27,24 +26,49 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
     console.error(`chdir: ${err}`)
   }
 
-  return {
-    pathToBitbakeFolder: resolveSettingsPath(settings.pathToBitbakeFolder, workspaceFolder),
-    pathToBuildFolder: settings.pathToBuildFolder !== '' ? resolveSettingsPath(settings.pathToBuildFolder, workspaceFolder) : undefined,
-    pathToEnvScript: settings.pathToEnvScript !== '' ? resolveSettingsPath(settings.pathToEnvScript, workspaceFolder) : undefined,
-    commandWrapper: settings.commandWrapper !== '' ? expandWorkspaceFolder(settings.commandWrapper, workspaceFolder) : undefined,
-    workingDirectory: settings.workingDirectory !== '' ? resolveSettingsPath(settings.workingDirectory, workspaceFolder) : workspaceFolder,
-    shellEnv: toStringDict(settings.shellEnv),
-    sdkImage: sanitizeForShell(settings.sdkImage),
-    sshTarget: sanitizeForShell(settings.sshTarget)
+  const variables = {
+    workspaceFolder,
+    ...Object.fromEntries(Object.entries(process.env).map(([key, value]) => [`env:${key}`, value]))
   }
+
+  const resolvedSettings = {
+    pathToBitbakeFolder: resolveSettingPath(settings.pathToBitbakeFolder, variables) ?? workspaceFolder,
+    pathToBuildFolder: resolveSettingPath(settings.pathToBuildFolder, variables),
+    pathToEnvScript: resolveSettingPath(settings.pathToEnvScript, variables),
+    commandWrapper: resolveSettingString(settings.commandWrapper, variables),
+    workingDirectory: resolveSettingPath(settings.workingDirectory, variables) ?? workspaceFolder,
+    shellEnv: resolveStringDict(toStringDict(settings.shellEnv), variables),
+    sdkImage: resolveSettingString(settings.sdkImage, variables),
+    sshTarget: resolveSettingString(settings.sshTarget, variables)
+  }
+  return resolvedSettings
 }
 
-function resolveSettingsPath (configurationPath: string, workspaceFolder: string): string {
-  return path.resolve(expandWorkspaceFolder(configurationPath, workspaceFolder))
+function resolveSettingPath (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
+  if (configurationPath === '' || configurationPath === undefined) {
+    return undefined
+  }
+  return path.resolve(resolveSettingString(configurationPath, variables) as string)
 }
 
-function expandWorkspaceFolder (configuration: string, workspaceFolder: string): string {
-  return sanitizeForShell(configuration.replace(/\${workspaceFolder}/g, workspaceFolder)) as string
+function resolveSettingString (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
+  if (configurationPath === '' || configurationPath === undefined) {
+    return undefined
+  }
+  return sanitizeForShell(substituteVariables(configurationPath, variables)) as string
+}
+
+/// Substitute ${variables} in a string
+function substituteVariables (configuration: string, variables: NodeJS.Dict<string>): string {
+  // Reproduces the behavior of https://code.visualstudio.com/docs/editor/variables-reference
+  // VSCode should be doing this for us, has been requested for years: https://github.com/microsoft/vscode/issues/2809
+  return configuration.replace(/\${(.*?)}/g, (_, name) => {
+    return variables[name] ?? ''
+  })
+}
+
+function resolveStringDict (dict: NodeJS.Dict<string> | undefined, variables: NodeJS.Dict<string>): NodeJS.Dict<string> | undefined {
+  return (dict != null) ? Object.fromEntries(Object.entries(dict).map(([key, value]) => [key, resolveSettingString(value, variables) as string])) : undefined
 }
 
 /// Santitize a string to be passed in a shell command (remove special characters)
