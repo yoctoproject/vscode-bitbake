@@ -38,6 +38,11 @@ describe('Create basic embedded bash documents', () => {
       // eslint-disable-next-line no-template-curly-in-string
       'foo(){\n${@FOO}\n}',
       `${shebang}foo(){\n\${?   }\n}`
+    ],
+    [
+      'with fakeroot',
+      'fakeroot foo(){\nBAR=""\n}',
+      `${shebang}         foo(){\nBAR=""\n}`
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'bash')
@@ -74,6 +79,11 @@ describe('Create various basic embedded python documents', () => {
       'with def keyword',
       'def foo():\n  pass',
       `${imports}def foo():\n  pass`
+    ],
+    [
+      'with fakeroot',
+      'fakeroot python(){\n  pass\n}',
+      `${imports}def _ ():\n  pass\n `
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
