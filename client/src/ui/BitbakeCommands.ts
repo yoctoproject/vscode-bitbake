@@ -24,11 +24,12 @@ import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
 import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
+import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
 
 let parsingPending = false
 let bitbakeSanity = false
 
-export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner): void {
+export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
@@ -37,6 +38,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
