@@ -205,12 +205,22 @@
           "autoDetect",
           "${cwd}"
         ],
-        "pattern": {
-          "regexp": "^.*ParseError (at|in) (.+?):(\\d+)?:? (.+)$",
-          "file": 2,
-          "line": 3,
-          "message": 4
-        }
+        "pattern": [
+          {
+            "regexp": "^.*ParseError (at|in) (.+?):(\\d+)?:? (unparsed line: '(.+)')$",
+            "file": 2,
+            "line": 3,
+            "message": 4,
+            "code": 5,
+            "column": 0
+          },
+          {
+            "regexp": "(ERROR): (Unable to parse (.+))$",
+            "severity": 1,
+            "file": 3,
+            "message": 2
+          }
+        ]
       },
       {
         "name": "bitbake-UnableToParse",
@@ -244,7 +254,7 @@
         }
       },
       {
-        "name": "bitbake-generic",
+        "name": "bitbake-compilation-python-function",
         "source": "bitbake",
         "owner": "bitbake",
         "fileLocation": [
@@ -252,10 +262,26 @@
           "${cwd}"
         ],
         "pattern": {
-          "regexp": "^Parsing recipes...(ERROR): (.+?): (.*)$",
+          "regexp": "(ERROR): (.+): (Error in compiling python function) in (.*), line (\\d+):$",
           "file": 2,
           "severity": 1,
+          "line": 5,
           "message": 3
+        }
+      },
+      {
+        "name": "bitbake-execution-error",
+        "source": "bitbake",
+        "owner": "bitbake",
+        "fileLocation": [
+          "autoDetect",
+          "${cwd}"
+        ],
+        "pattern": {
+          "regexp": "(^Parsing recipes...)?(ERROR): (.+?): (.*):?$",
+          "file": 3,
+          "severity": 2,
+          "message": 4
         }
       },
       {
