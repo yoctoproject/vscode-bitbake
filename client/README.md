@@ -195,6 +195,13 @@ You can also set up the SDK for the recipe by running the `Bitbake: Devtool: Con
 
 If your recipe's class is not supported, or you have an older version of poky, the `Bitbake: Devtool: Configure devtool fallback` command will add tasks to build and deploy the package through `devtool build/deploy-target`. Linting, debugging, testing and other advanced features will not be available in this mode.
 
+### BitBake terminal profile
+
+If you need to run custom commands not covered by this extension like `devtool add`, `bitbake-layers`, ...
+You can open an interactive BitBake terminal through the command `Bitbake: Open BitBake terminal`, the contextual menu on a recipe, or the "Launch Profile" button. This will open a new terminal with the BitBake environment set up. You can then run any BitBake command.
+
+![BitBake terminal profile](doc/bitbake-terminal-profile.png)
+
 ## Troubleshooting
 See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
 
