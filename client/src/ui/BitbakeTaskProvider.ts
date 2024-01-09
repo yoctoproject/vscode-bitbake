@@ -51,7 +51,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
             this.bitbakeDriver.composeBitbakeScript(bitbakeCommand))
           return pty
         }),
-        ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
+        ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-compilation-python-function', '$bitbake-execution-error', '$bitbake-task-error', '$bitbake-UnableToParse']
       )
       if ((bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) &&
           bitbakeTaskDefinition.options?.parseOnly !== true) {
