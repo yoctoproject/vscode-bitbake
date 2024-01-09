@@ -15,14 +15,14 @@ export class BitbakeTerminalProfileProvider implements vscode.TerminalProfilePro
     this.bitbakeDriver = bitbakeDriver
   }
 
-  provideTerminalProfile (token: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
+  provideTerminalProfile (token?: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
     // This does not take the lock of bitbakeDriver.bitbakeProcess
     // which means pipe errors if using docker containers in parallel to commands.
     // However it's also expected an interactive terminal can stay open on the side.
     // We can't use BitbakeTerminal either because VSCode won't allow it to be interactive.
     const command = this.bitbakeDriver.composeInteractiveCommand()
     const { shell, script } = this.bitbakeDriver.prepareCommand(command)
-    logger.debug(`Spawning Bitbake terminal with ${shell} -c ${script}`)
+    logger.info(`Spawning Bitbake terminal with ${shell} -c ${script}`)
     return {
       options: {
         name: script,
@@ -34,4 +34,11 @@ export class BitbakeTerminalProfileProvider implements vscode.TerminalProfilePro
       } satisfies vscode.TerminalOptions
     }
   }
+}
+
+export async function openBitbakeTerminalProfile (terminalProvider: BitbakeTerminalProfileProvider): Promise<vscode.Terminal> {
+  const profile = await terminalProvider.provideTerminalProfile() as vscode.TerminalProfile
+  const terminal = vscode.window.createTerminal(profile.options)
+  terminal.show()
+  return terminal
 }
