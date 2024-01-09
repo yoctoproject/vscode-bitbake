@@ -33,6 +33,9 @@ const handleFunctionDefinitionNode = (node: SyntaxNode, embeddedLanguageDoc: Emb
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     switch (child.type) {
+      case 'fakeroot':
+        handleFakerootNode(child, embeddedLanguageDoc)
+        break
       case 'override':
         handleOverrideNode(child, embeddedLanguageDoc)
         break
@@ -63,7 +66,12 @@ const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDo
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, inlinePythonNode.endIndex, replacement)
 }
 
+const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  // Replace it by spaces
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, inlinePythonNode.endIndex, ' '.repeat(inlinePythonNode.text.length))
+}
+
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
-  // Remove it
+  // Replace it by spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
 }

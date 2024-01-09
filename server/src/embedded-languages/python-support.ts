@@ -55,6 +55,9 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     switch (child.type) {
+      case 'fakeroot':
+        handleFakerootNode(child, embeddedLanguageDoc)
+        break
       case 'python':
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, 'def')
         if (child.nextSibling?.type === '(') {
@@ -109,7 +112,17 @@ const handleBlockNode = (blockNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLan
   }
 }
 
+const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  const nextNode = inlinePythonNode.nextSibling
+  if (nextNode === null) {
+    console.debug('[handleFakerootNode]: nextNode is null')
+    return
+  }
+  // Remove fakeroot with the spaces between it and the next node in order to keep proper indentation
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, nextNode.startIndex, '')
+}
+
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
-  // Remove it
+  // Replace it by space
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
 }
