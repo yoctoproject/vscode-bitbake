@@ -364,6 +364,11 @@
         "title": "BitBake: Devtool: Clean recipe",
         "description": "Clean a recipe using devtool.",
         "icon": "$(exclude)"
+      },
+      {
+        "command": "bitbake.terminal-profile",
+        "title": "BitBake: Open interactive terminal",
+        "description": "Open an interactive terminal with the bitbake environment."
       }
     ],
     "viewsContainers": {
@@ -412,6 +417,10 @@
         {
           "command": "bitbake.run-task",
           "group": "0@bitbake_recipe@2"
+        },
+        {
+          "command": "bitbake.terminal-profile",
+          "group": "0@bitbake_recipe@3"
         },
         {
           "command": "bitbake.devtool-modify",
@@ -471,6 +480,11 @@
           "command": "bitbake.drop-recipe",
           "group": "0@bitbake_recipe@3",
           "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.terminal-profile",
+          "group": "0@bitbake_recipe@4",
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.build-recipe",
