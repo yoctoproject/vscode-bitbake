@@ -11,7 +11,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
-import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCommands'
+import { registerBitbakeCommands, registerDevtoolCommands, setLanguageClient } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
@@ -21,7 +21,7 @@ import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './driver/BitbakeESDK'
 import path from 'path'
 
-let client: LanguageClient
+export let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
@@ -88,6 +88,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context)
   bitBakeProjectScanner.setClient(client)
+  setLanguageClient(client)
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 

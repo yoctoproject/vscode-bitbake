@@ -58,6 +58,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   onDidClose = this.closeEmitter.event
   onDidChangeName = this.changeNameEmitter.event
   lastExitCode: number = 0
+  outputDataString: string = ''
 
   readonly parentTerminal: BitbakeTerminal | undefined
   bitbakeDriver: BitbakeDriver
@@ -119,6 +120,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     processResolved.stdout?.on('data', (data) => {
       this.output(data.toString())
       logger.debug(data.toString())
+      this.outputDataString += data.toString()
     })
     processResolved.stdout?.once('data', () => {
       // I wanted to use appropriate events like process.on('spawn') or terminal.open() but they are not triggered at the right time for
