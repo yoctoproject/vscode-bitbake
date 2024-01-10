@@ -114,7 +114,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
         event.affectsConfiguration('bitbake.pathToBitbakeFolder') ||
         event.affectsConfiguration('bitbake.pathToBuildFolder') ||
         event.affectsConfiguration('bitbake.commandWrapper')) {
-      await clientNotificationManager.resetNeverShowAgain('custom/bitbakeSettingsError')
+      await clientNotificationManager.resetNeverShowAgain('bitbake/bitbakeSettingsError')
       logger.debug('Bitbake settings changed')
       updatePythonPath()
       void vscode.commands.executeCommand('bitbake.rescan-project')
