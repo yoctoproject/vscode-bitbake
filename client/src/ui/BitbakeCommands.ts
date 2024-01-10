@@ -16,22 +16,30 @@ import { extractRecipeName } from '../lib/src/utils/files'
 import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTerminal'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
-import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
+import { type BitbakeCustomExecution, type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
+import { type LanguageClient } from 'vscode-languageclient/node'
+import { RequestMethod } from '../lib/src/types/requests'
 
 let parsingPending = false
 let bitbakeSanity = false
+
+let _languageClient: LanguageClient
+
+export function setLanguageClient (client: LanguageClient): void {
+  _languageClient = client
+}
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
@@ -46,7 +54,17 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
           void parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider)
         }
       }
-    }))
+      if (e.execution.task.name === 'Bitbake: Scan recipe env') {
+        const executionEngine = e.execution.task.execution as BitbakeCustomExecution
+        if (executionEngine !== undefined) {
+          const scanResults = executionEngine.pty?.outputDataString
+          _languageClient === undefined && logger.error('Language client not set, unable to send request to the server to process scan results')
+          logger.debug('[onDidEndTask] Sending recipe environment to the server')
+          void _languageClient?.sendRequest(RequestMethod.ProcessRecipeScanResults, { scanResults })
+        }
+      }
+    })
+  )
 }
 
 export function registerDevtoolCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner): void {
@@ -115,21 +133,38 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
   }
 }
 
-async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
+async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider, uri?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
-  if (chosenRecipe !== undefined) {
-    logger.debug(`Command: scan-recipe-env: ${chosenRecipe}`)
-    await runBitbakeTerminal(
-      bitbakeDriver,
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
-      {
-        recipes: [chosenRecipe],
-        options: {
-          env: true
-        }
-      } as BitbakeTaskDefinition,
-    `Bitbake: Scan recipe env: ${chosenRecipe}`)
+
+  if (chosenRecipe === undefined) {
+    logger.debug('Command: scan-recipe-env: chosen recipe is undefined. Abort command')
+    return
   }
+
+  logger.debug('Command: scan-recipe-env')
+
+  if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+    logger.warn('bitbake settings are not sane, skip parse')
+    return
+  }
+
+  bitbakeSanity = true
+
+  const scanRecipeEnvTask = new vscode.Task(
+    { type: 'bitbake', recipes: [chosenRecipe], options: { parseOnly: true, env: true } },
+    vscode.TaskScope.Workspace,
+    'Bitbake: Scan recipe env',
+    'bitbake'
+  )
+
+  const runningTasks = vscode.tasks.taskExecutions
+  if (runningTasks.some((execution) => execution.task.name === scanRecipeEnvTask.name)) {
+    logger.debug('Bitbake parsing task is already running')
+    parsingPending = true
+    return
+  }
+
+  await runBitbakeTask(scanRecipeEnvTask, taskProvider)
 }
 
 async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any, task?: any): Promise<void> {
