@@ -145,14 +145,14 @@ export class BitBakeProjectScanner {
       return
     }
 
-    let containerDir = layerPath
-    const containerDirInodes = await this.getContainerParentInodes(containerDir)
+    const containerDirInodes = await this.getContainerParentInodes(layerPath)
     let hostDir = hostWorkdir
 
     while (hostDir !== '/') {
       const hostDirInode = fs.statSync(hostDir).ino
 
       let containerIdx = 0
+      let containerDir = layerPath
       while (containerDir !== '/') {
         const containerDirInode = containerDirInodes[containerIdx]
         logger.debug('Comparing container inodes: ' + containerDir + ':' + containerDirInode + ' ' + hostDir + ':' + hostDirInode)
