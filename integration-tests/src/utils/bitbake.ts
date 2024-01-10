@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
+import { assertWillComeTrue } from './async'
 
 export const BITBAKE_TIMEOUT = 300000
 
@@ -28,4 +29,16 @@ export async function resetLayer (layer: string, workspaceFolder: string): Promi
   lines.pop()
   const fileContent = lines.join('\n')
   await vscode.workspace.fs.writeFile(bblayersConf, Buffer.from(fileContent))
+}
+
+/// Wait for the bitbake parsing task to finish
+export async function awaitBitbakeParsingResult (): Promise<void> {
+  let taskExecuted = false
+  const disposable = vscode.tasks.onDidEndTask(async (e) => {
+    if (e.execution.task.definition.options.parseOnly === true) {
+      taskExecuted = true
+    }
+  })
+  await assertWillComeTrue(async () => taskExecuted)
+  disposable.dispose()
 }
