@@ -7,6 +7,8 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { afterEach } from 'mocha'
+import { BITBAKE_TIMEOUT } from '../utils/bitbake'
+import { assertWillComeTrue } from '../utils/async'
 
 suite('Bitbake Diagnostics Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/diagnostics.bb')
@@ -32,24 +34,11 @@ suite('Bitbake Diagnostics Test Suite', () => {
 
   test('Diagnostics', async () => {
     void vscode.workspace.openTextDocument(docUri)
-    await new Promise<vscode.Diagnostic[]>((resolve) => {
-      let nbChanges = 0
-      const disposable = vscode.languages.onDidChangeDiagnostics((e) => {
-        if (e.uris.some((uri) => uri.toString() === docUri.toString())) {
-          nbChanges++
-        }
-        const diagnostics = vscode.languages.getDiagnostics(docUri)
-        if (nbChanges === 3) {
-          resolve(diagnostics)
-        }
-      })
-      disposables.push(disposable)
-    }).then((diagnostics) => {
-      assert.strictEqual(diagnostics.length, 1)
-      assert.strictEqual(diagnostics[0].source, 'Pylance')
-      assert.deepEqual(diagnostics[0].range, new vscode.Range(1, 4, 1, 9))
-    }).catch((err) => {
-      assert.fail(err)
+    await assertWillComeTrue(async () => {
+      const diagnostics = vscode.languages.getDiagnostics(docUri)
+      return diagnostics.length === 1 &&
+        diagnostics[0].source === 'Pylance' &&
+        diagnostics[0].range.isEqual(new vscode.Range(1, 4, 1, 9))
     })
-  }).timeout(300000)
+  }).timeout(BITBAKE_TIMEOUT)
 })
