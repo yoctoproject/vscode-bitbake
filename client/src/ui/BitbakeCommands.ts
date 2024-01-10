@@ -16,24 +16,17 @@ import { extractRecipeName } from '../lib/src/utils/files'
 import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTerminal'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
-import { type BitbakeCustomExecution, type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
+import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
-import { type LanguageClient } from 'vscode-languageclient/node'
-import { RequestMethod } from '../lib/src/types/requests'
+import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
 
 let parsingPending = false
 let bitbakeSanity = false
-
-let _languageClient: LanguageClient
-
-export function setLanguageClient (client: LanguageClient): void {
-  _languageClient = client
-}
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
@@ -52,15 +45,6 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
         if (parsingPending) {
           parsingPending = false
           void parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider)
-        }
-      }
-      if (e.execution.task.name === 'Bitbake: Scan recipe env') {
-        const executionEngine = e.execution.task.execution as BitbakeCustomExecution
-        if (executionEngine !== undefined) {
-          const scanResults = executionEngine.pty?.outputDataString
-          _languageClient === undefined && logger.error('Language client not set, unable to send request to the server to process scan results')
-          logger.debug('[onDidEndTask] Sending recipe environment to the server')
-          void _languageClient?.sendRequest(RequestMethod.ProcessRecipeScanResults, { scanResults })
         }
       }
     })
@@ -144,27 +128,13 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
   logger.debug('Command: scan-recipe-env')
 
   if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
-    logger.warn('bitbake settings are not sane, skip parse')
+    logger.warn('bitbake settings are not sane, Abort scan')
     return
   }
 
   bitbakeSanity = true
 
-  const scanRecipeEnvTask = new vscode.Task(
-    { type: 'bitbake', recipes: [chosenRecipe], options: { parseOnly: true, env: true } },
-    vscode.TaskScope.Workspace,
-    'Bitbake: Scan recipe env',
-    'bitbake'
-  )
-
-  const runningTasks = vscode.tasks.taskExecutions
-  if (runningTasks.some((execution) => execution.task.name === scanRecipeEnvTask.name)) {
-    logger.debug('Bitbake parsing task is already running')
-    parsingPending = true
-    return
-  }
-
-  await runBitbakeTask(scanRecipeEnvTask, taskProvider)
+  await bitbakeRecipeScanner.scan(chosenRecipe, taskProvider)
 }
 
 async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any, task?: any): Promise<void> {
@@ -248,7 +218,7 @@ async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: string): Pr
   }
 }
 
-async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {
+export async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {
   let resolvedTask = taskProvider.resolveTask(task, new vscode.CancellationTokenSource().token)
   if (resolvedTask instanceof Promise) {
     resolvedTask = await resolvedTask
