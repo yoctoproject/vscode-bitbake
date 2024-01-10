@@ -88,7 +88,7 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
   const client: LanguageClient = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
   requestsManager.client = client
 
-  client.onRequest('custom/verifyConfigurationFileAssociation', async (param) => {
+  client.onRequest('bitbake/verifyConfigurationFileAssociation', async (param) => {
     if (param.filePath?.endsWith('.conf') === true) {
       const doc = await workspace.openTextDocument(param.filePath)
       const { languageId } = doc

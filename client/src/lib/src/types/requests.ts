@@ -13,9 +13,9 @@ export enum RequestType {
 }
 
 export const RequestMethod: Record<RequestType, string> = {
-  [RequestType.EmbeddedLanguageTypeOnPosition]: 'custom/requestEmbeddedLanguageDocInfos',
-  [RequestType.getLinksInDocument]: 'custom/getLinksInDocument',
-  [RequestType.ProcessRecipeScanResults]: 'custom/ProcessRecipeScanResults'
+  [RequestType.EmbeddedLanguageTypeOnPosition]: 'bitbake/requestEmbeddedLanguageDocInfos',
+  [RequestType.getLinksInDocument]: 'bitbake/getLinksInDocument',
+  [RequestType.ProcessRecipeScanResults]: 'bitbake/ProcessRecipeScanResults'
 }
 
 export interface RequestParams {

@@ -141,7 +141,7 @@ documents.onDidChangeContent(async (event) => {
   // Other language extensions might also associate .conf files with their langauge modes
   if (textDocument.uri.endsWith('.conf')) {
     logger.debug('verifyConfigurationFileAssociation')
-    await connection.sendRequest('custom/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
+    await connection.sendRequest('bitbake/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
   }
 })
 

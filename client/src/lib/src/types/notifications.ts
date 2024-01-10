@@ -10,7 +10,7 @@ enum NotificationType {
 }
 
 export const NotificationMethod: Record<NotificationType, string> = {
-  [NotificationType.EmbeddedLanguageDocs]: 'custom/EmbeddedLanguageDocs'
+  [NotificationType.EmbeddedLanguageDocs]: 'bitbake/EmbeddedLanguageDocs'
 }
 
 export interface NotificationParams {
