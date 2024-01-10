@@ -7,8 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 
 import { assertWillComeTrue, assertWorkspaceWillBeOpen } from '../utils/async'
-import path from 'path'
-import { BITBAKE_TIMEOUT } from '../utils/bitbake'
+import { BITBAKE_TIMEOUT, awaitBitbakeParsingResult } from '../utils/bitbake'
 
 suite('Bitbake Command Wrapper', () => {
   let workspaceURI: vscode.Uri
@@ -20,7 +19,7 @@ suite('Bitbake Command Wrapper', () => {
 
   suiteSetup(async function (this: Mocha.Context) {
     /* eslint-disable no-template-curly-in-string */
-    this.timeout(100000)
+    this.timeout(1.5 * BITBAKE_TIMEOUT) // Some additional time for pulling the Docker image
     await assertWorkspaceWillBeOpen()
     workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
     buildFolder = vscode.Uri.joinPath(workspaceURI, 'build-crops')
@@ -38,35 +37,28 @@ suite('Bitbake Command Wrapper', () => {
     }
 
     // We use purposely complex mount points to test the scanner path resolution logic
-    await bitbakeConfiguration.update('commandWrapper', 'docker run --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c')
-    await bitbakeConfiguration.update('pathToBuildFolder', '/workdir/integration-tests/project-folder/build-crops')
     await bitbakeConfiguration.update('pathToEnvScript', '/workdir/integration-tests/project-folder/sources/poky/oe-init-build-env')
+    await bitbakeConfiguration.update('pathToBuildFolder', '/workdir/integration-tests/project-folder/build-crops')
+    await bitbakeConfiguration.update('commandWrapper', 'docker run --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c')
+    // We can't update the settings atomically. Each update may trigger a scan/parsing. We wait for a successful scan after all the settings are updated.
+    await awaitBitbakeParsingResult()
   })
 
   suiteTeardown(async function (this: Mocha.Context) {
     this.timeout(BITBAKE_TIMEOUT)
-    await vscode.workspace.fs.delete(buildFolder, { recursive: true })
-
     const bitbakeConfiguration = vscode.workspace.getConfiguration('bitbake')
     await bitbakeConfiguration.update('commandWrapper', undefined)
     await bitbakeConfiguration.update('pathToBuildFolder', savedSettings.pathToBuildFolder)
     await bitbakeConfiguration.update('pathToEnvScript', savedSettings.pathToEnvScript)
+    await awaitBitbakeParsingResult()
+    await vscode.workspace.fs.delete(buildFolder, { recursive: true })
   })
 
-  test('Bitbake can properly scan includes inside a crops container', async () => {
-    const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/command-wrapper.bb')
-    const docUri = vscode.Uri.parse(`file://${filePath}`)
-    let definitions: vscode.Location[] = []
-
-    await vscode.workspace.openTextDocument(docUri)
-
+  test('Bitbake can run a task inside a crops container', async () => {
+    await vscode.commands.executeCommand('bitbake.run-task', 'base-files', 'unpack')
     await assertWillComeTrue(async () => {
-      definitions = await vscode.commands.executeCommand(
-        'vscode.executeDefinitionProvider',
-        docUri,
-        new vscode.Position(0, 10)
-      )
-      return definitions.length === 1
+      const files = await vscode.workspace.findFiles('build-crops/tmp/work/*/base-files/*/issue')
+      return files.length === 1
     })
   }).timeout(BITBAKE_TIMEOUT)
 })
