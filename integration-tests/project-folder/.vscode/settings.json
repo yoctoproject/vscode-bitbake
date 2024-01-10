@@ -4,10 +4,22 @@
     "bitbake.pathToEnvScript": "${workspaceFolder}/sources/poky/oe-init-build-env",
     "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
     "python.autoComplete.extraPaths": [
-        "${workspaceFolder}/sources/poky/bitbake/lib"
+        "${workspaceFolder}/sources/poky/bitbake/lib",
+        "${workspaceFolder}/sources/poky/meta/lib"
     ],
     "python.analysis.extraPaths": [
-        "${workspaceFolder}/sources/poky/bitbake/lib"
+        "${workspaceFolder}/sources/poky/bitbake/lib",
+        "${workspaceFolder}/sources/poky/meta/lib"
     ],
-    "task.saveBeforeRun": "always"
+    "task.saveBeforeRun": "always",
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.formatOnType": true,
+        "editor.wordBasedSuggestions": false,
+        "files.trimTrailingWhitespace": false
+    },
+    "[shellscript]": {
+        "files.eol": "\n",
+        "files.trimTrailingWhitespace": false
+    }
 }
