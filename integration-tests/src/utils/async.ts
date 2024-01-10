@@ -16,7 +16,7 @@ export async function delay (ms: number): Promise<void> {
 export async function assertWillComeTrue (predicate: () => Promise<boolean>, timeout: number = 300000): Promise<void> {
   const startTime = Date.now()
   while (!(await predicate()) && (Date.now() - startTime < timeout)) {
-    await delay(100)
+    await delay(250)
   }
   assert.ok(predicate())
 }
