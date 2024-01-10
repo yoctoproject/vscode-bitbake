@@ -72,9 +72,9 @@ suite('Bitbake Commands Test Suite', () => {
   }).timeout(BITBAKE_TIMEOUT)
 
   test('Bitbake can create a devtool modify workspace', async () => {
-    await vscode.commands.executeCommand('bitbake.devtool-modify', 'busybox')
+    await vscode.commands.executeCommand('bitbake.devtool-modify', 'base-files')
     await assertWillComeTrue(async () => {
-      const files = await vscode.workspace.findFiles('build/workspace/sources/busybox/README')
+      const files = await vscode.workspace.findFiles('build/workspace/sources/base-files/fstab')
       return files.length === 1
     })
   }).timeout(BITBAKE_TIMEOUT)
