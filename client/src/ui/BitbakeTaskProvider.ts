@@ -37,8 +37,17 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 
   resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
     const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
-    if (bitbakeTaskDefinition.recipes?.[0] !== undefined || bitbakeTaskDefinition.options?.parseOnly === true || bitbakeTaskDefinition.specialCommand !== undefined) {
+
+    const canResolveTask = (bitbakeTaskDefinition.recipes?.[0] !== undefined ||
+    bitbakeTaskDefinition.options?.parseOnly === true ||
+    bitbakeTaskDefinition.options?.env === true ||
+    bitbakeTaskDefinition.specialCommand !== undefined)
+
+    if (canResolveTask) {
       const bitbakeCommand = this.bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
+      // No matchers when scanning recipe environment
+      const problemMatchers = bitbakeTaskDefinition.options?.env === true ? [] : ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
+
       const resolvedTask = new vscode.Task(
         task.definition,
         task.scope ?? vscode.TaskScope.Workspace,
@@ -52,7 +61,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
             this.bitbakeDriver.composeBitbakeScript(bitbakeCommand))
           return pty
         }),
-        ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-compilation-python-function', '$bitbake-execution-error', '$bitbake-task-error', '$bitbake-UnableToParse']
+        problemMatchers
       )
       if ((bitbakeTaskDefinition.task === undefined || bitbakeTaskDefinition.task.includes('build')) &&
           bitbakeTaskDefinition.options?.parseOnly !== true) {
