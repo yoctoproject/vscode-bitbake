@@ -45,8 +45,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 
     if (canResolveTask) {
       const bitbakeCommand = this.bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
-      // No matchers when scanning recipe environment
-      const problemMatchers = bitbakeTaskDefinition.options?.env === true ? [] : ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
+      const problemMatchers = ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
 
       const resolvedTask = new vscode.Task(
         task.definition,
