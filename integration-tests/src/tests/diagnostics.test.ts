@@ -3,7 +3,6 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-/*
 import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
@@ -43,4 +42,3 @@ suite('Bitbake Diagnostics Test Suite', () => {
     })
   }).timeout(BITBAKE_TIMEOUT)
 })
-*/

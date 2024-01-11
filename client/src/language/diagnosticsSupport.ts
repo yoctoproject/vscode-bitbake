@@ -22,7 +22,15 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
   if (originalUri === undefined) {
     return
   }
-  const originalTextDocument = await vscode.workspace.openTextDocument(originalUri)
+  const originalTextDocument = vscode.workspace.textDocuments.find((textDocument) => textDocument.uri.toString() === originalUri.toString())
+  if (originalTextDocument === undefined) {
+    // The original TextDocument is probably closed. Thus the user would not see the diagnostics anyway.
+    // We don't attempt to reopen it. We were previously doing so, and it was causing trouble. Here what we assume was going on:
+    // At first everything looked fine, but it became an issue when too many files had been opened (around thirty).
+    // The oldest files were being "garbage collected", then immediately reopened, which would cause the next oldest files to be "garbage collected", and so on.
+    // The whole thing would create lot of flickering in the diagnostics, and make the extension slow.
+    return
+  }
   await Promise.all([
     setEmbeddedLanguageDocDiagnostics(originalTextDocument, 'bash'),
     setEmbeddedLanguageDocDiagnostics(originalTextDocument, 'python')
