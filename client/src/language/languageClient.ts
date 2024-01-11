@@ -27,6 +27,7 @@ import { middlewareProvideDefinition } from './middlewareDefinition'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
+import { updateDiagnostics } from './diagnosticsSupport'
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -70,8 +71,7 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   languages.onDidChangeDiagnostics(e => {
     e.uris.forEach(uri => {
-      // Deactivation until we understand why problems are spamming when a lot of documents are opened
-      // void updateDiagnostics(uri)
+      void updateDiagnostics(uri)
     })
   })
 
