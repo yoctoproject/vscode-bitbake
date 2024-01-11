@@ -64,6 +64,7 @@ jobs:
   # Inspired by https://github.com/microsoft/vscode-platform-specific-sample/blob/a0192a21122dfa5c90934b006f027cdf4e4d892d/.github/workflows/ci.yml#L64C11-L64C11 MIT License
   publish:
     runs-on: ubuntu-latest
+    environment: VSCE
     needs: build
     if: success() && startsWith( github.ref, 'refs/tags/')
     steps:
