@@ -118,7 +118,7 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
 }
 
 async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri, false)
 
   if (chosenRecipe === undefined) {
     logger.debug('Command: scan-recipe-env: chosen recipe is undefined. Abort command')
