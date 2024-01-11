@@ -213,12 +213,6 @@
             "message": 4,
             "code": 5,
             "column": 0
-          },
-          {
-            "regexp": "(ERROR): (Unable to parse (.+))$",
-            "severity": 1,
-            "file": 3,
-            "message": 2
           }
         ]
       },
@@ -231,9 +225,10 @@
           "${cwd}"
         ],
         "pattern": {
-          "regexp": "^ERROR: (Unable to parse) (.+)$",
-          "file": 2,
-          "message": 1,
+          "regexp": "(ERROR): (Unable to parse (.+))$",
+          "severity": 1,
+          "file": 3,
+          "message": 2,
           "kind": "File"
         }
       },
