@@ -143,6 +143,8 @@ export default class EmbeddedLanguageDocsManager {
     const workspaceEdit = new WorkspaceEdit()
     workspaceEdit.replace(uri, fullRange, embeddedLanguageDoc.content)
     await workspace.applyEdit(workspaceEdit)
+    // Sometimes document closes before the saving, so we open it again just in case
+    await workspace.openTextDocument(uri)
     await document.save()
     this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc, uri)
     const fileWaitingToUpdate = this.filesWaitingToUpdate.get(uri.toString())
