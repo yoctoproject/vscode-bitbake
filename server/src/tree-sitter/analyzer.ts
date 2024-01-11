@@ -29,6 +29,7 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 
 export interface AnalyzedDocument {
+  version: number // TextDocument is mutable and its version updates as the document updates
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   globalSymbolComments: GlobalSymbolComments
@@ -81,6 +82,7 @@ export default class Analyzer {
     this.sourceIncludeFiles(uri, extraSymbols, includeFileUris, { td: document, tree })
 
     this.uriToAnalyzedDocument[uri] = {
+      version: document.version,
       document,
       globalDeclarations,
       globalSymbolComments,
@@ -499,6 +501,7 @@ export default class Analyzer {
           globalDeclarations = getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[0]
 
           this.uriToAnalyzedDocument[uri] = {
+            version: textDocument.version,
             document: textDocument,
             globalDeclarations,
             globalSymbolComments: getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[1],
