@@ -122,8 +122,8 @@ connection.listen()
 
 documents.onDidChangeContent(async (event) => {
   const textDocument = event.document
-
-  if (textDocument.getText().length > 0) {
+  const previousVersion = analyzer.getAnalyzedDocument(textDocument.uri)?.version ?? -1
+  if (textDocument.getText().length > 0 && previousVersion < textDocument.version) {
     const diagnostics = analyzer.analyze({ document: textDocument, uri: textDocument.uri })
     const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document)
     if (embeddedLanguageDocs !== undefined) {
