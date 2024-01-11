@@ -241,7 +241,7 @@
           "${cwd}"
         ],
         "pattern": {
-          "regexp": "^Parsing recipes...(ERROR): (.+?): (.*?) file: (.+) line: (\\d+) (.*)$",
+          "regexp": "(^Parsing recipes...)?(ERROR): (.+?): (.*?) file: (.+) line: (\\d+) (.*)$",
           "file": 2,
           "line": 5,
           "severity": 1,
