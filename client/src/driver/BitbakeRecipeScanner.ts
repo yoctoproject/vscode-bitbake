@@ -8,15 +8,20 @@ import { type LanguageClient } from 'vscode-languageclient/node'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { runBitbakeTask } from '../ui/BitbakeCommands'
 import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/BitbakeTaskProvider'
-import { RequestMethod } from '../lib/src/types/requests'
+import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
 
 export class BitbakeRecipeScanner {
   private isPending: boolean = false
   private _languageClient: LanguageClient | undefined
+  private _currentUriForScan: string = ''
 
   public scanResults: string = ''
+  public processedScanResults: Record<string, unknown> | undefined
 
-  async scan (chosenRecipe: string, taskProvider: BitbakeTaskProvider): Promise<void> {
+  async scan (chosenRecipe: string, taskProvider: BitbakeTaskProvider, uri: any): Promise<void> {
+    logger.debug(`[BitbakeRecipeScanner] Scanning recipe env: ${uri}`)
+    this._currentUriForScan = uri
+
     const scanRecipeEnvTask = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], options: { parseOnly: true, env: true } },
       vscode.TaskScope.Workspace,
@@ -26,7 +31,7 @@ export class BitbakeRecipeScanner {
 
     const runningTasks = vscode.tasks.taskExecutions
     if (runningTasks.some((execution) => execution.task.name === scanRecipeEnvTask.name)) {
-      logger.debug('Bitbake parsing task is already running')
+      logger.debug('[BitbakeRecipeScanner] Recipe scan is already running')
       this.isPending = true
     }
 
@@ -38,7 +43,7 @@ export class BitbakeRecipeScanner {
       if (e.execution.task.name === 'Bitbake: Scan recipe env') {
         if (this.isPending) {
           this.isPending = false
-          await this.scan(e.execution.task.definition.recipes?.[0] ?? '', taskProvider)
+          await this.scan(e.execution.task.definition.recipes?.[0] ?? '', taskProvider, this._currentUriForScan)
         }
 
         const executionEngine = e.execution.task.execution as BitbakeCustomExecution
@@ -49,7 +54,10 @@ export class BitbakeRecipeScanner {
           } else {
             if (this.scanResults !== '') {
               logger.debug('[onDidEndTask] Sending recipe environment to the server')
-              void this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, { scanResults: this.scanResults })
+              const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults: this.scanResults, uri: this._currentUriForScan }
+              const processedScanResults = await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
+
+              logger.debug('processedScanResults: ' + JSON.stringify(processedScanResults))
             }
           }
         }

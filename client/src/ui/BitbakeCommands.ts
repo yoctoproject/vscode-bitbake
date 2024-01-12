@@ -134,7 +134,7 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
 
   bitbakeSanity = true
 
-  await bitbakeRecipeScanner.scan(chosenRecipe, taskProvider)
+  await bitbakeRecipeScanner.scan(chosenRecipe, taskProvider, uri)
 }
 
 async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any, task?: any): Promise<void> {
