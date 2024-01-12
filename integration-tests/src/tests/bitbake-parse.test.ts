@@ -46,7 +46,9 @@ suite('Bitbake Parsing Test Suite', () => {
       'recipes-error/error/compilation-python-function.bb',
       'recipes-error/error/execution-python-function.bb',
       'recipes-error/error/unable-to-parse.bb',
-      'recipes-error/error/unparsed-line.bb'
+      'recipes-error/error/unparsed-line.bb',
+      'recipes-error/error/task-error.bb',
+      'recipes-error/error/variable-error.bb'
     ]
 
     const workspacePath: string = workspaceURI.fsPath
