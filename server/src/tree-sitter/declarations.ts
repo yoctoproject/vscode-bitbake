@@ -19,11 +19,15 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
   variable_assignment: LSP.SymbolKind.Variable
 }
 
+export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
+  overrides?: string[]
+}
+
 /**
  * An object that contains the symbol information of all the global declarations.
  * Referenced by the symbol name
  */
-export type GlobalDeclarations = Record<string, LSP.SymbolInformation[]>
+export type GlobalDeclarations = Record<string, BitbakeSymbolInformation[]>
 export type GlobalSymbolComments = Record<string, Array<{ uri: string, line: number, comments: string[] }>>
 const GLOBAL_DECLARATION_NODE_TYPES = new Set([
   'function_definition',
@@ -80,7 +84,7 @@ export function nodeToSymbolInformation ({
 }: {
   node: Parser.SyntaxNode
   uri: string
-}): LSP.SymbolInformation | null {
+}): BitbakeSymbolInformation | null {
   const firstNamedChild = node.firstNamedChild
   if (firstNamedChild === null) {
     return null
@@ -92,13 +96,48 @@ export function nodeToSymbolInformation ({
 
   const kind = TREE_SITTER_TYPE_TO_LSP_KIND[node.type]
 
-  return LSP.SymbolInformation.create(
+  const overrides: string[] = []
+
+  node.children.forEach((child) => {
+    /**
+     * Example:
+     * FOO:override1:override2 = "foo"
+     *
+     * Tree node:
+     *    (variable_assignment [0, 0] - [0, 31]
+            (identifier [0, 0] - [0, 3])
+        ->  (override [0, 3] - [0, 23]
+          ->  (identifier [0, 4] - [0, 13])
+          ->  (identifier [0, 14] - [0, 23]))
+            (literal [0, 26] - [0, 31]
+              (string [0, 26] - [0, 31]
+                (string_content [0, 27] - [0, 30]))))
+     */
+    if (child.type === 'override') {
+      child.children.forEach((c) => {
+        if (c.type === 'identifier') {
+          overrides.push(c.text)
+        }
+      })
+    }
+  })
+
+  const symbol = LSP.SymbolInformation.create(
     firstNamedChild.text,
     kind ?? LSP.SymbolKind.Variable,
     TreeSitterUtil.range(node),
     uri,
     containerName
   )
+
+  if (overrides.length > 0) {
+    return {
+      ...symbol,
+      overrides
+    }
+  }
+
+  return symbol
 }
 
 function getDeclarationSymbolFromNode ({
@@ -107,7 +146,7 @@ function getDeclarationSymbolFromNode ({
 }: {
   node: Parser.SyntaxNode
   uri: string
-}): LSP.SymbolInformation | null {
+}): BitbakeSymbolInformation | null {
   if (TreeSitterUtil.isDefinition(node)) {
     // Currently in the tree, all functions start with python keyword have type 'anonymous_python_function', skip when the node is an actual anonymous python function in bitbake that has no identifier
     if (node.type === 'anonymous_python_function' && node.firstNamedChild?.type !== 'identifier') {

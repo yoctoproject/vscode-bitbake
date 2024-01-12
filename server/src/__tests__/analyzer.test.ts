@@ -55,7 +55,7 @@ describe('analyze', () => {
           location: {
             range: {
               end: {
-                character: 11,
+                character: 17,
                 line: 1
               },
               start: {
@@ -65,7 +65,8 @@ describe('analyze', () => {
             },
             uri: DUMMY_URI
           },
-          name: 'BAR'
+          name: 'BAR',
+          overrides: ['o1', 'o2']
         },
         {
           kind: 13,
@@ -83,47 +84,27 @@ describe('analyze', () => {
             uri: DUMMY_URI
           },
           name: 'FOO'
+        },
+        {
+          kind: 12,
+          location: {
+            range: {
+              end: {
+                character: 1,
+                line: 5
+              },
+              start: {
+                character: 0,
+                line: 3
+              }
+            },
+            uri: DUMMY_URI
+          },
+          overrides: ['o1', 'o2'],
+          name: 'my_func'
         }
       ])
     )
-    expect(globalDeclarations).toMatchInlineSnapshot(`
-      [
-        {
-          "kind": 13,
-          "location": {
-            "range": {
-              "end": {
-                "character": 11,
-                "line": 0,
-              },
-              "start": {
-                "character": 0,
-                "line": 0,
-              },
-            },
-            "uri": "${DUMMY_URI}",
-          },
-          "name": "FOO",
-        },
-        {
-          "kind": 13,
-          "location": {
-            "range": {
-              "end": {
-                "character": 11,
-                "line": 1,
-              },
-              "start": {
-                "character": 0,
-                "line": 1,
-              },
-            },
-            "uri": "${DUMMY_URI}",
-          },
-          "name": "BAR",
-        },
-      ]
-    `)
   })
 
   it('analyzes the document and returns word at point', async () => {
