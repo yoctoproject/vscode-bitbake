@@ -322,7 +322,7 @@
       {
         "command": "bitbake.scan-recipe-env",
         "title": "BitBake: Scan Recipe",
-        "description": "Scan the recipe for the complete information about the environment."
+        "description": "Run 'bitbake -e' on the chosen recipe to improve the language services such as hover definition"
       },
       {
         "command": "bitbake.drop-recipe",
