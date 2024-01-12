@@ -27,6 +27,7 @@ import fs from 'fs'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
+import { type RequestResult } from '../lib/src/types/requests'
 
 export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
@@ -704,6 +705,64 @@ export default class Analyzer {
         }
       }
     }
+  }
+
+  public processRecipeScanResults (scanResults: string, uri: any): RequestResult['ProcessRecipeScanResults'] {
+    let uriString
+    if (typeof uri === 'string') {
+      uriString = uri
+    }
+
+    if (uri.fsPath !== undefined) { // vscode.Uri
+      uriString = uri.fsPath
+    }
+
+    if (typeof uriString !== 'string') {
+      logger.debug('[ProcessRecipeScanResults] Cannot obtain the file uri, abort processing scan results')
+      return undefined
+    }
+
+    if (!uriString.startsWith('file://')) {
+      uriString = 'file://' + uriString
+    }
+
+    if (this.uriToAnalyzedDocument[uriString] === undefined) {
+      logger.debug(`[ProcessRecipeScanResults] Analyzed document for ${uriString} not found, abort processing scan results`)
+      return undefined
+    }
+
+    const lines = scanResults.split('\n')
+    const index = lines.findIndex((line) => line.includes('INCLUDE HISTORY'))
+    if (index === -1) {
+      logger.debug('[Analyzer] Cannot find INCLUDE HISTORY in scan results, abort processing scan results')
+      return undefined
+    }
+
+    const validTexts = lines.slice(index).join('\n')
+    const scanResultdocumentUri = uriString + '.scanned'
+    const scanResultDocument = TextDocument.create(
+      scanResultdocumentUri,
+      'bitbake',
+      0,
+      validTexts
+    )
+
+    this.analyze({ document: scanResultDocument, uri: scanResultdocumentUri })
+
+    const scanResultDocumentSymbols = this.getGlobalDeclarationSymbols(scanResultdocumentUri)
+    if (scanResultDocumentSymbols.length > 0) {
+      logger.debug(`symbol length for scan result document: ${scanResultDocumentSymbols.length}`)
+    }
+
+    // Symbol information on the file that was requested to be scanned
+    const originalSymbols = this.getGlobalDeclarationSymbols(uriString)
+
+    if (originalSymbols.length > 0) {
+      logger.debug(`symbol length for original document: ${originalSymbols.length}`)
+    }
+
+    // TODO: Further parsing of the scan results using both documents
+    return undefined
   }
 }
 
