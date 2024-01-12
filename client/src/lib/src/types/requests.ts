@@ -21,10 +21,11 @@ export const RequestMethod: Record<RequestType, string> = {
 export interface RequestParams {
   [RequestType.EmbeddedLanguageTypeOnPosition]: { uriString: string, position: Position }
   [RequestType.getLinksInDocument]: { documentUri: string }
-  [RequestType.ProcessRecipeScanResults]: { scanResults: string }
+  [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any }
 }
 
 export interface RequestResult {
   [RequestType.EmbeddedLanguageTypeOnPosition]: Promise<EmbeddedLanguageType | undefined | null> // for unknown reasons, the client receives null instead of undefined
   [RequestType.getLinksInDocument]: Promise<Array<{ value: string, range: Range }>>
+  [RequestType.ProcessRecipeScanResults]: Record<string, unknown> | undefined
 }
