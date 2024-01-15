@@ -165,6 +165,7 @@ describe('on definition', () => {
     const parsedHoverPath = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', ''))
     const somePackagePath = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', '').replace('hover.bb', 'some-package.bb'))
     const somePackagePath2 = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', '').replace('hover.bb', 'some-package+1.inc'))
+    const somePackagePath3 = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', '').replace('hover.bb', 'some-package-2.0.bb'))
 
     bitBakeProjectScannerClient.bitbakeScanResult._recipes = [
       {
@@ -189,6 +190,11 @@ describe('on definition', () => {
       {
         name: somePackagePath2.name,
         path: somePackagePath2,
+        extraInfo: 'layer: core'
+      },
+      {
+        name: somePackagePath3.name,
+        path: somePackagePath3,
         extraInfo: 'layer: core'
       }
     ]
@@ -268,6 +274,16 @@ describe('on definition', () => {
       }
     })
 
+    const shouldWork8 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 26,
+        character: 33
+      }
+    })
+
     const shouldNotWork = onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
@@ -313,6 +329,22 @@ describe('on definition', () => {
     expect(shouldWork7).toEqual(
       [{
         uri: 'file://' + somePackagePath2.dir + '/some-package+1.inc',
+        range: {
+          start: {
+            line: 0,
+            character: 0
+          },
+          end: {
+            line: 0,
+            character: 0
+          }
+        }
+      }]
+    )
+
+    expect(shouldWork8).toEqual(
+      [{
+        uri: 'file://' + somePackagePath3.dir + '/some-package-2.0.bb',
         range: {
           start: {
             line: 0,
