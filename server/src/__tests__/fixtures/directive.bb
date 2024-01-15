@@ -23,7 +23,7 @@ do_build(){
 my_func(){
 
 }
-# package names that contain hyphen
-RDEPENDS:${PN} += 'some-package'
+# package names that contain hyphen; some numbers with dots
+RDEPENDS:${PN} += 'some-package some-package-2.0'
 # package names that follow '--enable-' or '--disable-', and when + is part of the name
 PACKAGECONFIG[some-package3] = "--enable-some-package,--disable-some-package,some-package+1"
