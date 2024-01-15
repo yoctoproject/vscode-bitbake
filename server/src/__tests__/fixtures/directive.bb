@@ -25,3 +25,5 @@ my_func(){
 }
 # package names that contain hyphen
 RDEPENDS:${PN} += 'some-package'
+# package names that follow '--enable-' or '--disable-', and when + is part of the name
+PACKAGECONFIG[some-package3] = "--enable-some-package,--disable-some-package,some-package+1"

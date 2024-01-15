@@ -164,6 +164,7 @@ describe('on definition', () => {
   it('provides go to definition for symbols found in the string content', async () => {
     const parsedHoverPath = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', ''))
     const somePackagePath = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', '').replace('hover.bb', 'some-package.bb'))
+    const somePackagePath2 = path.parse(FIXTURE_DOCUMENT.HOVER.uri.replace('file://', '').replace('hover.bb', 'some-package+1.inc'))
 
     bitBakeProjectScannerClient.bitbakeScanResult._recipes = [
       {
@@ -183,6 +184,11 @@ describe('on definition', () => {
       {
         name: somePackagePath.name,
         path: somePackagePath,
+        extraInfo: 'layer: core'
+      },
+      {
+        name: somePackagePath2.name,
+        path: somePackagePath2,
         extraInfo: 'layer: core'
       }
     ]
@@ -232,6 +238,36 @@ describe('on definition', () => {
       }
     })
 
+    const shouldWork5 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 28,
+        character: 42
+      }
+    })
+
+    const shouldWork6 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 28,
+        character: 65
+      }
+    })
+
+    const shouldWork7 = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 28,
+        character: 78
+      }
+    })
+
     const shouldNotWork = onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
@@ -257,6 +293,26 @@ describe('on definition', () => {
     expect(shouldWork4).toEqual(
       [{
         uri: 'file://' + somePackagePath.dir + '/some-package.bb',
+        range: {
+          start: {
+            line: 0,
+            character: 0
+          },
+          end: {
+            line: 0,
+            character: 0
+          }
+        }
+      }]
+    )
+
+    expect(shouldWork5).toEqual(shouldWork4)
+
+    expect(shouldWork6).toEqual(shouldWork4)
+
+    expect(shouldWork7).toEqual(
+      [{
+        uri: 'file://' + somePackagePath2.dir + '/some-package+1.inc',
         range: {
           start: {
             line: 0,
