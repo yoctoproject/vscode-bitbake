@@ -586,42 +586,45 @@ export default class Analyzer {
    */
   public getSymbolsInStringContent (uri: string, line: number, character: number): SymbolInformation[] {
     const allSymbolsAtPosition: SymbolInformation[] = []
-    const wholeWordRegex = /(?<![-.:])\b([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\b(?![-.:])/g
+    const wholeWordRegex = /(?<![-.:])(--(enable|disable)-)?\b(?<name>[a-zA-Z0-9][a-zA-Z0-9-+]*[a-zA-Z0-9])\b(?![-.:])/g
     const n = this.nodeAtPoint(uri, line, character)
     if (n?.type === 'string_content') {
       this.processSymbolsInStringContent(n, wholeWordRegex, (start, end, match) => {
-        if (this.positionIsInRange(line, character, { start, end })) {
-          const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
-            return recipe.name === match[0]
-          })
-          if (foundRecipe !== undefined) {
-            if (foundRecipe?.path !== undefined) {
-              allSymbolsAtPosition.push({
-                name: match[0],
-                kind: SymbolKind.Variable,
-                location: {
-                  range: {
-                    start,
-                    end
-                  },
-                  uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
-                }
-              })
-            }
-            if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
-              foundRecipe.appends.forEach((append) => {
+        const symbolName = match.groups?.name
+        if (symbolName !== undefined) {
+          if (this.positionIsInRange(line, character, { start, end })) {
+            const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => {
+              return recipe.name === symbolName
+            })
+            if (foundRecipe !== undefined) {
+              if (foundRecipe?.path !== undefined) {
                 allSymbolsAtPosition.push({
-                  name: append.name,
+                  name: symbolName,
                   kind: SymbolKind.Variable,
                   location: {
                     range: {
                       start,
                       end
                     },
-                    uri: 'file://' + append.dir + '/' + append.base
+                    uri: 'file://' + foundRecipe.path.dir + '/' + foundRecipe.path.base
                   }
                 })
-              })
+              }
+              if (foundRecipe?.appends !== undefined && foundRecipe.appends.length > 0) {
+                foundRecipe.appends.forEach((append) => {
+                  allSymbolsAtPosition.push({
+                    name: append.name,
+                    kind: SymbolKind.Variable,
+                    location: {
+                      range: {
+                        start,
+                        end
+                      },
+                      uri: 'file://' + append.dir + '/' + append.base
+                    }
+                  })
+                })
+              }
             }
           }
         }
