@@ -23,3 +23,5 @@ do_build(){
 my_func(){
 
 }
+# package names that contain hyphen
+RDEPENDS:${PN} += 'some-package'

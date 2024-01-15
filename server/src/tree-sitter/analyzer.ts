@@ -586,7 +586,7 @@ export default class Analyzer {
    */
   public getSymbolsInStringContent (uri: string, line: number, character: number): SymbolInformation[] {
     const allSymbolsAtPosition: SymbolInformation[] = []
-    const wholeWordRegex = /(?<![-.:])\b(\w+)\b(?![-.:])/g
+    const wholeWordRegex = /(?<![-.:])\b([a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\b(?![-.:])/g
     const n = this.nodeAtPoint(uri, line, character)
     if (n?.type === 'string_content') {
       this.processSymbolsInStringContent(n, wholeWordRegex, (start, end, match) => {
