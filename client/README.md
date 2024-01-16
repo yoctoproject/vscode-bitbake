@@ -198,6 +198,10 @@ If your recipe's class is not supported, or you have an older version of poky, t
 ## Troubleshooting
 See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
 
+## Others
+This extension currently doesn't provide linting and formatting. Users are advised to install other extensions that have these features. (e.g. [oelint-adv](https://marketplace.visualstudio.com/items?itemName=kweihmann.oelint-vscode))
+
+This extension also doesn't support WKS files, you should find another extension such as [openembedded-kickstart](https://marketplace.visualstudio.com/items?itemName=wickscc.openembedded-kickstart)
 ## Contributing
 
 ### Reporting issues
