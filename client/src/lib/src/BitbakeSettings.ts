@@ -44,7 +44,7 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
   return resolvedSettings
 }
 
-function resolveSettingPath (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
+export function resolveSettingPath (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
   if (configurationPath === '' || configurationPath === undefined) {
     return undefined
   }

@@ -25,7 +25,7 @@ export const bashHeader = [
   ''
 ].join('\n')
 
-export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
+export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument, pokyFolder?: string): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'bash')
   TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
     switch (node.type) {
@@ -39,11 +39,23 @@ export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocume
     }
   })
   insertBashHeader(embeddedLanguageDoc)
+  if (pokyFolder !== undefined) {
+    insertBashTools(embeddedLanguageDoc, pokyFolder)
+  }
   return embeddedLanguageDoc
 }
 
 const insertBashHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashHeader)
+}
+
+const insertBashTools = (embeddedLanguageDoc: EmbeddedLanguageDoc, pokyFolder: string): void => {
+  const bashTools = [
+    `. ${pokyFolder}/meta/classes-global/logging.bbclass`,
+    `. ${pokyFolder}/meta/classes-global/base.bbclass`,
+    ''
+  ].join('\n')
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashTools)
 }
 
 const handleFunctionDefinitionNode = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {

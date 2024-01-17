@@ -11,13 +11,13 @@ import { generatePythonEmbeddedLanguageDoc } from './python-support'
 import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { analyzer } from '../tree-sitter/analyzer'
 
-export const generateEmbeddedLanguageDocs = (textDocument: TextDocument): EmbeddedLanguageDoc[] | undefined => {
+export const generateEmbeddedLanguageDocs = (textDocument: TextDocument, pokyFolder?: string): EmbeddedLanguageDoc[] | undefined => {
   const analyzedDocument = analyzer.getAnalyzedDocument(textDocument.uri)
   if (analyzedDocument === undefined) {
     return
   }
   return [
-    generateBashEmbeddedLanguageDoc(analyzedDocument),
+    generateBashEmbeddedLanguageDoc(analyzedDocument, pokyFolder),
     generatePythonEmbeddedLanguageDoc(analyzedDocument)
   ]
 }

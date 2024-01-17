@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import path from 'path'
 import {
   type Connection,
   type InitializeResult,
@@ -28,12 +29,15 @@ import { getSemanticTokens, legend } from './semanticTokens'
 import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
+import { resolveSettingPath } from './lib/src/BitbakeSettings'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let parseOnSave = true
 let eSDKMode = false
+let workspaceFolder: string | undefined
+let pokyFolder: string | undefined
 
 const disposables: Disposable[] = []
 
@@ -49,6 +53,8 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   logger.info('[onInitialize] Initializing connection')
   bitBakeProjectScannerClient.setConnection(connection)
   disposables.push(...bitBakeProjectScannerClient.buildHandlers())
+
+  workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
 
   const extensionPath = params.initializationOptions.extensionPath as string
 
@@ -85,11 +91,14 @@ connection.onShutdown(() => {
   disposables.forEach((disposable) => { disposable.dispose() })
 })
 
-// eslint-disable-next-line @typescript-eslint/no-misused-promises
-connection.onDidChangeConfiguration(async (change) => {
+connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake.loggingLevel
   parseOnSave = change.settings.bitbake.parseOnSave
   eSDKMode = change.settings.bitbake.eSDKMode
+  const bitbakeFolder = resolveSettingPath(change.settings.bitbake.pathToBitbakeFolder, { workspaceFolder })
+  if (bitbakeFolder !== undefined) {
+    pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
+  }
 })
 
 connection.onCompletion(onCompletionHandler)
@@ -134,7 +143,7 @@ const analyzeDocument = async (event: TextDocumentChangeEvent<TextDocument>): Pr
   const previousVersion = analyzer.getAnalyzedDocument(textDocument.uri)?.version ?? -1
   if (textDocument.getText().length > 0 && previousVersion < textDocument.version) {
     const diagnostics = analyzer.analyze({ document: textDocument, uri: textDocument.uri })
-    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document)
+    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document, pokyFolder)
     if (embeddedLanguageDocs !== undefined) {
       void connection.sendNotification(NotificationMethod.EmbeddedLanguageDocs, embeddedLanguageDocs)
     }
