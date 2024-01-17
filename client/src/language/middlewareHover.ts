@@ -4,11 +4,12 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type HoverMiddleware } from 'vscode-languageclient'
-import { type Hover, commands, workspace, MarkdownString } from 'vscode'
+import { type Hover, commands, workspace, MarkdownString, type TextDocument } from 'vscode'
 
 import { getEmbeddedLanguageDocPosition } from './utils'
-import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { requestsManager } from './RequestManager'
+import path from 'path'
 
 export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (document, position, token, next) => {
   const nextResult = await next(document, position, token)
@@ -30,12 +31,12 @@ export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (do
     embeddedLanguageDocInfos.characterIndexes,
     position
   )
-  const result = await commands.executeCommand<Hover[]>(
+  const hovers = await commands.executeCommand<Hover[]>(
     'vscode.executeHoverProvider',
     embeddedLanguageDocInfos.uri,
     adjustedPosition
   )
-  return result.find((hover) => {
+  const selectedHover = hovers.find((hover) => {
     const contents = hover.contents
     return contents.find((content) => {
       if (content instanceof MarkdownString) {
@@ -43,5 +44,31 @@ export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (do
       }
       return content !== ''
     })
+  })
+  if (selectedHover !== undefined) {
+    fixBashIdeRelativePath(selectedHover, embeddedLanguageDocInfos, document)
+  }
+  return selectedHover
+}
+
+// Bash IDE gives relative paths relative to the embedded language document. This path does not make any sense to the user.
+// This makes the path relative to the document the user is looking at instead.
+const fixBashIdeRelativePath = (hover: Hover, embeddedLanguageDocInfos: EmbeddedLanguageDocInfos, document: TextDocument): void => {
+  if (embeddedLanguageDocInfos.language !== 'bash') {
+    return
+  }
+
+  hover.contents.forEach((content) => {
+    if (content instanceof MarkdownString) {
+      // ex: Function: **bbwarn** - *defined in ../../../../../../../../../poky/meta/classes-global/logging.bbclass*
+      const match = content.value.match(/^Function: \*\*\b\w+\b\*\* - \*defined in (?<path>.*\.bbclass)\*/)
+      const wrongRelativePath = match?.groups?.path
+      if (wrongRelativePath === undefined) {
+        return
+      }
+      const absolutePath = path.resolve(path.dirname(embeddedLanguageDocInfos.uri.fsPath), wrongRelativePath)
+      const fixedRelativePath = path.relative(path.dirname(document.uri.fsPath), absolutePath)
+      content.value = content.value.replace(wrongRelativePath, fixedRelativePath)
+    }
   })
 }
