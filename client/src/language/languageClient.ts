@@ -55,6 +55,13 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     })
   })
 
+  const sendSettings = async (): Promise<void> => {
+    const settings = workspace.getConfiguration()
+    await client.sendNotification('workspace/didChangeConfiguration', { settings })
+  }
+
+  workspace.onDidChangeConfiguration(sendSettings)
+
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
     // Register the server for bitbake documents
@@ -142,6 +149,7 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
 
   // Start the client and launch the server
   await client.start()
+  await sendSettings()
 
   return client
 }
