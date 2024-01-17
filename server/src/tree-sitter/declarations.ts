@@ -21,6 +21,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 
 export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
   overrides?: string[]
+  finalValue?: string // Only for variables extracted from the scan results
 }
 
 /**
@@ -42,10 +43,12 @@ const GLOBAL_DECLARATION_NODE_TYPES = new Set([
  */
 export function getGlobalDeclarationsAndComments ({
   tree,
-  uri
+  uri,
+  getFinalValue = false // Whether to get the final value from the scan results obtained from scan recipe command, which is the only use case as of now
 }: {
   tree: Parser.Tree
   uri: string
+  getFinalValue?: boolean
 }): [GlobalDeclarations, GlobalSymbolComments] {
   const globalDeclarations: GlobalDeclarations = {}
   const symbolComments: GlobalSymbolComments = {}
@@ -53,7 +56,7 @@ export function getGlobalDeclarationsAndComments ({
   TreeSitterUtil.forEach(tree.rootNode, (node) => {
     const followChildren = !GLOBAL_DECLARATION_NODE_TYPES.has(node.type)
 
-    const symbol = getDeclarationSymbolFromNode({ node, uri })
+    const symbol = getDeclarationSymbolFromNode({ node, uri, getFinalValue })
     if (symbol !== null) {
       const word = symbol.name
       // Note that this can include BITBAKE_VARIABLES (e.g DESCRIPTION = ''), it will be used for completion later. But BITBAKE_VARIABLES are also added as completion from doc scanner. The remove of duplicates will happen there.
@@ -78,12 +81,14 @@ export function getGlobalDeclarationsAndComments ({
   return [globalDeclarations, symbolComments]
 }
 
-export function nodeToSymbolInformation ({
+function nodeToSymbolInformation ({
   node,
-  uri
+  uri,
+  getFinalValue
 }: {
   node: Parser.SyntaxNode
   uri: string
+  getFinalValue?: boolean
 }): BitbakeSymbolInformation | null {
   const firstNamedChild = node.firstNamedChild
   if (firstNamedChild === null) {
@@ -96,33 +101,33 @@ export function nodeToSymbolInformation ({
 
   const kind = TREE_SITTER_TYPE_TO_LSP_KIND[node.type]
 
+  /**
+   * Example:
+   * FOO:override1:override2 = "foo"
+   *
+   * Tree node:
+   *    (variable_assignment [0, 0] - [0, 31]
+          (identifier [0, 0] - [0, 3])
+      ->  (override [0, 3] - [0, 23]
+        ->  (identifier [0, 4] - [0, 13])
+        ->  (identifier [0, 14] - [0, 23]))
+          (literal [0, 26] - [0, 31]
+            (string [0, 26] - [0, 31]
+          ->  (string_content [0, 27] - [0, 30]))))
+   *
+   * Note that the append, prepend and remove operators don't have identifiers in the tree
+   */
   const overrides: string[] = []
+  const overrideChildNode = node.children.find((child) => child.type === 'override')
+  if (overrideChildNode !== undefined) {
+    overrideChildNode.children.forEach((child) => {
+      if (child.type === 'identifier') {
+        overrides.push(child.text)
+      }
+    })
+  }
 
-  node.children.forEach((child) => {
-    /**
-     * Example:
-     * FOO:override1:override2 = "foo"
-     *
-     * Tree node:
-     *    (variable_assignment [0, 0] - [0, 31]
-            (identifier [0, 0] - [0, 3])
-        ->  (override [0, 3] - [0, 23]
-          ->  (identifier [0, 4] - [0, 13])
-          ->  (identifier [0, 14] - [0, 23]))
-            (literal [0, 26] - [0, 31]
-              (string [0, 26] - [0, 31]
-                (string_content [0, 27] - [0, 30]))))
-     */
-    if (child.type === 'override') {
-      child.children.forEach((c) => {
-        if (c.type === 'identifier') {
-          overrides.push(c.text)
-        }
-      })
-    }
-  })
-
-  const symbol = LSP.SymbolInformation.create(
+  let symbol: BitbakeSymbolInformation = LSP.SymbolInformation.create(
     firstNamedChild.text,
     kind ?? LSP.SymbolKind.Variable,
     TreeSitterUtil.range(node),
@@ -130,10 +135,18 @@ export function nodeToSymbolInformation ({
     containerName
   )
 
-  if (overrides.length > 0) {
-    return {
-      ...symbol,
-      overrides
+  symbol = {
+    ...symbol,
+    overrides
+  }
+
+  if (kind === LSP.SymbolKind.Variable && getFinalValue === true) {
+    const finalValue = node.children.find((child) => child.type === 'literal')?.firstChild?.firstNamedChild?.text
+    if (finalValue !== undefined) {
+      symbol = {
+        ...symbol,
+        finalValue
+      }
     }
   }
 
@@ -142,17 +155,19 @@ export function nodeToSymbolInformation ({
 
 function getDeclarationSymbolFromNode ({
   node,
-  uri
+  uri,
+  getFinalValue
 }: {
   node: Parser.SyntaxNode
   uri: string
+  getFinalValue?: boolean
 }): BitbakeSymbolInformation | null {
   if (TreeSitterUtil.isDefinition(node)) {
     // Currently in the tree, all functions start with python keyword have type 'anonymous_python_function', skip when the node is an actual anonymous python function in bitbake that has no identifier
     if (node.type === 'anonymous_python_function' && node.firstNamedChild?.type !== 'identifier') {
       return null
     }
-    return nodeToSymbolInformation({ node, uri })
+    return nodeToSymbolInformation({ node, uri, getFinalValue })
   }
 
   return null

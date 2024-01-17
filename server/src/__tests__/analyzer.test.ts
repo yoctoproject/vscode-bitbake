@@ -83,7 +83,8 @@ describe('analyze', () => {
             },
             uri: DUMMY_URI
           },
-          name: 'FOO'
+          name: 'FOO',
+          overrides: []
         },
         {
           kind: 12,
