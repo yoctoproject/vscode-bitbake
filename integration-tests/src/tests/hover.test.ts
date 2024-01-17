@@ -72,4 +72,16 @@ suite('Bitbake Hover Test Suite', () => {
     const expected = 'The default task for all recipes. This task depends on all other normal'
     await testHover(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
+
+  test('Hover shows description for function defined into meta/classes-global/logging.bbclass', async () => {
+    const position = new vscode.Position(14, 6)
+    const expected = 'Function: **bbwarn** - *defined in'
+    await testHover(position, expected)
+  }).timeout(BITBAKE_TIMEOUT)
+
+  test('Hover shows description for function defined into meta/classes-global/base.bbclass', async () => {
+    const position = new vscode.Position(15, 6)
+    const expected = 'Function: **oe_runmake** - *defined in'
+    await testHover(position, expected)
+  }).timeout(BITBAKE_TIMEOUT)
 })
