@@ -604,4 +604,51 @@ describe('on hover', () => {
       })
     )
   })
+
+  it('should show final value of the variable after the scan results are available', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.CORRECT
+    })
+
+    const scanResults = '#INCLUDE HISTORY\n# Some scan results here\nFINAL_VALUE = \'this is the final value for FINAL_VALUE\'\nFINAL_VALUE:o1 = \'this is the final value for FINAL_VALUE with override o1\'\n'
+
+    analyzer.processRecipeScanResults(scanResults, DUMMY_URI)
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 9,
+        character: 1
+      }
+    })
+
+    const shouldShow2 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 10,
+        character: 1
+      }
+    })
+
+    expect(shouldShow1).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('**Final Value**\n___\n`this is the final value for FINAL_VALUE`')
+        })
+      })
+    )
+
+    expect(shouldShow2).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('**Final Value**\n___\n`this is the final value for FINAL_VALUE with override o1`')
+        })
+      })
+    )
+  })
 })
