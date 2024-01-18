@@ -14,7 +14,8 @@ import {
   type SymbolInformation,
   type Range,
   SymbolKind,
-  type Position
+  type Position,
+  Location
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -759,23 +760,49 @@ export default class Analyzer {
     const scanResultDocUri = originalDocUri + '.scanned'
     const scanResultDocTree = this.parser.parse(scanResultDoc)
 
-    const [scanResultDocGlobalDeclarations] = getGlobalDeclarationsAndComments({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
+    const [scanResultDocGlobalDeclarations, scanResultDocGlobalDeclarationComments] = getGlobalDeclarationsAndComments({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
     const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
     const { globalDeclarations: analyzedOriginalDocGlobalDeclarations } = analyzedOriginalDoc
 
     const processedSymbolInformation: RequestResult['ProcessRecipeScanResults'] = {}
 
-    // Replace final values of the symbols in the original document with the ones from the scan results
+    // Process and apply the scan results to the original document
     Object.values(analyzedOriginalDocGlobalDeclarations).forEach((symbolArray) => {
       symbolArray.forEach((symbol) => {
         if (symbol.kind === SymbolKind.Variable) {
           const sameSymbolInScanResultDocument = scanResultDocSymbols.find((scanResultDocumentSymbol) => {
-            return scanResultDocumentSymbol.name === symbol.name &&
-            scanResultDocumentSymbol.overrides?.length === symbol.overrides?.length &&
-            scanResultDocumentSymbol.overrides?.every((override) => symbol.overrides?.includes(override)) // Question: should we care about the order of the overrides?
+            return this.symbolsAreTheSame(scanResultDocumentSymbol, symbol)
           })
           if (sameSymbolInScanResultDocument !== undefined) {
+            // Replace final values
             symbol.finalValue = sameSymbolInScanResultDocument.finalValue
+
+            const commentsForTheSameSymbol = scanResultDocGlobalDeclarationComments[symbol.name].find(item => this.symbolsAreTheSame(item.symbolInfo, symbol))?.comments
+
+            // Extract the modification history of the symbol
+            if (commentsForTheSameSymbol !== undefined) {
+              commentsForTheSameSymbol.forEach((comment) => {
+                /**
+                 *  Example:
+                 *  #   set /home/projects/poky/meta/conf/bitbake.conf:396
+                    #     [_defaultval] "gnu"
+                    TC_CXX_RUNTIME="gnu"
+                 */
+                const regex = /(?<=#\s{3}set\??\s)(?<filePath>\/.*):(?<lineNumber>\d+)/g
+                for (const match of comment.matchAll(regex)) {
+                  const filePath = match.groups?.filePath
+                  const lineNumber = match.groups?.lineNumber
+                  if (filePath !== undefined && lineNumber !== undefined) {
+                    const uri = 'file://' + filePath
+                    const location = Location.create(uri, { start: { line: parseInt(lineNumber) - 1, character: 0 }, end: { line: parseInt(lineNumber) - 1, character: symbol.name.length } })
+                    if (symbol.history === undefined) {
+                      symbol.history = []
+                    }
+                    symbol.history.push(location)
+                  }
+                }
+              })
+            }
 
             if (processedSymbolInformation[symbol.name] === undefined) {
               processedSymbolInformation[symbol.name] = []
@@ -790,13 +817,28 @@ export default class Analyzer {
     /**
      TODO: Achieve the following goals using the scan results
        [check] 1. Get the final values for variables and show them in the hover
-       2. Get the complete history of assignments for variables and use them in the go-to-definition feature
+       [check] 2. Get the complete history of assignments for variables and use them in the go-to-definition feature
        3. Get the accurate definition for require/inherit/include directives
        4. Get the accurate recipe includes in the bitbake recipe view in the left panel
        5. Get the definitions for the overrides (They should exist in the .conf files which are listed in the scan results)
      */
 
     return processedSymbolInformation
+  }
+
+  /**
+   *
+   * @param symbolA
+   * @param symbolB
+   * @returns
+   *
+   * This functions doesn't check the deep equality of the two symbols. It only checkes the neccesary fields to determine if the two symbols are referring the same thing in the file.
+   */
+  public symbolsAreTheSame (symbolA: BitbakeSymbolInformation, symbolB: BitbakeSymbolInformation): boolean {
+    return symbolA.name === symbolB.name &&
+           symbolA.overrides.length === symbolB.overrides.length &&
+           symbolA.overrides.every((override) => symbolB.overrides.includes(override))
+    // Question: should we care about the order of the overrides?
   }
 }
 
