@@ -55,7 +55,7 @@ describe('analyze', () => {
           location: {
             range: {
               end: {
-                character: 17,
+                character: 3,
                 line: 1
               },
               start: {
@@ -73,7 +73,7 @@ describe('analyze', () => {
           location: {
             range: {
               end: {
-                character: 11,
+                character: 3,
                 line: 0
               },
               start: {
@@ -91,11 +91,11 @@ describe('analyze', () => {
           location: {
             range: {
               end: {
-                character: 1,
-                line: 5
+                character: 14,
+                line: 3
               },
               start: {
-                character: 0,
+                character: 7,
                 line: 3
               }
             },
@@ -273,7 +273,7 @@ describe('sourceIncludeFiles', () => {
                   },
                   end: {
                     line: 0,
-                    character: 23
+                    character: 11
                   }
                 }
               }
@@ -298,7 +298,7 @@ describe('sourceIncludeFiles', () => {
                   },
                   end: {
                     line: 0,
-                    character: 23
+                    character: 11
                   }
                 }
               }
@@ -323,7 +323,7 @@ describe('sourceIncludeFiles', () => {
                   },
                   end: {
                     line: 0,
-                    character: 27
+                    character: 11
                   }
                 }
               }
