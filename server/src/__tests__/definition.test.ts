@@ -153,10 +153,10 @@ describe('on definition', () => {
     expect(result1).toEqual(result2)
     expect(result1).toEqual(
       expect.arrayContaining([
-        { uri: FIXTURE_URI.FOO_INC, range: { start: { line: 1, character: 0 }, end: { line: 1, character: 21 } } },
-        { uri: FIXTURE_URI.FOO_INC, range: { start: { line: 2, character: 0 }, end: { line: 2, character: 21 } } }, { uri: FIXTURE_URI.BAR_INC, range: { start: { line: 2, character: 0 }, end: { line: 2, character: 21 } } },
-        { uri: DUMMY_URI, range: { start: { line: 4, character: 0 }, end: { line: 4, character: 21 } } },
-        { uri: DUMMY_URI, range: { start: { line: 5, character: 0 }, end: { line: 5, character: 28 } } }
+        { uri: FIXTURE_URI.FOO_INC, range: { start: { line: 1, character: 0 }, end: { line: 1, character: 6 } } },
+        { uri: FIXTURE_URI.FOO_INC, range: { start: { line: 2, character: 0 }, end: { line: 2, character: 6 } } }, { uri: FIXTURE_URI.BAR_INC, range: { start: { line: 2, character: 0 }, end: { line: 2, character: 6 } } },
+        { uri: DUMMY_URI, range: { start: { line: 4, character: 0 }, end: { line: 4, character: 6 } } },
+        { uri: DUMMY_URI, range: { start: { line: 5, character: 0 }, end: { line: 5, character: 6 } } }
       ])
     )
   })

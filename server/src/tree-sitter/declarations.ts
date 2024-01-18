@@ -132,7 +132,7 @@ function nodeToSymbolInformation ({
     ...LSP.SymbolInformation.create(
       firstNamedChild.text,
       kind ?? LSP.SymbolKind.Variable,
-      TreeSitterUtil.range(node),
+      TreeSitterUtil.range(firstNamedChild),
       uri,
       containerName
     ),
