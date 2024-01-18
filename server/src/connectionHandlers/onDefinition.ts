@@ -68,6 +68,17 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         })
       }
 
+      const exactSymbol = analyzer.getGlobalDeclarationSymbols(documentUri).find((symbol) => symbol.name === word && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
+
+      if (exactSymbol?.history !== undefined) {
+        exactSymbol.history.forEach((location) => {
+          definitions.push({
+            uri: location.uri,
+            range: location.range
+          })
+        })
+      }
+
       return definitions
     }
     // Symbols in string content

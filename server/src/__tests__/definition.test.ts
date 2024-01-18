@@ -360,4 +360,71 @@ describe('on definition', () => {
 
     expect(shouldNotWork).toEqual([])
   })
+
+  it('provides additional go to definition after the processed scan results are available', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.CORRECT
+    })
+
+    const fakeFilePath = FIXTURE_URI.BAR_INC.replace('file://', '')
+    const fakeLineNumber = 1
+    const variable = 'FINAL_VALUE'
+
+    const scanResults = `#INCLUDE HISTORY\n#   set ${fakeFilePath}:${fakeLineNumber}\n${variable} = 'this is the final value for FINAL_VALUE'\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\n`
+
+    analyzer.processRecipeScanResults(scanResults, DUMMY_URI)
+
+    const shouldWork = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 9,
+        character: 1
+      }
+    })
+
+    expect(shouldWork).toEqual([
+      {
+        uri: DUMMY_URI,
+        range: {
+          start: {
+            line: 9,
+            character: 0
+          },
+          end: {
+            line: 9,
+            character: 11
+          }
+        }
+      },
+      {
+        uri: DUMMY_URI,
+        range: {
+          start: {
+            line: 10,
+            character: 0
+          },
+          end: {
+            line: 10,
+            character: 11
+          }
+        }
+      },
+      {
+        uri: FIXTURE_URI.BAR_INC,
+        range: {
+          start: {
+            line: 0,
+            character: 0
+          },
+          end: {
+            line: 0,
+            character: 11
+          }
+        }
+      }
+    ])
+  })
 })

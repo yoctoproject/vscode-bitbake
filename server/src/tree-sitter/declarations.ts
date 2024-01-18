@@ -20,8 +20,9 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 }
 
 export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
-  overrides?: string[]
+  overrides: string[]
   finalValue?: string // Only for variables extracted from the scan results
+  history?: LSP.Location[] // The modification history of a variable with flags and overrides taken into account.
 }
 
 /**
@@ -29,7 +30,7 @@ export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
  * Referenced by the symbol name
  */
 export type GlobalDeclarations = Record<string, BitbakeSymbolInformation[]>
-export type GlobalSymbolComments = Record<string, Array<{ uri: string, line: number, comments: string[] }>>
+export type GlobalSymbolComments = Record<string, Array<{ uri: string, line: number, comments: string[], symbolInfo: BitbakeSymbolInformation }>>
 const GLOBAL_DECLARATION_NODE_TYPES = new Set([
   'function_definition',
   'python_function_definition',
@@ -71,7 +72,7 @@ export function getGlobalDeclarationsAndComments ({
         if (symbolComments[word] === undefined) {
           symbolComments[word] = []
         }
-        symbolComments[word].push({ uri, line: node.startPosition.row, comments: commentsAbove })
+        symbolComments[word].push({ uri, line: node.startPosition.row, comments: commentsAbove, symbolInfo: symbol })
       }
     }
 
@@ -127,16 +128,14 @@ function nodeToSymbolInformation ({
     })
   }
 
-  let symbol: BitbakeSymbolInformation = LSP.SymbolInformation.create(
-    firstNamedChild.text,
-    kind ?? LSP.SymbolKind.Variable,
-    TreeSitterUtil.range(node),
-    uri,
-    containerName
-  )
-
-  symbol = {
-    ...symbol,
+  let symbol: BitbakeSymbolInformation = {
+    ...LSP.SymbolInformation.create(
+      firstNamedChild.text,
+      kind ?? LSP.SymbolKind.Variable,
+      TreeSitterUtil.range(node),
+      uri,
+      containerName
+    ),
     overrides
   }
 
