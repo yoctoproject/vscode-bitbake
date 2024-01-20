@@ -44,12 +44,28 @@ export const getEmbeddedLanguageDocPosition = (
   return embeddedLanguageTextDocument.positionAt(embeddedLanguageDocOffset)
 }
 
+export const getEmbeddedLanguageDocRange = (
+  originalTextDocument: TextDocument,
+  embeddedLanguageTextDocument: TextDocument,
+  characterIndexes: number[],
+  originalRange: Range
+): Range => {
+  const start = getEmbeddedLanguageDocPosition(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, originalRange.start)
+  const end = getEmbeddedLanguageDocPosition(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, originalRange.end)
+  return new Range(start, end)
+}
+
 export const checkIsPositionEqual = (position1: Position, position2: Position): boolean => {
   return position1.line === position2.line && position1.character === position2.character
 }
 
 export const checkIsRangeEqual = (range1: Range, range2: Range): boolean => {
   return checkIsPositionEqual(range1.start, range2.start) && checkIsPositionEqual(range1.end, range2.end)
+}
+
+export const getIndentationOnLine = (document: TextDocument, lineNumber: number): string => {
+  const line = document.lineAt(lineNumber)
+  return line.text.slice(0, line.firstNonWhitespaceCharacterIndex)
 }
 
 export const checkIsDefinitionUriEqual = (definition: Location | LocationLink, uri: Uri): boolean => {

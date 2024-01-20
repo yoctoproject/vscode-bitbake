@@ -30,6 +30,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
 import { updateDiagnostics } from './diagnosticsSupport'
 import { getLanguageConfiguration } from './languageConfiguration'
+import { BitbakeCodeActionProvider } from './codeActionProvider'
 
 export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -85,6 +86,10 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
       void updateDiagnostics(uri)
     })
   })
+
+  context.subscriptions.push(
+    languages.registerCodeActionsProvider('bitbake', new BitbakeCodeActionProvider())
+  )
 
   if (context.storageUri?.fsPath === undefined) {
     logger.error('Failed to get storage path')
