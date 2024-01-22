@@ -262,8 +262,8 @@ export default class Analyzer {
   ): boolean {
     let n = this.nodeAtPoint(uri, line, column)
 
-    while (n?.parent !== null && n?.parent !== undefined) {
-      if (TreeSitterUtils.isShellDefinition(n.parent)) {
+    while (n !== null) {
+      if (TreeSitterUtils.isShellDefinition(n)) {
         return true
       }
       n = n.parent
@@ -278,8 +278,8 @@ export default class Analyzer {
     column: number
   ): boolean {
     let n = this.nodeAtPoint(uri, line, column)
-    while (n?.parent !== null && n?.parent !== undefined) {
-      if (TreeSitterUtils.isInlinePython(n.parent) || TreeSitterUtils.isPythonDefinition(n.parent)) {
+    while (n !== null) {
+      if (TreeSitterUtils.isInlinePython(n) || TreeSitterUtils.isPythonDefinition(n)) {
         return true
       }
       n = n.parent
