@@ -45,19 +45,19 @@ suite('Bitbake Completion Test Suite', () => {
   }
 
   test('Completion appears properly on bitbake variable', async () => {
-    const position = new vscode.Position(0, 2)
+    const position = new vscode.Position(8, 7)
     const expected = 'DESCRIPTION'
     await testCompletion(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
   test('Completion appears properly on embedded python', async () => {
-    const position = new vscode.Position(3, 6)
+    const position = new vscode.Position(1, 7)
     const expected = 'print'
     await testCompletion(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
   test('Completion appears properly on embedded bash', async () => {
-    const position = new vscode.Position(7, 6)
+    const position = new vscode.Position(5, 7)
     const expected = 'echo'
     await testCompletion(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
