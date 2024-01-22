@@ -1,9 +1,9 @@
-DESCRIPTION = 'FOO'
-
 python do_foo(){
-    print('123')
+    pri
 }
 
 do_bar(){
-    echo '123'
+    ech
 }
+
+DESCRIP
