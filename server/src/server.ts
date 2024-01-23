@@ -154,8 +154,10 @@ const analyzeDocument = async (event: TextDocumentChangeEvent<TextDocument>): Pr
 
   // Other language extensions might also associate .conf files with their langauge modes
   if (textDocument.uri.endsWith('.conf')) {
-    logger.debug('verifyConfigurationFileAssociation')
-    await connection.sendRequest('bitbake/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
+    // get decoded urls in case of running on Windows
+    const filePath = decodeURIComponent(new URL(textDocument.uri).pathname)
+    logger.debug(`[Verify Configuration File Association] file uri: ${filePath}`)
+    await connection.sendRequest('bitbake/verifyConfigurationFileAssociation', { filePath })
   }
 }
 
