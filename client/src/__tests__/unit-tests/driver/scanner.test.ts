@@ -104,6 +104,24 @@ describe('BitBakeProjectScanner', () => {
     )
   })
 
+  it('can get a list of conf files', async () => {
+    const confFiles = bitBakeProjectScanner.scanResult._confFiles
+    expect(confFiles.length).toBeGreaterThan(0)
+    expect(confFiles).toEqual(
+      expect.arrayContaining(
+        [
+          expect.objectContaining(
+            {
+              path: expect.objectContaining({
+                base: 'bitbake.conf'
+              })
+            }
+          )
+        ]
+      )
+    )
+  })
+
   it('can get a list of devtool workspaces', async () => {
     const devtoolWorkspaces = bitBakeProjectScanner.scanResult._workspaces
     expect(devtoolWorkspaces.length).toBeGreaterThan(0)
