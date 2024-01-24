@@ -646,6 +646,7 @@ describe('On Completion', () => {
       _layers: [],
       _overrides: [],
       _recipes: [],
+      _confFiles: [],
       _workspaces: []
     }
 

@@ -55,6 +55,7 @@ describe('on definition', () => {
       _layers: [],
       _overrides: [],
       _recipes: [],
+      _confFiles: [],
       _workspaces: []
     }
 
@@ -106,6 +107,7 @@ describe('on definition', () => {
         extraInfo: 'layer: core'
       }],
       _recipes: [],
+      _confFiles: [],
       _includes: [
         {
           name: parsedFooPath.name,

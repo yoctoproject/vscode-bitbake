@@ -38,9 +38,10 @@ export class BitBakeProjectScanner {
   private readonly _classFileExtension: string = 'bbclass'
   private readonly _includeFileExtension: string = 'inc'
   private readonly _recipesFileExtension: string = 'bb'
+  private readonly _confFileExtension: string = 'conf'
   onChange: EventEmitter = new EventEmitter()
 
-  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [] }
+  private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [] }
   private _shouldDeepExamine: boolean = false
   private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
@@ -98,6 +99,7 @@ export class BitBakeProjectScanner {
           await this.scanAvailableLayers()
           this.scanForClasses()
           this.scanForIncludeFiles()
+          this.scanForConfFiles()
           await this.scanForRecipes()
           await this.scanRecipesAppends()
           await this.scanOverrides()
@@ -176,6 +178,7 @@ export class BitBakeProjectScanner {
     logger.info(`Recipes:   ${this._bitbakeScanResult._recipes.length}`)
     logger.info(`Inc-Files: ${this._bitbakeScanResult._includes.length}`)
     logger.info(`bbclass:   ${this._bitbakeScanResult._classes.length}`)
+    logger.info(`conf Files:   ${this._bitbakeScanResult._confFiles.length}`)
     logger.info(`overrides:   ${this._bitbakeScanResult._overrides.length}`)
     logger.info(`Devtool-workspaces:   ${this._bitbakeScanResult._workspaces.length}`)
   }
@@ -186,6 +189,10 @@ export class BitBakeProjectScanner {
 
   private scanForIncludeFiles (): void {
     this._bitbakeScanResult._includes = this.searchFiles(this._includeFileExtension)
+  }
+
+  private scanForConfFiles (): void {
+    this._bitbakeScanResult._confFiles = this.searchFiles(this._confFileExtension)
   }
 
   private async scanAvailableLayers (): Promise<void> {
