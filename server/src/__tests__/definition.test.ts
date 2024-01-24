@@ -31,6 +31,7 @@ describe('on definition', () => {
     const parsedBarPath = path.parse(FIXTURE_DOCUMENT.BAR_INC.uri.replace('file://', ''))
     const parsedFooPath = path.parse(FIXTURE_DOCUMENT.FOO_INC.uri.replace('file://', ''))
     const parsedBazPath = path.parse(FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', ''))
+    const parsedBitbakeConfPath = path.parse(FIXTURE_DOCUMENT.BITBAKE_CONF.uri.replace('file://', ''))
 
     bitBakeProjectScannerClient.bitbakeScanResult = {
       _classes: [
@@ -55,7 +56,13 @@ describe('on definition', () => {
       _layers: [],
       _overrides: [],
       _recipes: [],
-      _confFiles: [],
+      _confFiles: [
+        {
+          name: parsedBitbakeConfPath.name,
+          path: parsedBitbakeConfPath,
+          extraInfo: 'layer: core'
+        }
+      ],
       _workspaces: []
     }
 
@@ -74,10 +81,38 @@ describe('on definition', () => {
       }
     })
 
+    const definition2 = onDefinitionHandler({
+      textDocument: {
+        uri: FIXTURE_URI.DIRECTIVE
+      },
+      position: {
+        line: 3,
+        character: 9
+      }
+    })
+
     expect(definition).toEqual(
       expect.arrayContaining([
         {
           uri: FIXTURE_URI.BAZ_BBCLASS,
+          range: {
+            start: {
+              line: 0,
+              character: 0
+            },
+            end: {
+              line: 0,
+              character: 0
+            }
+          }
+        }
+      ])
+    )
+
+    expect(definition2).toEqual(
+      expect.arrayContaining([
+        {
+          uri: FIXTURE_URI.BITBAKE_CONF,
           range: {
             start: {
               line: 0,
