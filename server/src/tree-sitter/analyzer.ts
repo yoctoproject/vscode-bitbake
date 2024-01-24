@@ -29,6 +29,7 @@ import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { type RequestResult } from '../lib/src/types/requests'
+import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
 export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
@@ -563,21 +564,13 @@ export default class Analyzer {
         })
       } else if (childNode.type === 'require_directive' || childNode.type === 'include_directive') {
         if (childNode.firstNamedChild !== null && childNode.firstNamedChild.type === 'include_path') {
-          logger.debug(`[Analyzer] Found include path: ${childNode.firstNamedChild.text}`)
-          const includeFile = path.parse(childNode.firstNamedChild.text)
-          let includes = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((inc) => {
-            return inc.name === includeFile.name
-          })
+          logger.debug(`[Analyzer] Found path: ${childNode.firstNamedChild.text}`)
 
-          if (includes.length === 0) {
-            includes = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((recipe) => {
-              return recipe.name === includeFile.name
-            })
-          }
+          const foundFiles = this.findFilesInProjectScanner(childNode.firstNamedChild.text)
 
-          for (const include of includes) {
-            if (include.path !== undefined) {
-              const uri: string = 'file://' + include.path.dir + '/' + include.path.base
+          for (const file of foundFiles) {
+            if (file.path !== undefined) {
+              const uri: string = 'file://' + file.path.dir + '/' + file.path.base
               fileUris.push(encodeURI(uri))
             }
           }
@@ -585,6 +578,34 @@ export default class Analyzer {
       }
     })
     return fileUris
+  }
+
+  public findFilesInProjectScanner (filePath: string): ElementInfo[] {
+    const parsedPath = path.parse(filePath)
+    let foundFiles: ElementInfo[] = []
+
+    switch (parsedPath.ext) {
+      case '.inc':
+        foundFiles = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((inc) => {
+          return inc.name === parsedPath.name
+        })
+        break
+      case '.bb':
+        foundFiles = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((recipe) => {
+          return recipe.name === parsedPath.name
+        })
+        break
+      case '.conf':
+        foundFiles = bitBakeProjectScannerClient.bitbakeScanResult._confFiles.filter((conf) => {
+          return conf.name === parsedPath.name
+        })
+        break
+      default:
+        logger.warn(`[Analyzer] Unsupported file extension: ${parsedPath.ext}`)
+        break
+    }
+
+    return foundFiles
   }
 
   /**
