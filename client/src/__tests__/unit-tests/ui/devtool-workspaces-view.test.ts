@@ -34,6 +34,7 @@ describe('Devtool Worskapces View', () => {
       _layers: [],
       _classes: [],
       _overrides: [],
+      _confFiles: [],
       _workspaces: [
         {
           name: 'dropbear',

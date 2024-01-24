@@ -16,6 +16,7 @@ export class BitBakeProjectScannerClient {
     _includes: [],
     _recipes: [],
     _overrides: [],
+    _confFiles: [],
     _workspaces: []
   }
 

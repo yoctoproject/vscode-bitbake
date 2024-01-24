@@ -53,6 +53,7 @@ describe('BitbakeDriver Recipes View', () => {
       _includes: [],
       _layers: [],
       _classes: [],
+      _confFiles: [],
       _overrides: [],
       _workspaces: []
     }

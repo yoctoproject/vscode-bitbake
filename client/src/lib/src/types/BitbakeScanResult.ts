@@ -38,6 +38,7 @@ export interface BitbakeScanResult {
   _includes: ElementInfo[]
   _recipes: ElementInfo[]
   _overrides: string[]
+  _confFiles: ElementInfo[]
   _workspaces: DevtoolWorkspaceInfo[]
 }
 
