@@ -8,7 +8,7 @@ import { type TextDocumentPositionParams, type Definition, Location, Range } fro
 import { analyzer } from '../tree-sitter/analyzer'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
-import path, { type ParsedPath } from 'path'
+import { type ParsedPath } from 'path'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Location[] | null {
@@ -98,29 +98,18 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   return []
 }
 
-function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, symbol: string): Location[] {
+function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, directivePath: string): Location[] {
   let elementInfos: ElementInfo[] = []
   switch (directiveStatementKeyword) {
     case 'inherit':
       elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((bbclass): boolean => {
-        return bbclass.name === symbol
+        return bbclass.name === directivePath
       })
       break
 
     case 'require':
     case 'include':
-      {
-        const includeFile = path.parse(symbol)
-        elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._includes.filter((incFile): boolean => {
-          return incFile.name === includeFile.name
-        })
-
-        if (elementInfos.length === 0) {
-          elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._recipes.filter((recipe): boolean => {
-            return recipe.name === includeFile.name
-          })
-        }
-      }
+      elementInfos = analyzer.findFilesInProjectScanner(directivePath)
       break
 
     default:
