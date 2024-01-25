@@ -15,65 +15,14 @@
 			],
 		},
 		{
-			"label": "compile:client",
-			"type": "npm",
-			"script": "compile:client",
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
-			"label": "compile:server",
-			"type": "npm",
-			"script": "compile:server",
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc"
-			]
-		},
-		{
 			"label": "watch",
 			"type": "npm",
 			"script": "watch",
 			"isBackground": true,
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
+			"group": {
+				"kind": "build",
+				"isDefault": true
 			},
-			"problemMatcher": [
-				"$tsc-watch"
-			]
-		},
-		{
-			"label": "watch:client",
-			"type": "npm",
-			"script": "watch:client",
-			"isBackground": true,
-			"group": "build",
-			"presentation": {
-				"panel": "dedicated",
-				"reveal": "never"
-			},
-			"problemMatcher": [
-				"$tsc-watch"
-			]
-		},
-		{
-			"label": "watch:server",
-			"type": "npm",
-			"script": "watch:server",
-			"isBackground": true,
-			"group": "build",
 			"presentation": {
 				"panel": "dedicated",
 				"reveal": "never"
