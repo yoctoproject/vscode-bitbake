@@ -14,7 +14,8 @@
 			"outFiles": [
 				"${workspaceRoot}/client/out/**/*.js",
 			],
-			"preLaunchTask": "watch:client"
+			"preLaunchTask": "watch"
+
 		},
 		{
 			"name": "Attach to Server",
@@ -25,7 +26,7 @@
 			"outFiles": [
 				"${workspaceRoot}/client/server/**/*.js",
 			],
-			"preLaunchTask": "watch:server"
+			"preLaunchTask": "watch"
 		},
 		{
 			"name": "Jest tests",
