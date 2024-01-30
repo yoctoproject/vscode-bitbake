@@ -57,9 +57,7 @@ export class BitbakeRecipeScanner {
             if (this.scanResults !== '') {
               logger.debug('[onDidEndTask] Sending recipe environment to the server')
               const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults: this.scanResults, uri: this._currentUriForScan }
-              const processedScanResults = await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
-
-              logger.debug('processedScanResults: ' + JSON.stringify(processedScanResults))
+              await this._languageClient.sendNotification(RequestMethod.ProcessRecipeScanResults, requestParam)
             }
           }
         }
