@@ -22,6 +22,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { onHoverHandler } from './connectionHandlers/onHover'
+import { onReferencesHandler } from './connectionHandlers/onReferences'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from './embedded-languages/general-support'
 import { getSemanticTokens, legend } from './semanticTokens'
 import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
@@ -70,6 +71,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
         triggerCharacters: [':', '[']
       },
       definitionProvider: true,
+      referencesProvider: true,
       hoverProvider: true,
       semanticTokensProvider: {
         legend,
@@ -101,6 +103,8 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 connection.onDefinition(onDefinitionHandler)
 
 connection.onHover(onHoverHandler)
+
+connection.onReferences(onReferencesHandler)
 
 connection.onRequest(
   RequestMethod.EmbeddedLanguageTypeOnPosition,
