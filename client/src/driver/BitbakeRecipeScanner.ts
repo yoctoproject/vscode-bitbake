@@ -13,7 +13,7 @@ import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
 export class BitbakeRecipeScanner {
   private _languageClient: LanguageClient | undefined
   private _currentUriForScan: string = ''
-  private readonly _pendingRecipeScanTasks: Array<{ task: vscode.Task, uri: string }> = []
+  private _pendingRecipeScanTasks: { task: vscode.Task, uri: string } | null = null
 
   public scanResults: string = ''
   public processedScanResults: Record<string, unknown> | undefined
@@ -35,7 +35,7 @@ export class BitbakeRecipeScanner {
     const runningTasks = vscode.tasks.taskExecutions
     if (runningTasks.some((execution) => execution.task.name === taskName)) {
       logger.debug('[BitbakeRecipeScanner] Recipe scan is already running, pushing to pending tasks')
-      this._pendingRecipeScanTasks.push({ task: scanRecipeEnvTask, uri })
+      this._pendingRecipeScanTasks = { task: scanRecipeEnvTask, uri }
       return
     }
 
@@ -62,11 +62,11 @@ export class BitbakeRecipeScanner {
           }
         }
 
-        const nextRecipeScanTask = this._pendingRecipeScanTasks.shift()
-        if (nextRecipeScanTask !== undefined) {
-          logger.debug(`[onDidEndTask] Running next pending recipe scan task. url: ${nextRecipeScanTask.uri}`)
-          this._currentUriForScan = nextRecipeScanTask.uri
-          await runBitbakeTask(nextRecipeScanTask.task, taskProvider)
+        if (this._pendingRecipeScanTasks !== null) {
+          logger.debug(`[onDidEndTask] Running the pending recipe scan task. url: ${this._pendingRecipeScanTasks.uri}`)
+          this._currentUriForScan = this._pendingRecipeScanTasks.uri
+          await runBitbakeTask(this._pendingRecipeScanTasks.task, taskProvider)
+          this._pendingRecipeScanTasks = null
         }
       }
     }))
