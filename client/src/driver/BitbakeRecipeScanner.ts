@@ -11,29 +11,36 @@ import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/Bit
 import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
 
 export class BitbakeRecipeScanner {
-  private isPending: boolean = false
   private _languageClient: LanguageClient | undefined
   private _currentUriForScan: string = ''
+  private readonly _pendingRecipeScanTasks: Array<{ task: vscode.Task, uri: string }> = []
 
   public scanResults: string = ''
   public processedScanResults: Record<string, unknown> | undefined
 
   async scan (chosenRecipe: string, taskProvider: BitbakeTaskProvider, uri: any): Promise<void> {
-    logger.debug(`[BitbakeRecipeScanner] Scanning recipe env: ${uri}`)
-    this._currentUriForScan = uri
+    if (chosenRecipe === '') {
+      logger.debug('[BitbakeRecipeScanner] No recipe chosen for scan')
+      return
+    }
 
+    const taskName = 'Bitbake: Scan recipe env'
     const scanRecipeEnvTask = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], options: { parseOnly: true, env: true } },
       vscode.TaskScope.Workspace,
-      'Bitbake: Scan recipe env',
+      taskName,
       'bitbake'
     )
 
     const runningTasks = vscode.tasks.taskExecutions
-    if (runningTasks.some((execution) => execution.task.name === scanRecipeEnvTask.name)) {
-      logger.debug('[BitbakeRecipeScanner] Recipe scan is already running')
-      this.isPending = true
+    if (runningTasks.some((execution) => execution.task.name === taskName)) {
+      logger.debug('[BitbakeRecipeScanner] Recipe scan is already running, pushing to pending tasks')
+      this._pendingRecipeScanTasks.push({ task: scanRecipeEnvTask, uri })
+      return
     }
+
+    logger.debug(`[BitbakeRecipeScanner] Scanning recipe env: ${uri}`)
+    this._currentUriForScan = uri
 
     await runBitbakeTask(scanRecipeEnvTask, taskProvider)
   }
@@ -41,11 +48,6 @@ export class BitbakeRecipeScanner {
   subscribeToTaskEnd (context: vscode.ExtensionContext, taskProvider: BitbakeTaskProvider): void {
     context.subscriptions.push(vscode.tasks.onDidEndTask(async (e) => {
       if (e.execution.task.name === 'Bitbake: Scan recipe env') {
-        if (this.isPending) {
-          this.isPending = false
-          await this.scan(e.execution.task.definition.recipes?.[0] ?? '', taskProvider, this._currentUriForScan)
-        }
-
         const executionEngine = e.execution.task.execution as BitbakeCustomExecution
         if (executionEngine !== undefined) {
           this.scanResults = executionEngine.pty?.outputDataString ?? ''
@@ -60,6 +62,13 @@ export class BitbakeRecipeScanner {
               logger.debug('processedScanResults: ' + JSON.stringify(processedScanResults))
             }
           }
+        }
+
+        const nextRecipeScanTask = this._pendingRecipeScanTasks.shift()
+        if (nextRecipeScanTask !== undefined) {
+          logger.debug(`[onDidEndTask] Running next pending recipe scan task. url: ${nextRecipeScanTask.uri}`)
+          this._currentUriForScan = nextRecipeScanTask.uri
+          await runBitbakeTask(nextRecipeScanTask.task, taskProvider)
         }
       }
     }))
