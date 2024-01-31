@@ -12,7 +12,7 @@ import { requestsManager } from './RequestManager'
 
 export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (document, position, token, next) => {
   const nextResult = await next(document, position, token)
-  if (nextResult !== undefined) {
+  if (nextResult !== undefined && nextResult !== null) {
     return nextResult
   }
   const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
