@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type HoverMiddleware } from 'vscode-languageclient'
-import { type Hover, commands, workspace } from 'vscode'
+import { type Hover, commands, workspace, MarkdownString } from 'vscode'
 
 import { getEmbeddedLanguageDocPosition } from './utils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
@@ -35,5 +35,13 @@ export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (do
     embeddedLanguageDocInfos.uri,
     adjustedPosition
   )
-  return result[0]
+  return result.find((hover) => {
+    const contents = hover.contents
+    return contents.find((content) => {
+      if (content instanceof MarkdownString) {
+        return content.value !== ''
+      }
+      return content !== ''
+    })
+  })
 }
