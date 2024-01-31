@@ -12,7 +12,8 @@ import {
   TextDocuments,
   ProposedFeatures,
   TextDocumentSyncKind,
-  type InitializeParams
+  type InitializeParams,
+  type TextDocumentChangeEvent
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -125,7 +126,7 @@ connection.onNotification(RequestMethod.ProcessRecipeScanResults, (param: Reques
 
 connection.listen()
 
-documents.onDidChangeContent(async (event) => {
+const analyzeDocument = async (event: TextDocumentChangeEvent<TextDocument>): Promise<void> => {
   const textDocument = event.document
   const previousVersion = analyzer.getAnalyzedDocument(textDocument.uri)?.version ?? -1
   if (textDocument.getText().length > 0 && previousVersion < textDocument.version) {
@@ -144,7 +145,11 @@ documents.onDidChangeContent(async (event) => {
     logger.debug('verifyConfigurationFileAssociation')
     await connection.sendRequest('bitbake/verifyConfigurationFileAssociation', { filePath: new URL(textDocument.uri).pathname })
   }
-})
+}
+
+documents.onDidOpen(analyzeDocument)
+
+documents.onDidChangeContent(analyzeDocument)
 
 documents.onDidSave(async (event) => {
   if (parseOnSave && !eSDKMode) {
