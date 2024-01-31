@@ -11,7 +11,7 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path, { type ParsedPath } from 'path'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 
-export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Definition | null {
+export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Location[] | null {
   const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
   logger.debug(`[onDefinition] Position: Line ${position.line} Character ${position.character}`)
 
@@ -87,7 +87,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   return []
 }
 
-function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, symbol: string): Definition {
+function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, symbol: string): Location[] {
   let elementInfos: ElementInfo[] = []
   switch (directiveStatementKeyword) {
     case 'inherit':

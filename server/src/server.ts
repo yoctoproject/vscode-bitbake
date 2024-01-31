@@ -23,7 +23,6 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler } from './connectionHandlers/onDefinition'
 import { onHoverHandler } from './connectionHandlers/onHover'
-import { onReferencesHandler } from './connectionHandlers/onReferences'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from './embedded-languages/general-support'
 import { getSemanticTokens, legend } from './semanticTokens'
 import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
@@ -102,10 +101,10 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 })
 
 connection.onDefinition(onDefinitionHandler)
+// We only provide definitions, references like "${SRC_URI}" are not handled by this extension
+connection.onReferences(onDefinitionHandler)
 
 connection.onHover(onHoverHandler)
-
-connection.onReferences(onReferencesHandler)
 
 connection.onRequest(
   RequestMethod.EmbeddedLanguageTypeOnPosition,
