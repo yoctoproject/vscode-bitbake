@@ -10,7 +10,20 @@ import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 import { type SyntaxNode } from 'web-tree-sitter'
 import { logger } from '../lib/src/utils/OutputLogger'
 
-export const shebang = '#!/bin/sh\n'
+const shebang = '#!/bin/sh\n'
+
+// Diagnostics to disable with the VS Code extension ShellCheck.
+// These would appear incorrectly, and we have not managed to find a proper workaround.
+const shellcheckDisables = [
+  // "Command appears to be unreachable." This happens because we remove the overiddes and functions end up having the same names.
+  '# shellcheck disable=SC2317'
+]
+
+export const bashHeader = [
+  shebang,
+  ...shellcheckDisables,
+  ''
+].join('\n')
 
 export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'bash')
@@ -25,8 +38,12 @@ export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocume
         return false
     }
   })
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, shebang)
+  insertBashHeader(embeddedLanguageDoc)
   return embeddedLanguageDoc
+}
+
+const insertBashHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashHeader)
 }
 
 const handleFunctionDefinitionNode = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
