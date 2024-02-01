@@ -11,7 +11,7 @@ import { generateParser } from '../tree-sitter/parser'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { imports } from '../embedded-languages/python-support'
-import { shebang } from '../embedded-languages/bash-support'
+import { bashHeader } from '../embedded-languages/bash-support'
 
 describe('Create basic embedded bash documents', () => {
   beforeAll(async () => {
@@ -26,23 +26,23 @@ describe('Create basic embedded bash documents', () => {
     [
       'basic',
       'foo(){\nBAR=""\n}',
-      `${shebang}foo(){\nBAR=""\n}`
+      `${bashHeader}foo(){\nBAR=""\n}`
     ],
     [
       'with override',
       'foo:append(){\nBAR=""\n}',
-      `${shebang}foo       (){\nBAR=""\n}`
+      `${bashHeader}foo       (){\nBAR=""\n}`
     ],
     [
       'with inline python',
       // eslint-disable-next-line no-template-curly-in-string
       'foo(){\n${@FOO}\n}',
-      `${shebang}foo(){\n\${?   }\n}`
+      `${bashHeader}foo(){\n\${?   }\n}`
     ],
     [
       'with fakeroot',
       'fakeroot foo(){\nBAR=""\n}',
-      `${shebang}         foo(){\nBAR=""\n}`
+      `${bashHeader}         foo(){\nBAR=""\n}`
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'bash')
