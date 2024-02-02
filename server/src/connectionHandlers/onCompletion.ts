@@ -109,28 +109,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     }
   }
 
-  let symbolCompletionItems: CompletionItem[] = []
-  if (word !== null) {
-    const uniqueSymbolSet = new Set()
-    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri).filter(symbol => {
-      if (!uniqueSymbolSet.has(symbol.name)) {
-        uniqueSymbolSet.add(symbol.name)
-        return true
-      }
-      return false
-    })
-    // Filter out duplicate BITBAKE_VARIABLES as they will be included as global declaration after running analyzer.analyze() in documents.onDidChangeContent() in server.ts
-    symbolCompletionItems = [
-      ...globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
-        {
-          label: symbol.name,
-          kind: symbolKindToCompletionKind(symbol.kind),
-          documentation: `${symbol.name}`
-        }
-      )),
-      ...formatCompletionItems(convertExtraSymbolsToCompletionItems(documentUri))
-    ]
-  }
+  const symbolCompletionItems: CompletionItem[] = getSymbolCompletionItems(word)
 
   // Directive statements completion items. bbclass files, include files, recipe files etc
   const directiveStatementKeyword = analyzer.getDirectiveStatementKeywordByLine(textDocumentPositionParams)
@@ -149,7 +128,47 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     })
   }
 
-  const bitBakeVariableCompletionItems: CompletionItem[] = bitBakeDocScanner.bitbakeVariableInfo.length > 0
+  const allCompletions = [
+    ...reserverdKeywordCompletionItems,
+    ...getVariablecompletionItems(symbolCompletionItems),
+    ...getYoctoTaskSnippets(),
+    ...symbolCompletionItems
+  ]
+
+  return allCompletions
+}
+
+function getYoctoTaskSnippets (): CompletionItem[] {
+  return formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoTaskInfo), CompletionItemKind.Snippet)
+}
+
+function getSymbolCompletionItems (word: string | null): CompletionItem[] {
+  if (word !== null) {
+    const uniqueSymbolSet = new Set()
+    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri).filter(symbol => {
+      if (!uniqueSymbolSet.has(symbol.name)) {
+        uniqueSymbolSet.add(symbol.name)
+        return true
+      }
+      return false
+    })
+    // Filter out duplicate BITBAKE_VARIABLES as they will be included as global declaration after running analyzer.analyze() in documents.onDidChangeContent() in server.ts
+    return [
+      ...globalDeclarationSymbols.filter((symbol: SymbolInformation) => !(new Set(BITBAKE_VARIABLES).has(symbol.name))).map((symbol: SymbolInformation) => (
+        {
+          label: symbol.name,
+          kind: symbolKindToCompletionKind(symbol.kind),
+          documentation: `${symbol.name}`
+        }
+      )),
+      ...formatCompletionItems(convertExtraSymbolsToCompletionItems(documentUri))
+    ]
+  }
+  return []
+}
+
+function getBitBakeVariableCompletionItems (): CompletionItem[] {
+  return bitBakeDocScanner.bitbakeVariableInfo.length > 0
     ? formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.bitbakeVariableInfo), CompletionItemKind.Variable)
     : BITBAKE_VARIABLES.map(keyword => {
       return {
@@ -157,25 +176,19 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
         kind: CompletionItemKind.Variable
       }
     })
+}
 
-  const yoctoTaskSnippets: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoTaskInfo), CompletionItemKind.Snippet)
+function getYoctoVariableCompletionItems (): CompletionItem[] {
+  return formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoVariableInfo), CompletionItemKind.Variable)
+}
 
-  const yoctoVariableCompletionItems: CompletionItem[] = formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoVariableInfo), CompletionItemKind.Variable)
-
+function getVariablecompletionItems (symbolCompletionItems: CompletionItem[] = []): CompletionItem[] {
+  const yoctoVariableCompletionItems = getYoctoVariableCompletionItems()
   // 1. Remove the duplicate variables by their names. It still keeps the fallback variables from BITBAKE_VARIABLES before scanning the docs since yoctoVariableCompletionItems will be [] in that case
   // 2. Remove the duplicates in variable completion items if they exist in the extra symbols. Keep the ones in the extra symbols as they contain information about the relative path.
-  const variableCompletionItems: CompletionItem[] = [...bitBakeVariableCompletionItems.filter((bitbakeVariable) => !yoctoVariableCompletionItems.some(yoctoVariable => yoctoVariable.label === bitbakeVariable.label)),
+  return [...getBitBakeVariableCompletionItems().filter((bitbakeVariable) => !yoctoVariableCompletionItems.some(yoctoVariable => yoctoVariable.label === bitbakeVariable.label)),
     ...yoctoVariableCompletionItems
   ].filter((variableCompletionItem) => !symbolCompletionItems.some((symbolCompletionItem) => symbolCompletionItem.label === variableCompletionItem.label))
-
-  const allCompletions = [
-    ...reserverdKeywordCompletionItems,
-    ...variableCompletionItems,
-    ...yoctoTaskSnippets,
-    ...symbolCompletionItems
-  ]
-
-  return allCompletions
 }
 
 /**
