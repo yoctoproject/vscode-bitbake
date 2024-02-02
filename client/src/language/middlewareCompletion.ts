@@ -11,6 +11,10 @@ import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 
 export const middlewareProvideCompletion: CompletionMiddleware['provideCompletionItem'] = async (document, position, context, token, next) => {
+  const nextResult = await next(document, position, context, token)
+  if (Array.isArray(nextResult) && nextResult.length > 0) {
+    return nextResult
+  }
   const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
     return await next(document, position, context, token)

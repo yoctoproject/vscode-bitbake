@@ -296,12 +296,21 @@ export default class Analyzer {
   public isPythonDatastoreVariable (
     uri: string,
     line: number,
-    column: number
+    column: number,
+    // Whether or not the opening quote should be considered as part of the variable
+    // We want to be able to suggest completion items as the user open the quotes
+    // However, when the user hover on the variable, the quotes are not part of the variable
+    includeOpeningQuote: boolean = false
   ): boolean {
     const n = this.nodeAtPoint(uri, line, column)
     if (!this.isInsidePythonRegion(uri, line, column)) {
       return false
     }
+
+    if (n?.type !== 'string_content' && (includeOpeningQuote ? n?.type !== 'string_start' : true)) {
+      return false
+    }
+
     // Example:
     // n.text: FOO
     // n.parent.text: 'FOO'
@@ -323,8 +332,8 @@ export default class Analyzer {
     // n.parent.previousSibling.text: (
     const isFirstParameter = n?.parent?.previousSibling?.text === '('
     if (isFirstParameter) {
-      const firstParameter = match?.groups?.params?.split(',')[0]?.trim().replace(/('|")/g, '')
-      return firstParameter === n?.text
+      const firstParameter = match?.groups?.params?.split(',')[0]?.trim()
+      return firstParameter === n?.parent?.text
     }
 
     // Example for d.renameVar('FOO', 'BAR'):
@@ -336,8 +345,8 @@ export default class Analyzer {
     const isSecondParameter = n?.parent?.previousSibling?.previousSibling?.previousSibling?.text === '('
     // d.renameVar is the only function for which the second parameter could be a Yocto defined variable
     if (functionName === 'renameVar' && isSecondParameter) {
-      const secondParameter = match?.groups?.params?.split(',')[1]?.trim().replace(/('|")/g, '')
-      return secondParameter === n?.text
+      const secondParameter = match?.groups?.params?.split(',')[1]?.trim()
+      return secondParameter === n?.parent?.text
     }
 
     return false

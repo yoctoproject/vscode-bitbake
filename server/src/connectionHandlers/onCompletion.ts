@@ -21,6 +21,7 @@ import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
+import { type Position } from 'vscode-languageserver-textdocument'
 
 let documentUri = ''
 
@@ -40,6 +41,18 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
   logger.debug(`[onCompletion] current word: ${word}`)
 
+  if (analyzer.isInsideBashRegion(documentUri, wordPosition.line, wordPosition.character)) {
+    return getBashCompletionItems()
+  }
+
+  if (analyzer.isInsidePythonRegion(documentUri, wordPosition.line, wordPosition.character)) {
+    return getPythonCompletionItems(documentUri, word, wordPosition)
+  }
+
+  return getBitBakeCompletionItems(textDocumentPositionParams, word, wordPosition)
+}
+
+function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): CompletionItem[] {
   if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
     return []
   }
@@ -136,6 +149,21 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   ]
 
   return allCompletions
+}
+
+function getBashCompletionItems (): CompletionItem[] {
+  return []
+}
+
+function getPythonCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
+  if (analyzer.isPythonDatastoreVariable(documentUri, wordPosition.line, wordPosition.character, true)) {
+    const symbolCompletionItems = getSymbolCompletionItems(word)
+    return [
+      ...getVariablecompletionItems(symbolCompletionItems),
+      ...symbolCompletionItems
+    ]
+  }
+  return []
 }
 
 function getYoctoTaskSnippets (): CompletionItem[] {

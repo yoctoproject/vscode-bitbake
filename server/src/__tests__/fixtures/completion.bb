@@ -15,5 +15,10 @@ inherit co
 def myFunc(param = [1,2,3]):
     pass
 
+DVAR=''
+python() {
+    d.getVar("D")
+}
+
 # Show completion at the last line https://github.com/amaanq/tree-sitter-bitbake/issues/9
 MYVAR:append:
