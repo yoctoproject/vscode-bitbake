@@ -310,7 +310,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 18,
+        line: 23,
         character: 13
       }
     })
@@ -739,5 +739,135 @@ describe('On Completion', () => {
         })
       ])
     )
+  })
+
+  it('provides proper completion items on python datastore variables', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    bitBakeDocScanner.parseYoctoVariablesFile()
+    bitBakeDocScanner.parseYoctoTaskFile()
+    bitBakeDocScanner.parsePythonDatastoreFunction()
+
+    // Completion items on string_start node
+    const resultOnStringStart = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 19,
+        character: 14
+      }
+    })
+
+    // string_start has Yocto variable among the completion items
+    expect(resultOnStringStart).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: 'Source: Yocto'
+          },
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          insertText: undefined,
+          insertTextFormat: 1
+        })
+      ])
+    )
+
+    // string_start has symbol among the completion items
+    expect(
+      resultOnStringStart.find((item) => item.label === 'DVAR')
+    ).not.toBeUndefined()
+
+    // string_start does not have task among the completion items
+    expect(resultOnStringStart).not.toEqual(
+      /* eslint-disable no-template-curly-in-string */
+      expect.arrayContaining([
+        {
+          documentation: {
+            value: '```man\ndo_build (bitbake-language-server)\n\n\n```\n```bitbake\ndo_build(){\n\t# Your code here\n}\n```\n---\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n\n[Reference](https://docs.yoctoproject.org/singleindex.html#do-build)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: ''
+          },
+          insertText: 'do_build(){\n\t${1:# Your code here}\n}',
+          insertTextFormat: 2,
+          label: 'do_build',
+          kind: 15
+        }
+      ])
+    )
+
+    // string_start does not have reserved word among the completion items
+    expect(
+      resultOnStringStart.find((item) => item.label === 'deltask')
+    ).toBeUndefined()
+
+    // Completion items on string_content node
+    const resultOnStringContent = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 19,
+        character: 15
+      }
+    })
+
+    // string_content has Yocto variable among the completion items
+    expect(resultOnStringContent).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: 'Source: Yocto'
+          },
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          insertText: undefined,
+          insertTextFormat: 1
+        })
+      ])
+    )
+
+    // string_content has symbol among the completion items
+    expect(
+      resultOnStringContent.find((item) => item.label === 'DVAR')
+    ).not.toBeUndefined()
+
+    // string_content does not have task among the completion items
+    expect(resultOnStringContent).not.toEqual(
+      /* eslint-disable no-template-curly-in-string */
+      expect.arrayContaining([
+        {
+          documentation: {
+            value: '```man\ndo_build (bitbake-language-server)\n\n\n```\n```bitbake\ndo_build(){\n\t# Your code here\n}\n```\n---\nThe default task for all recipes. This task depends on all other normal\ntasks required to build a recipe.\n\n[Reference](https://docs.yoctoproject.org/singleindex.html#do-build)',
+            kind: 'markdown'
+          },
+          labelDetails: {
+            description: ''
+          },
+          insertText: 'do_build(){\n\t${1:# Your code here}\n}',
+          insertTextFormat: 2,
+          label: 'do_build',
+          kind: 15
+        }
+      ])
+    )
+
+    // string_content does not have reserved word among the completion items
+    expect(
+      resultOnStringContent.find((item) => item.label === 'deltask')
+    ).toBeUndefined()
   })
 })
