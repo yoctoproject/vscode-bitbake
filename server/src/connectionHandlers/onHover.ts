@@ -52,7 +52,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     const exactSymbol = analyzer.getGlobalDeclarationSymbols(textDocument.uri).find((symbol) => symbol.name === word && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
 
     if (exactSymbol?.finalValue !== undefined) {
-      hoverValue += `**Final Value**\n___\n\`${exactSymbol.finalValue}\``
+      hoverValue += `**Final Value**\n___\n\t'${exactSymbol.finalValue}'`
     }
   }
 

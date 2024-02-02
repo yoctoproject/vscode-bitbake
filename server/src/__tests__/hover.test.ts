@@ -639,7 +639,7 @@ describe('on hover', () => {
     expect(shouldShow1).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining('**Final Value**\n___\n`this is the final value for FINAL_VALUE`')
+          value: expect.stringContaining('**Final Value**\n___\n\t\'this is the final value for FINAL_VALUE\'')
         })
       })
     )
@@ -647,7 +647,7 @@ describe('on hover', () => {
     expect(shouldShow2).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining('**Final Value**\n___\n`this is the final value for FINAL_VALUE with override o1`')
+          value: expect.stringContaining('**Final Value**\n___\n\t\'this is the final value for FINAL_VALUE with override o1\'')
         })
       })
     )
