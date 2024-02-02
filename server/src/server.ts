@@ -123,8 +123,8 @@ connection.onRequest(RequestMethod.getLinksInDocument, (params: RequestParams['g
 })
 
 connection.onNotification(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
-  logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)}`)
-  analyzer.processRecipeScanResults(param.scanResults, param.uri)
+  logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
+  analyzer.processRecipeScanResults(param.scanResults, param.uri, param.chosenRecipe)
 })
 
 connection.listen()
