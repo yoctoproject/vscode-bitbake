@@ -410,7 +410,7 @@ describe('on definition', () => {
 
     const scanResults = `#INCLUDE HISTORY\n#   set ${fakeFilePath}:${fakeLineNumber}\n${variable} = 'this is the final value for FINAL_VALUE'\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\n`
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI)
+    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, undefined)
 
     const shouldWork = onDefinitionHandler({
       textDocument: {

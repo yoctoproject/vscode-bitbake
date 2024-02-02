@@ -614,7 +614,7 @@ describe('on hover', () => {
 
     const scanResults = '#INCLUDE HISTORY\n# Some scan results here\nFINAL_VALUE = \'this is the final value for FINAL_VALUE\'\nFINAL_VALUE:o1 = \'this is the final value for FINAL_VALUE with override o1\'\n'
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI)
+    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, undefined)
 
     const shouldShow1 = await onHoverHandler({
       textDocument: {

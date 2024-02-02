@@ -21,7 +21,7 @@ export const RequestMethod: Record<RequestType, string> = {
 export interface RequestParams {
   [RequestType.EmbeddedLanguageTypeOnPosition]: { uriString: string, position: Position }
   [RequestType.getLinksInDocument]: { documentUri: string }
-  [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any }
+  [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any, chosenRecipe: string | undefined }
 }
 
 export interface RequestResult {
