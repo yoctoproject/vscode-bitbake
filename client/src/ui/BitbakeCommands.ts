@@ -164,7 +164,7 @@ async function selectTask (): Promise<string | undefined> {
   return sanitizeForShell(chosenTask)
 }
 
-async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canCreate: boolean = true): Promise<string | undefined> {
+async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canAdd: boolean = true): Promise<string | undefined> {
   let chosenRecipe: string | undefined
   // A string is provided when the command is called programmatically in tests with an argument
   if (typeof uri === 'string') {
@@ -186,13 +186,16 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canC
   }
   // No recipe is provided when calling the command through the command pallette
   if (chosenRecipe === undefined) {
-    if (canCreate) {
-      chosenRecipe = await vscode.window.showQuickPick([...bitbakeWorkspace.activeRecipes, 'Add another recipe...'], { placeHolder: 'Select bitbake recipe' })
-      if (chosenRecipe === 'Add another recipe...') {
-        chosenRecipe = await addActiveRecipe(bitbakeWorkspace)
-      }
-    } else {
-      chosenRecipe = await vscode.window.showQuickPick(bitbakeWorkspace.activeRecipes, { placeHolder: 'Select bitbake recipe' })
+    const quickPickItems = [...bitbakeWorkspace.activeRecipes]
+
+    if (canAdd) {
+      quickPickItems.push('Add another recipe...')
+    }
+
+    chosenRecipe = await vscode.window.showQuickPick(quickPickItems, { placeHolder: 'Select bitbake recipe' })
+
+    if (chosenRecipe === 'Add another recipe...') {
+      chosenRecipe = await addActiveRecipe(bitbakeWorkspace)
     }
   }
   return chosenRecipe
