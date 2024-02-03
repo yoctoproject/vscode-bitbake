@@ -3,21 +3,20 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { type CompletionList, commands, Range, workspace } from 'vscode'
+import { CompletionList, commands, Range, workspace } from 'vscode'
 import { type CompletionMiddleware } from 'vscode-languageclient/node'
 
 import { requestsManager } from './RequestManager'
 import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 
 export const middlewareProvideCompletion: CompletionMiddleware['provideCompletionItem'] = async (document, position, context, token, next) => {
-  const nextResult = await next(document, position, context, token)
-  if (Array.isArray(nextResult) && nextResult.length > 0) {
-    return nextResult
-  }
+  const nextResult = await next(document, position, context, token) ?? []
+
   const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
-    return await next(document, position, context, token)
+    return nextResult
   }
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
@@ -31,13 +30,13 @@ export const middlewareProvideCompletion: CompletionMiddleware['provideCompletio
     position
   )
   const vdocUri = embeddedLanguageTextDocument.uri
-  const result = await commands.executeCommand<CompletionList>(
+  const pulledCompletionList = await commands.executeCommand<CompletionList>(
     'vscode.executeCompletionItemProvider',
     vdocUri,
     adjustedPosition,
     context.triggerCharacter
   )
-  result.items.forEach((item) => {
+  pulledCompletionList.items.forEach((item) => {
     if (item.range === undefined) {
       // pass
     } else if (item.range instanceof Range) {
@@ -51,5 +50,9 @@ export const middlewareProvideCompletion: CompletionMiddleware['provideCompletio
       item.range = { inserting, replacing }
     }
   })
-  return result
+  return mergeArraysDistinctly(
+    pulledCompletionList.items,
+    nextResult instanceof CompletionList ? nextResult.items : nextResult,
+    (completionItem) => completionItem.label
+  )
 }
