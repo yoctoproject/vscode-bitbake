@@ -152,7 +152,7 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
 }
 
 function getBashCompletionItems (): CompletionItem[] {
-  return []
+  return getYoctoTaskSnippets()
 }
 
 function getPythonCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
@@ -163,7 +163,10 @@ function getPythonCompletionItems (documentUri: string, word: string | null, wor
       ...symbolCompletionItems
     ]
   }
-  return []
+  if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
+    return []
+  }
+  return getYoctoTaskSnippets()
 }
 
 function getYoctoTaskSnippets (): CompletionItem[] {

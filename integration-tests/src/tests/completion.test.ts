@@ -44,21 +44,33 @@ suite('Bitbake Completion Test Suite', () => {
     })
   }
 
-  test('Completion appears properly on bitbake variable', async () => {
+  test('Completion item for Yocto variable shows up in BitBake region', async () => {
     const position = new vscode.Position(8, 7)
     const expected = 'DESCRIPTION'
     await testCompletion(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
-  test('Completion appears properly on embedded python', async () => {
-    const position = new vscode.Position(1, 7)
+  test('Completion item for Python built in function shows up Python region', async () => {
+    const position = new vscode.Position(1, 6)
     const expected = 'print'
     await testCompletion(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
-  test('Completion appears properly on embedded bash', async () => {
-    const position = new vscode.Position(5, 7)
+  test('Completion item for Yocto task shows up in Python region', async () => {
+    const position = new vscode.Position(1, 6)
+    const expected = 'do_package'
+    await testCompletion(position, expected)
+  }).timeout(BITBAKE_TIMEOUT)
+
+  test('Completion item for built in Bash function shows up in Bash region', async () => {
+    const position = new vscode.Position(5, 6)
     const expected = 'echo'
+    await testCompletion(position, expected)
+  }).timeout(BITBAKE_TIMEOUT)
+
+  test('Completion item for Yocto task shows up in Bash region', async () => {
+    const position = new vscode.Position(5, 6)
+    const expected = 'do_populate_sdk_ext'
     await testCompletion(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 })

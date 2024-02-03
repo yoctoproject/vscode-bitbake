@@ -1,9 +1,9 @@
 python do_foo(){
-    pri
+    p
 }
 
 do_bar(){
-    ech
+    e
 }
 
 DESCRIP
