@@ -5,7 +5,7 @@
 
 import path from 'path'
 
-export function extractRecipeName (filename: string | undefined): string | undefined {
-  if (filename === undefined) { return undefined }
-  return path.basename(filename).split('.')[0].split('_')[0]
+export function extractRecipeName (filePath: string | undefined): string | undefined {
+  if (filePath === undefined) { return undefined }
+  return path.parse(filePath).name.split('_')[0]
 }
