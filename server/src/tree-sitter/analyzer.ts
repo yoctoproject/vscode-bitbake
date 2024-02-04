@@ -682,23 +682,29 @@ export default class Analyzer {
     if (parsedTree === undefined) {
       return []
     }
-    TreeSitterUtils.forEach(parsedTree.rootNode, (n) => {
-      if (n?.type === 'string_content') {
-        this.processSymbolsInStringContent(n, uriRegex, (start, end, match) => {
-          const matchedUri = match.groups?.uri
-          if (matchedUri !== undefined) {
-            links.push({
-              value: matchedUri,
-              range: {
-                start,
-                end
+
+    parsedTree.rootNode.children.forEach((childNode) => {
+      if (childNode.type === 'variable_assignment' && childNode.firstNamedChild?.text === 'SRC_URI') {
+        TreeSitterUtils.forEach(childNode, (n) => {
+          const followChild = n.type !== 'string_content'
+          if (n.type === 'string_content') {
+            this.processSymbolsInStringContent(n, uriRegex, (start, end, match) => {
+              const matchedUri = match.groups?.uri
+              if (matchedUri !== undefined) {
+                links.push({
+                  value: matchedUri,
+                  range: {
+                    start,
+                    end
+                  }
+                })
               }
+              return []
             })
           }
-          return []
+          return followChild
         })
       }
-      return true
     })
 
     return links
