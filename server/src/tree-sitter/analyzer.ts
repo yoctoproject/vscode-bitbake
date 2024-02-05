@@ -43,6 +43,7 @@ export interface AnalyzedDocument {
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
+  private readonly uriToScannedRecipeSymbolInfo: Record<string, BitbakeSymbolInformation[] | undefined> = {} // Store the results of the last scan for each recipe
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -50,6 +51,10 @@ export default class Analyzer {
 
   public getAnalyzedDocument (uri: string): AnalyzedDocument | undefined {
     return this.uriToAnalyzedDocument[uri]
+  }
+
+  public getLastScannedSymbolInfo (uri: string): BitbakeSymbolInformation[] | undefined {
+    return this.uriToScannedRecipeSymbolInfo[uri]
   }
 
   public getExtraSymbolsForUri (uri: string): GlobalDeclarations[] {
@@ -802,6 +807,7 @@ export default class Analyzer {
     const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
     const { globalDeclarations: analyzedOriginalDocGlobalDeclarations } = analyzedOriginalDoc
 
+    const symbolsInScannedRecipe: BitbakeSymbolInformation[] = []
     // Process and apply the scan results to the original document
     Object.values(analyzedOriginalDocGlobalDeclarations).forEach((symbolArray) => {
       symbolArray.forEach((symbol) => {
@@ -810,9 +816,9 @@ export default class Analyzer {
             return this.symbolsAreTheSame(scanResultDocumentSymbol, symbol)
           })
           if (sameSymbolInScanResultDocument !== undefined) {
-            // Replace final values
-            symbol.finalValue = sameSymbolInScanResultDocument.finalValue
+            symbolsInScannedRecipe.push(sameSymbolInScanResultDocument)
 
+            // TODO: refactor the comments to be part of the bitbakeSymbolInformation so it can be stored along with the symbol in the lastScannedSymbolInfo
             const commentsForTheSameSymbol = scanResultDocGlobalDeclarationComments[symbol.name].find(item => this.symbolsAreTheSame(item.symbolInfo, symbol))?.comments
 
             // Extract the modification history of the symbol
@@ -843,6 +849,8 @@ export default class Analyzer {
         }
       })
     })
+
+    this.uriToScannedRecipeSymbolInfo[originalDocUri] = symbolsInScannedRecipe
   }
 
   /**
