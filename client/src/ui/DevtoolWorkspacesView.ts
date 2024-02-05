@@ -24,12 +24,12 @@ export class DevtoolWorkspacesView {
 class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspaceTreeItem> {
   private readonly _onDidChangeTreeData: vscode.EventEmitter<DevtoolWorkspaceTreeItem | undefined> = new vscode.EventEmitter<DevtoolWorkspaceTreeItem | undefined>()
   readonly onDidChangeTreeData: vscode.Event<DevtoolWorkspaceTreeItem | undefined> = this._onDidChangeTreeData.event
-  private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [], _confFiles: [] }
+  private bitbakeScanResults: BitbakeScanResult | undefined
 
   constructor (bitbakeProjectScanner: BitBakeProjectScanner) {
     bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
-      if (!scanContainsData(this.bitbakeScanResults) || scanContainsData(scanResults)) {
+      if (this.bitbakeScanResults === undefined || !scanContainsData(this.bitbakeScanResults) || scanContainsData(scanResults)) {
         this.bitbakeScanResults = scanResults
       }
       this._onDidChangeTreeData.fire(undefined)
@@ -42,10 +42,8 @@ class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspac
 
   async getChildren (element?: DevtoolWorkspaceTreeItem | undefined): Promise<DevtoolWorkspaceTreeItem[]> {
     if (element === undefined) {
-      if (!scanContainsData(this.bitbakeScanResults)) {
-        while (!scanContainsData(this.bitbakeScanResults)) {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        }
+      while (this.bitbakeScanResults === undefined) {
+        await new Promise(resolve => setTimeout(resolve, 300))
       }
       const items = this.getDevtoolWorkspaces()
       items.push(this.getAddWorkspaceItem())
@@ -57,6 +55,9 @@ class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspac
   }
 
   private getDevtoolWorkspaces (): DevtoolWorkspaceTreeItem[] {
+    if (this.bitbakeScanResults === undefined) {
+      return []
+    }
     return this.bitbakeScanResults._workspaces.map((workspace: DevtoolWorkspaceInfo) => {
       return new DevtoolWorkspaceTreeItem(workspace)
     })
