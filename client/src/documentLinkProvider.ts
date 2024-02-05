@@ -9,6 +9,7 @@ import { RequestMethod, type RequestResult } from './lib/src/types/requests'
 import { logger } from './lib/src/utils/OutputLogger'
 import path from 'path'
 import { extractRecipeName } from './lib/src/utils/files'
+import find from 'find'
 
 export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider {
   private readonly client: LanguageClient
@@ -17,9 +18,22 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     this.client = client
   }
 
-  private async resolveUris (uri: vscode.Uri, linksData: Array<{ value: string, range: vscode.Range }>, token: vscode.CancellationToken): Promise<{ foundFolders: vscode.Uri[], foundFiles: vscode.Uri[] }> {
-    const foundFolders: vscode.Uri[] = []
-    const foundFiles: vscode.Uri[] = []
+  private basenameIsEqual (path1: string, path2: string): boolean {
+    return path.basename(path1) === path.basename(path2)
+  }
+
+  private async findDirAsync (pattern: RegExp, path: string): Promise<string[]> {
+    // find.dir is async but the callback in it is not guaranteed to be called before the provideDocumentLinks method returns.
+    // Thus wrap it with a promise to wait for the callback to be called before returning the result.
+    return await new Promise((resolve) => {
+      find.dir(pattern, path, (dirs) => {
+        resolve(dirs)
+      })
+    })
+  }
+
+  private async resolveUris (uri: vscode.Uri, linksData: Array<{ value: string, range: vscode.Range }>, token: vscode.CancellationToken): Promise<vscode.DocumentLink[]> {
+    const documentLinks: vscode.DocumentLink[] = []
 
     /* Corresponding file:// URI usually point to files in ${PN}/ or files/. Ex:
       * recipes-core
@@ -30,31 +44,19 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
       * └── files
       *     └── syslog-startup.conf
     */
-    const filenames = linksData.map(link => link.value.split(';')[0])
+    const LinksWithoutTails = linksData.map(link => {
+      return {
+        ...link,
+        value: link.value.split(';')[0]
+      }
+    })
+    const filenames = LinksWithoutTails.map(link => link.value)
     const filenamesRegex = '{' + filenames.join(',') + '}'
     const parentDir = path.dirname(uri.path)
-    const pnDir = path.join(parentDir, extractRecipeName(uri.path) as string)
+    const pnDir = path.join(parentDir, extractRecipeName(uri.fsPath) as string)
     const filesDir = path.join(parentDir, 'files')
 
-    /**
-     * connman/
-     * ├── connman-gnome/
-     *     └── images/
-     * ├── connman-gnome_0.7.bb
-     * └── ... (other files and folders)
-     */
-    for (let i = 0; i < linksData.length; i++) {
-      const pathToCheckStat = path.join(pnDir, linksData[i].value.split(';')[0])
-      try {
-        const fileStat = await vscode.workspace.fs.stat(vscode.Uri.parse(pathToCheckStat))
-        if (fileStat.type === vscode.FileType.Directory) {
-          foundFolders.push(vscode.Uri.parse(pathToCheckStat))
-        }
-      } catch (error) {
-        logger.debug(`Error when checking stat of ${pathToCheckStat}. ${JSON.stringify(error)}`)
-      }
-    }
-
+    const foundFiles: vscode.Uri[] = []
     try {
       foundFiles.push(...[
         ...(await vscode.workspace.findFiles(new vscode.RelativePattern(pnDir, '**/' + filenamesRegex), undefined, filenames.length, token)),
@@ -64,50 +66,52 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
       logger.error(`An error occurred when finding files with pattern: ${filenamesRegex}. ${JSON.stringify(err)}`)
     }
 
-    return { foundFolders, foundFiles }
+    for (let i = 0; i < LinksWithoutTails.length; i++) {
+      const link = LinksWithoutTails[i]
+
+      const fileUri = foundFiles.find(file => this.basenameIsEqual(file.fsPath, link.value))
+      if (fileUri !== undefined) {
+        documentLinks.push(new vscode.DocumentLink(link.range, fileUri))
+      }
+    }
+
+    /**
+     * connman/
+     * ├── connman-gnome/
+     *     └── images/
+     * ├── connman-gnome_0.7.bb
+     * └── ... (other files and folders)
+     */
+
+    // Remaining links that were not idenetified as files
+    const remaining = LinksWithoutTails.filter(link => !foundFiles.some(file => this.basenameIsEqual(file.fsPath, link.value)))
+    const dirnameRegex = '(' + remaining.sort((prev, next) => next.value.length - prev.value.length).map(link => '(' + link.value + ')').join('|') + ')' // e.g. (folder1|folder2|folder3|...) with length from longest to shortest
+    let matchedDirs: string[] = []
+
+    try {
+      // Assume all possible directories are under the same parent directory
+      matchedDirs = await this.findDirAsync(new RegExp(dirnameRegex), pnDir)
+      // matchedDirs = find.dirSync(pnDir)
+    } catch (error) {
+      logger.error(`An error occurred when finding directories with pattern: ${dirnameRegex}. ${JSON.stringify(error)}`)
+    }
+    remaining.forEach(link => {
+      const foundDir = matchedDirs.find(dir => this.basenameIsEqual(dir, link.value))
+      if (foundDir !== undefined) {
+        /*
+          commandArguments could be formatted into an array for intermediary command if needed.
+          Reference: https://code.visualstudio.com/api/extension-guides/command#command-uris
+        */
+        const targetUri = vscode.Uri.parse(`command:revealInExplorer?${encodeURIComponent(JSON.stringify(vscode.Uri.parse(foundDir)))}`)
+        documentLinks.push(new vscode.DocumentLink(link.range, targetUri))
+      }
+    })
+
+    return documentLinks
   }
 
   async provideDocumentLinks (document: vscode.TextDocument, token: vscode.CancellationToken): Promise<vscode.DocumentLink[]> {
     const linksData = await this.client.sendRequest<RequestResult['getLinksInDocument']>(RequestMethod.getLinksInDocument, { documentUri: document.uri.toString() })
-    const documentLinks: vscode.DocumentLink[] = []
-    const { foundFiles, foundFolders } = await this.resolveUris(document.uri, linksData, token)
-
-    logger.debug(`Found ${foundFolders.length} folders from the links in file: ${document.uri.toString()}`)
-    logger.debug(`Found ${foundFiles.length} files from the links in file: ${document.uri.toString()}`)
-
-    // Assign command uri to folders
-    foundFolders.forEach((folder) => {
-      const range = linksData.find(link => folder.path.endsWith(link.value))?.range
-
-      if (range === undefined) {
-        return
-      }
-
-      /*
-        commandArguments could be formatted into an array for intermediary command if needed.
-        Reference: https://code.visualstudio.com/api/extension-guides/command#command-uris
-      */
-      const targetUri = vscode.Uri.parse(`command:revealInExplorer?${encodeURIComponent(JSON.stringify(folder))}`)
-      documentLinks.push(new vscode.DocumentLink(range, targetUri))
-    })
-
-    for (let i = 0; i < linksData.length; i++) {
-      const link = linksData[i]
-      const range = new vscode.Range(
-        link.range.start.line,
-        link.range.start.character,
-        link.range.end.line,
-        link.range.end.character
-      )
-
-      const filename = link.value.split(';')[0]
-
-      const file = foundFiles.find(file => file.path.endsWith(filename))
-      if (file !== undefined) {
-        documentLinks.push(new vscode.DocumentLink(range, vscode.Uri.parse(file.fsPath)))
-      }
-    }
-
-    return documentLinks
+    return await this.resolveUris(document.uri, linksData, token)
   }
 }
