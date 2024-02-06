@@ -22,7 +22,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
   overrides: string[]
   finalValue?: string // Only for variables extracted from the scan results
-  history?: LSP.Location[] // The modification history of a variable with flags and overrides taken into account.
+  commentsAbove?: string[]
 }
 
 /**
@@ -64,16 +64,18 @@ export function getGlobalDeclarationsAndComments ({
       if (globalDeclarations[word] === undefined) {
         globalDeclarations[word] = []
       }
-      globalDeclarations[word].push(symbol)
 
       const commentsAbove: string[] = []
       extractCommentsAbove(node, commentsAbove)
       if (commentsAbove.length > 0) {
+        symbol.commentsAbove = commentsAbove
         if (symbolComments[word] === undefined) {
           symbolComments[word] = []
         }
         symbolComments[word].push({ uri, line: node.startPosition.row, comments: commentsAbove, symbolInfo: symbol })
       }
+
+      globalDeclarations[word].push(symbol)
     }
 
     return followChildren
