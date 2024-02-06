@@ -68,15 +68,20 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         })
       }
 
+      const lastScanResult = analyzer.getLastScanResult(documentUri)
       const exactSymbol = analyzer.getGlobalDeclarationSymbols(documentUri).find((symbol) => symbol.name === word && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
 
-      if (exactSymbol?.history !== undefined) {
-        exactSymbol.history.forEach((location) => {
-          definitions.push({
-            uri: location.uri,
-            range: location.range
+      if (lastScanResult !== undefined && exactSymbol !== undefined) {
+        const foundSymbol = lastScanResult.find((symbol) => analyzer.symbolsAreTheSame(symbol, exactSymbol))
+        if (foundSymbol !== undefined) {
+          const modificationHistory = analyzer.extractModificationHistoryFromComments(foundSymbol)
+          modificationHistory.forEach((location) => {
+            definitions.push({
+              uri: location.uri,
+              range: location.range
+            })
           })
-        })
+        }
       }
 
       return definitions

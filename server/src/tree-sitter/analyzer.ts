@@ -43,7 +43,7 @@ export interface AnalyzedDocument {
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
-  private readonly uriToScannedRecipeSymbolInfo: Record<string, BitbakeSymbolInformation[] | undefined> = {} // Store the results of the last scan for each recipe
+  private readonly uriToLastScanResult: Record<string, BitbakeSymbolInformation[]> = {} // Store the results of the last scan for each recipe
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -53,8 +53,8 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]
   }
 
-  public getLastScannedSymbolInfo (uri: string): BitbakeSymbolInformation[] | undefined {
-    return this.uriToScannedRecipeSymbolInfo[uri]
+  public getLastScanResult (uri: string): BitbakeSymbolInformation[] | undefined {
+    return this.uriToLastScanResult[uri]
   }
 
   public getExtraSymbolsForUri (uri: string): GlobalDeclarations[] {
@@ -803,11 +803,11 @@ export default class Analyzer {
     const scanResultDocUri = originalDocUri + '.scanned'
     const scanResultDocTree = this.parser.parse(scanResultDoc)
 
-    const [scanResultDocGlobalDeclarations, scanResultDocGlobalDeclarationComments] = getGlobalDeclarationsAndComments({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
+    const [scanResultDocGlobalDeclarations] = getGlobalDeclarationsAndComments({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
     const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
     const { globalDeclarations: analyzedOriginalDocGlobalDeclarations } = analyzedOriginalDoc
 
-    const symbolsInScannedRecipe: BitbakeSymbolInformation[] = []
+    const scannedResultSymbolInfo: BitbakeSymbolInformation[] = []
     // Process and apply the scan results to the original document
     Object.values(analyzedOriginalDocGlobalDeclarations).forEach((symbolArray) => {
       symbolArray.forEach((symbol) => {
@@ -816,41 +816,41 @@ export default class Analyzer {
             return this.symbolsAreTheSame(scanResultDocumentSymbol, symbol)
           })
           if (sameSymbolInScanResultDocument !== undefined) {
-            symbolsInScannedRecipe.push(sameSymbolInScanResultDocument)
-
-            // TODO: refactor the comments to be part of the bitbakeSymbolInformation so it can be stored along with the symbol in the lastScannedSymbolInfo
-            const commentsForTheSameSymbol = scanResultDocGlobalDeclarationComments[symbol.name].find(item => this.symbolsAreTheSame(item.symbolInfo, symbol))?.comments
-
-            // Extract the modification history of the symbol
-            if (commentsForTheSameSymbol !== undefined) {
-              commentsForTheSameSymbol.forEach((comment) => {
-                /**
-                 *  Example:
-                 *  #   set /home/projects/poky/meta/conf/bitbake.conf:396
-                    #     [_defaultval] "gnu"
-                    TC_CXX_RUNTIME="gnu"
-                 */
-                const regex = /(?<=#\s{3}set\??\s)(?<filePath>\/.*):(?<lineNumber>\d+)/g
-                for (const match of comment.matchAll(regex)) {
-                  const filePath = match.groups?.filePath
-                  const lineNumber = match.groups?.lineNumber
-                  if (filePath !== undefined && lineNumber !== undefined) {
-                    const uri = 'file://' + filePath
-                    const location = Location.create(uri, { start: { line: parseInt(lineNumber) - 1, character: 0 }, end: { line: parseInt(lineNumber) - 1, character: symbol.name.length } })
-                    if (symbol.history === undefined) {
-                      symbol.history = []
-                    }
-                    symbol.history.push(location)
-                  }
-                }
-              })
-            }
+            scannedResultSymbolInfo.push(sameSymbolInScanResultDocument)
           }
         }
       })
     })
 
-    this.uriToScannedRecipeSymbolInfo[originalDocUri] = symbolsInScannedRecipe
+    this.uriToLastScanResult[originalDocUri] = scannedResultSymbolInfo
+  }
+
+  public extractModificationHistoryFromComments (symbol: BitbakeSymbolInformation): Location[] {
+    const comments = symbol.commentsAbove
+    const history: Location[] = []
+
+    comments?.forEach((comment) => {
+      /**
+       *  Example:
+       *  #   set /home/projects/poky/meta/conf/bitbake.conf:396
+          #     [_defaultval] "gnu"
+          TC_CXX_RUNTIME="gnu"
+       */
+      const regex = /(?<=#\s{3}set\??\s)(?<filePath>\/.*):(?<lineNumber>\d+)/g
+      for (const match of comment.matchAll(regex)) {
+        const filePath = match.groups?.filePath
+        const lineNumber = match.groups?.lineNumber
+        if (filePath !== undefined && lineNumber !== undefined) {
+          const uri = 'file://' + filePath
+          // Assuming the variables start at the beginning of the line (character 0)
+          // Could traverse the target file tree-sitter tree to find the exact range of the variable, but it costs performance
+          const location = Location.create(uri, { start: { line: parseInt(lineNumber) - 1, character: 0 }, end: { line: parseInt(lineNumber) - 1, character: symbol.name.length } })
+          history.push(location)
+        }
+      }
+    })
+
+    return history
   }
 
   /**
