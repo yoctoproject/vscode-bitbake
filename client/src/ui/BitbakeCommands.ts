@@ -22,7 +22,7 @@ import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
-import { configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
+import { bitbakeESDKMode, configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
 import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
 import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
 
@@ -73,6 +73,10 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
     return
   }
   bitbakeSanity = true
+
+  if (bitbakeESDKMode) {
+    return
+  }
 
   // We have to use tasks instead of BitbakeTerminal because we want the problemMatchers to detect parsing errors
   const parseAllRecipesTask = new vscode.Task(
