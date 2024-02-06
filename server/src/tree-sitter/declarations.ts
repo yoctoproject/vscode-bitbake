@@ -22,7 +22,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
   overrides: string[]
   finalValue?: string // Only for variables extracted from the scan results
-  commentsAbove?: string[]
+  commentsAbove: string[]
 }
 
 /**
@@ -50,9 +50,8 @@ export function getGlobalDeclarationsAndComments ({
   tree: Parser.Tree
   uri: string
   getFinalValue?: boolean
-}): [GlobalDeclarations, GlobalSymbolComments] {
+}): GlobalDeclarations {
   const globalDeclarations: GlobalDeclarations = {}
-  const symbolComments: GlobalSymbolComments = {}
 
   TreeSitterUtil.forEach(tree.rootNode, (node) => {
     const followChildren = !GLOBAL_DECLARATION_NODE_TYPES.has(node.type)
@@ -69,10 +68,6 @@ export function getGlobalDeclarationsAndComments ({
       extractCommentsAbove(node, commentsAbove)
       if (commentsAbove.length > 0) {
         symbol.commentsAbove = commentsAbove
-        if (symbolComments[word] === undefined) {
-          symbolComments[word] = []
-        }
-        symbolComments[word].push({ uri, line: node.startPosition.row, comments: commentsAbove, symbolInfo: symbol })
       }
 
       globalDeclarations[word].push(symbol)
@@ -81,7 +76,7 @@ export function getGlobalDeclarationsAndComments ({
     return followChildren
   })
 
-  return [globalDeclarations, symbolComments]
+  return globalDeclarations
 }
 
 function nodeToSymbolInformation ({
@@ -138,6 +133,7 @@ function nodeToSymbolInformation ({
       uri,
       containerName
     ),
+    commentsAbove: [],
     overrides
   }
 

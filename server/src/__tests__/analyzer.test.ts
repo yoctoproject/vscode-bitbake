@@ -66,7 +66,8 @@ describe('analyze', () => {
             uri: DUMMY_URI
           },
           name: 'BAR',
-          overrides: ['o1', 'o2']
+          overrides: ['o1', 'o2'],
+          commentsAbove: []
         },
         {
           kind: 13,
@@ -84,7 +85,8 @@ describe('analyze', () => {
             uri: DUMMY_URI
           },
           name: 'FOO',
-          overrides: []
+          overrides: [],
+          commentsAbove: []
         },
         {
           kind: 12,
@@ -102,7 +104,8 @@ describe('analyze', () => {
             uri: DUMMY_URI
           },
           overrides: ['o1', 'o2'],
-          name: 'my_func'
+          name: 'my_func',
+          commentsAbove: []
         }
       ])
     )
