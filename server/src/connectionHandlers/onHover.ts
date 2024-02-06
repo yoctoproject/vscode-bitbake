@@ -9,7 +9,7 @@ import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { DIRECTIVE_STATEMENT_KEYWORDS } from '../lib/src/types/directiveKeywords'
 import path from 'path'
-import { type GlobalSymbolComments } from '../tree-sitter/declarations'
+import type { BitbakeSymbolInformation } from '../tree-sitter/declarations'
 
 export async function onHoverHandler (params: HoverParams): Promise<Hover | null> {
   const { position, textDocument } = params
@@ -21,6 +21,9 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 
   let hoverValue: string = ''
   const hoverKind: MarkupKind = 'markdown'
+
+  // Find the exact variable at the position
+  const exactSymbol = analyzer.findExactSymbolAtPoint(textDocument.uri, position, word)
 
   // Show documentation of a bitbake variable
   // Triggers on global declaration expressions like "VAR = 'foo'" and inside variable expansion like "FOO = ${VAR}" but skip the ones like "python VAR(){}"
@@ -49,8 +52,6 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     }
 
     const lastScanResult = analyzer.getLastScanResult(textDocument.uri)
-    // Find the exact variable with the same name and overrides
-    const exactSymbol = analyzer.getGlobalDeclarationSymbols(textDocument.uri).find((symbol) => symbol.name === word && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
     if (lastScanResult !== undefined && exactSymbol !== undefined) {
       const foundSymbol = lastScanResult.find((symbol) => analyzer.symbolsAreTheSame(symbol, exactSymbol))
       if (foundSymbol?.finalValue !== undefined) {
@@ -86,9 +87,12 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     }
   }
 
-  const comments = getGlobalSymbolComments(textDocument.uri, word)
+  let comments: string | null = null
+  if (exactSymbol !== undefined) {
+    comments = getGlobalSymbolComments(textDocument.uri, word, exactSymbol)
+  }
 
-  // Append comments for variables or tasks that don't have documentation from Yocto/BitBake
+  // Append comments for symbols that don't already have documentation from Yocto/BitBake
   if (hoverValue === '' && comments !== null) {
     hoverValue += comments ?? ''
   }
@@ -108,42 +112,29 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   return null
 }
 
-function getGlobalSymbolComments (uri: string, word: string): string | null {
-  if (analyzer.getGlobalDeclarationSymbols(uri).some((symbol) => symbol.name === word)) {
-    const analyzedDocument = analyzer.getAnalyzedDocument(uri)
-    const symbolComments = analyzedDocument?.globalSymbolComments
-    const includeFileUris = analyzedDocument?.includeFileUris
-    if (symbolComments === undefined) {
-      return null
+function getGlobalSymbolComments (uri: string, word: string, currentSymbolAtPoint: BitbakeSymbolInformation): string | null {
+  const localSymbolsWithComments = analyzer.getGlobalDeclarationSymbols(uri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0)
+  const externalSymbolsWithComments: BitbakeSymbolInformation[] = []
+
+  const analyzedDocument = analyzer.getAnalyzedDocument(uri)
+  const includeFileUris = analyzedDocument?.includeFileUris
+
+  includeFileUris?.forEach((includeFileUri) => {
+    externalSymbolsWithComments.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0))
+  })
+  const priority = ['.bbclass', '.conf', '.inc', '.bb', '.bbappend']
+
+  const allSymbolsWithCommentsFoundWithWord = [...localSymbolsWithComments, ...externalSymbolsWithComments]
+  let finalComments: string = ''
+  // higher priority comments replace lower ones
+  priority.reverse().forEach((ext) => {
+    const symbolsForTheExt = allSymbolsWithCommentsFoundWithWord.filter((symbol) => path.parse(symbol.location.uri).ext === ext)
+    if (symbolsForTheExt.length > 0) {
+      // Only show comments from one of the symbols to not flood the hover definition with comments
+      const symbol = symbolsForTheExt[0]
+      finalComments = `${symbol.commentsAbove.map((comment) => comment.slice(1)).join('\n')}` + `\n\nSource: ${symbol.location.uri.replace('file://', '')} \`L: ${symbol.location.range.start.line + 1}\`}`
     }
-    if (symbolComments[word] !== undefined) {
-      const localCommentsForSymbol = symbolComments[word]
+  })
 
-      const otherCommentsForSymbol: GlobalSymbolComments[string] = []
-      includeFileUris?.forEach((includeFileUri) => {
-        const analyzedDocumentForIncludeFile = analyzer.getAnalyzedDocument(includeFileUri)
-        const symbolCommentsForIncludeFile = analyzedDocumentForIncludeFile?.globalSymbolComments
-        if (symbolCommentsForIncludeFile !== undefined) {
-          otherCommentsForSymbol.push(...(symbolCommentsForIncludeFile[word] ?? []))
-        }
-      })
-      const priority = ['.bbclass', '.conf', '.inc', '.bb', '.bbappend']
-
-      const allCommentsForSymbol = [...localCommentsForSymbol, ...otherCommentsForSymbol]
-      let commentsToShow: GlobalSymbolComments[string] = []
-      // higher priority comments replace lower ones
-      priority.reverse().forEach((ext) => {
-        const commentsForExt = allCommentsForSymbol.filter((item) => path.parse(item.uri).ext === ext)
-        if (commentsForExt.length > 0) {
-          commentsToShow = commentsForExt
-        }
-      })
-
-      if (commentsToShow.length > 0) {
-        return `${commentsToShow[0].comments.map(comment => comment.slice(1)).join('\n') + `\n\nSource: ${commentsToShow[0].uri.replace('file://', '')} \`L: ${commentsToShow[0].line + 1}\``}`
-      }
-    }
-  }
-
-  return null
+  return finalComments
 }

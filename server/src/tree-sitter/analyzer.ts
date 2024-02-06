@@ -19,7 +19,7 @@ import {
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { type BitbakeSymbolInformation, getGlobalDeclarationsAndComments, type GlobalDeclarations, type GlobalSymbolComments } from './declarations'
+import { type BitbakeSymbolInformation, getGlobalDeclarationsAndComments as getGlobalDeclarations, type GlobalDeclarations } from './declarations'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
@@ -34,7 +34,6 @@ export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
   document: TextDocument
   globalDeclarations: GlobalDeclarations
-  globalSymbolComments: GlobalSymbolComments
   includeFileUris?: string[]
   tree: Parser.Tree
   extraSymbols?: GlobalDeclarations[] // symbols from the include files
@@ -80,7 +79,7 @@ export default class Analyzer {
     const fileContent = document.getText()
 
     const tree = this.parser.parse(fileContent)
-    const [globalDeclarations, globalSymbolComments] = getGlobalDeclarationsAndComments({ tree, uri })
+    const globalDeclarations = getGlobalDeclarations({ tree, uri })
 
     // eslint-disable-next-line prefer-const
     let extraSymbols: GlobalDeclarations[] = []
@@ -92,7 +91,6 @@ export default class Analyzer {
       version: document.version,
       document,
       globalDeclarations,
-      globalSymbolComments,
       includeFileUris,
       tree,
       extraSymbols
@@ -124,6 +122,10 @@ export default class Analyzer {
       symbols = symbols.concat(symbolArray)
     })
     return symbols
+  }
+
+  public findExactSymbolAtPoint (uri: string, position: Position, wordAtPoint: string): BitbakeSymbolInformation | undefined {
+    return analyzer.getGlobalDeclarationSymbols(uri).find((symbol) => symbol.name === wordAtPoint && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
   }
 
   public getParsedTreeForUri (uri: string): Tree | undefined {
@@ -518,13 +520,12 @@ export default class Analyzer {
           )
           parsedTree = this.parser.parse(textDocument.getText())
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
-          globalDeclarations = getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[0]
+          globalDeclarations = getGlobalDeclarations({ tree: parsedTree, uri })
 
           this.uriToAnalyzedDocument[uri] = {
             version: textDocument.version,
             document: textDocument,
             globalDeclarations,
-            globalSymbolComments: getGlobalDeclarationsAndComments({ tree: parsedTree, uri })[1],
             tree: parsedTree
           }
         } else {
@@ -803,7 +804,7 @@ export default class Analyzer {
     const scanResultDocUri = originalDocUri + '.scanned'
     const scanResultDocTree = this.parser.parse(scanResultDoc)
 
-    const [scanResultDocGlobalDeclarations] = getGlobalDeclarationsAndComments({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
+    const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
     const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
     const { globalDeclarations: analyzedOriginalDocGlobalDeclarations } = analyzedOriginalDoc
 
