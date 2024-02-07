@@ -149,7 +149,7 @@ export default class Analyzer {
   }
 
   public findExactSymbolAtPoint (uri: string, position: Position, wordAtPoint: string): BitbakeSymbolInformation | undefined {
-    return analyzer.getGlobalDeclarationSymbols(uri).find((symbol) => symbol.name === wordAtPoint && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
+    return analyzer.getGlobalDeclarationSymbols(uri).find((symbol) => symbol.name === wordAtPoint && analyzer.positionIsInRange(position.line, position.character, symbol.location.range)) ?? analyzer.uriToAnalyzedDocument[uri]?.variableExpansionSymbols.find((symbol) => symbol.name === wordAtPoint && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
   }
 
   public getParsedTreeForUri (uri: string): Tree | undefined {
