@@ -71,7 +71,7 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
 
       const fileUri = foundFiles.find(file => this.basenameIsEqual(file.fsPath, link.value))
       if (fileUri !== undefined) {
-        documentLinks.push(new vscode.DocumentLink(link.range, fileUri))
+        documentLinks.push({ ...new vscode.DocumentLink(link.range, fileUri), tooltip: 'Bitbake: Go to file' })
       }
     }
 
@@ -103,7 +103,7 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
           Reference: https://code.visualstudio.com/api/extension-guides/command#command-uris
         */
         const targetUri = vscode.Uri.parse(`command:revealInExplorer?${encodeURIComponent(JSON.stringify(vscode.Uri.parse(foundDir)))}`)
-        documentLinks.push(new vscode.DocumentLink(link.range, targetUri))
+        documentLinks.push({ ...new vscode.DocumentLink(link.range, targetUri), tooltip: 'Bitbake: Reveal in explorer' })
       }
     })
 
