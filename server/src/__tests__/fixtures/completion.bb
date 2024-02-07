@@ -20,5 +20,13 @@ python() {
     d.getVar("D")
 }
 
+D
+python() {
+}
+
+DESCRIPTION:
+def dummy() {
+}
+
 # Show completion at the last line https://github.com/amaanq/tree-sitter-bitbake/issues/9
 MYVAR:append:

@@ -310,7 +310,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 23,
+        line: 31,
         character: 13
       }
     })
@@ -924,5 +924,67 @@ describe('On Completion', () => {
     expect(
       resultOnVariableAssignation.find((item) => item.label === 'DEBIAN_MIRROR')
     ).toBeUndefined()
+  })
+
+  it('provides proper completion items on incomplete variable assignment', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    bitBakeDocScanner.parseYoctoVariablesFile()
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 22,
+        character: 1
+      }
+    })
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: 'Source: Yocto'
+          },
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          insertText: undefined,
+          insertTextFormat: 1
+        })
+      ])
+    )
+  })
+
+  it('provides proper completion items on incomplete variable assignment with override', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 26,
+        character: 12
+      }
+    })
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        {
+          label: 'append',
+          kind: 24
+        }
+      ])
+    )
   })
 })

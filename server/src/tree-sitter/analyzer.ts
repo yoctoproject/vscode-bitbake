@@ -290,12 +290,44 @@ export default class Analyzer {
     (n?.type === ':' && n?.parent?.type === 'ERROR' && n?.parent?.previousSibling?.type === 'override') // when having MYVAR:append: = '123' and the second or later colon is typed
   }
 
+  // While the user is typing on a line right before a function, tree-sitter-bitbake wrongly assumes the identifier is part of the function.
+  // See tree-sitter-bitbake issue: https://github.com/amaanq/tree-sitter-bitbake/issues/16
+  // TODO: Remove this function when the issue is fixed
+  public isBuggyIdentifier (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    // The bug appears on identifiers, and also on the colon of overrides
+    if (n?.type !== 'identifier' && n?.type !== ':') {
+      return false
+    }
+    const currentLine = n.startPosition.row
+    const parent = n.parent
+
+    // The bug occurs when tree-sitter-bitbake mistakens the identifier as part of the name of a function
+    // The name of a function is on the same line as a function_definition node
+    if (parent?.type !== 'function_definition' && currentLine !== parent?.startPosition.row) {
+      return false
+    }
+
+    const nextSibling = n.nextSibling
+    // If the identifier is the name of a function, then the next sibling should be '(' or an override.
+    // In any case, it should be on the same line as the identifier.
+    // If it is not, then we have our buggy identifier.
+    return nextSibling?.endPosition.row !== currentLine
+  }
+
   public isInsideBashRegion (
     uri: string,
     line: number,
     column: number
   ): boolean {
     let n = this.nodeAtPoint(uri, line, column)
+    if (this.isBuggyIdentifier(uri, line, column)) {
+      return false
+    }
 
     while (n !== null) {
       if (TreeSitterUtils.isShellDefinition(n)) {
@@ -313,6 +345,10 @@ export default class Analyzer {
     column: number
   ): boolean {
     let n = this.nodeAtPoint(uri, line, column)
+    if (this.isBuggyIdentifier(uri, line, column)) {
+      return false
+    }
+
     while (n !== null) {
       if (TreeSitterUtils.isInlinePython(n) || TreeSitterUtils.isPythonDefinition(n)) {
         return true
