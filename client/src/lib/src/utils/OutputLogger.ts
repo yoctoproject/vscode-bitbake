@@ -28,7 +28,8 @@ export class OutputLogger {
   public log (message: string, level: string = 'info'): void {
     if (this.shouldLog(level)) {
       this.outputChannel?.appendLine(message)
-      console.log(message)
+      const time = new Date().toISOString().substring(11, 23)
+      console.log(`${time} [${level[0].toUpperCase() + level.slice(1)}] ${message}`)
     }
   }
 
