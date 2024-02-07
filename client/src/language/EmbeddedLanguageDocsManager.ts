@@ -3,13 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { randomUUID } from 'crypto'
 import path from 'path'
 import fs from 'fs'
 
 import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { Range, Uri, WorkspaceEdit, workspace } from 'vscode'
+import { hashString } from '../lib/src/utils/hash'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
 
@@ -93,9 +93,9 @@ export default class EmbeddedLanguageDocsManager {
     if (this.embeddedLanguageDocsFolder === undefined) {
       return undefined
     }
-    const randomName = randomUUID()
+    const hashedName = hashString(embeddedLanguageDoc.originalUri)
     const fileExtension = fileExtensionsMap[embeddedLanguageDoc.language]
-    const embeddedLanguageDocFilename = randomName + fileExtension
+    const embeddedLanguageDocFilename = hashedName + fileExtension
     const pathToEmbeddedLanguageDocsFolder = this.embeddedLanguageDocsFolder
     return Uri.parse(`file://${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`)
   }
