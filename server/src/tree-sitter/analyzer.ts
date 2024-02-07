@@ -837,21 +837,25 @@ export default class Analyzer {
 
     const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
     const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
-    const { globalDeclarations: analyzedOriginalDocGlobalDeclarations } = analyzedOriginalDoc
+    const originalDocDeclarationSymbols = this.getAllSymbolsFromGlobalDeclarations(analyzedOriginalDoc.globalDeclarations)
+    const filteredOriginalDocVariableExpansionSymbols = analyzedOriginalDoc.variableExpansionSymbols.filter((symbol) => {
+      return !originalDocDeclarationSymbols.some((declarationSymbol) => {
+        return this.symbolsAreTheSame(symbol, declarationSymbol)
+      })
+    })
 
     const scannedResultSymbolInfo: BitbakeSymbolInformation[] = []
     // Process and apply the scan results to the original document
-    Object.values(analyzedOriginalDocGlobalDeclarations).forEach((symbolArray) => {
-      symbolArray.forEach((symbol) => {
-        if (symbol.kind === SymbolKind.Variable) {
-          const sameSymbolInScanResultDocument = scanResultDocSymbols.find((scanResultDocumentSymbol) => {
-            return this.symbolsAreTheSame(scanResultDocumentSymbol, symbol)
-          })
-          if (sameSymbolInScanResultDocument !== undefined) {
-            scannedResultSymbolInfo.push(sameSymbolInScanResultDocument)
-          }
+    const allSymbols = [...originalDocDeclarationSymbols, ...filteredOriginalDocVariableExpansionSymbols]
+    allSymbols.forEach((symbol) => {
+      if (symbol.kind === SymbolKind.Variable) {
+        const sameSymbolInScanResultDocument = scanResultDocSymbols.find((scanResultDocumentSymbol) => {
+          return this.symbolsAreTheSame(scanResultDocumentSymbol, symbol)
+        })
+        if (sameSymbolInScanResultDocument !== undefined) {
+          scannedResultSymbolInfo.push(sameSymbolInScanResultDocument)
         }
-      })
+      }
     })
 
     this.uriToLastScanResult[originalDocUri] = scannedResultSymbolInfo
