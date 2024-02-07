@@ -410,3 +410,26 @@ describe('getLinksInStringContent', () => {
     expect(links).toEqual([])
   })
 })
+
+describe('getVariableExpansionSymbols', () => {
+  it('returns an array of BitbakeSymbolInformation for variable expansions', async () => {
+    const analyzer = await getAnalyzer()
+    const document = FIXTURE_DOCUMENT.HOVER
+    const uri = FIXTURE_URI.HOVER
+
+    analyzer.analyze({
+      document,
+      uri
+    })
+
+    const tree = analyzer.getAnalyzedDocument(uri)?.tree
+
+    if (tree === undefined) {
+      fail('Tree is undefined')
+    }
+
+    const symbols = analyzer.getVariableExpansionSymbols({ tree, uri })
+
+    expect(symbols.length).toEqual(2)
+  })
+})
