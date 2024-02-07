@@ -19,7 +19,7 @@ export const getOriginalDocRange = (
   return new Range(start, end)
 }
 
-const getOriginalDocPosition = (
+export const getOriginalDocPosition = (
   originalTextDocument: TextDocument,
   embeddedLanguageTextDocument: TextDocument,
   characterIndexes: number[],
