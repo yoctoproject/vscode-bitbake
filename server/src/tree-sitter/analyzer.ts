@@ -19,7 +19,7 @@ import {
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { type BitbakeSymbolInformation, getGlobalDeclarationsAndComments as getGlobalDeclarations, type GlobalDeclarations } from './declarations'
+import { type BitbakeSymbolInformation, getGlobalDeclarations, type GlobalDeclarations, nodeToSymbolInformation } from './declarations'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
@@ -34,6 +34,7 @@ export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
   document: TextDocument
   globalDeclarations: GlobalDeclarations
+  variableExpansionSymbols: BitbakeSymbolInformation[]
   includeFileUris?: string[]
   tree: Parser.Tree
   extraSymbols?: GlobalDeclarations[] // symbols from the include files
@@ -81,6 +82,8 @@ export default class Analyzer {
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
 
+    const variableExpansionSymbols = this.getVariableExpansionSymbols({ tree, uri })
+
     // eslint-disable-next-line prefer-const
     let extraSymbols: GlobalDeclarations[] = []
     // eslint-disable-next-line prefer-const
@@ -91,6 +94,7 @@ export default class Analyzer {
       version: document.version,
       document,
       globalDeclarations,
+      variableExpansionSymbols,
       includeFileUris,
       tree,
       extraSymbols
@@ -105,6 +109,26 @@ export default class Analyzer {
     // It was used to provide diagnostics from tree-sitter, but it is not yet reliable.
 
     return diagnostics
+  }
+
+  public getVariableExpansionSymbols ({ tree, uri }: { tree: Tree, uri: string }): BitbakeSymbolInformation[] {
+    const variableExpansionSymbols: BitbakeSymbolInformation[] = []
+
+    TreeSitterUtils.forEach(tree.rootNode, (node) => {
+      const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion')
+      const followChildren = !isNonEmptyVariableExpansion
+
+      if (isNonEmptyVariableExpansion) {
+        console.log('node type', node.type)
+        const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isVariableExpansion: true })
+        console.log('symbol', symbol)
+        symbol !== null && variableExpansionSymbols.push(symbol)
+      }
+
+      return followChildren
+    })
+
+    return variableExpansionSymbols
   }
 
   public getGlobalDeclarationSymbols (uri: string): BitbakeSymbolInformation[] {
@@ -526,6 +550,7 @@ export default class Analyzer {
             version: textDocument.version,
             document: textDocument,
             globalDeclarations,
+            variableExpansionSymbols: [], // won't be used here, so give it an empty array
             tree: parsedTree
           }
         } else {

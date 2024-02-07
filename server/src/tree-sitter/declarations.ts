@@ -42,7 +42,7 @@ const GLOBAL_DECLARATION_NODE_TYPES = new Set([
  * This currently does not include global variables defined inside other code blocks (e.g. if statement & functions)
  *
  */
-export function getGlobalDeclarationsAndComments ({
+export function getGlobalDeclarations ({
   tree,
   uri,
   getFinalValue = false // Whether to get the final value from the scan results obtained from scan recipe command, which is the only use case as of now
@@ -79,17 +79,24 @@ export function getGlobalDeclarationsAndComments ({
   return globalDeclarations
 }
 
-function nodeToSymbolInformation ({
+export function nodeToSymbolInformation ({
   node,
   uri,
-  getFinalValue
+  getFinalValue,
+  isVariableExpansion = false
 }: {
   node: Parser.SyntaxNode
   uri: string
   getFinalValue?: boolean
+  isVariableExpansion?: boolean
 }): BitbakeSymbolInformation | null {
-  const firstNamedChild = node.firstNamedChild
-  if (firstNamedChild === null) {
+  let namedNode = node.firstNamedChild
+
+  if (isVariableExpansion) {
+    namedNode = node
+  }
+
+  if (namedNode === null) {
     return null
   }
 
@@ -127,9 +134,9 @@ function nodeToSymbolInformation ({
 
   let symbol: BitbakeSymbolInformation = {
     ...LSP.SymbolInformation.create(
-      firstNamedChild.text,
+      namedNode.text,
       kind ?? LSP.SymbolKind.Variable,
-      TreeSitterUtil.range(firstNamedChild),
+      TreeSitterUtil.range(namedNode),
       uri,
       containerName
     ),
