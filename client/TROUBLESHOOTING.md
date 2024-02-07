@@ -3,12 +3,12 @@
 ## Known Issues
 
 ### Problems from Unknown Files Appear in the Problems Tab
-Errors and warnings appear twice in the "PROBLEMS" tab. They first appear for the BitBake files to which they belong, and then again for Bash or Python files with UUID names (ex. 9ad23ed5-9278-41e0-98cd-349750c1e2c0.py). As the first one is expected and desired, the second is not. This issue arises from the way we handle diagnostics (errors and warnings). See [Trade-offs on Diagnostics](TROUBLESHOOTING.md#trade-offs-on-diagnostics).
+Errors and warnings appear twice in the "PROBLEMS" tab. They first appear for the BitBake files to which they belong, and then again for Bash or Python files with hash names (ex. 9dab97ca1ef2b71ea07d42d4609e9e54.py). As the first one is expected and desired, the second is not. This issue arises from the way we handle diagnostics (errors and warnings). See [Trade-offs on Diagnostics](TROUBLESHOOTING.md#trade-offs-on-diagnostics).
 
 Unfortunately, the VS Code API does not offer a way to programmatically filter the "PROBLEMS" tab. However, manual filtering is still possible. Typing `!workspaceStorage` or `!workspaceStorage/**/yocto-project.yocto-bitbake/embedded-documents` (if more precision is needed) should filter out all these unwanted problems.
 
 ### Tabs from Unknown Files Open and Close Quickly
-While typing, tabs with UUID names (ex. aa2a3ba2-769c-4900-8f5f-31ea16bfbc8f.sh) might occasionally open in the tabs bar and then close shortly thereafter.  This occurs as a result of our method for handling diagnostics (errors and warnings). See [Trade-offs on Diagnostics](TROUBLESHOOTING.md#trade-offs-on-diagnostics).
+While typing, tabs with hash names (ex. 9dab97ca1ef2b71ea07d42d4609e9e54.sh) might occasionally open in the tabs bar and then close shortly thereafter.  This occurs as a result of our method for handling diagnostics (errors and warnings). See [Trade-offs on Diagnostics](TROUBLESHOOTING.md#trade-offs-on-diagnostics).
 
 We haven't found a way to prevent these tabs from opening, but we try to close them as quickly as possible.
 
