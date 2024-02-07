@@ -364,7 +364,7 @@ describe('declarations', () => {
 })
 
 describe('getLinksInStringContent', () => {
-  it('returns an array of links in the string content', async () => {
+  it('returns an array of links in the string content when variable is SRC_URI', async () => {
     const analyzer = await getAnalyzer()
     const document = FIXTURE_DOCUMENT.CORRECT
     const uri = FIXTURE_URI.CORRECT
