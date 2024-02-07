@@ -30,6 +30,7 @@ import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 import { resolveSettingPath } from './lib/src/BitbakeSettings'
+import { extractRecipeName } from './lib/src/utils/files'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -166,8 +167,22 @@ documents.onDidOpen(analyzeDocument)
 documents.onDidChangeContent(analyzeDocument)
 
 documents.onDidSave(async (event) => {
+  logger.info(`[onDidSave] Document saved: ${event.document.uri}`)
   if (parseOnSave && !eSDKMode) {
-    logger.debug('[onDidSave] Parsing all recipes...')
+    const exts = ['.bb', '.bbappend', '.inc']
+    const uri = event.document.uri
+
+    if (exts.includes(path.extname(uri))) {
+      const foundRecipe = bitBakeProjectScannerClient.bitbakeScanResult._recipes.find((recipe) => recipe.name === extractRecipeName(uri))
+      if (foundRecipe !== undefined) {
+        logger.debug(`[onDidSave] Running 'bitbake -e' against the saved recipe: ${foundRecipe.name}`)
+        // Note that it pends only one scan at a time. See client/src/driver/BitbakeRecipeScanner.ts.
+        // Saving more than 2 files at the same time could cause the server to miss some of the scans.
+        void connection.sendRequest('bitbake/scanRecipe', { uri })
+        return
+      }
+    }
+    // saving other files or no recipe is resolved
     void connection.sendRequest('bitbake/parseAllRecipes')
   }
 })
