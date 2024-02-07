@@ -84,4 +84,10 @@ suite('Bitbake Hover Test Suite', () => {
     const expected = 'Function: **oe_runmake** - *defined in ../poky/meta/classes-global/base.bbclass*'
     await testHover(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
+
+  test('Hover gives right line number in bash function declared in the same file', async () => {
+    const position = new vscode.Position(16, 7)
+    const expected = 'Function: **do_bar** - *defined on line 7*'
+    await testHover(position, expected)
+  }).timeout(BITBAKE_TIMEOUT)
 })

@@ -14,4 +14,5 @@ python do_build() {
 do_build() {
     bbwarn
     oe_runmake
+    do_bar
 }
