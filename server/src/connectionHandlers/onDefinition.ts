@@ -69,7 +69,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
       }
 
       const lastScanResult = analyzer.getLastScanResult(documentUri)
-      const exactSymbol = analyzer.getGlobalDeclarationSymbols(documentUri).find((symbol) => symbol.name === word && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
+      const exactSymbol = analyzer.findExactSymbolAtPoint(documentUri, position, word)
 
       if (lastScanResult !== undefined && exactSymbol !== undefined) {
         const foundSymbol = lastScanResult.find((symbol) => analyzer.symbolsAreTheSame(symbol, exactSymbol))
