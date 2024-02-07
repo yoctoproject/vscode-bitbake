@@ -47,18 +47,6 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
   }
 
-  workspace.onDidRenameFiles((params) => {
-    params.files.forEach((file) => {
-      embeddedLanguageDocsManager.renameEmbeddedLanguageDocs(file.oldUri.toString(), file.newUri.toString())
-    })
-  })
-
-  workspace.onDidDeleteFiles((params) => {
-    params.files.forEach((file) => {
-      void embeddedLanguageDocsManager.deleteEmbeddedLanguageDocs(file.toString())
-    })
-  })
-
   const sendSettings = async (): Promise<void> => {
     const settings = workspace.getConfiguration()
     await client.sendNotification('workspace/didChangeConfiguration', { settings })
@@ -96,7 +84,7 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
   if (context.storageUri?.fsPath === undefined) {
     logger.error('Failed to get storage path')
   } else {
-    void embeddedLanguageDocsManager.setStoragePath(context.storageUri.fsPath)
+    await embeddedLanguageDocsManager.setStoragePath(context.storageUri.fsPath)
   }
 
   // Create the language client and start the client.
