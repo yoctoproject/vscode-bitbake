@@ -20,14 +20,12 @@ const fileExtensionsMap = {
 
 export interface EmbeddedLanguageDocInfos {
   uri: Uri
+  originalUri: Uri
   language: EmbeddedLanguageType
   characterIndexes: number[]
 }
-
-type EmbeddedLanguageDocsRecord = Partial<Record<EmbeddedLanguageType, EmbeddedLanguageDocInfos>>
-
 export default class EmbeddedLanguageDocsManager {
-  private readonly embeddedLanguageDocsInfos = new Map<string, EmbeddedLanguageDocsRecord>() // map of original uri to embedded documents infos
+  private readonly embeddedLanguageDocsInfosMap = new Map<string, EmbeddedLanguageDocInfos>() // map of the embedded document name with its infos
   private _storagePath: string | undefined
   private readonly filesWaitingToUpdate = new Map<string, EmbeddedLanguageDoc>()
 
@@ -61,40 +59,33 @@ export default class EmbeddedLanguageDocsManager {
   private registerEmbeddedLanguageDocInfos (embeddedLanguageDoc: EmbeddedLanguageDoc, uri: Uri): void {
     const embeddedLanguageDocInfos: EmbeddedLanguageDocInfos = {
       ...embeddedLanguageDoc,
-      uri
+      uri,
+      originalUri: Uri.parse(embeddedLanguageDoc.originalUri)
     }
-    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(embeddedLanguageDoc.originalUri) ?? {}
-    embeddedLanguageDocs[embeddedLanguageDoc.language] = embeddedLanguageDocInfos
-    this.embeddedLanguageDocsInfos.set(embeddedLanguageDoc.originalUri, embeddedLanguageDocs)
+    this.embeddedLanguageDocsInfosMap.set(uri.toString(), embeddedLanguageDocInfos)
   }
 
   getEmbeddedLanguageDocInfos (
-    originalUriString: string,
+    originalUri: Uri,
     languageType: EmbeddedLanguageType
   ): EmbeddedLanguageDocInfos | undefined {
-    const embeddedLanguageDocs = this.embeddedLanguageDocsInfos.get(originalUriString)
-    return embeddedLanguageDocs?.[languageType]
+    const embeddedLanguageDocumentUri = this.getEmbeddedLanguageDocUri(originalUri, languageType)
+    if (embeddedLanguageDocumentUri === undefined) {
+      return undefined
+    }
+    return this.embeddedLanguageDocsInfosMap.get(embeddedLanguageDocumentUri.toString())
   }
 
   getOriginalUri (embeddedLanguageDocUri: Uri): Uri | undefined {
-    let originalUri: Uri | undefined
-    this.embeddedLanguageDocsInfos.forEach((embeddedLanguageDocs, stringUri) => {
-      if (
-        embeddedLanguageDocs.bash?.uri.toString() === embeddedLanguageDocUri.toString() ||
-        embeddedLanguageDocs.python?.uri.toString() === embeddedLanguageDocUri.toString()
-      ) {
-        originalUri = Uri.parse(stringUri)
-      }
-    })
-    return originalUri
+    return this.embeddedLanguageDocsInfosMap.get(embeddedLanguageDocUri.toString())?.originalUri
   }
 
-  private createEmbeddedLanguageDocUri (embeddedLanguageDoc: EmbeddedLanguageDoc): Uri | undefined {
+  private getEmbeddedLanguageDocUri (originalUri: Uri, languageType: EmbeddedLanguageType): Uri | undefined {
     if (this.embeddedLanguageDocsFolder === undefined) {
       return undefined
     }
-    const hashedName = hashString(embeddedLanguageDoc.originalUri)
-    const fileExtension = fileExtensionsMap[embeddedLanguageDoc.language]
+    const hashedName = hashString(originalUri.toString())
+    const fileExtension = fileExtensionsMap[languageType]
     const embeddedLanguageDocFilename = hashedName + fileExtension
     const pathToEmbeddedLanguageDocsFolder = this.embeddedLanguageDocsFolder
     return Uri.parse(`file://${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`)
@@ -133,7 +124,7 @@ export default class EmbeddedLanguageDocsManager {
   }
 
   private async createEmbeddedLanguageDocFile (embeddedLanguageDoc: EmbeddedLanguageDoc): Promise<void> {
-    const uri = this.createEmbeddedLanguageDocUri(embeddedLanguageDoc)
+    const uri = this.getEmbeddedLanguageDocUri(Uri.parse(embeddedLanguageDoc.originalUri), embeddedLanguageDoc.language)
     if (uri === undefined) {
       return undefined
     }
@@ -151,7 +142,7 @@ export default class EmbeddedLanguageDocsManager {
   ): Promise<void> {
     logger.debug(`Save embedded document (${embeddedLanguageDoc.language}) for ${embeddedLanguageDoc.originalUri}`)
     const embeddedLanguageDocInfos = this.getEmbeddedLanguageDocInfos(
-      embeddedLanguageDoc.originalUri,
+      Uri.parse(embeddedLanguageDoc.originalUri),
       embeddedLanguageDoc.language
     )
     if (embeddedLanguageDocInfos !== undefined) {

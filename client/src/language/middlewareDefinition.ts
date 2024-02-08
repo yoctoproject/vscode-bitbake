@@ -22,7 +22,7 @@ export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinitio
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
     return
   }
-  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
   logger.debug(`[middlewareProvideDefinition] embeddedLanguageDoc ${embeddedLanguageDocInfos?.uri as any}`)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
