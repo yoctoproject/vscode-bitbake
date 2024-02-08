@@ -119,9 +119,7 @@ export default class Analyzer {
       const followChildren = !isNonEmptyVariableExpansion
 
       if (isNonEmptyVariableExpansion) {
-        console.log('node type', node.type)
         const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isVariableExpansion: true })
-        console.log('symbol', symbol)
         symbol !== null && variableExpansionSymbols.push(symbol)
       }
 
@@ -858,7 +856,52 @@ export default class Analyzer {
       }
     })
 
+    // Store the variable expansion symbols first and use their final value to resolve those declaration symbols. e.g. VAR:${PN}
+    filteredOriginalDocVariableExpansionSymbols.forEach((symbol) => {
+      const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
+        return this.symbolsAreTheSame(scanResultDocSymbol, symbol)
+      })
+      if (foundSymbol !== undefined) {
+        scannedResultSymbolInfo.push(foundSymbol)
+      }
+    })
+
+    originalDocDeclarationSymbols.forEach((symbol) => {
+      const resolvedSymbol = this.resolveSymbol(symbol, scannedResultSymbolInfo)
+
+      const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
+        return this.symbolsAreTheSame(scanResultDocSymbol, resolvedSymbol)
+      })
+
+      if (foundSymbol !== undefined) {
+        scannedResultSymbolInfo.push(foundSymbol)
+      }
+    })
+
     this.uriToLastScanResult[originalDocUri] = scannedResultSymbolInfo
+  }
+
+  /**
+ * Resolve the symbol if it contains variable expansion syntax in its overrides
+ */
+  public resolveSymbol (symbol: BitbakeSymbolInformation, lookUpSymbolList: BitbakeSymbolInformation[]): BitbakeSymbolInformation {
+    const overridesToResolve = symbol.overrides.filter((override) => typeof override !== 'string').map((override) => (override as { variableName: string, value?: string }).variableName)
+
+    const resolvedOverrdies: string[] = []
+    overridesToResolve.forEach((override) => {
+      const value = lookUpSymbolList.find((symbol) => symbol.name === override)?.finalValue
+      value !== undefined && resolvedOverrdies.push(value)
+    })
+
+    if (resolvedOverrdies.length > 0) {
+      const resolvedSymbol: BitbakeSymbolInformation = {
+        ...symbol,
+        overrides: [...symbol.overrides.filter(o => typeof o === 'string'), ...resolvedOverrdies]
+      }
+      return resolvedSymbol
+    }
+
+    return symbol
   }
 
   public extractModificationHistoryFromComments (symbol: BitbakeSymbolInformation): Location[] {
@@ -898,9 +941,13 @@ export default class Analyzer {
    * This functions doesn't check the deep equality of the two symbols. It only checkes the neccesary fields to determine if the two symbols are referring the same thing in the file.
    */
   public symbolsAreTheSame (symbolA: BitbakeSymbolInformation, symbolB: BitbakeSymbolInformation): boolean {
-    return symbolA.name === symbolB.name &&
-           symbolA.overrides.length === symbolB.overrides.length &&
-           symbolA.overrides.every((override) => symbolB.overrides.includes(override))
+    const conditions = symbolA.name === symbolB.name && symbolA.overrides.length === symbolB.overrides.length
+    // Only compare the overrides that are not variable expansions.
+    // For symbols with variable expansions, first resolve the values of the variables in '${}' then reconstrcut a symbol with only literal overrdies before comparing
+    const overridesWithValuesForA = symbolA.overrides.filter(override => typeof override === 'string')
+    const overridesWithValuesForB = symbolB.overrides.filter(override => typeof override === 'string')
+
+    return conditions && overridesWithValuesForA.every((override) => overridesWithValuesForB.includes(override))
     // Question: should we care about the order of the overrides?
   }
 }
