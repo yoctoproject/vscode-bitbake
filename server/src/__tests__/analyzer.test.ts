@@ -10,7 +10,7 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
 import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type GlobalDeclarations } from '../tree-sitter/declarations'
+import { type BitbakeSymbolInformation, type GlobalDeclarations } from '../tree-sitter/declarations'
 
 async function getAnalyzer (): Promise<Analyzer> {
   const parser = await generateParser()
@@ -431,5 +431,74 @@ describe('getVariableExpansionSymbols', () => {
     const symbols = analyzer.getVariableExpansionSymbols({ tree, uri })
 
     expect(symbols.length).toEqual(2)
+  })
+})
+
+describe('resolveSymbol', () => {
+  it('resolves symbol overrides', async () => {
+    /**
+     * Resolve the overrides first, then the symbol
+     * VAR:${PN} = "foo"
+     * if PN = "1", resolved symbol -> VAR:1 = "foo"
+     */
+    const analyzer = await getAnalyzer()
+    const uri = FIXTURE_URI.HOVER
+
+    const PN = '1'
+
+    const symbol1: BitbakeSymbolInformation = {
+      name: 'symbol1',
+      location: {
+        uri,
+        range: {
+          start: { line: 0, character: 0 },
+          end: { line: 0, character: 0 }
+        }
+      },
+      kind: 13,
+      commentsAbove: [],
+      overrides: ['override1', 'override2', { variableName: 'PN' }]
+    }
+
+    const symbol2: BitbakeSymbolInformation = {
+      ...symbol1,
+      overrides: []
+    }
+
+    const lookUpSymbolList: BitbakeSymbolInformation[] = [
+      {
+        name: 'PN',
+        location: {
+          uri,
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 0 }
+          }
+        },
+        kind: 13,
+        commentsAbove: [],
+        overrides: [],
+        finalValue: PN
+      },
+      {
+        name: 'symbol1',
+        location: {
+          uri,
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 0 }
+          }
+        },
+        kind: 13,
+        commentsAbove: [],
+        overrides: ['override1', 'override2', PN]
+      }
+    ]
+
+    const resolvedSymbol1 = analyzer.resolveSymbol(symbol1, lookUpSymbolList)
+    const resolvedSymbol2 = analyzer.resolveSymbol(symbol2, lookUpSymbolList)
+
+    expect(resolvedSymbol1).toEqual(lookUpSymbolList[1])
+    expect(resolvedSymbol2).toEqual(symbol2) // not found in the look up list, resolve to itself
   })
 })
