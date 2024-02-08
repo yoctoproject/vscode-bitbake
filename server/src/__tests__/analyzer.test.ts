@@ -66,7 +66,7 @@ describe('analyze', () => {
             uri: DUMMY_URI
           },
           name: 'BAR',
-          overrides: ['o1', 'o2'],
+          overrides: ['o1', 'o2', { variableName: 'PN' }],
           commentsAbove: []
         },
         {

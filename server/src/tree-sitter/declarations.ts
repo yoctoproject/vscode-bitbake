@@ -20,7 +20,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 }
 
 export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
-  overrides: string[]
+  overrides: Array<{ variableName: string, value?: string } | string> // Store the literal override values or the variable names. e.g. VAR:${MY_OVERRIDE}
   finalValue?: string // Only for variables extracted from the scan results
   commentsAbove: string[]
 }
@@ -113,18 +113,20 @@ export function nodeToSymbolInformation ({
       ->  (override [0, 3] - [0, 23]
         ->  (identifier [0, 4] - [0, 13])
         ->  (identifier [0, 14] - [0, 23]))
-          (literal [0, 26] - [0, 31]
-            (string [0, 26] - [0, 31]
-          ->  (string_content [0, 27] - [0, 30]))))
+            (variable_expansion [0, 24] - [0, 30]
+          ->  (identifier [0, 26] - [0, 29])))
    *
    * Note that the append, prepend and remove operators don't have identifiers in the tree
    */
-  const overrides: string[] = []
+  const overrides: BitbakeSymbolInformation['overrides'] = []
   const overrideChildNode = node.children.find((child) => child.type === 'override')
   if (overrideChildNode !== undefined) {
     overrideChildNode.children.forEach((child) => {
       if (child.type === 'identifier') {
         overrides.push(child.text)
+      }
+      if (child.type === 'variable_expansion' && child.firstNamedChild?.type === 'identifier') {
+        overrides.push({ variableName: child.firstNamedChild.text })
       }
     })
   }
