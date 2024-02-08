@@ -65,47 +65,37 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     } catch (err) {
       logger.error(`An error occurred when finding files with pattern: ${filenamesRegex}. ${JSON.stringify(err)}`)
     }
+    let foundDirs: string[] = []
+    try {
+      foundDirs = foundDirs.concat(find.dirSync(pnDir))
+      foundDirs = foundDirs.concat(find.dirSync(filesDir))
+    } catch (error) {
+      logger.error(`An error occurred when finding directories within: ${pnDir}. ${JSON.stringify(error)}`)
+    }
 
     for (let i = 0; i < LinksWithoutTails.length; i++) {
       const link = LinksWithoutTails[i]
 
+      // Handle files: provide a direct link to the file
       const fileUri = foundFiles.find(file => this.basenameIsEqual(file.fsPath, link.value))
       if (fileUri !== undefined) {
         documentLinks.push({ ...new vscode.DocumentLink(link.range, fileUri), tooltip: 'Bitbake: Go to file' })
+        continue
       }
-    }
 
-    /**
-     * connman/
-     * ├── connman-gnome/
-     *     └── images/
-     * ├── connman-gnome_0.7.bb
-     * └── ... (other files and folders)
-     */
-
-    // Remaining links that were not idenetified as files
-    const remaining = LinksWithoutTails.filter(link => !foundFiles.some(file => this.basenameIsEqual(file.fsPath, link.value)))
-    const dirnameRegex = '(' + remaining.sort((prev, next) => next.value.length - prev.value.length).map(link => '(' + link.value + ')').join('|') + ')' // e.g. (folder1|folder2|folder3|...) with length from longest to shortest
-    let matchedDirs: string[] = []
-
-    try {
-      // Assume all possible directories are under the same parent directory
-      matchedDirs = await this.findDirAsync(new RegExp(dirnameRegex), pnDir)
-      // matchedDirs = find.dirSync(pnDir)
-    } catch (error) {
-      logger.error(`An error occurred when finding directories with pattern: ${dirnameRegex}. ${JSON.stringify(error)}`)
-    }
-    remaining.forEach(link => {
-      const foundDir = matchedDirs.find(dir => this.basenameIsEqual(dir, link.value))
+      // Handle directories: provide a "Reveal in explorer" command
+      const foundDir = foundDirs.find(dir => this.basenameIsEqual(dir, link.value))
       if (foundDir !== undefined) {
         /*
           commandArguments could be formatted into an array for intermediary command if needed.
           Reference: https://code.visualstudio.com/api/extension-guides/command#command-uris
         */
         const targetUri = vscode.Uri.parse(`command:revealInExplorer?${encodeURIComponent(JSON.stringify(vscode.Uri.parse(foundDir)))}`)
+        // targetUri = vscode.Uri.parse('file://' + foundDir)
         documentLinks.push({ ...new vscode.DocumentLink(link.range, targetUri), tooltip: 'Bitbake: Reveal in explorer' })
+        continue
       }
-    })
+    }
 
     return documentLinks
   }
