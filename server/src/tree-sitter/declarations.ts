@@ -30,7 +30,7 @@ export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
  * Referenced by the symbol name
  */
 export type GlobalDeclarations = Record<string, BitbakeSymbolInformation[]>
-export type GlobalSymbolComments = Record<string, Array<{ uri: string, line: number, comments: string[], symbolInfo: BitbakeSymbolInformation }>>
+
 const GLOBAL_DECLARATION_NODE_TYPES = new Set([
   'function_definition',
   'python_function_definition',
@@ -66,10 +66,7 @@ export function getGlobalDeclarations ({
 
       const commentsAbove: string[] = []
       extractCommentsAbove(node, commentsAbove)
-      if (commentsAbove.length > 0) {
-        symbol.commentsAbove = commentsAbove
-      }
-
+      symbol.commentsAbove = commentsAbove
       globalDeclarations[word].push(symbol)
     }
 
