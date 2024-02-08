@@ -22,16 +22,6 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     return path.basename(path1) === path.basename(path2)
   }
 
-  private async findDirAsync (pattern: RegExp, path: string): Promise<string[]> {
-    // find.dir is async but the callback in it is not guaranteed to be called before the provideDocumentLinks method returns.
-    // Thus wrap it with a promise to wait for the callback to be called before returning the result.
-    return await new Promise((resolve) => {
-      find.dir(pattern, path, (dirs) => {
-        resolve(dirs)
-      })
-    })
-  }
-
   private async resolveUris (uri: vscode.Uri, linksData: Array<{ value: string, range: vscode.Range }>, token: vscode.CancellationToken): Promise<vscode.DocumentLink[]> {
     const documentLinks: vscode.DocumentLink[] = []
 
@@ -73,6 +63,13 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
       logger.error(`An error occurred when finding directories within: ${pnDir}. ${JSON.stringify(error)}`)
     }
 
+    /**
+     * Important:
+     * This is building the vscode.documentLink array the same order as they appear in the document to prevent
+     * the results from the default provider from showing up as long as the links extracted from the document are in order.
+     * So the shortcut (e.g. ctrl+click) can always work on the link this provider returned.
+     * Reference: https://github.com/microsoft/vscode/blob/main/src/vs/editor/contrib/links/browser/getLinks.ts#L140
+     */
     for (let i = 0; i < LinksWithoutTails.length; i++) {
       const link = LinksWithoutTails[i]
 
@@ -93,7 +90,6 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
         const targetUri = vscode.Uri.parse(`command:revealInExplorer?${encodeURIComponent(JSON.stringify(vscode.Uri.parse(foundDir)))}`)
         // targetUri = vscode.Uri.parse('file://' + foundDir)
         documentLinks.push({ ...new vscode.DocumentLink(link.range, targetUri), tooltip: 'Bitbake: Reveal in explorer' })
-        continue
       }
     }
 
