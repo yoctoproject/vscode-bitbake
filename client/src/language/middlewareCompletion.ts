@@ -18,7 +18,7 @@ export const middlewareProvideCompletion: CompletionMiddleware['provideCompletio
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
     return nextResult
   }
-  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
   }

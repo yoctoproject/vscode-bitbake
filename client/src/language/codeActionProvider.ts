@@ -37,7 +37,7 @@ const buildActionFromEmbeddedLanguageDiagnostic = async (
   originalRange: vscode.Range,
   embeddedLanguageType: EmbeddedLanguageType
 ): Promise<vscode.CodeAction[]> => {
-  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return []
   }

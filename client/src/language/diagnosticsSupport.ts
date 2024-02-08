@@ -43,7 +43,7 @@ const setEmbeddedLanguageDocDiagnostics = async (
   embeddedLanguageType: EmbeddedLanguageType
 ): Promise<void> => {
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(
-    originalTextDocument.uri.toString(),
+    originalTextDocument.uri,
     embeddedLanguageType
   )
   if (embeddedLanguageDocInfos?.uri === undefined) {

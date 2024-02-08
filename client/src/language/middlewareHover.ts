@@ -20,7 +20,7 @@ export const middlewareProvideHover: HoverMiddleware['provideHover'] = async (do
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
     return
   }
-  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri.toString(), embeddedLanguageType)
+  const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
   }
