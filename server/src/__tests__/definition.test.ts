@@ -91,6 +91,21 @@ describe('on definition', () => {
       }
     })
 
+    // Resolve the directive path with ${} and provide go-to-definition
+    const scanResults = '#INCLUDE HISTORY\n#some operation history for PN\nPN = \'foo\'\n'
+
+    analyzer.processRecipeScanResults(scanResults, FIXTURE_URI.DIRECTIVE, undefined)
+
+    const definition3 = onDefinitionHandler({
+      textDocument: {
+        uri: FIXTURE_URI.DIRECTIVE
+      },
+      position: {
+        line: 30,
+        character: 9
+      }
+    })
+
     expect(definition).toEqual(
       expect.arrayContaining([
         {
@@ -113,6 +128,24 @@ describe('on definition', () => {
       expect.arrayContaining([
         {
           uri: FIXTURE_URI.BITBAKE_CONF,
+          range: {
+            start: {
+              line: 0,
+              character: 0
+            },
+            end: {
+              line: 0,
+              character: 0
+            }
+          }
+        }
+      ])
+    )
+
+    expect(definition3).toEqual(
+      expect.arrayContaining([
+        {
+          uri: FIXTURE_URI.FOO_INC,
           range: {
             start: {
               line: 0,
