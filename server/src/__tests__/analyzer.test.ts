@@ -435,7 +435,7 @@ describe('getVariableExpansionSymbols', () => {
 })
 
 describe('resolveSymbol', () => {
-  it('resolves symbol overrides', async () => {
+  it('resolves symbols with variable expansion syntax', async () => {
     /**
      * Resolve the overrides first, then the symbol
      * VAR:${PN} = "foo"
@@ -445,6 +445,7 @@ describe('resolveSymbol', () => {
     const uri = FIXTURE_URI.HOVER
 
     const PN = '1'
+    const PV = '1.0+git'
 
     const symbol1: BitbakeSymbolInformation = {
       name: 'symbol1',
@@ -465,6 +466,9 @@ describe('resolveSymbol', () => {
       overrides: []
     }
 
+    // eslint-disable-next-line no-template-curly-in-string
+    const symbol3 = 'recipe_${PV}.bb'
+
     const lookUpSymbolList: BitbakeSymbolInformation[] = [
       {
         name: 'PN',
@@ -479,6 +483,20 @@ describe('resolveSymbol', () => {
         commentsAbove: [],
         overrides: [],
         finalValue: PN
+      },
+      {
+        name: 'PV',
+        location: {
+          uri,
+          range: {
+            start: { line: 0, character: 0 },
+            end: { line: 0, character: 0 }
+          }
+        },
+        kind: 13,
+        commentsAbove: [],
+        overrides: [],
+        finalValue: PV
       },
       {
         name: 'symbol1',
@@ -497,8 +515,10 @@ describe('resolveSymbol', () => {
 
     const resolvedSymbol1 = analyzer.resolveSymbol(symbol1, lookUpSymbolList)
     const resolvedSymbol2 = analyzer.resolveSymbol(symbol2, lookUpSymbolList)
+    const resolvedSymbol3 = analyzer.resolveSymbol(symbol3, lookUpSymbolList)
 
-    expect(resolvedSymbol1).toEqual(lookUpSymbolList[1])
+    expect(resolvedSymbol1).toEqual(lookUpSymbolList[2])
     expect(resolvedSymbol2).toEqual(symbol2) // not found in the look up list, resolve to itself
+    expect(resolvedSymbol3).toEqual('recipe_1.0.bb')
   })
 })

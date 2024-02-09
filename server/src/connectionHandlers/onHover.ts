@@ -54,7 +54,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     const lastScanResult = analyzer.getLastScanResult(textDocument.uri)
     if (lastScanResult !== undefined && exactSymbol !== undefined) {
       const resolvedSymbol = analyzer.resolveSymbol(exactSymbol, lastScanResult)
-      const foundSymbol = lastScanResult.find((symbol) => analyzer.symbolsAreTheSame(symbol, resolvedSymbol))
+      const foundSymbol = lastScanResult.find((symbol) => analyzer.symbolsAreTheSame(symbol, resolvedSymbol as BitbakeSymbolInformation))
       if (foundSymbol?.finalValue !== undefined) {
         hoverValue += `**Final Value**\n___\n\t'${foundSymbol.finalValue}'`
       }

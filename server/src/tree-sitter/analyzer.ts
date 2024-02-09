@@ -870,7 +870,7 @@ export default class Analyzer {
       const resolvedSymbol = this.resolveSymbol(symbol, scannedResultSymbolInfo)
 
       const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
-        return this.symbolsAreTheSame(scanResultDocSymbol, resolvedSymbol)
+        return this.symbolsAreTheSame(scanResultDocSymbol, resolvedSymbol as BitbakeSymbolInformation)
       })
 
       if (foundSymbol !== undefined) {
@@ -882,23 +882,53 @@ export default class Analyzer {
   }
 
   /**
- * Resolve the symbol if it contains variable expansion syntax in its overrides
- */
-  public resolveSymbol (symbol: BitbakeSymbolInformation, lookUpSymbolList: BitbakeSymbolInformation[]): BitbakeSymbolInformation {
-    const overridesToResolve = symbol.overrides.filter((override) => typeof override !== 'string').map((override) => (override as { variableName: string, value?: string }).variableName)
+   *
+   * @param symbol A symbol that contains variable expansion syntax. e.g. VAR:${PN} or require ${PN}.inc
+   * @param lookUpSymbolList A list of symbols to look up the final value of the variables in the variable expansion syntax
+   *
+   * Resolve the symbol if it contains variable expansion syntax in its overrides
+   */
+  public resolveSymbol (symbol: BitbakeSymbolInformation | string, lookUpSymbolList: BitbakeSymbolInformation[]): BitbakeSymbolInformation | string {
+    const variableToResolve: string[] = []
 
-    const resolvedOverrdies: string[] = []
-    overridesToResolve.forEach((override) => {
-      const value = lookUpSymbolList.find((symbol) => symbol.name === override)?.finalValue
-      value !== undefined && resolvedOverrdies.push(value)
-    })
+    if (typeof symbol !== 'string') {
+      variableToResolve.push(...symbol.overrides.filter((override) => typeof override !== 'string').map((override) => (override as { variableName: string, value?: string }).variableName))
 
-    if (resolvedOverrdies.length > 0) {
-      const resolvedSymbol: BitbakeSymbolInformation = {
-        ...symbol,
-        overrides: [...symbol.overrides.filter(o => typeof o === 'string'), ...resolvedOverrdies]
+      const resolvedVariable: string[] = []
+      variableToResolve.forEach((override) => {
+        const value = lookUpSymbolList.find((symbol) => symbol.name === override)?.finalValue
+        value !== undefined && resolvedVariable.push(value)
+      })
+
+      if (resolvedVariable.length > 0) {
+        const resolvedSymbol: BitbakeSymbolInformation = {
+          ...symbol,
+          overrides: [...symbol.overrides.filter(o => typeof o === 'string'), ...resolvedVariable]
+        }
+        return resolvedSymbol
       }
-      return resolvedSymbol
+    } else {
+      const regex = /\$\{(?<variable>.*)\}/g
+      for (const match of symbol.matchAll(regex)) {
+        const variable = match.groups?.variable
+        if (variable !== undefined) {
+          variableToResolve.push(variable)
+        }
+      }
+
+      const resolvedVariables: Array<{ variable: string, value: string }> = []
+      variableToResolve.forEach((variable) => {
+        const value = lookUpSymbolList.find((symbol) => symbol.name === variable)?.finalValue
+        value !== undefined && resolvedVariables.push({ variable, value: value.replace('+git', '') }) // PV usually has +git appended to it
+      })
+
+      if (resolvedVariables.length > 0) {
+        let resolvedSymbol = symbol
+        resolvedVariables.forEach((v) => {
+          resolvedSymbol = resolvedSymbol.replace('${' + v.variable + '}', v.value)
+        })
+        return resolvedSymbol
+      }
     }
 
     return symbol
