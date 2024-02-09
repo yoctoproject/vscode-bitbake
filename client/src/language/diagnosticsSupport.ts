@@ -8,6 +8,7 @@ import * as vscode from 'vscode'
 import { getOriginalDocRange } from './utils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -52,6 +53,9 @@ const setEmbeddedLanguageDocDiagnostics = async (
   const dirtyDiagnostics = vscode.languages.getDiagnostics(embeddedLanguageDocInfos.uri)
   const cleanDiagnostics: vscode.Diagnostic[] = []
   dirtyDiagnostics.forEach((diagnostic) => {
+    if (checkIsIgnoredShellcheckSc2154(diagnostic)) {
+      return
+    }
     if (diagnostic.range === undefined) {
       cleanDiagnostics.push(diagnostic)
     }
@@ -72,4 +76,17 @@ const setEmbeddedLanguageDocDiagnostics = async (
   })
   const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
   diagnosticCollection.set(originalTextDocument.uri, cleanDiagnostics)
+}
+
+const checkIsIgnoredShellcheckSc2154 = (diagnostic: vscode.Diagnostic): boolean => {
+  if (diagnostic.source !== 'shellcheck' && diagnostic.code !== 'SC2154') {
+    return false
+  }
+  const message = diagnostic.message
+  const match = message.match(/^(?<variableName>\w+) is referenced but not assigned\.$/)
+  const variableName = match?.groups?.variableName
+  if (variableName === undefined) {
+    return false
+  }
+  return commonDirectoriesVariables.has(variableName)
 }
