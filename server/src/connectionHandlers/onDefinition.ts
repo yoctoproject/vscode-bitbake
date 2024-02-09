@@ -31,18 +31,25 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     return []
   }
 
+  const lastScanResult = analyzer.getLastScanResult(documentUri)
+
+  const definitions: Definition = []
+
   // require, inherit & include directives
   const directiveStatementKeyword = analyzer.getDirectiveStatementKeywordByNodeType(textDocumentPositionParams)
   const directivePath = analyzer.getDirectivePathForPosition(textDocumentPositionParams)
   if (directiveStatementKeyword !== undefined && directivePath !== undefined) {
     logger.debug(`[onDefinition] Found directive: ${directiveStatementKeyword}`)
-    const definition = getDefinitionForDirectives(directiveStatementKeyword, directivePath)
-    logger.debug(`[onDefinition] definition item: ${JSON.stringify(definition)}`)
-    return definition
+    let resolvedDirectivePath = directivePath
+    if (lastScanResult !== undefined) {
+      resolvedDirectivePath = analyzer.resolveSymbol(directivePath, lastScanResult) as string
+    }
+    definitions.push(...getDefinitionForDirectives(directiveStatementKeyword, resolvedDirectivePath))
+    logger.debug(`[onDefinition] definition item: ${JSON.stringify(definitions)}`)
+    return definitions
   }
 
   if (word !== null) {
-    const definitions: Definition = []
     const canProvideGoToDefinitionForSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
     (analyzer.isVariableExpansion(documentUri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
     // Variables in declartion and variable expansion syntax
@@ -68,7 +75,6 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         })
       }
 
-      const lastScanResult = analyzer.getLastScanResult(documentUri)
       const exactSymbol = analyzer.findExactSymbolAtPoint(documentUri, position, word)
 
       if (lastScanResult !== undefined && exactSymbol !== undefined) {

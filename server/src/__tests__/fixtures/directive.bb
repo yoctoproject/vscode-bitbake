@@ -27,3 +27,5 @@ my_func(){
 RDEPENDS:${PN} += 'some-package some-package-2.0'
 # package names that follow '--enable-' or '--disable-', and when + is part of the name
 PACKAGECONFIG[some-package3] = "--enable-some-package,--disable-some-package,some-package+1"
+
+require inc/${PN}.inc
