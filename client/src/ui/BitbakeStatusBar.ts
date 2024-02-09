@@ -8,6 +8,7 @@ import * as vscode from 'vscode'
 import { type BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 import { type BitbakeCustomExecution } from './BitbakeTaskProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { BitbakeRecipeScanner } from '../driver/BitbakeRecipeScanner'
 
 export class BitbakeStatusBar {
   private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [], _confFiles: [] }
@@ -44,13 +45,15 @@ export class BitbakeStatusBar {
     })
 
     vscode.tasks.onDidStartTask((e: vscode.TaskStartEvent) => {
-      if (e.execution.task.name === 'Bitbake: Parse' && e.execution.task.source === 'bitbake') {
+      const taskName = e.execution.task.name
+      if ((taskName === 'Bitbake: Parse' || taskName === BitbakeRecipeScanner.taskName) && e.execution.task.source === 'bitbake') {
         this.parsingInProgress = true
         this.updateStatusBar()
       }
     })
     vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
-      if (e.execution.task.name === 'Bitbake: Parse' && e.execution.task.source === 'bitbake') {
+      const taskName = e.execution.task.name
+      if ((taskName === 'Bitbake: Parse' || taskName === BitbakeRecipeScanner.taskName) && e.execution.task.source === 'bitbake') {
         this.parsingInProgress = false
         this.scanExitCode = (e.execution.task.execution as BitbakeCustomExecution).pty?.lastExitCode ?? -1
         this.updateStatusBar()

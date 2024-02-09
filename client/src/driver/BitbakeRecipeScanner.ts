@@ -11,6 +11,8 @@ import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/Bit
 import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
 
 export class BitbakeRecipeScanner {
+  static readonly taskName = 'Bitbake: Scan recipe env'
+
   private _languageClient: LanguageClient | undefined
   private _currentUriForScan: string | undefined = undefined
   private _currentRecipeForScan: string | undefined = undefined
@@ -33,7 +35,7 @@ export class BitbakeRecipeScanner {
       return
     }
 
-    const taskName = 'Bitbake: Scan recipe env'
+    const taskName = BitbakeRecipeScanner.taskName
     const scanRecipeEnvTask = new vscode.Task(
       { type: 'bitbake', recipes: [chosenRecipe], options: { parseOnly: true, env: true } },
       vscode.TaskScope.Workspace,
