@@ -109,6 +109,15 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     }
   })
 
+  client.onRequest('bitbake/parseAllRecipes', async () => {
+    // Temporarily disable task.saveBeforeRun
+    // This request happens on bitbake document save. We don't want to save all files when any bitbake file is saved.
+    const saveBeforeRun = await workspace.getConfiguration('task').get('saveBeforeRun')
+    await workspace.getConfiguration('task').update('saveBeforeRun', 'never', undefined, true)
+    await commands.executeCommand('bitbake.parse-recipes')
+    await workspace.getConfiguration('task').update('saveBeforeRun', saveBeforeRun, undefined, true)
+  })
+
   client.onRequest('bitbake/scanRecipe', async (param) => {
     if (typeof param.uri === 'string') {
       // Temporarily disable task.saveBeforeRun
