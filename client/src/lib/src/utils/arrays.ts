@@ -4,21 +4,17 @@
  * ------------------------------------------------------------------------------------------ */
 
 export const mergeArraysDistinctly = <ElementType, KeyType>(
-  array1: ElementType[],
-  array2: ElementType[],
-  getKey: (a: ElementType) => KeyType // A key on which two elements are equal
+  getKey: (a: ElementType) => KeyType, // A key on which two elements are equal
+  ...arrays: ElementType[][]
 ): ElementType[] => {
   const mergedArray: ElementType[] = []
   const seenKeys = new Set<KeyType>()
 
-  array1.forEach((item) => {
-    mergedArray.push(item)
-    seenKeys.add(getKey(item))
-  })
-
-  array2.forEach((item) => {
-    if (!seenKeys.has(getKey(item))) {
+  arrays.flat().forEach((item) => {
+    const key = getKey(item)
+    if (!seenKeys.has(key)) {
       mergedArray.push(item)
+      seenKeys.add(key)
     }
   })
 
