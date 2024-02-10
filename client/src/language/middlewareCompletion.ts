@@ -51,8 +51,8 @@ export const middlewareProvideCompletion: CompletionMiddleware['provideCompletio
     }
   })
   return mergeArraysDistinctly(
+    (completionItem) => completionItem.label,
     pulledCompletionList.items,
-    nextResult instanceof CompletionList ? nextResult.items : nextResult,
-    (completionItem) => completionItem.label
+    nextResult instanceof CompletionList ? nextResult.items : nextResult
   )
 }
