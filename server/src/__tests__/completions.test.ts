@@ -870,4 +870,59 @@ describe('On Completion', () => {
       resultOnStringContent.find((item) => item.label === 'deltask')
     ).toBeUndefined()
   })
+
+  it('provides common directories completion items where it is appropriate', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    bitBakeDocScanner.parseYoctoVariablesFile()
+    bitBakeDocScanner.parseYoctoTaskFile()
+    bitBakeDocScanner.parsePythonDatastoreFunction()
+
+    const resultOnVariableExpansion = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 2,
+        character: 13
+      }
+    })
+    expect(
+      resultOnVariableExpansion.find((item) => item.label === 'FULL_OPTIMIZATION')
+    ).not.toBeUndefined()
+
+    const pnCompletionItems = resultOnVariableExpansion.filter((item) => item.label === 'PN')
+    expect(pnCompletionItems.length).toBe(1) // not duplicated with common directories
+    expect(pnCompletionItems[0].labelDetails?.description).toBe('Source: Yocto') // Not overridden by common directories
+
+    const resultOnPythonDatastoreVariable = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 19,
+        character: 15
+      }
+    })
+    expect(
+      resultOnPythonDatastoreVariable.find((item) => item.label === 'DEBIAN_MIRROR')
+    ).not.toBeUndefined()
+
+    const resultOnVariableAssignation = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 17,
+        character: 1
+      }
+    })
+    expect(
+      resultOnVariableAssignation.find((item) => item.label === 'DEBIAN_MIRROR')
+    ).toBeUndefined()
+  })
 })
