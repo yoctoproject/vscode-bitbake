@@ -22,6 +22,8 @@ import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
 import { type Position } from 'vscode-languageserver-textdocument'
+import { commonDirectoriesVariables } from '../lib/src/availableVariables'
+import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 
 let documentUri = ''
 
@@ -131,24 +133,19 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
     return getCompletionItemForDirectiveStatementKeyword(directiveStatementKeyword)
   }
 
-  let reserverdKeywordCompletionItems: CompletionItem[] = []
-  if (!analyzer.isVariableExpansion(documentUri, wordPosition.line, wordPosition.character)) {
-    reserverdKeywordCompletionItems = RESERVED_KEYWORDS.map(keyword => {
-      return {
-        label: keyword,
-        kind: CompletionItemKind.Keyword
-      }
-    })
-  }
+  const isVariableExpansion = analyzer.isVariableExpansion(documentUri, wordPosition.line, wordPosition.character)
+  const commonDirectoriesCompletionItems = isVariableExpansion ? allCommonDirectoriesCompletionItems : []
+  const reservedKeywordCompletionItems = !isVariableExpansion ? allReserverdKeywordCompletionItems : []
 
-  const allCompletions = [
-    ...reserverdKeywordCompletionItems,
-    ...getVariablecompletionItems(symbolCompletionItems),
-    ...getYoctoTaskSnippets(),
-    ...symbolCompletionItems
-  ]
-
-  return allCompletions
+  return mergeArraysDistinctly(
+    (completionItem) => completionItem.label,
+    // In priority order
+    getSymbolCompletionItems(word),
+    reservedKeywordCompletionItems,
+    getVariablecompletionItems(symbolCompletionItems),
+    getYoctoTaskSnippets(),
+    commonDirectoriesCompletionItems
+  )
 }
 
 function getBashCompletionItems (): CompletionItem[] {
@@ -158,10 +155,12 @@ function getBashCompletionItems (): CompletionItem[] {
 function getPythonCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
   if (analyzer.isPythonDatastoreVariable(documentUri, wordPosition.line, wordPosition.character, true)) {
     const symbolCompletionItems = getSymbolCompletionItems(word)
-    return [
-      ...getVariablecompletionItems(symbolCompletionItems),
-      ...symbolCompletionItems
-    ]
+    return mergeArraysDistinctly(
+      (completionItem) => completionItem.label,
+      getVariablecompletionItems(symbolCompletionItems),
+      symbolCompletionItems,
+      allCommonDirectoriesCompletionItems
+    )
   }
   if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
     return []
@@ -172,6 +171,20 @@ function getPythonCompletionItems (documentUri: string, word: string | null, wor
 function getYoctoTaskSnippets (): CompletionItem[] {
   return formatCompletionItems(docInfoToCompletionItems(bitBakeDocScanner.yoctoTaskInfo), CompletionItemKind.Snippet)
 }
+
+const allReserverdKeywordCompletionItems: CompletionItem[] = RESERVED_KEYWORDS.map(keyword => {
+  return {
+    label: keyword,
+    kind: CompletionItemKind.Keyword
+  }
+})
+
+const allCommonDirectoriesCompletionItems: CompletionItem[] = Array.from(commonDirectoriesVariables).map((variable) => {
+  return {
+    label: variable,
+    kind: CompletionItemKind.Variable
+  }
+})
 
 function getSymbolCompletionItems (word: string | null): CompletionItem[] {
   if (word !== null) {
