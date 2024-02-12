@@ -42,7 +42,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     logger.debug(`[onDefinition] Found directive: ${directiveStatementKeyword}`)
     let resolvedDirectivePath = directivePath
     if (lastScanResult !== undefined) {
-      resolvedDirectivePath = analyzer.resolveSymbol(directivePath, lastScanResult) as string
+      resolvedDirectivePath = analyzer.resolveSymbol(directivePath, lastScanResult)
     }
     definitions.push(...getDefinitionForDirectives(directiveStatementKeyword, resolvedDirectivePath))
     logger.debug(`[onDefinition] definition item: ${JSON.stringify(definitions)}`)
