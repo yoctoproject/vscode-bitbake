@@ -895,7 +895,14 @@ export default class Analyzer {
     const variableToResolve: string[] = []
 
     if (typeof symbol !== 'string') {
-      variableToResolve.push(...symbol.overrides.filter((override) => typeof override !== 'string').map((override) => (override as { variableName: string, value?: string }).variableName))
+      const toResolve = symbol.overrides.reduce<string[]>((acc, override) => {
+        if (typeof override !== 'string') {
+          acc.push(override.variableName)
+        }
+        return acc
+      }, [])
+
+      variableToResolve.push(...toResolve)
 
       const resolvedVariable: string[] = []
       variableToResolve.forEach((override) => {
