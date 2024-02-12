@@ -66,7 +66,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
   analyzer.initialize(parser)
 
   bitBakeProjectScannerClient.onChange.on('scanReady', () => {
-    logger.debug('[On scanReady] Analyzing the current document again...')
+    logger.debug('Analyzing the current document again...')
     analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
   })
 
@@ -105,8 +105,7 @@ connection.onDidChangeConfiguration((change) => {
 connection.onCompletion(onCompletionHandler)
 
 connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-  logger.debug(`onCompletionResolve: ${JSON.stringify(item)}`)
-  // TODO: An alternative: Currently it just returns the completion items created when onCompletion fires. Maybe here can be good place to get the documentation for completion items instead of getting all of the documentation at startup.
+  logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
   return item
 })
 
