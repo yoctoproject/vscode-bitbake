@@ -48,7 +48,8 @@ suite('Bitbake Parsing Test Suite', () => {
       'recipes-error/error/unable-to-parse.bb',
       'recipes-error/error/unparsed-line.bb',
       'recipes-error/error/task-error.bb',
-      'recipes-error/error/variable-error.bb'
+      'recipes-error/error/variable-error.bb',
+      'recipes-error/error/non-existent-uri.bb'
     ]
 
     const workspacePath: string = workspaceURI.fsPath

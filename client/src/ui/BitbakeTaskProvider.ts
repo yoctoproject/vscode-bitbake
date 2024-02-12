@@ -45,7 +45,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
 
     if (canResolveTask) {
       const bitbakeCommand = this.bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
-      const problemMatchers = ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse']
+      const problemMatchers = ['$bitbake-ParseError', '$bitbake-Variable', '$bitbake-generic', '$bitbake-task-error', '$bitbake-UnableToParse', '$bitbake-non-existent-uri']
 
       const resolvedTask = new vscode.Task(
         task.definition,
