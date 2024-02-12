@@ -78,7 +78,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
       const exactSymbol = analyzer.findExactSymbolAtPoint(documentUri, position, word)
 
       if (lastScanResult !== undefined && exactSymbol !== undefined) {
-        const foundSymbol = lastScanResult.find((symbol) => analyzer.symbolsAreTheSame(symbol, exactSymbol))
+        const foundSymbol = analyzer.matchSymbol(exactSymbol, lastScanResult)
         if (foundSymbol !== undefined) {
           const modificationHistory = analyzer.extractModificationHistoryFromComments(foundSymbol)
           modificationHistory.forEach((location) => {
