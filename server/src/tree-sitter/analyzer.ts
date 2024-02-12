@@ -870,7 +870,7 @@ export default class Analyzer {
       const resolvedSymbol = this.resolveSymbol(symbol, scannedResultSymbolInfo)
 
       const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
-        return this.symbolsAreTheSame(scanResultDocSymbol, resolvedSymbol as BitbakeSymbolInformation)
+        return this.symbolsAreTheSame(scanResultDocSymbol, resolvedSymbol)
       })
 
       if (foundSymbol !== undefined) {
@@ -881,6 +881,9 @@ export default class Analyzer {
     this.uriToLastScanResult[originalDocUri] = scannedResultSymbolInfo
   }
 
+  // overload
+  public resolveSymbol (symbol: BitbakeSymbolInformation, lookUpSymbolList: BitbakeSymbolInformation[]): BitbakeSymbolInformation
+  public resolveSymbol (symbol: string, lookUpSymbolList: BitbakeSymbolInformation[]): string
   /**
    *
    * @param symbol A symbol that contains variable expansion syntax. e.g. VAR:${PN} or require ${PN}.inc
