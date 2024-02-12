@@ -869,9 +869,7 @@ export default class Analyzer {
     originalDocDeclarationSymbols.forEach((symbol) => {
       const resolvedSymbol = this.resolveSymbol(symbol, scannedResultSymbolInfo)
 
-      const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
-        return this.symbolsAreTheSame(scanResultDocSymbol, resolvedSymbol)
-      })
+      const foundSymbol = this.matchSymbol(resolvedSymbol, scanResultDocSymbols)
 
       if (foundSymbol !== undefined) {
         scannedResultSymbolInfo.push(foundSymbol)
@@ -879,6 +877,22 @@ export default class Analyzer {
     })
 
     this.uriToLastScanResult[originalDocUri] = scannedResultSymbolInfo
+  }
+
+  /**
+   * @param symbol The symbol to match
+   * @param lookUpSymbolList The list of symbols to look up the symbol
+   * @returns The symbol that matches the symbol in the scan results
+   *
+   * Match the symbol in the scan results with the symbol in the original document. If the exact symbol is not found, it will try to find the symbol without 0 overrides as fallback
+   */
+  public matchSymbol (symbol: BitbakeSymbolInformation, lookUpSymbolList: BitbakeSymbolInformation[]): BitbakeSymbolInformation | undefined {
+    return lookUpSymbolList.find((scanResultDocSymbol) => {
+      return this.symbolsAreTheSame(scanResultDocSymbol, symbol)
+    }) ??
+    lookUpSymbolList.find((scanResultDocSymbol) => {
+      return scanResultDocSymbol.name === symbol.name && scanResultDocSymbol.overrides.length === 0
+    })
   }
 
   // overload
