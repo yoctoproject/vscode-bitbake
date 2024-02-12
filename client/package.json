@@ -249,6 +249,21 @@
         }
       },
       {
+        "name": "bitbake-non-existent-uri",
+        "source": "bitbake",
+        "owner": "bitbake",
+        "fileLocation": [
+          "autoDetect",
+          "${cwd}"
+        ],
+        "pattern": {
+          "regexp": "(ERROR): (.+?): (.*non-existent-uri: file could not be found)$",
+          "file": 2,
+          "severity": 1,
+          "message": 3
+        }
+      },
+      {
         "name": "bitbake-compilation-python-function",
         "source": "bitbake",
         "owner": "bitbake",
