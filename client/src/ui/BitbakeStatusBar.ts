@@ -16,6 +16,7 @@ export class BitbakeStatusBar {
   readonly statusBarItem: vscode.StatusBarItem
   private scanInProgress = false
   private parsingInProgress = false
+  private recipeScanInProgress = false
   private commandInProgress: string | undefined
   private scanExitCode = 0
 
@@ -45,24 +46,40 @@ export class BitbakeStatusBar {
     })
 
     vscode.tasks.onDidStartTask((e: vscode.TaskStartEvent) => {
-      const taskName = e.execution.task.name
-      if ((taskName === 'Bitbake: Parse' || taskName === BitbakeRecipeScanner.taskName) && e.execution.task.source === 'bitbake') {
-        this.parsingInProgress = true
-        this.updateStatusBar()
+      if (e.execution.task.source !== 'bitbake') {
+        return
       }
+
+      const taskName = e.execution.task.name
+
+      if (taskName === 'Bitbake: Parse') {
+        this.parsingInProgress = true
+      } else if (taskName === BitbakeRecipeScanner.taskName) {
+        this.recipeScanInProgress = true
+      }
+
+      this.updateStatusBar()
     })
     vscode.tasks.onDidEndTask((e: vscode.TaskEndEvent) => {
-      const taskName = e.execution.task.name
-      if ((taskName === 'Bitbake: Parse' || taskName === BitbakeRecipeScanner.taskName) && e.execution.task.source === 'bitbake') {
-        this.parsingInProgress = false
-        this.scanExitCode = (e.execution.task.execution as BitbakeCustomExecution).pty?.lastExitCode ?? -1
-        this.updateStatusBar()
+      if (e.execution.task.source !== 'bitbake') {
+        return
       }
+
+      const taskName = e.execution.task.name
+      this.scanExitCode = (e.execution.task.execution as BitbakeCustomExecution).pty?.lastExitCode ?? -1
+
+      if (taskName === 'Bitbake: Parse') {
+        this.parsingInProgress = false
+      } else if (taskName === BitbakeRecipeScanner.taskName) {
+        this.recipeScanInProgress = false
+      }
+
+      this.updateStatusBar()
     })
   }
 
   updateStatusBar (): void {
-    if (this.scanInProgress || this.parsingInProgress) {
+    if (this.scanInProgress || this.parsingInProgress || this.recipeScanInProgress) {
       if (this.scanInProgress) {
         this.statusBarItem.text = '$(loading~spin) BitBake: Scanning...'
         this.statusBarItem.tooltip = 'BitBake: Scanning...'
