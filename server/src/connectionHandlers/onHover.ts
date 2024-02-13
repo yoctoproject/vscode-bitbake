@@ -53,8 +53,8 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 
     const lastScanResult = analyzer.getLastScanResult(textDocument.uri)
     if (lastScanResult !== undefined && exactSymbol !== undefined) {
-      const resolvedSymbol = analyzer.resolveSymbol(exactSymbol, lastScanResult)
-      const foundSymbol = analyzer.matchSymbol(resolvedSymbol, lastScanResult)
+      const resolvedSymbol = analyzer.resolveSymbol(exactSymbol, lastScanResult.symbols)
+      const foundSymbol = analyzer.matchSymbol(resolvedSymbol, lastScanResult.symbols)
       if (foundSymbol?.finalValue !== undefined) {
         hoverValue += `**Final Value**\n___\n\t'${foundSymbol.finalValue}'`
       }

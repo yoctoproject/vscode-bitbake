@@ -42,7 +42,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     logger.debug(`[onDefinition] Found directive: ${directiveStatementKeyword}`)
     let resolvedDirectivePath = directivePath
     if (lastScanResult !== undefined) {
-      resolvedDirectivePath = analyzer.resolveSymbol(directivePath, lastScanResult)
+      resolvedDirectivePath = analyzer.resolveSymbol(directivePath, lastScanResult.symbols)
     }
     definitions.push(...getDefinitionForDirectives(directiveStatementKeyword, resolvedDirectivePath))
     logger.debug(`[onDefinition] definition item: ${JSON.stringify(definitions)}`)
@@ -78,7 +78,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
       const exactSymbol = analyzer.findExactSymbolAtPoint(documentUri, position, word)
 
       if (lastScanResult !== undefined && exactSymbol !== undefined) {
-        const foundSymbol = analyzer.matchSymbol(exactSymbol, lastScanResult)
+        const foundSymbol = analyzer.matchSymbol(exactSymbol, lastScanResult.symbols)
         if (foundSymbol !== undefined) {
           const modificationHistory = analyzer.extractModificationHistoryFromComments(foundSymbol)
           modificationHistory.forEach((location) => {
