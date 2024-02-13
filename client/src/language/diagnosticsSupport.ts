@@ -9,6 +9,7 @@ import { getOriginalDocRange } from './utils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
+import path from 'path'
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -16,7 +17,8 @@ const diagnosticCollections = {
 }
 
 export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
-  if (!uri.path.endsWith('.py') && !uri.path.endsWith('.sh')) {
+  const embeddedLanguageType = getEmbeddedLanguageType(uri)
+  if (embeddedLanguageType === undefined) {
     return
   }
   const originalUri = embeddedLanguageDocsManager.getOriginalUri(uri)
@@ -32,21 +34,12 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     // The whole thing would create lot of flickering in the diagnostics, and make the extension slow.
     return
   }
-  await Promise.all([
-    setEmbeddedLanguageDocDiagnostics(originalTextDocument, 'bash'),
-    setEmbeddedLanguageDocDiagnostics(originalTextDocument, 'python')
-  ])
-}
 
-const setEmbeddedLanguageDocDiagnostics = async (
-  originalTextDocument: vscode.TextDocument,
-  embeddedLanguageType: EmbeddedLanguageType
-): Promise<void> => {
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(
     originalTextDocument.uri,
     embeddedLanguageType
   )
-  if (embeddedLanguageDocInfos?.uri === undefined) {
+  if (embeddedLanguageDocInfos === undefined) {
     return
   }
   const embeddedLanguageDoc = await vscode.workspace.openTextDocument(embeddedLanguageDocInfos.uri.fsPath)
@@ -76,6 +69,17 @@ const setEmbeddedLanguageDocDiagnostics = async (
   })
   const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
   diagnosticCollection.set(originalTextDocument.uri, cleanDiagnostics)
+}
+
+const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefined => {
+  const fileExtension = path.extname(uri.fsPath)
+  if (fileExtension === '.py') {
+    return 'python'
+  }
+  if (fileExtension === '.sh') {
+    return 'bash'
+  }
+  return undefined
 }
 
 const checkIsIgnoredShellcheckSc2154 = (diagnostic: vscode.Diagnostic): boolean => {
