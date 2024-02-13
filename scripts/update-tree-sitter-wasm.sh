@@ -6,10 +6,10 @@
 set -euox pipefail
 
 cd client
-npm install -D tree-sitter-cli https://github.com/amaanq/tree-sitter-bitbake
+npm install -D tree-sitter-cli https://github.com/tree-sitter-grammars/tree-sitter-bitbake
 npx tree-sitter build-wasm node_modules/tree-sitter-bitbake
 
-curl 'https://api.github.com/repos/amaanq/tree-sitter-bitbake/commits/master' | jq .commit.url > parser.info
+curl 'https://api.github.com/repos/tree-sitter-grammars/tree-sitter-bitbake/commits/master' | jq .commit.url > parser.info
 echo "tree-sitter-cli $(cat package.json | jq '.devDependencies["tree-sitter-cli"]')" >> parser.info
 
 npm uninstall tree-sitter-cli tree-sitter-bitbake
