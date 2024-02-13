@@ -25,7 +25,7 @@ import * as TreeSitterUtils from './utils'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { logger } from '../lib/src/utils/OutputLogger'
 import fs from 'fs'
-import path from 'path'
+import path, { type ParsedPath } from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
@@ -40,10 +40,15 @@ export interface AnalyzedDocument {
   extraSymbols?: GlobalDeclarations[] // symbols from the include files
 }
 
+interface LastScanResult {
+  symbols: BitbakeSymbolInformation[]
+  includeHistory: ParsedPath[]
+}
+
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
-  private readonly uriToLastScanResult: Record<string, BitbakeSymbolInformation[]> = {} // Store the results of the last scan for each recipe
+  private readonly uriToLastScanResult: Record<string, LastScanResult> = {} // Store the results of the last scan for each recipe
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -53,7 +58,7 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]
   }
 
-  public getLastScanResult (uri: string): BitbakeSymbolInformation[] | undefined {
+  public getLastScanResult (uri: string): LastScanResult | undefined {
     return this.uriToLastScanResult[uri]
   }
 
@@ -876,7 +881,32 @@ export default class Analyzer {
       }
     })
 
-    this.uriToLastScanResult[originalDocUri] = scannedResultSymbolInfo
+    this.uriToLastScanResult[originalDocUri] = {
+      symbols: scannedResultSymbolInfo,
+      includeHistory: this.extractIncludeHistory(scanResult, index)
+    }
+  }
+
+  private extractIncludeHistory (scanResult: string, includeHistoryIndex: number): ParsedPath[] {
+    const result: string[] = []
+    const lines = scanResult.split('\n')
+
+    /**
+     * # INCLUDE HISTORY
+     * #
+     * # ...include paths we want
+     * #
+     * # ...operation history for variables
+     */
+    for (let i = includeHistoryIndex + 2; i < lines.length; i++) {
+      if (lines[i] === '#') {
+        break
+      }
+
+      result.push(lines[i])
+    }
+
+    return result.map((line) => path.parse(line.slice(1).trim()))
   }
 
   /**
