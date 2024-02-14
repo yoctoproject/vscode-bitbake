@@ -87,7 +87,7 @@ export default class Analyzer {
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
 
-    const variableExpansionSymbols = this.getVariableExpansionSymbols({ tree, uri })
+    const variableExpansionSymbols = this.getVariableExpansionSymbolsFromTree({ tree, uri })
 
     // eslint-disable-next-line prefer-const
     let extraSymbols: GlobalDeclarations[] = []
@@ -116,7 +116,7 @@ export default class Analyzer {
     return diagnostics
   }
 
-  public getVariableExpansionSymbols ({ tree, uri }: { tree: Tree, uri: string }): BitbakeSymbolInformation[] {
+  public getVariableExpansionSymbolsFromTree ({ tree, uri }: { tree: Tree, uri: string }): BitbakeSymbolInformation[] {
     const variableExpansionSymbols: BitbakeSymbolInformation[] = []
 
     TreeSitterUtils.forEach(tree.rootNode, (node) => {
