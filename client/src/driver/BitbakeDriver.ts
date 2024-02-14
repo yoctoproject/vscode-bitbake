@@ -4,7 +4,6 @@
  * ------------------------------------------------------------------------------------------ */
 
 import childProcess from 'child_process'
-import fs from 'fs'
 import EventEmitter from 'events'
 
 import { logger } from '../lib/src/utils/OutputLogger'
@@ -13,7 +12,7 @@ import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution } from '../lib/src/utils/ProcessUtils'
-import { bitbakeESDKMode } from './BitbakeESDK'
+import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
@@ -101,30 +100,23 @@ export class BitbakeDriver {
   }
 
   async checkBitbakeSettingsSanity (): Promise<boolean> {
-    const bitbakeFolder = this.bitbakeSettings.pathToBitbakeFolder
-    const bitbakeBinPath = bitbakeFolder + '/bin/bitbake'
-
-    if (!fs.existsSync(bitbakeBinPath) && !bitbakeESDKMode) {
-      clientNotificationManager.showBitbakeSettingsError("Bitbake binary doesn't exist: " + bitbakeBinPath)
-      return false
-    }
-
-    const pathToEnvScript = this.bitbakeSettings.pathToEnvScript
-    if (this.bitbakeSettings.commandWrapper === undefined && pathToEnvScript !== undefined && !fs.existsSync(pathToEnvScript)) {
-      clientNotificationManager.showBitbakeSettingsError("Bitbake environment script doesn't exist: " + pathToEnvScript)
-      return false
-    }
-
-    // We could test for bitbake, but devtool exists also in the eSDK
-    const command = 'which devtool'
+    // We could test for devtool and bitbake to know if we are in an eSDK or not
+    const command = 'which devtool bitbake || true'
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
     const ret = await finishProcessExecution(process, async () => { await this.killBitbake() })
-    if (ret.status !== 0) {
-      const errorMsg = `Command "${command}" returned ${ret.status}.\n See Bitbake Terminal for command output.`
-      // The BitbakeTerminal focuses on it's own on error
-      clientNotificationManager.showBitbakeSettingsError(errorMsg)
+    const outLines = ret.stdout.toString().split('\n')
+
+    if (outLines.filter((line) => /devtool$/.test(line)).length === 0) {
+      clientNotificationManager.showBitbakeSettingsError('devtool not found in $PATH\nSee Bitbake Terminal for command output.')
       return false
     }
+
+    if (outLines.filter((line) => /bitbake$/.test(line)).length === 0) {
+      setBitbakeESDKMode(true)
+    } else {
+      setBitbakeESDKMode(false)
+    }
+    logger.info(`Bitbake settings are sane, eSDK mode: ${bitbakeESDKMode}`)
 
     return true
   }
