@@ -9,6 +9,7 @@ import { BitbakeWorkspace } from '../../../ui/BitbakeWorkspace'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { type BitbakeScanResult } from '../../../lib/src/types/BitbakeScanResult'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import { mockVscodeEvents } from '../../utils/vscodeMock'
 
 jest.mock('vscode')
 
@@ -71,6 +72,7 @@ describe('BitbakeDriver Recipes View', () => {
         expect(filesItems?.length).toStrictEqual(2)
         done()
       })
+    mockVscodeEvents()
 
     const bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
     bitbakeRecipesView.registerView(contextMock)

@@ -8,10 +8,15 @@ import { type DevtoolWorkspaceTreeItem, DevtoolWorkspacesView } from '../../../u
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { type BitbakeScanResult } from '../../../lib/src/types/BitbakeScanResult'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import { mockVscodeEvents } from '../../utils/vscodeMock'
 
 jest.mock('vscode')
 
 describe('Devtool Worskapces View', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   it('should list devtool workspaces', (done) => {
     const contextMock: vscode.ExtensionContext = {
       subscriptions: {
@@ -55,6 +60,7 @@ describe('Devtool Worskapces View', () => {
 
         done()
       })
+    mockVscodeEvents()
 
     const devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
     bitBakeProjectScanner.onChange.emit('scanReady', scanResult)

@@ -97,10 +97,9 @@ const languages = {
   const TestRunRequest = jest.fn();
   const ThemeColor = jest.fn();
 
-  const EventEmitter = jest.fn().mockImplementation(() => {
-    return {
-      fire: jest.fn(),
-    };
+  const EventEmitter = jest.fn(() => {
+    fire: jest.fn()
+    event: jest.fn()
   });
 
   const QuickPickItemKind = {

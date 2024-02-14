@@ -7,6 +7,7 @@ import path from 'path'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { BITBAKE_TIMEOUT } from '../../../lib/src/utils/ProcessUtils'
+import { mockVscodeEvents } from '../../utils/vscodeMock'
 
 let bitBakeProjectScanner: BitBakeProjectScanner
 
@@ -32,6 +33,7 @@ describe('BitBakeProjectScanner', () => {
     bitBakeProjectScanner.onChange.on(('scanReady'), () => {
       DoneCallback()
     })
+    mockVscodeEvents()
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
       child.on('close', () => {
         void bitBakeProjectScanner.rescanProject()
@@ -49,6 +51,7 @@ describe('BitBakeProjectScanner', () => {
     }, (error) => {
       throw error
     })
+    jest.clearAllMocks()
   }, BITBAKE_TIMEOUT)
 
   it('can get a list of layers', async () => {
