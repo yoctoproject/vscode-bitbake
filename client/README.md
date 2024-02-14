@@ -202,6 +202,16 @@ You can open an interactive BitBake terminal through the command `Bitbake: Open 
 
 ![BitBake terminal profile](doc/bitbake-terminal-profile.png)
 
+### Recipe scan
+This extension can run bitbake commands to parse recipes through context menu, command palette, or whenever a certain managed file is saved.
+
+Upon saving `.bb`, `.bbappend` and `.inc` files, it runs `bitbake -e` against the corresponding recipe while `bitbake -p` is run for other saved files. The command `Bitbake: Scan recipe` triggers `bitbake -e`.
+
+You may toggle this behaviour through the setting `bitbake.parseOnSave`.
+
+The extension will receive additional information about the recipe from the `bitbake -e` command and provide more advanced features such as `Go to definition` for symbols with variable expansion (e.g., `require recipe_${PN}.bb`) and showing the final values of variables (values in the command output) on hover.
+
+
 ## Troubleshooting
 See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
 
