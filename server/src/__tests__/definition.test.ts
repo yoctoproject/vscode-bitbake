@@ -499,4 +499,49 @@ describe('on definition', () => {
       ])
     )
   })
+
+  it('provides go to definition for overrides', async () => {
+    const parsedConfFile = path.parse('/home/poky/layer/poky.conf')
+
+    bitBakeProjectScannerClient.bitbakeScanResult._confFiles = [
+      {
+        name: parsedConfFile.name,
+        path: parsedConfFile,
+        extraInfo: 'layer: core'
+      }
+    ]
+
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const shouldWork = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 32,
+        character: 5
+      }
+    })
+
+    expect(shouldWork).toEqual(
+      expect.arrayContaining([
+        {
+          uri: 'file://' + parsedConfFile.dir + '/' + parsedConfFile.base,
+          range: {
+            start: {
+              line: 0,
+              character: 0
+            },
+            end: {
+              line: 0,
+              character: 0
+            }
+          }
+        }
+      ])
+    )
+  })
 })
