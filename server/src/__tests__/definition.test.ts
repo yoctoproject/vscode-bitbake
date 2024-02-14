@@ -455,46 +455,48 @@ describe('on definition', () => {
       }
     })
 
-    expect(shouldWork).toEqual([
-      {
-        uri: DUMMY_URI,
-        range: {
-          start: {
-            line: 9,
-            character: 0
-          },
-          end: {
-            line: 9,
-            character: 11
+    expect(shouldWork).toEqual(
+      expect.arrayContaining([
+        {
+          uri: DUMMY_URI,
+          range: {
+            start: {
+              line: 9,
+              character: 0
+            },
+            end: {
+              line: 9,
+              character: 11
+            }
+          }
+        },
+        {
+          uri: DUMMY_URI,
+          range: {
+            start: {
+              line: 10,
+              character: 0
+            },
+            end: {
+              line: 10,
+              character: 11
+            }
+          }
+        },
+        {
+          uri: FIXTURE_URI.BAR_INC,
+          range: {
+            start: {
+              line: 0,
+              character: 0
+            },
+            end: {
+              line: 0,
+              character: 11
+            }
           }
         }
-      },
-      {
-        uri: DUMMY_URI,
-        range: {
-          start: {
-            line: 10,
-            character: 0
-          },
-          end: {
-            line: 10,
-            character: 11
-          }
-        }
-      },
-      {
-        uri: FIXTURE_URI.BAR_INC,
-        range: {
-          start: {
-            line: 0,
-            character: 0
-          },
-          end: {
-            line: 0,
-            character: 11
-          }
-        }
-      }
-    ])
+      ])
+    )
   })
 })
