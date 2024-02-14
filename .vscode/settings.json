@@ -5,7 +5,8 @@
 	},
 	"search.exclude": {
 		"out": true, // set this to false to include "out" folder in search results
-		"tsconfig.tsbuildinfo": true
+		"tsconfig.tsbuildinfo": true,
+		"integration-tests/project-folder": true
 	},
 	"typescript.tsdk": "./node_modules/typescript/lib",
 	"typescript.tsc.autoDetect": "off",
