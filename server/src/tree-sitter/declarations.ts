@@ -20,7 +20,7 @@ const TREE_SITTER_TYPE_TO_LSP_KIND: Record<string, LSP.SymbolKind | undefined> =
 }
 
 export interface BitbakeSymbolInformation extends LSP.SymbolInformation {
-  overrides: Array<{ variableName: string, value?: string } | string> // Store the literal override values or the variable names. e.g. VAR:${MY_OVERRIDE}
+  overrides: string[] // Store the literal text of all overrides including the ones that contain ${} which are resolved when needed.
   finalValue?: string // Only for variables extracted from the scan results
   commentsAbove: string[]
 }
@@ -105,16 +105,19 @@ export function nodeToSymbolInformation ({
 
   /**
    * Example:
-   * FOO:override1:override2 = "foo"
+   * FOO:override1:${PN}:${PN}-foo = "foo"
    *
    * Tree node:
    *    (variable_assignment [0, 0] - [0, 31]
           (identifier [0, 0] - [0, 3])
       ->  (override [0, 3] - [0, 23]
         ->  (identifier [0, 4] - [0, 13])
-        ->  (identifier [0, 14] - [0, 23]))
-            (variable_expansion [0, 24] - [0, 30]
-          ->  (identifier [0, 26] - [0, 29])))
+        ->  (variable_expansion [0, 14] - [0, 19]
+              (identifier [0, 16] - [0, 18]))
+        ->  (concatenation [0, 20] - [0, 29]
+              (variable_expansion [0, 20] - [0, 25]
+                (identifier [0, 22] - [0, 24]))
+              (identifier [0, 25] - [0, 29])))
    *
    * Note that the append, prepend and remove operators don't have identifiers in the tree
    */
@@ -122,12 +125,11 @@ export function nodeToSymbolInformation ({
   const overrideChildNode = node.children.find((child) => child.type === 'override')
   if (overrideChildNode !== undefined) {
     overrideChildNode.children.forEach((child) => {
-      if (child.type === 'identifier') {
-        overrides.push(child.text)
+      const validTypes = ['identifier', 'variable_expansion', 'concatenation']
+      if (!validTypes.includes(child.type)) {
+        return
       }
-      if (child.type === 'variable_expansion' && child.firstNamedChild?.type === 'identifier') {
-        overrides.push({ variableName: child.firstNamedChild.text })
-      }
+      overrides.push(child.text)
     })
   }
 
