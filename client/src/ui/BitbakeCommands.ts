@@ -91,7 +91,13 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
     parsingPending = true
     return
   }
+
+  // Temporarily disable task.saveBeforeRun
+  // This request happens on bitbake document save. We don't want to save all files when any bitbake file is saved.
+  const saveBeforeRun = await vscode.workspace.getConfiguration('task').get('saveBeforeRun')
+  await vscode.workspace.getConfiguration('task').update('saveBeforeRun', 'never', undefined, true)
   await runBitbakeTask(parseAllRecipesTask, taskProvider)
+  await vscode.workspace.getConfiguration('task').update('saveBeforeRun', saveBeforeRun, undefined, true)
 }
 
 async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
@@ -140,7 +146,12 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
 
   bitbakeSanity = true
 
+  // Temporarily disable task.saveBeforeRun
+  // This request happens on bitbake document save. We don't want to save all files when any bitbake file is saved.
+  const saveBeforeRun = await vscode.workspace.getConfiguration('task').get('saveBeforeRun')
+  await vscode.workspace.getConfiguration('task').update('saveBeforeRun', 'never', undefined, true)
   await bitbakeRecipeScanner.scan(chosenRecipe, taskProvider, uri)
+  await vscode.workspace.getConfiguration('task').update('saveBeforeRun', saveBeforeRun, undefined, true)
 }
 
 async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any, task?: any): Promise<void> {
