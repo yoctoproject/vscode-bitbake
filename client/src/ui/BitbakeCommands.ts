@@ -146,6 +146,10 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
 
   bitbakeSanity = true
 
+  if (bitbakeESDKMode) {
+    return
+  }
+
   // Temporarily disable task.saveBeforeRun
   // This request happens on bitbake document save. We don't want to save all files when any bitbake file is saved.
   const saveBeforeRun = await vscode.workspace.getConfiguration('task').get('saveBeforeRun')

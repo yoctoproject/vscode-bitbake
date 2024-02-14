@@ -98,6 +98,7 @@
         "bitbake.eSDKMode": {
           "type": "boolean",
           "default": false,
+          "deprecationMessage": "eSDK mode is now automatically detected. This setting is deprecated and will be removed in a future release.",
           "markdownDescription": "Activate eSDK only mode. This tells the extension that devtool is available but not bitbake, which will disable unavailable features. You should point the `bitbake.pathToEnvScript` setting to the environment script of the eSDK."
         },
         "bitbake.pathToEnvScript": {
