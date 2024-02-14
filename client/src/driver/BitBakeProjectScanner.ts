@@ -95,7 +95,7 @@ export class BitBakeProjectScanner {
       this.onChange.emit('startScan')
 
       try {
-        if (!bitbakeESDKMode) {
+        if (!bitbakeESDKMode) { // Has been set by sanity checking
           await this.scanAvailableLayers()
           this.scanForClasses()
           this.scanForIncludeFiles()
