@@ -17,17 +17,17 @@ const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<child_process.ChildProcess> {
   const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
   const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), bitbakeDriver, terminalName, script, isBackground)
+  return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
 export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<child_process.ChildProcess> {
   const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(bitbakeDriver.spawnBitbakeProcess(command), bitbakeDriver, terminalName, script, isBackground)
+  return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
-async function runBitbakeTerminalScript (process: Promise<child_process.ChildProcess>, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<child_process.ChildProcess> {
+async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<child_process.ChildProcess> {
   let terminal: BitbakeTerminal | undefined
   for (const t of bitbakeTerminals) {
     if (!t.pty.isBusy()) {
@@ -41,11 +41,15 @@ async function runBitbakeTerminalScript (process: Promise<child_process.ChildPro
     // We want to open another terminal right away to show the user that the command is queued
     // But the process will have to wait for the previous one to finish (await process)
     terminal = new BitbakeTerminal(terminalName, bitbakeDriver)
+    // Wait for the terminal to be ready to receive input before spawning the process
+    // Otherwise it might miss the first input, or the whole process!
+    await new Promise(resolve => terminal?.pty.onDidOpen.event(resolve))
   }
 
   if (!isBackground) {
     terminal.terminal.show()
   }
+  const process = bitbakeDriver.spawnBitbakeProcess(command)
   await terminal.pty.runProcess(process, bitbakeScript, terminalName)
   return await process
 }
@@ -57,6 +61,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   onDidWrite = this.writeEmitter.event
   onDidClose = this.closeEmitter.event
   onDidChangeName = this.changeNameEmitter.event
+  readonly onDidOpen = new vscode.EventEmitter<void>()
   lastExitCode: number = 0
   outputDataString: string = ''
 
@@ -70,6 +75,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
 
   open (): void {
     if (!this.isTaskTerminal()) { bitbakeTerminals.push(this.parentTerminal as BitbakeTerminal) }
+    this.onDidOpen.fire()
   }
 
   async close (): Promise<void> {
