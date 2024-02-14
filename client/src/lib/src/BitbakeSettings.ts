@@ -3,8 +3,6 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import path from 'path'
-
 /// Defines the context of a bitbake workspace with all information to call bitbake
 export interface BitbakeSettings {
   pathToBitbakeFolder: string
@@ -31,27 +29,27 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
     ...Object.fromEntries(Object.entries(process.env).map(([key, value]) => [`env:${key}`, value]))
   }
 
-  const resolvedSettings = {
-    pathToBitbakeFolder: resolveSettingPath(settings.pathToBitbakeFolder, variables) ?? workspaceFolder,
-    pathToBuildFolder: resolveSettingPath(settings.pathToBuildFolder, variables),
-    pathToEnvScript: resolveSettingPath(settings.pathToEnvScript, variables),
-    commandWrapper: resolveSettingString(settings.commandWrapper, variables),
-    workingDirectory: resolveSettingPath(settings.workingDirectory, variables) ?? workspaceFolder,
-    shellEnv: resolveStringDict(toStringDict(settings.shellEnv), variables),
-    sdkImage: resolveSettingString(settings.sdkImage, variables),
-    sshTarget: resolveSettingString(settings.sshTarget, variables)
+  const expandedSettings = {
+    pathToBitbakeFolder: expandSettingPath(settings.pathToBitbakeFolder, variables) ?? workspaceFolder,
+    pathToBuildFolder: expandSettingPath(settings.pathToBuildFolder, variables),
+    pathToEnvScript: expandSettingPath(settings.pathToEnvScript, variables),
+    commandWrapper: expandSettingString(settings.commandWrapper, variables),
+    workingDirectory: expandSettingPath(settings.workingDirectory, variables) ?? workspaceFolder,
+    shellEnv: expandStringDict(toStringDict(settings.shellEnv), variables),
+    sdkImage: expandSettingString(settings.sdkImage, variables),
+    sshTarget: expandSettingString(settings.sshTarget, variables)
   }
-  return resolvedSettings
+  return expandedSettings
 }
 
-export function resolveSettingPath (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
+export function expandSettingPath (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
   if (configurationPath === '' || configurationPath === undefined) {
     return undefined
   }
-  return path.resolve(resolveSettingString(configurationPath, variables) as string)
+  return expandSettingString(configurationPath, variables) as string
 }
 
-function resolveSettingString (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
+function expandSettingString (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
   if (configurationPath === '' || configurationPath === undefined) {
     return undefined
   }
@@ -67,8 +65,8 @@ function substituteVariables (configuration: string, variables: NodeJS.Dict<stri
   })
 }
 
-function resolveStringDict (dict: NodeJS.Dict<string> | undefined, variables: NodeJS.Dict<string>): NodeJS.Dict<string> | undefined {
-  return (dict != null) ? Object.fromEntries(Object.entries(dict).map(([key, value]) => [key, resolveSettingString(value, variables) as string])) : undefined
+function expandStringDict (dict: NodeJS.Dict<string> | undefined, variables: NodeJS.Dict<string>): NodeJS.Dict<string> | undefined {
+  return (dict != null) ? Object.fromEntries(Object.entries(dict).map(([key, value]) => [key, expandSettingString(value, variables) as string])) : undefined
 }
 
 /// Santitize a string to be passed in a shell command (remove special characters)
