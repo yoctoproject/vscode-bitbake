@@ -29,3 +29,5 @@ RDEPENDS:${PN} += 'some-package some-package-2.0'
 PACKAGECONFIG[some-package3] = "--enable-some-package,--disable-some-package,some-package+1"
 
 require inc/${PN}.inc
+# if there is a poky.conf, go-to-definition should be provided for override 'poky'
+VAR:poky = '123'
