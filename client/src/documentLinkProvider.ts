@@ -10,6 +10,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import path from 'path'
 import { extractRecipeName } from './lib/src/utils/files'
 import find from 'find'
+import fs from 'fs'
 
 export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider {
   private readonly client: LanguageClient
@@ -57,8 +58,8 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     }
     let foundDirs: string[] = []
     try {
-      foundDirs = foundDirs.concat(find.dirSync(pnDir))
-      foundDirs = foundDirs.concat(find.dirSync(filesDir))
+      if (fs.existsSync(pnDir)) foundDirs = foundDirs.concat(find.dirSync(pnDir))
+      if (fs.existsSync(filesDir)) foundDirs = foundDirs.concat(find.dirSync(filesDir))
     } catch (error) {
       logger.error(`An error occurred when finding directories within: ${pnDir}. ${JSON.stringify(error)}`)
     }
