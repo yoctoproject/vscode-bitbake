@@ -612,7 +612,7 @@ describe('on hover', () => {
       document: FIXTURE_DOCUMENT.CORRECT
     })
 
-    const scanResults = '#INCLUDE HISTORY\n# Some scan results here\nFINAL_VALUE = \'this is the final value for FINAL_VALUE\'\nFINAL_VALUE:o1 = \'this is the final value for FINAL_VALUE with override o1\'\n'
+    const scanResults = '#INCLUDE HISTORY\n# Some scan results here\nFINAL_VALUE = \'this is the final value for FINAL_VALUE\'\nFINAL_VALUE:o1 = \'this is the final value for FINAL_VALUE with override o1\'\nFINAL_VALUE:o1:pn:pn-foo = \'this is the final value for FINAL_VALUE with override containing variable expansion\'\nPN= \'pn\'\n'
 
     analyzer.processRecipeScanResults(scanResults, DUMMY_URI, undefined)
 
@@ -636,6 +636,16 @@ describe('on hover', () => {
       }
     })
 
+    const shouldShow3 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 14,
+        character: 1
+      }
+    })
+
     expect(shouldShow1).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
@@ -648,6 +658,14 @@ describe('on hover', () => {
       expect.objectContaining({
         contents: expect.objectContaining({
           value: expect.stringContaining('**Final Value**\n___\n\t\'this is the final value for FINAL_VALUE with override o1\'')
+        })
+      })
+    )
+
+    expect(shouldShow3).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('**Final Value**\n___\n\t\'this is the final value for FINAL_VALUE with override containing variable expansion\'')
         })
       })
     )
