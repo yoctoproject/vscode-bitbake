@@ -40,8 +40,7 @@ describe('Bitbake ESDK Test Suite', () => {
 
     expect(saveJsonMock).toHaveBeenCalledWith(vscodeSettingsPath, expect.objectContaining({
       'bitbake.pathToBitbakeFolder': 'newPath',
-      'bitbake.pathToEnvScript': 'should be created',
-      'bitbake.eSDKMode': true
+      'bitbake.pathToEnvScript': 'should be created'
     }))
   })
 

@@ -42,8 +42,6 @@ export function copyBitbakeSettings (workspace: string, bitbakeSettings: Bitbake
   setJsonProperty(vscodeSettings, 'bitbake.workingDirectory', bitbakeSettings.workingDirectory)
   setJsonProperty(vscodeSettings, 'bitbake.commandWrapper', bitbakeSettings.commandWrapper)
   setJsonProperty(vscodeSettings, 'bitbake.shellEnv', bitbakeSettings.shellEnv ?? {})
-  // Disables features like the bitbake scan which is slow and not useful
-  setJsonProperty(vscodeSettings, 'bitbake.eSDKMode', true)
   saveJsonFile(vscodeSettingsPath, vscodeSettings)
   logger.info(`Generated ${vscodeSettingsPath}`)
   logger.debug(`Bitbake settings: ${JSON.stringify(vscodeSettings)}`)

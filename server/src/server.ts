@@ -36,7 +36,6 @@ import { extractRecipeName } from './lib/src/utils/files'
 const connection: Connection = createConnection(ProposedFeatures.all)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let parseOnSave = true
-let eSDKMode = false
 let workspaceFolder: string | undefined
 let pokyFolder: string | undefined
 
@@ -95,7 +94,6 @@ connection.onShutdown(() => {
 connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake.loggingLevel
   parseOnSave = change.settings.bitbake.parseOnSave
-  eSDKMode = change.settings.bitbake.eSDKMode
   const bitbakeFolder = resolveSettingPath(change.settings.bitbake.pathToBitbakeFolder, { workspaceFolder })
   if (bitbakeFolder !== undefined) {
     pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
@@ -167,7 +165,7 @@ documents.onDidChangeContent(analyzeDocument)
 
 documents.onDidSave(async (event) => {
   logger.info(`[onDidSave] Document saved: ${event.document.uri}`)
-  if (parseOnSave && !eSDKMode) {
+  if (parseOnSave) {
     const exts = ['.bb', '.bbappend', '.inc']
     const uri = event.document.uri
 
