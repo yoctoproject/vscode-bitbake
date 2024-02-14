@@ -120,7 +120,7 @@ export default class Analyzer {
 
       if (isNonEmptyVariableExpansion) {
         const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isVariableExpansion: true })
-        symbol !== null && variableExpansionSymbols.push(symbol)
+        symbol !== null && variableExpansionSymbols.find(s => s.name === symbol.name) === undefined && variableExpansionSymbols.push(symbol)
       }
 
       return followChildren

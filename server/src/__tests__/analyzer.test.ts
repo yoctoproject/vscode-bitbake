@@ -430,7 +430,13 @@ describe('getVariableExpansionSymbols', () => {
 
     const symbols = analyzer.getVariableExpansionSymbols({ tree, uri })
 
-    expect(symbols.length).toEqual(2)
+    expect(symbols).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          name: 'DESCRIPTION'
+        })
+      ])
+    )
   })
 })
 
