@@ -906,56 +906,35 @@ export default class Analyzer {
    * Resolve the symbol if it contains variable expansion syntax in its overrides
    */
   public resolveSymbol (symbol: BitbakeSymbolInformation | string, lookUpSymbolList: BitbakeSymbolInformation[]): BitbakeSymbolInformation | string {
-    const variableToResolve: string[] = []
-
     if (typeof symbol !== 'string') {
-      const toResolve = symbol.overrides.reduce<string[]>((acc, override) => {
-        if (typeof override !== 'string') {
-          acc.push(override.variableName)
-        }
-        return acc
-      }, [])
-
-      variableToResolve.push(...toResolve)
-
-      const resolvedVariable: string[] = []
-      variableToResolve.forEach((override) => {
-        const value = lookUpSymbolList.find((symbol) => symbol.name === override)?.finalValue
-        value !== undefined && resolvedVariable.push(value)
+      const resolvedOverrides = symbol.overrides.map((override) => {
+        return this.resolveVariableExpansionValues(override, lookUpSymbolList)
       })
 
-      if (resolvedVariable.length > 0) {
-        const resolvedSymbol: BitbakeSymbolInformation = {
-          ...symbol,
-          overrides: [...symbol.overrides.filter(o => typeof o === 'string'), ...resolvedVariable]
-        }
-        return resolvedSymbol
+      const resolvedSymbol: BitbakeSymbolInformation = {
+        ...symbol,
+        overrides: [...resolvedOverrides]
       }
+
+      return resolvedSymbol
     } else {
-      const regex = /\$\{(?<variable>.*)\}/g
-      for (const match of symbol.matchAll(regex)) {
-        const variable = match.groups?.variable
-        if (variable !== undefined) {
-          variableToResolve.push(variable)
-        }
-      }
+      return this.resolveVariableExpansionValues(symbol, lookUpSymbolList)
+    }
+  }
 
-      const resolvedVariables: Array<{ variable: string, value: string }> = []
-      variableToResolve.forEach((variable) => {
+  private resolveVariableExpansionValues (symbol: string, lookUpSymbolList: BitbakeSymbolInformation[]): string {
+    const regex = /\$\{(?<variable>.*)\}/g
+    let resolvedSymbol = symbol
+
+    for (const match of symbol.matchAll(regex)) {
+      const variable = match.groups?.variable
+      if (variable !== undefined) {
         const value = lookUpSymbolList.find((symbol) => symbol.name === variable)?.finalValue
-        value !== undefined && resolvedVariables.push({ variable, value: value.replace('+git', '') }) // PV usually has +git appended to it
-      })
-
-      if (resolvedVariables.length > 0) {
-        let resolvedSymbol = symbol
-        resolvedVariables.forEach((v) => {
-          resolvedSymbol = resolvedSymbol.replace('${' + v.variable + '}', v.value)
-        })
-        return resolvedSymbol
+        value !== undefined && (resolvedSymbol = resolvedSymbol.replace(new RegExp('\\$\\{' + variable + '\\}', 'g'), value.endsWith('+git') ? value.replace('+git', '') : value)) // PV usually has +git appended to it
       }
     }
 
-    return symbol
+    return resolvedSymbol
   }
 
   public extractModificationHistoryFromComments (symbol: BitbakeSymbolInformation): Location[] {
