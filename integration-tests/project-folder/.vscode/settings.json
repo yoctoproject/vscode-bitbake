@@ -1,7 +1,7 @@
 {
     "bitbake.loggingLevel": "debug",
     "bitbake.pathToBitbakeFolder": "${workspaceFolder}/sources/poky/bitbake",
-    "bitbake.pathToEnvScript": "${workspaceFolder}/sources/poky/oe-init-build-env",
+    "bitbake.pathToEnvScript": "sources/poky/oe-init-build-env",
     "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/sources/poky/bitbake/lib",

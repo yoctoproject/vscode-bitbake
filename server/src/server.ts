@@ -29,7 +29,7 @@ import { getSemanticTokens, legend } from './semanticTokens'
 import { bitBakeProjectScannerClient } from './BitbakeProjectScannerClient'
 import { RequestMethod, type RequestParams, type RequestResult } from './lib/src/types/requests'
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
-import { resolveSettingPath } from './lib/src/BitbakeSettings'
+import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { extractRecipeName } from './lib/src/utils/files'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
@@ -94,7 +94,7 @@ connection.onShutdown(() => {
 connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake.loggingLevel
   parseOnSave = change.settings.bitbake.parseOnSave
-  const bitbakeFolder = resolveSettingPath(change.settings.bitbake.pathToBitbakeFolder, { workspaceFolder })
+  const bitbakeFolder = expandSettingPath(change.settings.bitbake.pathToBitbakeFolder, { workspaceFolder })
   if (bitbakeFolder !== undefined) {
     pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
   }

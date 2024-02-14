@@ -3,7 +3,6 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import path from 'path'
 import { loadBitbakeSettings } from '../../BitbakeSettings'
 
 describe('BitbakeSettings Tests', () => {
@@ -23,7 +22,7 @@ describe('BitbakeSettings Tests', () => {
     expect(settings.pathToBuildFolder).toEqual('/home/user/workspace/build')
   })
 
-  it('should expand relative paths', () => {
+  it('should keep relative paths', () => {
     const settings = loadBitbakeSettings({
       pathToBitbakeFolder: '',
       pathToEnvScript: '',
@@ -31,7 +30,7 @@ describe('BitbakeSettings Tests', () => {
       workingDirectory: '',
       commandWrapper: ''
     }, __dirname)
-    expect(settings.pathToBuildFolder).toEqual(path.join(__dirname, '/build'))
+    expect(settings.pathToBuildFolder).toEqual('./build')
   })
 
   it('should expand env variables', () => {
