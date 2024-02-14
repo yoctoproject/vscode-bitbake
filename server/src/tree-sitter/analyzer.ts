@@ -66,6 +66,10 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]?.extraSymbols ?? []
   }
 
+  public getVariableExpansionSymbols (uri: string): BitbakeSymbolInformation[] {
+    return this.uriToAnalyzedDocument[uri]?.variableExpansionSymbols ?? []
+  }
+
   public initialize (parser: Parser): void {
     this.parser = parser
   }

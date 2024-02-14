@@ -65,15 +65,13 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         }
       })
 
-      const ownSymbol = analyzer.getAnalyzedDocument(documentUri)?.globalDeclarations[word]
-      if (ownSymbol !== undefined) {
-        ownSymbol.forEach((symbol) => {
-          definitions.push({
-            uri: symbol.location.uri,
-            range: symbol.location.range
-          })
+      const ownSymbols = [...analyzer.getGlobalDeclarationSymbols(documentUri), ...analyzer.getVariableExpansionSymbols(documentUri)].filter(symbol => symbol.name === word)
+      ownSymbols.forEach((symbol) => {
+        definitions.push({
+          uri: symbol.location.uri,
+          range: symbol.location.range
         })
-      }
+      })
 
       const exactSymbol = analyzer.findExactSymbolAtPoint(documentUri, position, word)
 
