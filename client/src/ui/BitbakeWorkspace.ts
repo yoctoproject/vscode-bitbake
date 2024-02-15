@@ -37,6 +37,14 @@ export class BitbakeWorkspace {
     this.onChange.emit('recipeDropped', chosenRecipe)
   }
 
+  dropAllActiveRecipes (): void {
+    this.activeRecipes = []
+    if (this.memento !== undefined) {
+      void this.saveBitbakeWorkspace(this.memento)
+    }
+    this.onChange.emit('recipeDropped')
+  }
+
   loadBitbakeWorkspace (workspaceState: vscode.Memento): void {
     const activeRecipes = workspaceState.get('BitbakeWorkspace.activeRecipes', [])
     this.activeRecipes = activeRecipes ?? []

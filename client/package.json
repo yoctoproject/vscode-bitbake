@@ -353,6 +353,12 @@
         "description": "Start watching or suggesting a recipe in bitbake commands."
       },
       {
+        "command": "bitbake.drop-all-recipes",
+        "title": "BitBake: Drop all recipes from the active workspace",
+        "description": "Clear all recipes in the recipes view and from all command suggestions.",
+        "icon": "$(close)"
+      },
+      {
         "command": "bitbake.parse-recipes",
         "title": "BitBake: Parse all recipes",
         "description": "This command runs bitbake in parse-only mode."
@@ -503,6 +509,11 @@
         {
           "command": "bitbake.rescan-project",
           "group": "navigation@1",
+          "when": "view == bitbakeRecipes"
+        },
+        {
+          "command": "bitbake.drop-all-recipes",
+          "group": "navigation@2",
           "when": "view == bitbakeRecipes"
         }
       ],
