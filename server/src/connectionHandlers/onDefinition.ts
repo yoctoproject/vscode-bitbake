@@ -58,7 +58,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
 
       analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
         if (globalDeclaration[word] !== undefined) {
-          globalDeclaration[word].forEach((symbol) => {
+          globalDeclaration[word].filter((symbol) => symbol.kind === symbolAtPoint?.kind).forEach((symbol) => {
             definitions.push({
               uri: symbol.location.uri,
               range: symbol.location.range
@@ -67,7 +67,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         }
       })
 
-      const ownSymbols = [...analyzer.getGlobalDeclarationSymbols(documentUri), ...analyzer.getVariableExpansionSymbols(documentUri)].filter(symbol => symbol.name === word)
+      const ownSymbols = [...analyzer.getGlobalDeclarationSymbols(documentUri), ...analyzer.getVariableExpansionSymbols(documentUri)].filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind)
       ownSymbols.forEach((symbol) => {
         definitions.push({
           uri: symbol.location.uri,
