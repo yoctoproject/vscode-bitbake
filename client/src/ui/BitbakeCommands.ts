@@ -25,6 +25,7 @@ import { clientNotificationManager } from './ClientNotificationManager'
 import { bitbakeESDKMode, configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
 import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
 import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
+import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -208,7 +209,11 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
   }
   // No recipe is provided when calling the command through the command pallette
   if (chosenRecipe === undefined) {
-    const quickPickItems = [...bitbakeWorkspace.activeRecipes]
+    const devtoolWorkspacesNames = bitBakeProjectScanner.scanResult._workspaces.map((workspace) => workspace.name)
+    const quickPickItems = mergeArraysDistinctly(
+      (name) => name,
+      bitbakeWorkspace.activeRecipes,
+      devtoolWorkspacesNames)
 
     if (canAdd) {
       quickPickItems.push('Add another recipe...')
