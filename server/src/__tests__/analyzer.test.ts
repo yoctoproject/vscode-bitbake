@@ -434,7 +434,16 @@ describe('getVariableExpansionSymbols', () => {
     expect(symbols).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          name: 'DESCRIPTION'
+          name: 'DESCRIPTION',
+          location: expect.objectContaining({
+            range: { start: { line: 2, character: 11 }, end: { line: 2, character: 22 } }
+          })
+        }),
+        expect.objectContaining({
+          name: 'DESCRIPTION',
+          location: expect.objectContaining({
+            range: { start: { line: 3, character: 8 }, end: { line: 3, character: 19 } }
+          })
         })
       ])
     )
