@@ -578,4 +578,83 @@ describe('on definition', () => {
       ])
     )
   })
+
+  it('provide references for the variables only in declaration or variable expansion syntax', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldWork = onDefinitionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 1,
+        character: 1
+      }
+    })
+
+    expect(shouldWork).toEqual(
+      expect.arrayContaining([
+        {
+          uri: DUMMY_URI,
+          range: {
+            start: {
+              line: 1,
+              character: 0
+            },
+            end: {
+              line: 1,
+              character: 11
+            }
+          }
+        },
+        {
+          uri: DUMMY_URI,
+          range: {
+            start: {
+              line: 2,
+              character: 11
+            },
+            end: {
+              line: 2,
+              character: 22
+            }
+          }
+        },
+        {
+          uri: DUMMY_URI,
+          range: {
+            start: {
+              line: 3,
+              character: 8
+            },
+            end: {
+              line: 3,
+              character: 19
+            }
+          }
+        }
+      ])
+    )
+
+    expect(shouldWork).not.toEqual(
+      expect.arrayContaining([
+        {
+          uri: DUMMY_URI, // this symbol here is a function but with the same identifier. Should not be a reference of the variable
+          range: {
+            start: {
+              line: 4,
+              character: 7
+            },
+            end: {
+              line: 4,
+              character: 18
+            }
+          }
+        }
+      ])
+    )
+  })
 })
