@@ -84,7 +84,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   await disableInteferingSettings()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
-  client = await activateLanguageServer(context)
+  client = await activateLanguageServer(context, bitBakeProjectScanner)
   bitBakeProjectScanner.setClient(client)
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)

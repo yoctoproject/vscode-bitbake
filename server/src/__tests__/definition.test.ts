@@ -72,7 +72,7 @@ describe('on definition', () => {
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
 
-    const definition = onDefinitionHandler({
+    const definition = await onDefinitionHandler({
       textDocument: {
         uri: FIXTURE_URI.DIRECTIVE
       },
@@ -82,7 +82,7 @@ describe('on definition', () => {
       }
     })
 
-    const definition2 = onDefinitionHandler({
+    const definition2 = await onDefinitionHandler({
       textDocument: {
         uri: FIXTURE_URI.DIRECTIVE
       },
@@ -97,7 +97,7 @@ describe('on definition', () => {
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(FIXTURE_URI.DIRECTIVE))
 
-    const definition3 = onDefinitionHandler({
+    const definition3 = await onDefinitionHandler({
       textDocument: {
         uri: FIXTURE_URI.DIRECTIVE
       },
@@ -197,7 +197,7 @@ describe('on definition', () => {
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
 
-    const result1 = onDefinitionHandler({
+    const result1 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -207,7 +207,7 @@ describe('on definition', () => {
       }
     })
     // Go to definition for symbols in variable expansion
-    const result2 = onDefinitionHandler({
+    const result2 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -275,7 +275,7 @@ describe('on definition', () => {
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
 
-    const shouldWork1 = onDefinitionHandler({
+    const shouldWork1 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -285,7 +285,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork2 = onDefinitionHandler({
+    const shouldWork2 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -295,7 +295,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork3 = onDefinitionHandler({
+    const shouldWork3 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -305,7 +305,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork4 = onDefinitionHandler({
+    const shouldWork4 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -315,7 +315,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork5 = onDefinitionHandler({
+    const shouldWork5 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -325,7 +325,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork6 = onDefinitionHandler({
+    const shouldWork6 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -335,7 +335,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork7 = onDefinitionHandler({
+    const shouldWork7 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -345,7 +345,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldWork8 = onDefinitionHandler({
+    const shouldWork8 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -355,7 +355,7 @@ describe('on definition', () => {
       }
     })
 
-    const shouldNotWork = onDefinitionHandler({
+    const shouldNotWork = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -447,7 +447,7 @@ describe('on definition', () => {
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
-    const shouldWork = onDefinitionHandler({
+    const shouldWork = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -511,7 +511,7 @@ describe('on definition', () => {
 
     analyzer.processRecipeScanResults(scanResults2, extractRecipeName(FIXTURE_URI.DIRECTIVE))
 
-    const shouldWork2 = onDefinitionHandler({
+    const shouldWork2 = await onDefinitionHandler({
       textDocument: {
         uri: FIXTURE_URI.DIRECTIVE
       },
@@ -570,7 +570,7 @@ describe('on definition', () => {
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
 
-    const shouldWork = onDefinitionHandler({
+    const shouldWork = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -603,7 +603,7 @@ describe('on definition', () => {
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
-    const shouldWork2 = onDefinitionHandler({
+    const shouldWork2 = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -638,7 +638,7 @@ describe('on definition', () => {
       document: FIXTURE_DOCUMENT.HOVER
     })
 
-    const shouldWork = onDefinitionHandler({
+    const shouldWork = await onDefinitionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
