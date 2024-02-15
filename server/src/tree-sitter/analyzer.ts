@@ -845,15 +845,11 @@ export default class Analyzer {
     const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
     const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
     const originalDocDeclarationSymbols = this.getAllSymbolsFromGlobalDeclarations(analyzedOriginalDoc.globalDeclarations)
-    const filteredOriginalDocVariableExpansionSymbols = analyzedOriginalDoc.variableExpansionSymbols.filter((symbol) => {
-      return !originalDocDeclarationSymbols.some((declarationSymbol) => {
-        return this.symbolsAreTheSame(symbol, declarationSymbol)
-      })
-    })
+    const originalDocVariableExpansionSymbols = analyzedOriginalDoc.variableExpansionSymbols
 
     const scannedResultSymbolInfo: BitbakeSymbolInformation[] = []
     // Store the variable expansion symbols first and use their final value to resolve those declaration symbols. e.g. VAR:${PN}
-    filteredOriginalDocVariableExpansionSymbols.forEach((symbol) => {
+    originalDocVariableExpansionSymbols.forEach((symbol) => {
       const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
         return this.symbolsAreTheSame(scanResultDocSymbol, symbol)
       })
@@ -873,7 +869,12 @@ export default class Analyzer {
     })
 
     this.uriToLastScanResult[originalDocUri] = {
-      symbols: scannedResultSymbolInfo,
+      symbols: scannedResultSymbolInfo.reduce<BitbakeSymbolInformation[]>((acc, symbol) => {
+        if (acc.find((s) => this.symbolsAreTheSame(s, symbol)) === undefined) {
+          acc.push(symbol)
+        }
+        return acc
+      }, []),
       includeHistory: this.extractIncludeHistory(scanResult, index)
     }
   }
