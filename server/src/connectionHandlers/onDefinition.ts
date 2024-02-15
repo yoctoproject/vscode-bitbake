@@ -56,19 +56,13 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     if (isVariableSymbol) {
       const symbolAtPoint = analyzer.findExactSymbolAtPoint(documentUri, position, word)
 
-      analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
-        if (globalDeclaration[word] !== undefined) {
-          globalDeclaration[word].filter((symbol) => symbol.kind === symbolAtPoint?.kind).forEach((symbol) => {
-            definitions.push({
-              uri: symbol.location.uri,
-              range: symbol.location.range
-            })
-          })
-        }
-      })
+      const allMatchedSymbols = [
+        ...analyzer.getGlobalDeclarationSymbols(documentUri),
+        ...analyzer.getVariableExpansionSymbols(documentUri),
+        ...analyzer.getExtraSymbolsForUri(documentUri)]
+        .filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind)
 
-      const ownSymbols = [...analyzer.getGlobalDeclarationSymbols(documentUri), ...analyzer.getVariableExpansionSymbols(documentUri)].filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind)
-      ownSymbols.forEach((symbol) => {
+      allMatchedSymbols.forEach((symbol) => {
         definitions.push({
           uri: symbol.location.uri,
           range: symbol.location.range

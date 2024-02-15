@@ -10,7 +10,7 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
 import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type BitbakeSymbolInformation, type GlobalDeclarations } from '../tree-sitter/declarations'
+import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 
 async function getAnalyzer (): Promise<Analyzer> {
   const parser = await generateParser()
@@ -259,80 +259,58 @@ describe('sourceIncludeFiles', () => {
     ])
 
     /* eslint-disable-next-line prefer-const */
-    let symbols: GlobalDeclarations[] = []
+    let symbols: BitbakeSymbolInformation[] = []
     analyzer.sourceIncludeFiles(uri, symbols, [])
 
     expect(symbols).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          DESCRIPTION: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'DESCRIPTION',
-              location: {
-                uri: FIXTURE_URI.BAR_INC,
-                range: {
-                  start: {
-                    line: 0,
-                    character: 0
-                  },
-                  end: {
-                    line: 0,
-                    character: 11
-                  }
-                }
+          name: 'DESCRIPTION',
+          location: {
+            uri: FIXTURE_URI.BAR_INC,
+            range: {
+              start: {
+                line: 0,
+                character: 0
+              },
+              end: {
+                line: 0,
+                character: 11
               }
-            })
-          ])
-        })
-      ])
-    )
-
-    expect(symbols).toEqual(
-      expect.arrayContaining([
+            }
+          }
+        }),
         expect.objectContaining({
-          DESCRIPTION: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'DESCRIPTION',
-              location: {
-                uri: FIXTURE_URI.FOO_INC,
-                range: {
-                  start: {
-                    line: 0,
-                    character: 0
-                  },
-                  end: {
-                    line: 0,
-                    character: 11
-                  }
-                }
+          name: 'DESCRIPTION',
+          location: {
+            uri: FIXTURE_URI.FOO_INC,
+            range: {
+              start: {
+                line: 0,
+                character: 0
+              },
+              end: {
+                line: 0,
+                character: 11
               }
-            })
-          ])
-        })
-      ])
-    )
-
-    expect(symbols).toEqual(
-      expect.arrayContaining([
+            }
+          }
+        }),
         expect.objectContaining({
-          DESCRIPTION: expect.arrayContaining([
-            expect.objectContaining({
-              name: 'DESCRIPTION',
-              location: {
-                uri: FIXTURE_URI.BAZ_BBCLASS,
-                range: {
-                  start: {
-                    line: 0,
-                    character: 0
-                  },
-                  end: {
-                    line: 0,
-                    character: 11
-                  }
-                }
+          name: 'DESCRIPTION',
+          location: {
+            uri: FIXTURE_URI.BAZ_BBCLASS,
+            range: {
+              start: {
+                line: 0,
+                character: 0
+              },
+              end: {
+                line: 0,
+                character: 11
               }
-            })
-          ])
+            }
+          }
         })
       ])
     )

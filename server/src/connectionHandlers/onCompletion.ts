@@ -24,6 +24,7 @@ import path from 'path'
 import { type Position } from 'vscode-languageserver-textdocument'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
+import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 
 let documentUri = ''
 
@@ -339,20 +340,25 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
 function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
   let completionItems: CompletionItem[] = []
-  analyzer.getExtraSymbolsForUri(uri).forEach((extraSymbols) => {
-    Object.keys(extraSymbols).forEach((key) => {
+  analyzer.getExtraSymbolsForUri(uri).reduce<BitbakeSymbolInformation[]>((acc, symbol) => {
+    if (acc.find((s) => s.name === symbol.name) === undefined) { // Symbols with the same name are considered duplicates, regardless of overrides, because we only need one for each as a completion item
+      acc.push(symbol)
+    }
+    return acc
+  }, [])
+    .forEach((extraSymbol) => {
       const variableInfo = [
         ...bitBakeDocScanner.bitbakeVariableInfo.filter((bitbakeVariable) => !bitBakeDocScanner.yoctoVariableInfo.some(yoctoVariable => yoctoVariable.name === bitbakeVariable.name)),
         ...bitBakeDocScanner.yoctoVariableInfo
       ]
-      const foundInVariableInfo = variableInfo.find((variable) => variable.name === key)
+      const foundInVariableInfo = variableInfo.find((variable) => variable.name === extraSymbol.name)
       const completionItem: CompletionItem = {
-        label: key,
+        label: extraSymbol.name,
         labelDetails: {
-          description: path.relative(documentUri.replace('file://', ''), extraSymbols[key][0].location.uri.replace('file://', ''))
+          description: path.relative(documentUri.replace('file://', ''), extraSymbol.location.uri.replace('file://', ''))
         },
         documentation: foundInVariableInfo?.definition ?? '',
-        kind: symbolKindToCompletionKind(extraSymbols[key][0].kind),
+        kind: symbolKindToCompletionKind(extraSymbol.kind),
         data: {
           referenceUrl: foundInVariableInfo?.referenceUrl
         },
@@ -360,8 +366,7 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
       }
       completionItems.push(completionItem)
     })
-  })
-  // Filter duplicates from the included files, current goal is to show only one item for one symbol even though it occurs in multiple included files. The one that remains will still contain the path in its label details but it doesn't necessarily indicate the location of the very first occurance as this feature will require extra info from bitbake and it is not yet planned.
+  // Filter duplicates from the included files, current goal is to show only one item for one symbol even though it occurs in multiple included files. The one that remains will still contain the path in its label details but it doesn't necessarily indicate the location of the very first occurance.
   const uniqueItems = new Set()
   completionItems = completionItems.filter(item => {
     if (!uniqueItems.has(item.label)) {
