@@ -106,15 +106,6 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     }
     // Overrides
     if (analyzer.isOverride(documentUri, position.line, position.character)) {
-      const overrideFile = bitBakeProjectScannerClient.bitbakeScanResult._confFiles.find((confFile) => {
-        return confFile.name === word
-      })
-
-      if (overrideFile?.path !== undefined) {
-        definitions.push(createDefinitionLocationForPathInfo(overrideFile.path))
-        return definitions
-      }
-
       if (lastScanResult !== undefined) {
         const targetPath = lastScanResult.includeHistory.find((includePath) => {
           return includePath.ext === '.conf' && includePath.name === word
@@ -124,6 +115,15 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
           definitions.push(createDefinitionLocationForPathInfo(targetPath))
           return definitions
         }
+      }
+
+      const overrideFile = bitBakeProjectScannerClient.bitbakeScanResult._confFiles.find((confFile) => {
+        return confFile.name === word
+      })
+
+      if (overrideFile?.path !== undefined) {
+        definitions.push(createDefinitionLocationForPathInfo(overrideFile.path))
+        return definitions
       }
     }
   }
