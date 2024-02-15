@@ -36,6 +36,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
@@ -248,6 +249,10 @@ async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectSca
   if (chosenRecipe !== undefined) {
     bitbakeWorkspace.dropActiveRecipe(chosenRecipe)
   }
+}
+
+async function dropAllRecipes (bitbakeWorkspace: BitbakeWorkspace): Promise<void> {
+  bitbakeWorkspace.dropAllActiveRecipes()
 }
 
 export async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {
