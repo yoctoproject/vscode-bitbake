@@ -43,6 +43,7 @@ const languages = {
     onDidRenameFiles: jest.fn(),
     onDidSaveTextDocument: jest.fn(),
     onWillSaveTextDocument: jest.fn(),
+    asRelativePath: jest.fn(),
   };
 
   const OverviewRulerLane = {
