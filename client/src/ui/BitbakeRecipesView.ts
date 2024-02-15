@@ -40,7 +40,7 @@ class BitbakeFileTreeItem extends BitbakeRecipeTreeItem {
     this.iconPath = new vscode.ThemeIcon('book')
     const uri: vscode.Uri = vscode.Uri.file(resolvedPath)
     this.command = { command: 'vscode.open', title: 'Open file', arguments: [uri] }
-    this.description = resolvedPath
+    this.description = vscode.workspace.asRelativePath(resolvedPath, false)
     this.tooltip = resolvedPath
   }
 }
