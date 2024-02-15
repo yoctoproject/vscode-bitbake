@@ -31,12 +31,12 @@ let bitbakeSanity = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitbakeTaskProvider.bitbakeDriver, uri, task) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, recipe) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, uri, task) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
 
@@ -58,11 +58,11 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-deploy', async (uri) => { await devtoolDeployCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-clean', async (uri) => { await devtoolCleanCommand(bitbakeWorkspace, bitBakeProjectScanner.bitbakeDriver, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-deploy', async (uri) => { await devtoolDeployCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-clean', async (uri) => { await devtoolCleanCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -100,12 +100,12 @@ async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider
   await vscode.workspace.getConfiguration('task').update('saveBeforeRun', saveBeforeRun, undefined, true)
 }
 
-async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: build-recipe: ${chosenRecipe}`)
     await runBitbakeTerminal(
-      bitbakeDriver,
+      bitBakeProjectScanner.bitbakeDriver,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {
         recipes: [chosenRecipe]
@@ -114,12 +114,12 @@ async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
   }
 }
 
-async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
     await runBitbakeTerminal(
-      bitbakeDriver,
+      bitBakeProjectScanner.bitbakeDriver,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {
         recipes: [chosenRecipe],
@@ -129,8 +129,8 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDr
   }
 }
 
-async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri, false)
+async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
 
   if (chosenRecipe === undefined) {
     logger.debug('Command: scan-recipe-env: chosen recipe is undefined. Abort command')
@@ -158,8 +158,8 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
   await vscode.workspace.getConfiguration('task').update('saveBeforeRun', saveBeforeRun, undefined, true)
 }
 
-async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any, task?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any, task?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     let chosenTask: string | undefined
     if (typeof task === 'string') {
@@ -169,7 +169,7 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver
     }
     if (chosenTask !== undefined) {
       logger.debug(`Command: run-task: ${chosenRecipe}, ${chosenTask}`)
-      await runBitbakeTerminal(bitbakeDriver,
+      await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
       // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         {
           recipes: [chosenRecipe],
@@ -185,7 +185,7 @@ async function selectTask (): Promise<string | undefined> {
   return sanitizeForShell(chosenTask)
 }
 
-async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canAdd: boolean = true): Promise<string | undefined> {
+async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any, canAdd: boolean = true): Promise<string | undefined> {
   let chosenRecipe: string | undefined
   // A string is provided when the command is called programmatically in tests with an argument
   if (typeof uri === 'string') {
@@ -216,27 +216,35 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: any, canA
     chosenRecipe = await vscode.window.showQuickPick(quickPickItems, { placeHolder: 'Select bitbake recipe' })
 
     if (chosenRecipe === 'Add another recipe...') {
-      chosenRecipe = await addActiveRecipe(bitbakeWorkspace)
+      chosenRecipe = await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner)
     }
   }
   return chosenRecipe
 }
 
-async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, recipe?: string): Promise<string | undefined> {
+async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, recipe?: string): Promise<string | undefined> {
   if (typeof recipe === 'string') {
     bitbakeWorkspace.addActiveRecipe(recipe)
     return recipe
   }
-  let chosenRecipe = await vscode.window.showInputBox({ placeHolder: 'Recipe name to add' })
+
+  const recipeNames = bitBakeProjectScanner.scanResult._recipes.map((recipe) => recipe.name)
+  let chosenRecipe: string | undefined
+  if (recipeNames.length !== 0) {
+    chosenRecipe = await vscode.window.showQuickPick(recipeNames, { placeHolder: 'Select recipe to add' })
+  } else {
+    chosenRecipe = await vscode.window.showInputBox({ placeHolder: "Type the recipe's name to add. (Bitbake scan not complete yet)" })
+  }
   if (chosenRecipe !== undefined) {
     chosenRecipe = sanitizeForShell(extractRecipeName(chosenRecipe) as string) as string
     bitbakeWorkspace.addActiveRecipe(chosenRecipe)
   }
+
   return chosenRecipe
 }
 
-async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, uri?: string): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri, false)
+async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: string): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
   if (chosenRecipe !== undefined) {
     bitbakeWorkspace.dropActiveRecipe(chosenRecipe)
   }
@@ -266,7 +274,7 @@ async function rescanProject (bitBakeProjectScanner: BitBakeProjectScanner): Pro
 }
 
 async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-modify: ${chosenRecipe}`)
     const command = `devtool modify ${chosenRecipe}`
@@ -285,7 +293,7 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
 }
 
 async function devtoolSDKFallbackCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-sdk-fallback: ${chosenRecipe}`)
     const workspace = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)
@@ -294,8 +302,9 @@ async function devtoolSDKFallbackCommand (bitbakeWorkspace: BitbakeWorkspace, bi
   }
 }
 
-async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  const bitbakeDriver = bitBakeProjectScanner.bitbakeDriver
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-ide-sdk: ${chosenRecipe}`)
     if (!checkIdeSdkConfiguration(bitbakeDriver)) {
@@ -337,7 +346,7 @@ async function pickLayer (extraOption: string, bitBakeProjectScanner: BitBakePro
 
 async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
   const originalRecipeChoice = 'Update the original recipe'
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe === undefined) { return }
   const chosenLayer = await pickLayer(originalRecipeChoice, bitBakeProjectScanner)
   if (chosenLayer === undefined) { return }
@@ -376,7 +385,7 @@ async function openDevtoolUpdateBBAppend (res: SpawnSyncReturns<Buffer>, bitBake
 }
 
 async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-reset: ${chosenRecipe}`)
     const command = `devtool reset ${chosenRecipe}`
@@ -392,7 +401,7 @@ async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
 }
 
 async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe === undefined) { return }
   if (bitBakeProjectScanner.bitbakeDriver === undefined) { throw new Error('bitbakeDriver is undefined') }
 
@@ -410,12 +419,12 @@ async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, 
   await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(workspacePath), { forceNewWindow: true })
 }
 
-async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-build: ${chosenRecipe}`)
     await runBitbakeTerminal(
-      bitbakeDriver,
+      bitBakeProjectScanner.bitbakeDriver,
       {
         specialCommand: `devtool build ${chosenRecipe}`,
         type: 'bitbake'
@@ -424,8 +433,9 @@ async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeD
   }
 }
 
-async function devtoolDeployCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function devtoolDeployCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  const bitbakeDriver = bitBakeProjectScanner.bitbakeDriver
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-deploy: ${chosenRecipe}`)
     const sshTarget = bitbakeDriver.bitbakeSettings.sshTarget
@@ -443,12 +453,12 @@ async function devtoolDeployCommand (bitbakeWorkspace: BitbakeWorkspace, bitbake
   }
 }
 
-async function devtoolCleanCommand (bitbakeWorkspace: BitbakeWorkspace, bitbakeDriver: BitbakeDriver, uri?: any): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, uri)
+async function devtoolCleanCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-clean: ${chosenRecipe}`)
     await runBitbakeTerminal(
-      bitbakeDriver,
+      bitBakeProjectScanner.bitbakeDriver,
       {
         specialCommand: `devtool build -c ${chosenRecipe}`,
         type: 'bitbake'
