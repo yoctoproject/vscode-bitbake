@@ -232,7 +232,7 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private async resolveCorrespondingPath (inputPath: string | undefined, hostToContainer: boolean): Promise<string | undefined> {
+  private async resolveCorrespondingPath (inputPath: string | undefined, hostToContainer: boolean, quiet: boolean = false): Promise<string | undefined> {
     if (inputPath === undefined) {
       return undefined
     }
@@ -258,13 +258,15 @@ export class BitBakeProjectScanner {
     }
     if (!await fileExistsFn(resolvedPath)) {
       // Showing a modal here because this can only happend through the command devtool-update-recipe which is not used often
-      await vscode.window.showErrorMessage(
-        'Bitbake extension couldn\'t locate a file.', {
-          modal: true,
-          detail: `It looks like you are using the bitbake.commandWrapper setting to use a docker container.\n
+      if (!quiet) {
+        await vscode.window.showErrorMessage(
+          'Bitbake extension couldn\'t locate a file.', {
+            modal: true,
+            detail: `It looks like you are using the bitbake.commandWrapper setting to use a docker container.\n
 Couldn't find ${inputPath} corresponding paths inside and outside of the container.\n
 You should adjust your docker volumes to use the same URIs as those present on your host machine.`
-        })
+          })
+      }
       return inputPath
     }
     return resolvedPath
@@ -272,13 +274,13 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
   /// If a docker container is used, the workdir may be different from the host system.
   /// This function resolves the path to the host system.
-  async resolveContainerPath (layerPath: string | undefined): Promise<string | undefined> {
-    return await this.resolveCorrespondingPath(layerPath, false)
+  async resolveContainerPath (layerPath: string | undefined, quiet: boolean = false): Promise<string | undefined> {
+    return await this.resolveCorrespondingPath(layerPath, false, quiet)
   }
 
   /// This function mirrors resolveContainerPath, but for the other direction.
-  async resolveHostPath (containerPath: string | undefined): Promise<string | undefined> {
-    return await this.resolveCorrespondingPath(containerPath, true)
+  async resolveHostPath (containerPath: string | undefined, quiet: boolean = false): Promise<string | undefined> {
+    return await this.resolveCorrespondingPath(containerPath, true, quiet)
   }
 
   private async existsInContainer (containerPath: string): Promise<boolean> {
