@@ -50,10 +50,12 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   }
 
   if (word !== null) {
-    const canProvideGoToDefinitionForSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
+    const isVariableSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
     (analyzer.isVariableExpansion(documentUri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
     // Variables in declartion and variable expansion syntax
-    if (canProvideGoToDefinitionForSymbol) {
+    if (isVariableSymbol) {
+      const symbolAtPoint = analyzer.findExactSymbolAtPoint(documentUri, position, word)
+
       analyzer.getExtraSymbolsForUri(documentUri).forEach((globalDeclaration) => {
         if (globalDeclaration[word] !== undefined) {
           globalDeclaration[word].forEach((symbol) => {
@@ -73,10 +75,8 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         })
       })
 
-      const exactSymbol = analyzer.findExactSymbolAtPoint(documentUri, position, word)
-
-      if (lastScanResult !== undefined && exactSymbol !== undefined) {
-        const foundSymbol = analyzer.matchSymbol(exactSymbol, lastScanResult.symbols)
+      if (lastScanResult !== undefined && symbolAtPoint !== undefined) {
+        const foundSymbol = analyzer.matchSymbol(symbolAtPoint, lastScanResult.symbols)
         if (foundSymbol !== undefined) {
           const modificationHistory = analyzer.extractModificationHistoryFromComments(foundSymbol)
           modificationHistory.forEach((location) => {
