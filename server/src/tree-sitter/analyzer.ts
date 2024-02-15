@@ -852,19 +852,6 @@ export default class Analyzer {
     })
 
     const scannedResultSymbolInfo: BitbakeSymbolInformation[] = []
-    // Process and apply the scan results to the original document
-    const allSymbols = [...originalDocDeclarationSymbols, ...filteredOriginalDocVariableExpansionSymbols]
-    allSymbols.forEach((symbol) => {
-      if (symbol.kind === SymbolKind.Variable) {
-        const sameSymbolInScanResultDocument = scanResultDocSymbols.find((scanResultDocumentSymbol) => {
-          return this.symbolsAreTheSame(scanResultDocumentSymbol, symbol)
-        })
-        if (sameSymbolInScanResultDocument !== undefined) {
-          scannedResultSymbolInfo.push(sameSymbolInScanResultDocument)
-        }
-      }
-    })
-
     // Store the variable expansion symbols first and use their final value to resolve those declaration symbols. e.g. VAR:${PN}
     filteredOriginalDocVariableExpansionSymbols.forEach((symbol) => {
       const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
