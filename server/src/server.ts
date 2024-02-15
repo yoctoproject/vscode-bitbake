@@ -22,7 +22,7 @@ import { analyzer } from './tree-sitter/analyzer'
 import { generateParser } from './tree-sitter/parser'
 import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
-import { onDefinitionHandler } from './connectionHandlers/onDefinition'
+import { onDefinitionHandler, setDefinitionsConnection } from './connectionHandlers/onDefinition'
 import { onHoverHandler } from './connectionHandlers/onHover'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from './embedded-languages/general-support'
 import { getSemanticTokens, legend } from './semanticTokens'
@@ -34,7 +34,8 @@ import { extractRecipeName } from './lib/src/utils/files'
 import { onReferenceHandler } from './connectionHandlers/onReference'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
-const connection: Connection = createConnection(ProposedFeatures.all)
+export const connection: Connection = createConnection(ProposedFeatures.all)
+setDefinitionsConnection(connection)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let parseOnSave = true
 let workspaceFolder: string | undefined

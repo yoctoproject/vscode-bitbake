@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type TextDocumentPositionParams, type Definition, Location, Range, SymbolKind } from 'vscode-languageserver/node'
+import { type TextDocumentPositionParams, type Definition, Location, Range, SymbolKind, type Connection } from 'vscode-languageserver/node'
 import { analyzer } from '../tree-sitter/analyzer'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
@@ -13,9 +13,14 @@ import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { extractRecipeName } from '../lib/src/utils/files'
 
-export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Location[] | null {
+let connection: Connection | undefined
+
+export function setDefinitionsConnection (conn: Connection): void {
+  connection = conn
+}
+
+export async function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Promise<Location[] | null> {
   const { textDocument: { uri }, position } = textDocumentPositionParams
-  logger.debug(`[onDefinition] Position: Line ${position.line} Character ${position.character}`)
 
   const wordPosition = {
     line: position.line,
@@ -65,12 +70,13 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
         const foundSymbol = analyzer.matchSymbol(symbolAtPoint, lastScanResult.symbols)
         if (foundSymbol !== undefined) {
           const modificationHistory = analyzer.extractModificationHistoryFromComments(foundSymbol)
-          modificationHistory.forEach((location) => {
+          for (const location of modificationHistory) {
+            const resolvedLocation: string | undefined = await connection?.sendRequest('bitbake/resolveContainerPath', location.uri.replace('file://', ''))
             definitions.push({
-              uri: location.uri,
+              uri: resolvedLocation ?? location.uri,
               range: location.range
             })
-          })
+          }
         }
       }
 

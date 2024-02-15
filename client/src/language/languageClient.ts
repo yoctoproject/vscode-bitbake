@@ -31,8 +31,9 @@ import { NotificationMethod, type NotificationParams } from '../lib/src/types/no
 import { updateDiagnostics } from './diagnosticsSupport'
 import { getLanguageConfiguration } from './languageConfiguration'
 import { BitbakeCodeActionProvider } from './codeActionProvider'
+import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
-export async function activateLanguageServer (context: ExtensionContext): Promise<LanguageClient> {
+export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
   // The debug options for the server
   // Use --inspect-brk instead of --inspect if you want to debug the server startup code
@@ -125,8 +126,8 @@ export async function activateLanguageServer (context: ExtensionContext): Promis
     logger.error(`[OnRequest] <bitbake/scanRecipe>: Invalid uri: ${JSON.stringify(param.uri)}`)
   })
 
-  client.onRequest('bitbake/rescanProject', async () => {
-    return await commands.executeCommand('bitbake.rescan-project')
+  client.onRequest('bitbake/resolveContainerPath', async (uri) => {
+    return await bitBakeProjectScanner.resolveContainerPath(uri, true)
   })
 
   client.onNotification(NotificationMethod.EmbeddedLanguageDocs, (embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs']) => {
