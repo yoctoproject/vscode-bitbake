@@ -37,7 +37,7 @@ export interface AnalyzedDocument {
   variableExpansionSymbols: BitbakeSymbolInformation[]
   includeFileUris?: string[]
   tree: Parser.Tree
-  extraSymbols?: GlobalDeclarations[] // symbols from the include files
+  extraSymbols?: BitbakeSymbolInformation[] // symbols from the include files
 }
 
 interface LastScanResult {
@@ -62,7 +62,7 @@ export default class Analyzer {
     return this.uriToLastScanResult[uri]
   }
 
-  public getExtraSymbolsForUri (uri: string): GlobalDeclarations[] {
+  public getExtraSymbolsForUri (uri: string): BitbakeSymbolInformation[] {
     return this.uriToAnalyzedDocument[uri]?.extraSymbols ?? []
   }
 
@@ -94,7 +94,7 @@ export default class Analyzer {
     const variableExpansionSymbols = this.getVariableExpansionSymbolsFromTree({ tree, uri })
 
     // eslint-disable-next-line prefer-const
-    let extraSymbols: GlobalDeclarations[] = []
+    let extraSymbols: BitbakeSymbolInformation[] = []
     // eslint-disable-next-line prefer-const
     let includeFileUris: string[] = []
     this.sourceIncludeFiles(uri, extraSymbols, includeFileUris, { td: document, tree })
@@ -526,7 +526,7 @@ export default class Analyzer {
    * @param uri
    * @param document Main purpose of this param is to avoid re-reading the file from disk and re-parsing the tree when the file is opened for the first time since the same process will happen in the analyze() before calling this function.
    */
-  public sourceIncludeFiles (uri: string, extraSymbols: GlobalDeclarations[], includeFileUris: string[], document?: { td: TextDocument, tree: Parser.Tree }): void {
+  public sourceIncludeFiles (uri: string, extraSymbols: BitbakeSymbolInformation[], includeFileUris: string[], document?: { td: TextDocument, tree: Parser.Tree }): void {
     if (this.parser === undefined) {
       logger.error('[Analyzer] The analyzer is not initialized with a parser')
       return
@@ -542,6 +542,7 @@ export default class Analyzer {
       } else {
         const analyzedDocument = this.uriToAnalyzedDocument[uri]
         let globalDeclarations: GlobalDeclarations
+        let variableExpansionSymbols: BitbakeSymbolInformation[]
         if (analyzedDocument === undefined) {
           textDocument = TextDocument.create(
             uri,
@@ -552,6 +553,7 @@ export default class Analyzer {
           parsedTree = this.parser.parse(textDocument.getText())
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
           globalDeclarations = getGlobalDeclarations({ tree: parsedTree, uri })
+          variableExpansionSymbols = this.getVariableExpansionSymbolsFromTree({ tree: parsedTree, uri })
 
           this.uriToAnalyzedDocument[uri] = {
             version: textDocument.version,
@@ -565,8 +567,9 @@ export default class Analyzer {
           textDocument = analyzedDocument.document
           parsedTree = analyzedDocument.tree
           globalDeclarations = analyzedDocument.globalDeclarations
+          variableExpansionSymbols = analyzedDocument.variableExpansionSymbols
         }
-        extraSymbols.push(globalDeclarations)
+        extraSymbols.push(...this.getAllSymbolsFromGlobalDeclarations(globalDeclarations), ...variableExpansionSymbols)
       }
 
       // Recursively scan for files in the directive statements `inherit`, `include` and `require` and pass the same reference of extraSymbols to each recursive call
