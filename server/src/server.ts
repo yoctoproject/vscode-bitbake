@@ -131,7 +131,7 @@ connection.onRequest(RequestMethod.getLinksInDocument, (params: RequestParams['g
   return analyzer.getLinksInStringContent(params.documentUri)
 })
 
-connection.onNotification(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
+connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
   logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
   analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
 })
