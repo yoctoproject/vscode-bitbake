@@ -819,12 +819,6 @@ export default class Analyzer {
       originalDocUri = 'file://' + originalDocUri
     }
 
-    const analyzedOriginalDoc = this.uriToAnalyzedDocument[originalDocUri]
-    if (analyzedOriginalDoc === undefined) {
-      logger.debug(`[ProcessRecipeScanResults] Analyzed document for ${originalDocUri} not found, abort processing scan results`)
-      return undefined
-    }
-
     const lines = scanResult.split('\n')
     const index = lines.findIndex((line) => line.includes('INCLUDE HISTORY'))
     if (index === -1) {
