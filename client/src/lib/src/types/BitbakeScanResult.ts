@@ -49,3 +49,7 @@ export function scanContainsData (scanResult: BitbakeScanResult): boolean {
 export function scanContainsRecipes (scanResult: BitbakeScanResult): boolean {
   return scanResult._layers.length > 0 || scanResult._recipes.length > 0
 }
+
+export function pathInfoToString (pathInfo: PathInfo): string {
+  return `${pathInfo.dir}/${pathInfo.base}`
+}
