@@ -117,10 +117,7 @@ function getGlobalSymbolComments (uri: string, word: string, currentSymbolAtPoin
   const localSymbolsWithComments = analyzer.getGlobalDeclarationSymbols(uri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0)
   const externalSymbolsWithComments: BitbakeSymbolInformation[] = []
 
-  const analyzedDocument = analyzer.getAnalyzedDocument(uri)
-  const includeFileUris = analyzedDocument?.includeFileUris
-
-  includeFileUris?.forEach((includeFileUri) => {
+  analyzer.getIncludeUrisForUri(uri).forEach((includeFileUri) => {
     externalSymbolsWithComments.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0))
   })
   const priority = ['.bbclass', '.conf', '.inc', '.bb', '.bbappend']
