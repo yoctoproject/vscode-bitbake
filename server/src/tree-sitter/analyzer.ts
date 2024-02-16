@@ -47,7 +47,7 @@ interface LastScanResult {
 export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
-  private readonly uriToLastScanResult: Record<string, LastScanResult> = {} // Store the results of the last scan for each recipe
+  private readonly uriToLastScanResult: Record<string, LastScanResult | undefined> = {} // Store the results of the last scan for each recipe
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -67,6 +67,10 @@ export default class Analyzer {
 
   public getVariableExpansionSymbols (uri: string): BitbakeSymbolInformation[] {
     return this.uriToAnalyzedDocument[uri]?.variableExpansionSymbols ?? []
+  }
+
+  public removeLastScanResultForUri (uri: string): void {
+    this.uriToLastScanResult[uri] = undefined
   }
 
   public initialize (parser: Parser): void {
