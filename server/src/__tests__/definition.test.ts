@@ -579,7 +579,7 @@ describe('on definition', () => {
     )
   })
 
-  it('provide references for the variables only in declaration or variable expansion syntax', async () => {
+  it('only provides symbols in declaration expression as definitions', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -609,6 +609,27 @@ describe('on definition', () => {
               character: 11
             }
           }
+        }
+      ])
+    )
+
+    // Symbols with the same identifier but with different kind or the ones in ${} should not be definitions
+    // Function -> Function
+    // Variable -> Variable
+    expect(shouldWork).not.toEqual(
+      expect.arrayContaining([
+        {
+          uri: DUMMY_URI,
+          range: {
+            start: {
+              line: 4,
+              character: 7
+            },
+            end: {
+              line: 4,
+              character: 18
+            }
+          }
         },
         {
           uri: DUMMY_URI,
@@ -633,24 +654,6 @@ describe('on definition', () => {
             end: {
               line: 3,
               character: 19
-            }
-          }
-        }
-      ])
-    )
-
-    expect(shouldWork).not.toEqual(
-      expect.arrayContaining([
-        {
-          uri: DUMMY_URI, // this symbol here is a function but with the same identifier. Should not be a reference of the variable
-          range: {
-            start: {
-              line: 4,
-              character: 7
-            },
-            end: {
-              line: 4,
-              character: 18
             }
           }
         }

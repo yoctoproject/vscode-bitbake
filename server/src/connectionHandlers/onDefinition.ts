@@ -10,9 +10,10 @@ import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywor
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { type ParsedPath } from 'path'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 
 export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPositionParams): Location[] | null {
-  const { textDocument: { uri: documentUri }, position } = textDocumentPositionParams
+  const { textDocument: { uri }, position } = textDocumentPositionParams
   logger.debug(`[onDefinition] Position: Line ${position.line} Character ${position.character}`)
 
   const wordPosition = {
@@ -25,13 +26,13 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     position: wordPosition
   })
 
-  const documentAsText = analyzer.getDocumentTexts(documentUri)
+  const documentAsText = analyzer.getDocumentTexts(uri)
   if (documentAsText === undefined) {
-    logger.debug(`[onDefinition] Document not found for ${documentUri}`)
+    logger.debug(`[onDefinition] Document not found for ${uri}`)
     return []
   }
 
-  const lastScanResult = analyzer.getLastScanResult(documentUri)
+  const lastScanResult = analyzer.getLastScanResult(uri)
 
   const definitions: Definition = []
 
@@ -51,18 +52,21 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
 
   if (word !== null) {
     const isVariableSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
-    (analyzer.isVariableExpansion(documentUri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
+    (analyzer.isVariableExpansion(uri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
     // Variables in declartion and variable expansion syntax
     if (isVariableSymbol) {
-      const symbolAtPoint = analyzer.findExactSymbolAtPoint(documentUri, position, word)
+      const symbolAtPoint = analyzer.findExactSymbolAtPoint(uri, position, word)
 
-      const allMatchedSymbols = [
-        ...analyzer.getGlobalDeclarationSymbols(documentUri),
-        ...analyzer.getVariableExpansionSymbols(documentUri),
-        ...analyzer.getExtraSymbolsForUri(documentUri)]
-        .filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind)
+      // Only the ones in the declaration syntax, variable expansions are considered as references.
+      const allDeclarationSymbols: BitbakeSymbolInformation[] = [
+        ...analyzer.getGlobalDeclarationSymbols(uri)
+      ]
+      const includeFileUris = analyzer.getAnalyzedDocument(uri)?.includeFileUris
+      includeFileUris?.forEach((includeFileUri) => {
+        allDeclarationSymbols.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri))
+      })
 
-      allMatchedSymbols.forEach((symbol) => {
+      allDeclarationSymbols.filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind).forEach((symbol) => {
         definitions.push({
           uri: symbol.location.uri,
           range: symbol.location.range
@@ -85,8 +89,8 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
       return definitions
     }
     // Symbols in string content
-    if (analyzer.isStringContent(documentUri, position.line, position.character)) {
-      const allSymbolsAtPosition = analyzer.getSymbolsInStringContent(documentUri, position.line, position.character)
+    if (analyzer.isStringContent(uri, position.line, position.character)) {
+      const allSymbolsAtPosition = analyzer.getSymbolsInStringContent(uri, position.line, position.character)
 
       allSymbolsAtPosition.forEach((symbol) => {
         definitions.push({
@@ -97,7 +101,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
       return definitions
     }
     // Overrides
-    if (analyzer.isOverride(documentUri, position.line, position.character)) {
+    if (analyzer.isOverride(uri, position.line, position.character)) {
       if (lastScanResult !== undefined) {
         const targetPath = lastScanResult.includeHistory.find((includePath) => {
           return includePath.ext === '.conf' && includePath.name === word
