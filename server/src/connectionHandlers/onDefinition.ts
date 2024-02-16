@@ -57,15 +57,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
     if (isVariableSymbol) {
       const symbolAtPoint = analyzer.findExactSymbolAtPoint(uri, position, word)
 
-      // Only the ones in the declaration syntax, variable expansions are considered as references.
-      const allDeclarationSymbols: BitbakeSymbolInformation[] = [
-        ...analyzer.getGlobalDeclarationSymbols(uri)
-      ]
-      analyzer.getIncludeUrisForUri(uri)?.forEach((includeFileUri) => {
-        allDeclarationSymbols.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri))
-      })
-
-      allDeclarationSymbols.filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind).forEach((symbol) => {
+      getAllDefinitionSymbolsForSymbolAtPoint(uri, word, symbolAtPoint).forEach((symbol) => {
         definitions.push({
           uri: symbol.location.uri,
           range: symbol.location.range
@@ -159,4 +151,18 @@ function createDefinitionLocationForPathInfo (path: ParsedPath): Location {
   const location: Location = Location.create(encodeURI(url), Range.create(0, 0, 0, 0))
 
   return location
+}
+
+export function getAllDefinitionSymbolsForSymbolAtPoint (uri: string, word: string, symbolAtPoint: BitbakeSymbolInformation | undefined): BitbakeSymbolInformation[] {
+  if (symbolAtPoint === undefined) {
+    return []
+  }
+  const allDeclarationSymbols = [
+    ...analyzer.getGlobalDeclarationSymbols(uri)
+  ]
+  analyzer.getIncludeUrisForUri(uri)?.forEach((includeFileUri) => {
+    allDeclarationSymbols.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri))
+  })
+
+  return allDeclarationSymbols.filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind)
 }
