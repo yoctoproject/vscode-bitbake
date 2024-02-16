@@ -185,4 +185,10 @@ documents.onDidSave(async (event) => {
   }
 })
 
+documents.onDidClose((event) => {
+  const uri = event.document.uri
+  logger.debug(`[onDidClose] Document closed: ${uri}`)
+  analyzer.removeLastScanResultForUri(uri)
+})
+
 documents.listen(connection)
