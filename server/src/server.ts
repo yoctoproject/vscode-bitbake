@@ -31,6 +31,7 @@ import { RequestMethod, type RequestParams, type RequestResult } from './lib/src
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { extractRecipeName } from './lib/src/utils/files'
+import { onReferenceHandler } from './connectionHandlers/onReference'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 const connection: Connection = createConnection(ProposedFeatures.all)
@@ -108,8 +109,8 @@ connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
 })
 
 connection.onDefinition(onDefinitionHandler)
-// We only provide definitions, references like "${SRC_URI}" are not handled by this extension
-connection.onReferences(onDefinitionHandler)
+
+connection.onReferences(onReferenceHandler)
 
 connection.onHover(onHoverHandler)
 
