@@ -122,8 +122,9 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
   client.onRequest('bitbake/scanRecipe', async (param) => {
     if (typeof param.uri === 'string') {
       await commands.executeCommand('bitbake.scan-recipe-env', Uri.parse(param.uri))
+    } else {
+      logger.error(`[OnRequest] <bitbake/scanRecipe>: Invalid uri: ${JSON.stringify(param.uri)}`)
     }
-    logger.error(`[OnRequest] <bitbake/scanRecipe>: Invalid uri: ${JSON.stringify(param.uri)}`)
   })
 
   client.onRequest('bitbake/resolveContainerPath', async (uri) => {
