@@ -35,7 +35,7 @@ export interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   variableExpansionSymbols: BitbakeSymbolInformation[]
-  includeFileUris?: string[]
+  includeFileUris: string[]
   tree: Parser.Tree
   extraSymbols?: BitbakeSymbolInformation[] // symbols from the include files
 }
@@ -560,6 +560,7 @@ export default class Analyzer {
             document: textDocument,
             globalDeclarations,
             variableExpansionSymbols: [], // won't be used here, so give it an empty array
+            includeFileUris: [],
             tree: parsedTree
           }
         } else {
