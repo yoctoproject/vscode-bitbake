@@ -61,8 +61,7 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
       const allDeclarationSymbols: BitbakeSymbolInformation[] = [
         ...analyzer.getGlobalDeclarationSymbols(uri)
       ]
-      const includeFileUris = analyzer.getAnalyzedDocument(uri)?.includeFileUris
-      includeFileUris?.forEach((includeFileUri) => {
+      analyzer.getIncludeUrisForUri(uri)?.forEach((includeFileUri) => {
         allDeclarationSymbols.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri))
       })
 

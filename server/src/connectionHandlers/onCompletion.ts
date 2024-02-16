@@ -340,7 +340,11 @@ function getFilePath (elementInfo: ElementInfo, fileType: string): string | unde
 function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
   let completionItems: CompletionItem[] = []
-  analyzer.getExtraSymbolsForUri(uri).reduce<BitbakeSymbolInformation[]>((acc, symbol) => {
+  analyzer.getIncludeUrisForUri(uri).map((includeUri) => {
+    return analyzer.getGlobalDeclarationSymbols(includeUri)
+  })
+    .flat()
+    .reduce<BitbakeSymbolInformation[]>((acc, symbol) => {
     if (acc.find((s) => s.name === symbol.name) === undefined) { // Symbols with the same name are considered duplicates, regardless of overrides, because we only need one for each as a completion item
       acc.push(symbol)
     }
