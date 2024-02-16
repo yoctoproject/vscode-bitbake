@@ -204,7 +204,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
     const extension = path.extname(uri.fsPath)
     if (['.bb', '.bbappend', '.inc'].includes(extension)) {
       chosenRecipe = extractRecipeName(uri.fsPath) as string
-      bitbakeWorkspace.addActiveRecipe(chosenRecipe)
+      if (canAdd) bitbakeWorkspace.addActiveRecipe(chosenRecipe)
     }
   }
   // No recipe is provided when calling the command through the command pallette
