@@ -204,7 +204,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
     const extension = path.extname(uri.fsPath)
     if (['.bb', '.bbappend', '.inc'].includes(extension)) {
       chosenRecipe = extractRecipeName(uri.fsPath) as string
-      if (canAdd) bitbakeWorkspace.addActiveRecipe(chosenRecipe)
+      if (canAdd) await bitbakeWorkspace.addActiveRecipe(chosenRecipe)
     }
   }
   // No recipe is provided when calling the command through the command pallette
@@ -230,7 +230,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
 
 async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, recipe?: string): Promise<string | undefined> {
   if (typeof recipe === 'string') {
-    bitbakeWorkspace.addActiveRecipe(recipe)
+    await bitbakeWorkspace.addActiveRecipe(recipe)
     return recipe
   }
 
@@ -243,7 +243,7 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProje
   }
   if (chosenRecipe !== undefined) {
     chosenRecipe = sanitizeForShell(extractRecipeName(chosenRecipe) as string) as string
-    bitbakeWorkspace.addActiveRecipe(chosenRecipe)
+    await bitbakeWorkspace.addActiveRecipe(chosenRecipe)
   }
 
   return chosenRecipe
@@ -252,12 +252,12 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProje
 async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: string): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
   if (chosenRecipe !== undefined) {
-    bitbakeWorkspace.dropActiveRecipe(chosenRecipe)
+    await bitbakeWorkspace.dropActiveRecipe(chosenRecipe)
   }
 }
 
 async function dropAllRecipes (bitbakeWorkspace: BitbakeWorkspace): Promise<void> {
-  bitbakeWorkspace.dropAllActiveRecipes()
+  await bitbakeWorkspace.dropAllActiveRecipes()
 }
 
 export async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {

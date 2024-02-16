@@ -12,7 +12,7 @@ export class BitbakeWorkspace {
   private memento: vscode.Memento | undefined
   onChange: EventEmitter = new EventEmitter()
 
-  addActiveRecipe (recipe: string): void {
+  async addActiveRecipe (recipe: string): Promise<void> {
     if (this.activeRecipes.includes(recipe)) {
       return
     }
@@ -21,26 +21,26 @@ export class BitbakeWorkspace {
       this.activeRecipes.shift()
     }
     if (this.memento !== undefined) {
-      void this.saveBitbakeWorkspace(this.memento)
+      await this.saveBitbakeWorkspace(this.memento)
     }
     this.onChange.emit('recipeAdded', recipe)
   }
 
-  dropActiveRecipe (chosenRecipe: string): void {
+  async dropActiveRecipe (chosenRecipe: string): Promise<void> {
     const index = this.activeRecipes.indexOf(chosenRecipe)
     if (index > -1) {
       this.activeRecipes.splice(index, 1)
     }
     if (this.memento !== undefined) {
-      void this.saveBitbakeWorkspace(this.memento)
+      await this.saveBitbakeWorkspace(this.memento)
     }
     this.onChange.emit('recipeDropped', chosenRecipe)
   }
 
-  dropAllActiveRecipes (): void {
+  async dropAllActiveRecipes (): Promise<void> {
     this.activeRecipes = []
     if (this.memento !== undefined) {
-      void this.saveBitbakeWorkspace(this.memento)
+      await this.saveBitbakeWorkspace(this.memento)
     }
     this.onChange.emit('recipeDropped')
   }

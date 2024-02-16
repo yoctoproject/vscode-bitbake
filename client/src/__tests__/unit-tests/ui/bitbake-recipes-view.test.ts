@@ -21,7 +21,7 @@ describe('BitbakeDriver Recipes View', () => {
   it('should list recipes', (done) => {
     const bitbakeWorkspace = new BitbakeWorkspace()
     const bitBakeProjectScanner = new BitBakeProjectScanner(new BitbakeDriver())
-    bitbakeWorkspace.addActiveRecipe('base-files')
+    void bitbakeWorkspace.addActiveRecipe('base-files') // The promise is the memento which is under mock
 
     const contextMock: vscode.ExtensionContext = {
       subscriptions: {
