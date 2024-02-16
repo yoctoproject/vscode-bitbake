@@ -10,10 +10,10 @@ describe('Bitbake Workspace Test Suite', () => {
 
   it('should manage a list of active recipes', async () => {
     expect(bitbakeWorkspace.activeRecipes).toEqual([])
-    bitbakeWorkspace.addActiveRecipe('foo')
+    await bitbakeWorkspace.addActiveRecipe('foo')
     expect(bitbakeWorkspace.activeRecipes).toEqual(['foo'])
 
-    bitbakeWorkspace.dropActiveRecipe('foo')
+    await bitbakeWorkspace.dropActiveRecipe('foo')
     expect(bitbakeWorkspace.activeRecipes).toEqual([])
   })
 })
