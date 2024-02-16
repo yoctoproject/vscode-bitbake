@@ -17,7 +17,7 @@ import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTe
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
-import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
+import { pathInfoToString, type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
@@ -26,11 +26,12 @@ import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
 import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { finishProcessExecution } from '../utils/ProcessUtils'
+import { type LanguageClient } from 'vscode-languageclient/node'
 
 let parsingPending = false
 let bitbakeSanity = false
 
-export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider): void {
+export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider, client: LanguageClient): void {
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
@@ -41,6 +42,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
@@ -427,6 +429,28 @@ async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, 
     return
   }
   await vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(workspacePath), { forceNewWindow: true })
+}
+
+async function openRecipeWorkdirCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient, uri?: any): Promise<void> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  if (chosenRecipe === undefined) { return }
+
+  logger.debug(`Command: open-recipe-workdir: ${chosenRecipe}`)
+  const recipeUri = bitBakeProjectScanner.scanResult._recipes.find((recipe) => recipe.name === chosenRecipe)?.path
+  if (recipeUri === undefined) throw Error(`Recipe ${chosenRecipe}: not found in Bitbake scan`)
+  const recipePath = pathInfoToString(recipeUri)
+  let recipeWorkdir: string | undefined | null = await client.sendRequest('bitbake/getVar', { variable: 'WORKDIR', recipe: chosenRecipe })
+  if (recipeWorkdir === undefined || recipeWorkdir === null) {
+    // We may not have scanned the recipe yet. Let's try again.
+    await vscode.commands.executeCommand('bitbake.scan-recipe-env', vscode.Uri.file(recipePath))
+    recipeWorkdir = await client.sendRequest('bitbake/getVar', { variable: 'WORKDIR', recipe: chosenRecipe })
+    if (recipeWorkdir === undefined || recipeWorkdir === null) throw Error(`Recipe ${chosenRecipe}: workdir not found`)
+  }
+
+  // These results are guaranteed to be defined if recipeWorkdir is defined
+  recipeWorkdir = await bitBakeProjectScanner.resolveContainerPath(recipeWorkdir, true) as string
+  const recipeWorkdirURI = vscode.Uri.file(recipeWorkdir)
+  await vscode.commands.executeCommand('vscode.openFolder', recipeWorkdirURI, { forceNewWindow: true })
 }
 
 async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {

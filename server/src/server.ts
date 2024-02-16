@@ -136,6 +136,11 @@ connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestPara
   analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
 })
 
+connection.onRequest('bitbake/getVar', async (params: { variable: string, recipe: string }) => {
+  const scanResult = analyzer.getLastScanResult(params.recipe)
+  return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
+})
+
 connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {
   logger.debug(`[onNotification] <${NotificationMethod.RemoveScanResult}> recipe: ${param.recipeName}`)
   analyzer.removeLastScanResultForRecipe(param.recipeName)

@@ -347,6 +347,12 @@
         "description": "Run 'bitbake -e' on the chosen recipe to improve the language services such as hover definition"
       },
       {
+        "command": "bitbake.open-recipe-workdir",
+        "title": "BitBake: Open recipe's workdir",
+        "description": "Open a recipe's workdir in VSCode.",
+        "icon": "$(file-symlink-directory)"
+      },
+      {
         "command": "bitbake.drop-recipe",
         "title": "BitBake: Drop a recipe from the active workspace",
         "description": "Stop watching or suggesting a recipe in bitbake commands.",
@@ -481,6 +487,10 @@
           "group": "0@bitbake_recipe@3"
         },
         {
+          "command": "bitbake.open-recipe-workdir",
+          "group": "0@bitbake_recipe@4"
+        },
+        {
           "command": "bitbake.devtool-modify",
           "group": "1@bitbake_devtool@0"
         }
@@ -547,6 +557,11 @@
         {
           "command": "bitbake.terminal-profile",
           "group": "0@bitbake_recipe@4",
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.open-recipe-workdir",
+          "group": "0@bitbake_recipe@5",
           "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
