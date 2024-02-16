@@ -215,7 +215,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
       bitbakeWorkspace.activeRecipes,
       devtoolWorkspacesNames)
 
-    if (canAdd) {
+    if (canAdd || bitbakeWorkspace.activeRecipes.length === 0) {
       quickPickItems.push('Add another recipe...')
     }
 
