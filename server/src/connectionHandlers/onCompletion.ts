@@ -377,14 +377,3 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   })
   return completionItems
 }
-
-// TBD: Recipe completion, the code from CompletionProvider.ts
-// function createCompletionItemForRecipes (): CompletionItem[] {
-//   return [
-//     ...convertElementInfoListToCompletionItemList(
-//       bitBakeProjectScannerClient.bitbakeScanResult.recipes,
-//       CompletionItemKind.Method,
-//       'bb'
-//     )
-//   ]
-// }
