@@ -197,7 +197,7 @@ describe('sourceIncludeFiles', () => {
 
     const fsReadFileSyncMock = jest.spyOn(fs, 'readFileSync')
 
-    analyzer.sourceIncludeFiles(uri, [])
+    analyzer.extractIncludeFileUris(uri)
 
     expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.DIRECTIVE.replace('file://', ''), 'utf8')
     expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.FOO_INC.replace('file://', ''), 'utf8')
@@ -226,7 +226,7 @@ describe('sourceIncludeFiles', () => {
 
     const loggerMock = jest.spyOn(logger, 'debug')
 
-    analyzer.sourceIncludeFiles(uri, [])
+    analyzer.extractIncludeFileUris(uri)
 
     let loggerDebugCalledTimes = 0
     loggerMock.mock.calls.forEach((call) => {
@@ -258,9 +258,7 @@ describe('sourceIncludeFiles', () => {
       FIXTURE_URI.BAZ_BBCLASS
     ])
 
-    /* eslint-disable-next-line prefer-const */
-    let includeUris: string[] = []
-    analyzer.sourceIncludeFiles(uri, includeUris)
+    analyzer.extractIncludeFileUris(uri)
 
     const symbols = analyzer.getIncludeUrisForUri(uri).map((includeUri) => {
       return analyzer.getGlobalDeclarationSymbols(includeUri)

@@ -92,16 +92,12 @@ export default class Analyzer {
 
     const variableExpansionSymbols = this.getVariableExpansionSymbolsFromTree({ tree, uri })
 
-    // eslint-disable-next-line prefer-const
-    let includeFileUris: string[] = []
-    this.sourceIncludeFiles(uri, includeFileUris, tree)
-
     this.uriToAnalyzedDocument[uri] = {
       version: document.version,
       document,
       globalDeclarations,
       variableExpansionSymbols,
-      includeFileUris,
+      includeFileUris: this.extractIncludeFileUris(uri, tree),
       tree
     }
 
@@ -517,12 +513,17 @@ export default class Analyzer {
     return tree.rootNode.descendantForPosition({ row: line, column })
   }
 
+  // Return the uris in the diretive statements for unlimited depth
+  public extractIncludeFileUris (uri: string, tree?: Parser.Tree): string[] {
+    const includeUris: string[] = []
+    this.sourceIncludeFiles(uri, includeUris, tree)
+    return includeUris
+  }
+
   /**
-   *
-   * @param uri
-   * @param document Main purpose of this param is to avoid re-reading the file from disk and re-parsing the tree when the file is opened for the first time since the same process will happen in the analyze() before calling this function.
+   * The files pointed by the include URIs will analyzed if not yet done so such that the symbols in the included files are available for querying.
    */
-  public sourceIncludeFiles (uri: string, includeFileUris: string[], tree?: Parser.Tree): void {
+  private sourceIncludeFiles (uri: string, includeFileUris: string[], tree?: Parser.Tree): void {
     if (this.parser === undefined) {
       logger.error('[Analyzer] The analyzer is not initialized with a parser')
       return
@@ -566,7 +567,7 @@ export default class Analyzer {
         }
       })
       for (const fileUri of fileUris) {
-        this.sourceIncludeFiles(fileUri, includeFileUris, undefined)
+        this.sourceIncludeFiles(fileUri, includeFileUris)
       }
     } catch (error) {
       if (error instanceof Error) {
