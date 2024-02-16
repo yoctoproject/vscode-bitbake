@@ -828,43 +828,15 @@ export default class Analyzer {
       return undefined
     }
 
-    const scanResultDoc = lines.slice(index).join('\n')
-    const scanResultDocUri = originalDocUri + '.scanned'
-    const scanResultDocTree = this.parser.parse(scanResultDoc)
+    const scanResultText = lines.slice(index).join('\n')
+    const scanResultDummyUri = originalDocUri + '.scanned'
+    const scanResultParsedTree = this.parser.parse(scanResultText)
 
-    const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultDocTree, uri: scanResultDocUri, getFinalValue: true })
-    const scanResultDocSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
-    const originalDocDeclarationSymbols = this.getAllSymbolsFromGlobalDeclarations(analyzedOriginalDoc.globalDeclarations)
-    const originalDocVariableExpansionSymbols = analyzedOriginalDoc.variableExpansionSymbols
-
-    const scannedResultSymbolInfo: BitbakeSymbolInformation[] = []
-    // Store the variable expansion symbols first and use their final value to resolve those declaration symbols. e.g. VAR:${PN}
-    originalDocVariableExpansionSymbols.forEach((symbol) => {
-      const foundSymbol = scanResultDocSymbols.find((scanResultDocSymbol) => {
-        return this.symbolsAreTheSame(scanResultDocSymbol, symbol)
-      })
-      if (foundSymbol !== undefined) {
-        scannedResultSymbolInfo.push(foundSymbol)
-      }
-    })
-
-    originalDocDeclarationSymbols.forEach((symbol) => {
-      const resolvedSymbol = this.resolveSymbol(symbol, scannedResultSymbolInfo)
-
-      const foundSymbol = this.matchSymbol(resolvedSymbol, scanResultDocSymbols)
-
-      if (foundSymbol !== undefined) {
-        scannedResultSymbolInfo.push(foundSymbol)
-      }
-    })
+    const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultParsedTree, uri: scanResultDummyUri, getFinalValue: true })
+    const scanResultSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
 
     this.uriToLastScanResult[originalDocUri] = {
-      symbols: scannedResultSymbolInfo.reduce<BitbakeSymbolInformation[]>((acc, symbol) => {
-        if (acc.find((s) => this.symbolsAreTheSame(s, symbol)) === undefined) {
-          acc.push(symbol)
-        }
-        return acc
-      }, []),
+      symbols: scanResultSymbols.filter((symbol) => symbol.kind === SymbolKind.Variable),
       includeHistory: this.extractIncludeHistory(scanResult, index)
     }
   }
