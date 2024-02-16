@@ -18,6 +18,7 @@ export class BitbakeRecipeScanner {
 
   public scanResults: string = ''
   public processedScanResults: Record<string, unknown> | undefined
+  private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri>()
 
   /**
    *
@@ -49,6 +50,15 @@ export class BitbakeRecipeScanner {
     }
 
     await runBitbakeTask(scanRecipeEnvTask, taskProvider)
+    // Wait for the task and server side to have done the processing
+    await new Promise<void>((resolve) => {
+      const disposable = this.serverScanRequest.event((uri) => {
+        if (uri === scanRecipeEnvTask.definition.uri) {
+          disposable.dispose()
+          resolve()
+        }
+      })
+    })
   }
 
   subscribeToTaskEnd (context: vscode.ExtensionContext, taskProvider: BitbakeTaskProvider): void {
@@ -66,7 +76,8 @@ export class BitbakeRecipeScanner {
             if (this.scanResults !== '' && uri !== undefined && chosenRecipe !== undefined) {
               logger.debug('[onDidEndTask] Sending recipe environment to the server')
               const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults: this.scanResults, uri, chosenRecipe }
-              await this._languageClient.sendNotification(RequestMethod.ProcessRecipeScanResults, requestParam)
+              await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
+              this.serverScanRequest.fire(uri)
             }
           }
         }
