@@ -3,21 +3,21 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import childProcess from 'child_process'
 import EventEmitter from 'events'
+import * as pty from 'node-pty'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
-import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
+import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution } from '../utils/ProcessUtils'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
-  bitbakeProcess: childProcess.ChildProcess | undefined
+  bitbakeProcess: pty.IPty | undefined
   bitbakeProcessCommand: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
 
@@ -38,22 +38,26 @@ export class BitbakeDriver {
   }
 
   /// Execute a command in the bitbake environment
-  async spawnBitbakeProcess (command: string): Promise<childProcess.ChildProcess> {
+  async spawnBitbakeProcess (command: string): Promise<pty.IPty> {
     const { shell, script } = this.prepareCommand(command)
     const cwd = this.bitbakeSettings.workingDirectory
     await this.waitForBitbakeToFinish()
     logger.debug(`Executing Bitbake command with ${shell} in ${cwd}: ${script}`)
-    const child = childProcess.spawn(script, {
+    const child = pty.spawn(
       shell,
-      cwd,
-      env: { ...process.env, ...this.bitbakeSettings.shellEnv }
-    })
+      ['-c', script],
+      {
+        cwd,
+        env: { ...process.env, ...this.bitbakeSettings.shellEnv }
+      }
+    )
     this.bitbakeProcess = child
     this.bitbakeProcessCommand = command
-    child.on('spawn', () => {
+    const listener = child.onData(() => {
       this.onBitbakeProcessChange.emit('spawn', command)
+      listener.dispose()
     })
-    child.on('close', () => {
+    child.onExit(() => {
       this.bitbakeProcess = undefined
       this.bitbakeProcessCommand = undefined
       this.onBitbakeProcessChange.emit('close')
@@ -179,7 +183,7 @@ export class BitbakeDriver {
       throw Error('Bitbake process command is undefined')
     }
     let processStopped = false
-    processToStop.on('close', () => {
+    processToStop.onExit(() => {
       processStopped = true
       logger.debug('Bitbake process successfully terminated')
     })
@@ -219,7 +223,7 @@ export class BitbakeDriver {
 
     // Our process will look something like this in `ps`:
     // deribau+  405680  405597 21 17:13 ?        00:00:00 python3 /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/bitbake/bin/bitbake linux-yocto
-    const ps = childProcess.spawn('ps', ['-ef'])
+    const ps = pty.spawn('ps', ['-ef'], {})
     const ret = await finishProcessExecution(Promise.resolve(ps))
 
     const stdout = ret.stdout.toString()
@@ -236,7 +240,7 @@ export class BitbakeDriver {
     if (bitbakeProcesses.length === 1) {
       const pid = bitbakeProcesses[0].split(/\s+/)[1]
       logger.info('Stopping bitbake process with PID: ' + pid)
-      childProcess.spawn('kill', ['-s', 'SIGINT', pid])
+      pty.spawn('kill', ['-s', 'SIGINT', pid], {})
       return true
     }
 

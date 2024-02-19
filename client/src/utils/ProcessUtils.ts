@@ -3,27 +3,25 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import type * as pty from 'node-pty'
 import type childProcess from 'child_process'
-import { logger } from './OutputLogger'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 export const BITBAKE_TIMEOUT = 300000
 export const BITBAKE_EXIT_TIMEOUT = 30000
 
-export type KillProcessFunction = (child: childProcess.ChildProcess) => Promise<void>
+export type KillProcessFunction = (child: pty.IPty) => Promise<void>
 
 /// Wait for an asynchronous process to finish and return its output
-export async function finishProcessExecution (process: Promise<childProcess.ChildProcess>, timeoutCallback: KillProcessFunction = async (child) => { child.kill() }, timeout = BITBAKE_TIMEOUT): Promise<childProcess.SpawnSyncReturns<Buffer>> {
+export async function finishProcessExecution (process: Promise<pty.IPty>, timeoutCallback: KillProcessFunction = async (child) => { child.kill() }, timeout = BITBAKE_TIMEOUT): Promise<childProcess.SpawnSyncReturns<Buffer>> {
   return await new Promise<childProcess.SpawnSyncReturns<Buffer>>((resolve, reject) => {
     process.then((child) => {
       let stdout = ''
-      let stderr = ''
-      child.stdout?.on('data', (data) => {
+      const stderr = ''
+      child.onData((data) => {
         stdout += data
       })
-      child.stderr?.on('data', (data) => {
-        stderr += data
-      })
-      child.on('close', (code) => {
+      child.onExit((event) => {
         clearTimeout(timer)
         const stdoutBuffer = Buffer.from(stdout)
         const stderrBuffer = Buffer.from(stderr)
@@ -32,7 +30,7 @@ export async function finishProcessExecution (process: Promise<childProcess.Chil
           output: [stdoutBuffer, stderrBuffer],
           stdout: stdoutBuffer,
           stderr: stderrBuffer,
-          status: code,
+          status: event.exitCode,
           signal: null
         })
       })
