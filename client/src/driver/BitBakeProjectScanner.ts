@@ -23,8 +23,8 @@ import { type BitbakeDriver } from './BitbakeDriver'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import fs from 'fs'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
-import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { bitbakeESDKMode } from './BitbakeESDK'
+import { finishProcessExecution } from '../utils/ProcessUtils'
 
 interface ScannStatus {
   scanIsRunning: boolean

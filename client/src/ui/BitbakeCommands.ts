@@ -19,13 +19,13 @@ import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
-import { finishProcessExecution } from '../lib/src/utils/ProcessUtils'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { bitbakeESDKMode, configureDevtoolSDKFallback } from '../driver/BitbakeESDK'
 import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
 import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
+import { finishProcessExecution } from '../utils/ProcessUtils'
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -289,8 +289,8 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
     logger.debug(`Command: devtool-modify: ${chosenRecipe}`)
     const command = `devtool modify ${chosenRecipe}`
     const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
-    process.on('exit', (code) => {
-      if (code === 0) {
+    process.onExit((event) => {
+      if (event.exitCode === 0) {
         void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
           // Running devtool-ide-sdk is very slow. Users may not want to start it all the time so we suggest it here.
           // For instance, if they only need to make a quick patch to a recipe, they may not want to wait for the SDK to be built.
@@ -400,8 +400,8 @@ async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
     logger.debug(`Command: devtool-reset: ${chosenRecipe}`)
     const command = `devtool reset ${chosenRecipe}`
     const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Reset: ${chosenRecipe}`)
-    process.on('exit', (code) => {
-      if (code === 0) {
+    process.onExit((event) => {
+      if (event.exitCode === 0) {
         void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
           void bitBakeProjectScanner.rescanProject()
         })

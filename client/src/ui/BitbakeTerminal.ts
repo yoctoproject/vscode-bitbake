@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
-import type * as child_process from 'child_process'
+import type * as pty from 'node-pty'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
@@ -14,20 +14,20 @@ const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<child_process.ChildProcess> {
+export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<pty.IPty> {
   const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
   const script = bitbakeDriver.composeBitbakeScript(command)
   return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<child_process.ChildProcess> {
+export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<pty.IPty> {
   const script = bitbakeDriver.composeBitbakeScript(command)
   return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
-async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<child_process.ChildProcess> {
+async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<pty.IPty> {
   let terminal: BitbakeTerminal | undefined
   for (const t of bitbakeTerminals) {
     if (!t.pty.isBusy()) {
@@ -94,7 +94,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     }
   }
 
-  private process: Promise<child_process.ChildProcess> | undefined
+  private process: Promise<pty.IPty> | undefined
 
   isBusy (): boolean {
     return this.process !== undefined
@@ -110,12 +110,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     this.writeEmitter.fire(line)
   }
 
-  error (error: string): void {
-    error = error.replace(/\n/g, endOfLine)
-    this.writeEmitter.fire(error)
-  }
-
-  public async runProcess (process: Promise<child_process.ChildProcess>, bitbakeScript: string, terminalName?: string): Promise<child_process.ChildProcess> {
+  public async runProcess (process: Promise<pty.IPty>, bitbakeScript: string, terminalName?: string): Promise<pty.IPty> {
     if (this.process !== undefined) {
       throw new Error('Bitbake process already running')
     }
@@ -123,34 +118,25 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     this.process = process
     const processResolved = await this.process
 
-    processResolved.stdout?.on('data', (data) => {
+    processResolved.onData((data) => {
       this.output(data.toString())
       logger.debug(data.toString())
       if (this.isTaskTerminal()) {
         this.outputDataString += data.toString()
       }
     })
-    processResolved.stdout?.once('data', () => {
+    const listener = processResolved.onData(() => {
       // I wanted to use appropriate events like process.on('spawn') or terminal.open() but they are not triggered at the right time for
       // the terminal to be ready to receive input
-      this.output(emphasisedAsterisk + ' Executing script: ' + bitbakeScript + '\n')
+      this.output(emphasisedAsterisk + ' Executing script: ' + bitbakeScript + endOfLine)
+      listener.dispose()
     })
-    processResolved.stderr?.on('data', (data) => {
-      this.error(data.toString())
-      logger.error(data.toString())
-    })
-    processResolved.on('error', (error) => {
-      this.lastExitCode = -1
-      this.error(error.toString())
-      logger.error(error.toString())
+    
+    processResolved.onExit((event) => {
+      this.lastExitCode = event.exitCode ?? -1
       this.process = undefined
-      if (this.isTaskTerminal()) { this.closeEmitter.fire(-1) }
-    })
-    processResolved.on('exit', (code) => {
-      this.lastExitCode = code ?? -1
-      this.process = undefined
-      if (code !== 0) {
-        this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + code + '\n')
+      if (event.exitCode !== 0) {
+        this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + event.exitCode + endOfLine)
         if (!this.isTaskTerminal()) {
           this.changeNameEmitter.fire('✖ ' + terminalName)
           this.parentTerminal?.terminal.show()
