@@ -28,6 +28,8 @@ const languages = {
     createTerminal: jest.fn(),
   };
 
+  const TerminalLink = jest.fn();
+
   const workspace = {
     getConfiguration: jest.fn(),
     workspaceFolders: [],
@@ -141,5 +143,6 @@ const languages = {
     ViewColumn,
     QuickPickItemKind,
     TreeItem,
-    TreeItemCollapsibleState
+    TreeItemCollapsibleState,
+    TerminalLink,
   };
