@@ -1,6 +1,6 @@
 {
   "name": "yocto-bitbake",
-	"displayName": "Yocto Project BitBake",
+  "displayName": "Yocto Project BitBake",
   "description": "Extended Yocto Project and BitBake language support",
   "author": {
     "name": "Savoir-faire Linux",
@@ -67,7 +67,9 @@
       {
         "language": "bitbake",
         "scopes": {
-          "operator.readonly": ["keyword.other.bitbake-operator.bb"]
+          "operator.readonly": [
+            "keyword.other.bitbake-operator.bb"
+          ]
         }
       }
     ],
@@ -103,12 +105,16 @@
         },
         "bitbake.pathToEnvScript": {
           "type": "string",
-          "examples": ["${workspaceFolder}/sources/poky/oe-init-build-env"],
+          "examples": [
+            "${workspaceFolder}/sources/poky/oe-init-build-env"
+          ],
           "markdownDescription": "Set the path to the environment script to configure the BitBake project. _(Optional)_, see the commandWrapper setting.\n\nExample: `${workspaceFolder}/sources/poky/oe-init-build-env`"
         },
         "bitbake.pathToBuildFolder": {
           "type": "string",
-          "examples": ["${workspaceFolder}/build"],
+          "examples": [
+            "${workspaceFolder}/build"
+          ],
           "description": "Set the build folder for the BitBake project. _(Optional)_, see the commandWrapper setting.\n\nExample: '${workspaceFolder}/build'"
         },
         "bitbake.pathToBitbakeFolder": {
@@ -633,16 +639,19 @@
     "test": "npm run test:grammar",
     "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
     "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u",
+    "postinstall": "electron-rebuild -w node-pty -v 27.3.2",
     "vscode:prepublish": "npm install --omit=dev && cd ../server && npm install --omit=dev && npm run installServer",
     "package": "npm run vscode:prepublish && vsce package --target linux-x64 && vsce package --target linux-arm64 && vsce package --target linux-armhf && vsce package --target win32-x64 && vsce package --target win32-arm64"
   },
   "dependencies": {
+    "@electron/rebuild": "^3.6.0",
     "find": "^0.2.7",
+    "node-pty": "^1.0.0",
     "vscode-languageclient": "^8.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.6.2",
     "@types/find": "^0.2.2",
+    "@types/node": "^20.6.2",
     "@types/vscode": "^1.75.1"
   },
   "workspaces": [
