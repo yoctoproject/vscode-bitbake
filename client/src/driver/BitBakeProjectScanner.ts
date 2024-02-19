@@ -271,7 +271,7 @@ Couldn't find ${inputPath} corresponding paths inside and outside of the contain
 You should adjust your docker volumes to use the same URIs as those present on your host machine.`
           })
       }
-      return inputPath
+      return resolvedPath
     }
     return resolvedPath
   }
