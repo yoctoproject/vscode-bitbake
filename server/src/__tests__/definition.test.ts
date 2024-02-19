@@ -94,7 +94,7 @@ describe('on definition', () => {
     // Resolve the directive path with ${} and provide go-to-definition
     const scanResults = '#INCLUDE HISTORY\n#some operation history for PN\nPN = \'foo\'\n'
 
-    analyzer.processRecipeScanResults(scanResults, FIXTURE_URI.DIRECTIVE, undefined)
+    analyzer.processRecipeScanResults(scanResults, FIXTURE_URI.DIRECTIVE, 'dummy_recipe')
 
     const definition3 = onDefinitionHandler({
       textDocument: {
@@ -443,7 +443,7 @@ describe('on definition', () => {
 
     const scanResults = `#INCLUDE HISTORY\n#   set ${fakeFilePath}:${fakeLineNumber}\n${variable} = 'this is the final value for FINAL_VALUE'\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\n`
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, undefined)
+    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, 'dummy_recipe')
 
     const shouldWork = onDefinitionHandler({
       textDocument: {
@@ -548,7 +548,7 @@ describe('on definition', () => {
     // when recipe scan result is avaiable, prioritize the path found in the result
     const scanResults = `#  INCLUDE HISTORY\n#\n# ${parsedConfFile2}\n`
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, undefined)
+    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, 'dummy_recipe')
 
     const shouldWork2 = onDefinitionHandler({
       textDocument: {
