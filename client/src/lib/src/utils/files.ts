@@ -5,7 +5,6 @@
 
 import path from 'path'
 
-export function extractRecipeName (filePath: string | undefined): string | undefined {
-  if (filePath === undefined) { return undefined }
+export function extractRecipeName (filePath: string): string {
   return path.parse(filePath).name.split('_')[0]
 }

@@ -44,7 +44,7 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     const filenames = LinksWithoutTails.map(link => link.value)
     const filenamesRegex = '{' + filenames.join(',') + '}'
     const parentDir = path.dirname(uri.path)
-    const pnDir = path.join(parentDir, extractRecipeName(uri.fsPath) as string)
+    const pnDir = path.join(parentDir, extractRecipeName(uri.fsPath))
     const filesDir = path.join(parentDir, 'files')
 
     const foundFiles: vscode.Uri[] = []

@@ -203,7 +203,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
   if (uri instanceof vscode.Uri) {
     const extension = path.extname(uri.fsPath)
     if (['.bb', '.bbappend', '.inc'].includes(extension)) {
-      chosenRecipe = extractRecipeName(uri.fsPath) as string
+      chosenRecipe = extractRecipeName(uri.fsPath)
       if (canAdd) await bitbakeWorkspace.addActiveRecipe(chosenRecipe)
     }
   }
@@ -242,7 +242,7 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProje
     chosenRecipe = await vscode.window.showInputBox({ placeHolder: "Type the recipe's name to add. (Bitbake scan not complete yet)" })
   }
   if (chosenRecipe !== undefined) {
-    chosenRecipe = sanitizeForShell(extractRecipeName(chosenRecipe) as string) as string
+    chosenRecipe = sanitizeForShell(extractRecipeName(chosenRecipe)) as string
     await bitbakeWorkspace.addActiveRecipe(chosenRecipe)
   }
 
