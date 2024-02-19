@@ -106,7 +106,6 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   output (line: string): void {
-    line = line.replace(/\n/g, endOfLine)
     this.writeEmitter.fire(line)
   }
 
@@ -131,7 +130,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
       this.output(emphasisedAsterisk + ' Executing script: ' + bitbakeScript + endOfLine)
       listener.dispose()
     })
-    
+
     processResolved.onExit((event) => {
       this.lastExitCode = event.exitCode ?? -1
       this.process = undefined
@@ -142,11 +141,11 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
           this.parentTerminal?.terminal.show()
         }
       } else {
-        this.output(emphasisedAsterisk + ' Bitbake process exited successfully' + '\n')
+        this.output(emphasisedAsterisk + ' Bitbake process exited successfully' + endOfLine)
         if (!this.isTaskTerminal()) { this.changeNameEmitter.fire('✔ ' + terminalName) }
       }
-      if (!this.isTaskTerminal()) { this.output(emphasisedAsterisk + ' Terminal will be reused by BitBake, press any key to close it.' + '\n') }
-      if (this.isTaskTerminal()) { this.closeEmitter.fire(code ?? -1) }
+      if (!this.isTaskTerminal()) { this.output(emphasisedAsterisk + ' Terminal will be reused by BitBake, press any key to close it.' + endOfLine) }
+      if (this.isTaskTerminal()) { this.closeEmitter.fire(event.exitCode ?? -1) }
     })
 
     return processResolved

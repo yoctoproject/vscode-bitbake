@@ -207,7 +207,7 @@ export class BitBakeProjectScanner {
 
     if (commandResult.status === 0) {
       const output = commandResult.stdout.toString()
-      const outputLines = output.split('\n')
+      const outputLines = output.split(/\r?\n/g)
 
       const layersStartRegex = /^layer *path *priority$/
       let layersFirstLine = 0
@@ -331,8 +331,8 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
     const output = commandResult.output.toString()
 
-    const outerReg: RegExp = /(.+):\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\n)+)/g
-    const innerReg: RegExp = /\s+(\S+)\s+(\S+(?:\s+\(skipped\))?)\n/g
+    const outerReg: RegExp = /(.+):\r?\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\r?\n)+)/g
+    const innerReg: RegExp = /\s+(\S+)\s+(\S+(?:\s+\(skipped\))?)\r?\n/g
 
     for (const match of output.matchAll(outerReg)) {
       const extraInfoString: string[] = new Array < string >()
@@ -355,7 +355,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
       const element: ElementInfo = {
         name: match[1],
-        extraInfo: extraInfoString.join('\n'),
+        extraInfo: extraInfoString.join('\r\n'),
         layerInfo: layer,
         version
       }
@@ -373,7 +373,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
       throw new Error('Failed to scan overrides')
     }
     const output = commandResult.output.toString()
-    const outerReg = /\nOVERRIDES="(.*)"\n/
+    const outerReg = /\nOVERRIDES="(.*)"\r\n/
     this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
@@ -445,8 +445,8 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const output = commandResult.output.toString()
 
     // Example:
-    // \nbusybox_1.36.1.bb:\n  /home/user/yocto/sources/poky/meta-poky/recipes-core/busybox/busybox_%.bbappend
-    const outerReg: RegExp = /\n(.*\.bb):(?:\n\s*\/.*\.bbappend)+/g
+    // \r\nbusybox_1.36.1.bb:\r\n  /home/user/yocto/sources/poky/meta-poky/recipes-core/busybox/busybox_%.bbappend
+    const outerReg: RegExp = /\r?\n(.*\.bb):(?:\r?\n\s*\/.*\.bbappend)+/g
 
     for (const match of output.matchAll(outerReg)) {
       const fullRecipeNameAsArray: string[] = match[1].split('_')

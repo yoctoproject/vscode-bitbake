@@ -108,7 +108,7 @@ export class BitbakeDriver {
     const command = 'which devtool bitbake || true'
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
     const ret = await finishProcessExecution(process, async () => { await this.killBitbake() })
-    const outLines = ret.stdout.toString().split('\n')
+    const outLines = ret.stdout.toString().split(/\r?\n/g)
 
     if (outLines.filter((line) => /devtool$/.test(line)).length === 0) {
       clientNotificationManager.showBitbakeSettingsError('devtool not found in $PATH\nSee Bitbake Terminal for command output.')
@@ -227,7 +227,7 @@ export class BitbakeDriver {
     const ret = await finishProcessExecution(Promise.resolve(ps))
 
     const stdout = ret.stdout.toString()
-    const lines = stdout.split('\n').slice(1, -1)
+    const lines = stdout.split(/\r?\n/g).slice(1, -1)
     let bitbakeProcesses = lines.filter((line) => line.split(/\s+/)[7] === 'python3')
     bitbakeProcesses = bitbakeProcesses.filter((line) => line.includes(command))
     logger.debug('Bitbake process: ' + JSON.stringify(bitbakeProcesses))
