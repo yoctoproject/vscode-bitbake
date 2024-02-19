@@ -21,6 +21,7 @@ import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import path from 'path'
 import bitbakeRecipeScanner from './driver/BitbakeRecipeScanner'
 import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
+import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -100,6 +101,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
   terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
   vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
+  const terminalLinkProvider = new BitbakeTerminalLinkProvider(bitBakeProjectScanner)
+  vscode.window.registerTerminalLinkProvider(terminalLinkProvider)
 
   const provider = new BitbakeDocumentLinkProvider(client)
   const selector = { scheme: 'file', language: 'bitbake' }

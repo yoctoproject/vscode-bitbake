@@ -79,6 +79,10 @@ export class BitBakeProjectScanner {
     return this._bitbakeDriver
   }
 
+  public needsContainerPathsResolution (): boolean {
+    return this.containerMountPoint !== undefined
+  }
+
   /// A quick scan to present devtool modify/reset results. A full rescan is required for .bbappends.
   async rescanDevtoolWorkspaces (): Promise<void> {
     logger.info('request rescanDevtoolWorkspaces')
