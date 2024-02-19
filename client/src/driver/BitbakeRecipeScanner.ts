@@ -14,9 +14,7 @@ export class BitbakeRecipeScanner {
   static readonly taskName = 'Bitbake: Scan recipe env'
 
   private _languageClient: LanguageClient | undefined
-  private _currentUriForScan: string | undefined = undefined
-  private _currentRecipeForScan: string | undefined = undefined
-  private _pendingRecipeScanTasks: { task: vscode.Task, uri: string, recipe: string } | null = null
+  private _pendingRecipeScanTasks: vscode.Task | null = null
 
   public scanResults: string = ''
   public processedScanResults: Record<string, unknown> | undefined
@@ -37,7 +35,7 @@ export class BitbakeRecipeScanner {
 
     const taskName = BitbakeRecipeScanner.taskName
     const scanRecipeEnvTask = new vscode.Task(
-      { type: 'bitbake', recipes: [chosenRecipe], options: { parseOnly: true, env: true } },
+      { type: 'bitbake', recipes: [chosenRecipe], uri, options: { parseOnly: true, env: true } },
       vscode.TaskScope.Workspace,
       taskName,
       'bitbake'
@@ -46,12 +44,9 @@ export class BitbakeRecipeScanner {
     const runningTasks = vscode.tasks.taskExecutions
     if (runningTasks.some((execution) => execution.task.name === taskName)) {
       logger.debug('[BitbakeRecipeScanner] Recipe scan is already running, pushing to pending tasks')
-      this._pendingRecipeScanTasks = { task: scanRecipeEnvTask, uri, recipe: chosenRecipe }
+      this._pendingRecipeScanTasks = scanRecipeEnvTask
       return
     }
-
-    this._currentUriForScan = uri
-    this._currentRecipeForScan = chosenRecipe
 
     await runBitbakeTask(scanRecipeEnvTask, taskProvider)
   }
@@ -59,27 +54,26 @@ export class BitbakeRecipeScanner {
   subscribeToTaskEnd (context: vscode.ExtensionContext, taskProvider: BitbakeTaskProvider): void {
     context.subscriptions.push(vscode.tasks.onDidEndTask(async (e) => {
       if (e.execution.task.name === 'Bitbake: Scan recipe env') {
+        const uri = e.execution.task.definition.uri
+        const chosenRecipe = e.execution.task.definition.recipes[0]
+
         const executionEngine = e.execution.task.execution as BitbakeCustomExecution
         if (executionEngine !== undefined) {
           this.scanResults = executionEngine.pty?.outputDataString ?? ''
           if (this._languageClient === undefined) {
             logger.error('[onDidEndTask] Language client not set, unable to forward recipe environment to the server')
           } else {
-            if (this.scanResults !== '') {
+            if (this.scanResults !== '' && uri !== undefined && chosenRecipe !== undefined) {
               logger.debug('[onDidEndTask] Sending recipe environment to the server')
-              const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults: this.scanResults, uri: this._currentUriForScan, chosenRecipe: this._currentRecipeForScan }
+              const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults: this.scanResults, uri, chosenRecipe }
               await this._languageClient.sendNotification(RequestMethod.ProcessRecipeScanResults, requestParam)
-              this._currentUriForScan = undefined
-              this._currentRecipeForScan = undefined
             }
           }
         }
 
         if (this._pendingRecipeScanTasks !== null) {
-          logger.debug(`[onDidEndTask] Running the pending recipe scan task. url: ${this._pendingRecipeScanTasks.uri}`)
-          this._currentUriForScan = this._pendingRecipeScanTasks.uri
-          this._currentRecipeForScan = this._pendingRecipeScanTasks.recipe
-          await runBitbakeTask(this._pendingRecipeScanTasks.task, taskProvider)
+          logger.debug(`[onDidEndTask] Running the pending recipe scan task. url: ${this._pendingRecipeScanTasks.definition.uri}`)
+          await runBitbakeTask(this._pendingRecipeScanTasks, taskProvider)
           this._pendingRecipeScanTasks = null
         }
       }
