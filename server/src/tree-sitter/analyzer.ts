@@ -803,7 +803,7 @@ export default class Analyzer {
    * @param func The custom function to process the matched symbols
    */
   private processSymbolsInStringContent (n: Parser.SyntaxNode, regex: RegExp, func: (start: Position, end: Position, match: RegExpMatchArray) => void): void {
-    const splittedStringContent = n.text.split(/\n/g)
+    const splittedStringContent = n.text.split(/\r?\n/g)
     for (let i = 0; i < splittedStringContent.length; i++) {
       const lineText = splittedStringContent[i]
       for (const match of lineText.matchAll(regex)) {
@@ -833,14 +833,14 @@ export default class Analyzer {
       return
     }
 
-    const lines = scanResult.split('\n')
+    const lines = scanResult.split(/\r?\n/g)
     const index = lines.findIndex((line) => line.includes('INCLUDE HISTORY'))
     if (index === -1) {
       logger.debug('[ProcessRecipeScanResults] Cannot find INCLUDE HISTORY in scan results, abort processing scan results')
       return undefined
     }
 
-    const scanResultText = lines.slice(index).join('\n')
+    const scanResultText = lines.slice(index).join('\r\n')
     const scanResultParsedTree = this.parser.parse(scanResultText)
 
     const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultParsedTree, uri: 'scanResultDummyUri', getFinalValue: true })
@@ -854,7 +854,7 @@ export default class Analyzer {
 
   private extractIncludeHistory (scanResult: string, includeHistoryIndex: number): ParsedPath[] {
     const result: string[] = []
-    const lines = scanResult.split('\n')
+    const lines = scanResult.split(/\r?\n/g)
 
     /**
      * # INCLUDE HISTORY
