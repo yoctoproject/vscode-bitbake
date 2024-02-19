@@ -10,6 +10,7 @@ import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 import { onHoverHandler } from '../connectionHandlers/onHover'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 describe('on hover', () => {
   beforeAll(async () => {
@@ -614,7 +615,7 @@ describe('on hover', () => {
 
     const scanResults = '#INCLUDE HISTORY\n# Some scan results here\nFINAL_VALUE = \'this is the final value for FINAL_VALUE\'\nFINAL_VALUE:o1 = \'this is the final value for FINAL_VALUE with override o1\'\nFINAL_VALUE:o1:pn:pn-foo = \'this is the final value for FINAL_VALUE with override containing variable expansion\'\nPN= \'pn\'\n'
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, 'dummy_recipe')
+    analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
     const shouldShow1 = await onHoverHandler({
       textDocument: {

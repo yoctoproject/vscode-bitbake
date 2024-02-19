@@ -9,6 +9,7 @@ import { onDefinitionHandler } from '../connectionHandlers/onDefinition'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 describe('on definition', () => {
   beforeAll(async () => {
@@ -94,7 +95,7 @@ describe('on definition', () => {
     // Resolve the directive path with ${} and provide go-to-definition
     const scanResults = '#INCLUDE HISTORY\n#some operation history for PN\nPN = \'foo\'\n'
 
-    analyzer.processRecipeScanResults(scanResults, FIXTURE_URI.DIRECTIVE, 'dummy_recipe')
+    analyzer.processRecipeScanResults(scanResults, extractRecipeName(FIXTURE_URI.DIRECTIVE))
 
     const definition3 = onDefinitionHandler({
       textDocument: {
@@ -443,7 +444,7 @@ describe('on definition', () => {
 
     const scanResults = `#INCLUDE HISTORY\n#   set ${fakeFilePath}:${fakeLineNumber}\n${variable} = 'this is the final value for FINAL_VALUE'\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\n`
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, 'dummy_recipe')
+    analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
     const shouldWork = onDefinitionHandler({
       textDocument: {
@@ -548,7 +549,7 @@ describe('on definition', () => {
     // when recipe scan result is avaiable, prioritize the path found in the result
     const scanResults = `#  INCLUDE HISTORY\n#\n# ${parsedConfFile2}\n`
 
-    analyzer.processRecipeScanResults(scanResults, DUMMY_URI, 'dummy_recipe')
+    analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
     const shouldWork2 = onDefinitionHandler({
       textDocument: {
