@@ -199,8 +199,8 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
   if (uri instanceof DevtoolWorkspaceTreeItem) {
     return uri.label as string
   }
-  // A vscode.Uri is provided when the command is called through the context menu of a .bb file
-  if (uri !== undefined) {
+  // A vscode.Uri is provided when the command is called through the explorer/editor context menus of a file
+  if (uri instanceof vscode.Uri) {
     const extension = path.extname(uri.fsPath)
     if (['.bb', '.bbappend', '.inc'].includes(extension)) {
       chosenRecipe = extractRecipeName(uri.fsPath) as string
