@@ -69,8 +69,8 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]?.variableExpansionSymbols ?? []
   }
 
-  public removeLastScanResultForUri (uri: string): void {
-    this.uriToLastScanResult[uri] = undefined
+  public removeLastScanResultForRecipe (recipe: string): void {
+    this.uriToLastScanResult[recipe] = undefined
   }
 
   public initialize (parser: Parser): void {
