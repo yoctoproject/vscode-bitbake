@@ -3,8 +3,8 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { type IPty } from 'node-pty'
 import * as vscode from 'vscode'
-import type * as pty from 'node-pty'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
@@ -14,20 +14,20 @@ const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<pty.IPty> {
+export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<IPty> {
   const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
   const script = bitbakeDriver.composeBitbakeScript(command)
   return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
 /// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<pty.IPty> {
+export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<IPty> {
   const script = bitbakeDriver.composeBitbakeScript(command)
   return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
-async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<pty.IPty> {
+async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<IPty> {
   let terminal: BitbakeTerminal | undefined
   for (const t of bitbakeTerminals) {
     if (!t.pty.isBusy()) {
@@ -94,7 +94,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     }
   }
 
-  private process: Promise<pty.IPty> | undefined
+  private process: Promise<IPty> | undefined
 
   isBusy (): boolean {
     return this.process !== undefined
@@ -109,7 +109,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     this.writeEmitter.fire(line)
   }
 
-  public async runProcess (process: Promise<pty.IPty>, bitbakeScript: string, terminalName?: string): Promise<pty.IPty> {
+  public async runProcess (process: Promise<IPty>, bitbakeScript: string, terminalName?: string): Promise<IPty> {
     if (this.process !== undefined) {
       throw new Error('Bitbake process already running')
     }
