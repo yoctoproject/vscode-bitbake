@@ -6,7 +6,7 @@
 import path from 'path'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import { BITBAKE_TIMEOUT } from '../../../lib/src/utils/ProcessUtils'
+import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
 import { mockVscodeEvents } from '../../utils/vscodeMock'
 
 let bitBakeProjectScanner: BitBakeProjectScanner
@@ -35,7 +35,7 @@ describe('BitBakeProjectScanner', () => {
     })
     mockVscodeEvents()
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
-      child.on('close', () => {
+      child.onExit(() => {
         void bitBakeProjectScanner.rescanProject()
       })
     }, (error) => {
@@ -45,7 +45,7 @@ describe('BitBakeProjectScanner', () => {
 
   afterAll((done) => {
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
-      child.on('close', () => {
+      child.onExit(() => {
         done()
       })
     }, (error) => {

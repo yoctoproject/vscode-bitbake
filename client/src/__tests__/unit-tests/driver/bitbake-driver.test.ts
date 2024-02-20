@@ -11,12 +11,12 @@ describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
     const driver = new BitbakeDriver()
     void driver.spawnBitbakeProcess(': ; printenv').then((process) => {
-      process.stdout?.on('data', (data) => {
-        if (data.toString().includes('USER=') === true) {
+      process.onData((data) => {
+        if (data.toString().includes('USER=')) {
           done('Command injection detected')
         }
       })
-      process.on('exit', (code) => {
+      process.onExit((code) => {
         expect(code).not.toBe(0)
         done()
       })
@@ -41,8 +41,8 @@ describe('BitbakeDriver Tests', () => {
     fs.writeFileSync(fakeEnvScriptPath, content)
 
     void driver.spawnBitbakeProcess(':').then((process) => {
-      process.stdout?.on('data', (data) => {
-        if (data.includes('FINDME') === true) {
+      process.onData((data) => {
+        if (data.includes('FINDME')) {
           done()
         }
       })
