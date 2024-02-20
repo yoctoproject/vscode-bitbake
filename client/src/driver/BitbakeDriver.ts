@@ -4,7 +4,6 @@
  * ------------------------------------------------------------------------------------------ */
 
 import EventEmitter from 'events'
-import * as pty from 'node-pty'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell } from '../lib/src/BitbakeSettings'
@@ -12,12 +11,14 @@ import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
-import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution } from '../utils/ProcessUtils'
+import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution, pty } from '../utils/ProcessUtils'
+
+import { type IPty } from 'node-pty'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
   bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
-  bitbakeProcess: pty.IPty | undefined
+  bitbakeProcess: IPty | undefined
   bitbakeProcessCommand: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
 
@@ -38,7 +39,7 @@ export class BitbakeDriver {
   }
 
   /// Execute a command in the bitbake environment
-  async spawnBitbakeProcess (command: string): Promise<pty.IPty> {
+  async spawnBitbakeProcess (command: string): Promise<IPty> {
     const { shell, script } = this.prepareCommand(command)
     const cwd = this.bitbakeSettings.workingDirectory
     await this.waitForBitbakeToFinish()
