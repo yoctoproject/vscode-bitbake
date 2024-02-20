@@ -441,6 +441,7 @@ describe('on definition', () => {
     const fakeFilePath = FIXTURE_URI.BAR_INC.replace('file://', '')
     const fakeLineNumber = 1
     const variable = 'FINAL_VALUE'
+    const funcName = 'do_build'
 
     const scanResults = `#INCLUDE HISTORY\n#   set ${fakeFilePath}:${fakeLineNumber}\n${variable} = 'this is the final value for FINAL_VALUE'\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\n`
 
@@ -494,6 +495,57 @@ describe('on definition', () => {
             end: {
               line: 0,
               character: 11
+            }
+          }
+        }
+      ])
+    )
+
+    // Functions
+    analyzer.analyze({
+      uri: FIXTURE_URI.DIRECTIVE,
+      document: FIXTURE_DOCUMENT.BAR_INC
+    })
+
+    const scanResults2 = `#INCLUDE HISTORY\n# line: ${fakeLineNumber}, file: ${fakeFilePath}\n${funcName}(){\n\techo '123'\n}`
+
+    analyzer.processRecipeScanResults(scanResults2, extractRecipeName(FIXTURE_URI.DIRECTIVE))
+
+    const shouldWork2 = onDefinitionHandler({
+      textDocument: {
+        uri: FIXTURE_URI.DIRECTIVE
+      },
+      position: {
+        line: 6,
+        character: 1
+      }
+    })
+
+    expect(shouldWork2).toEqual(
+      expect.arrayContaining([
+        {
+          uri: FIXTURE_URI.DIRECTIVE, // symbol itself
+          range: {
+            start: {
+              line: 6,
+              character: 0
+            },
+            end: {
+              line: 6,
+              character: 8
+            }
+          }
+        },
+        {
+          uri: 'file://' + fakeFilePath, // symbol from the scan result
+          range: {
+            start: {
+              line: 0,
+              character: 0
+            },
+            end: {
+              line: 0,
+              character: 8
             }
           }
         }
