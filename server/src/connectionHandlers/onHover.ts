@@ -57,7 +57,13 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
       const resolvedSymbol = analyzer.resolveSymbol(exactSymbol, lastScanResult.symbols)
       const foundSymbol = analyzer.matchSymbol(resolvedSymbol, lastScanResult.symbols)
       if (foundSymbol?.finalValue !== undefined) {
-        hoverValue += `**Final Value**\n___\n\t'${foundSymbol.finalValue}'`
+        if (hoverValue.split('\n___\n').length === 2) { // when the variable has a definition obtained from above
+          const splitted = hoverValue.split('\n___\n')
+          splitted.splice(1, 0, `**Final Value**\n___\n\t'${foundSymbol.finalValue}'`) // Alternative: use the new array method toSplice() if the node env supports it
+          hoverValue = splitted.join('\n___\n')
+        } else {
+          hoverValue += `**Final Value**\n___\n\t'${foundSymbol.finalValue}'`
+        }
       }
     }
   }
