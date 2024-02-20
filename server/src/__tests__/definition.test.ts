@@ -93,7 +93,7 @@ describe('on definition', () => {
     })
 
     // Resolve the directive path with ${} and provide go-to-definition
-    const scanResults = '#INCLUDE HISTORY\n#some operation history for PN\nPN = \'foo\'\n'
+    const scanResults = '#INCLUDE HISTORY\r\n#some operation history for PN\r\nPN = \'foo\'\r\n'
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(FIXTURE_URI.DIRECTIVE))
 
@@ -442,7 +442,7 @@ describe('on definition', () => {
     const fakeLineNumber = 1
     const variable = 'FINAL_VALUE'
 
-    const scanResults = `#INCLUDE HISTORY\n#   set ${fakeFilePath}:${fakeLineNumber}\n${variable} = 'this is the final value for FINAL_VALUE'\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\n`
+    const scanResults = `#INCLUDE HISTORY\r\n#   set ${fakeFilePath}:${fakeLineNumber}\r\n${variable} = 'this is the final value for FINAL_VALUE'\r\n${variable}:o1 = 'this is the final value for FINAL_VALUE with override o1'\r\n`
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
@@ -547,7 +547,7 @@ describe('on definition', () => {
     )
 
     // when recipe scan result is avaiable, prioritize the path found in the result
-    const scanResults = `#  INCLUDE HISTORY\n#\n# ${parsedConfFile2}\n`
+    const scanResults = `#  INCLUDE HISTORY\r\n#\r\n# ${parsedConfFile2}\r\n`
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 

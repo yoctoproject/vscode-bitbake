@@ -10,7 +10,7 @@ import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { registerDevtoolCommands } from '../../../ui/BitbakeCommands'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
 import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
-import * as ProcessUtils from '../../../lib/src/utils/ProcessUtils'
+import * as ProcessUtils from '../../../utils/ProcessUtils'
 
 jest.mock('vscode')
 

@@ -7,7 +7,7 @@ import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { type BitbakeSettings } from '../../../lib/src/BitbakeSettings'
 import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
-import * as ProcessUtils from '../../../lib/src/utils/ProcessUtils'
+import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from '../../../driver/BitbakeESDK'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
 
@@ -52,7 +52,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
 
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
       status: 1,
-      stdout: '/tmp/devtool\nbitbake not found'
+      stdout: '/tmp/devtool\r\nbitbake not found'
     } as any))
     let sane = await bitbakeDriver.checkBitbakeSettingsSanity()
     expect(sane).toStrictEqual(true)
@@ -61,7 +61,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
 
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
       status: 0,
-      stdout: '/tmp/devtool\n/tmp/bitbake'
+      stdout: '/tmp/devtool\r\n/tmp/bitbake'
     } as any))
     sane = await bitbakeDriver.checkBitbakeSettingsSanity()
     expect(sane).toStrictEqual(true)
