@@ -935,15 +935,28 @@ export default class Analyzer {
   public extractModificationHistoryFromComments (symbol: BitbakeSymbolInformation): Location[] {
     const comments = symbol.commentsAbove
     const history: Location[] = []
+    let regex = /()?/g // dummy regex
+
+    if (symbol.kind === SymbolKind.Variable) {
+      regex = /(?<=#\s{3}set\??\s)(?<filePath>\/.*):(?<lineNumber>\d+)/g
+    } else if (symbol.kind === SymbolKind.Function) {
+      regex = /(?<=#\s)line:\s(?<lineNumber>\d+),\sfile:\s(?<filePath>\/.*)/g
+    }
 
     comments?.forEach((comment) => {
       /**
-       *  Example:
+       *  Examples:
+       *  Variable:
        *  #   set /home/projects/poky/meta/conf/bitbake.conf:396
           #     [_defaultval] "gnu"
           TC_CXX_RUNTIME="gnu"
+
+          Function:
+          # line: 331, file: /home/projects/poky/meta/classes-global/base.bbclass
+          base_do_configure(){
+
+          }
        */
-      const regex = /(?<=#\s{3}set\??\s)(?<filePath>\/.*):(?<lineNumber>\d+)/g
       for (const match of comment.matchAll(regex)) {
         const filePath = match.groups?.filePath
         const lineNumber = match.groups?.lineNumber
