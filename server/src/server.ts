@@ -135,6 +135,11 @@ connection.onNotification(RequestMethod.ProcessRecipeScanResults, (param: Reques
   analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
 })
 
+connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {
+  logger.debug(`[onNotification] <${NotificationMethod.RemoveScanResult}> recipe: ${param.recipeName}`)
+  analyzer.removeLastScanResultForRecipe(param.recipeName)
+})
+
 connection.listen()
 
 const analyzeDocument = async (event: TextDocumentChangeEvent<TextDocument>): Promise<void> => {
@@ -183,12 +188,6 @@ documents.onDidSave(async (event) => {
     // saving other files or no recipe is resolved
     void connection.sendRequest('bitbake/parseAllRecipes')
   }
-})
-
-documents.onDidClose((event) => {
-  const uri = event.document.uri
-  logger.debug(`[onDidClose] Document closed: ${uri}`)
-  analyzer.removeLastScanResultForUri(uri)
 })
 
 documents.listen(connection)

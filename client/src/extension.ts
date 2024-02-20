@@ -22,6 +22,7 @@ import path from 'path'
 import bitbakeRecipeScanner from './driver/BitbakeRecipeScanner'
 import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
+import { extractRecipeName } from './lib/src/utils/files'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -132,6 +133,22 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
     updatePythonPath()
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
+  }))
+
+  // Check if the document that was just closed was the last one for a recipe
+  context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
+    const ext = ['.bb', '.bbappend', '.inc']
+    const { fsPath } = document.uri
+    if (ext.includes(path.extname(fsPath))) {
+      const recipeName = extractRecipeName(fsPath)
+      const recipeFile = vscode.window.visibleTextEditors.find((editor) => {
+        return ext.includes(path.extname(editor.document.uri.fsPath)) && extractRecipeName(editor.document.uri.fsPath) === recipeName
+      })
+      if (recipeFile === undefined) {
+        logger.debug(`No files related to the recipe ${recipeName}, sending notification to remove scan results`)
+        void client.sendNotification('bitbake/removeScanResult', { recipeName })
+      }
+    }
   }))
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, terminalProvider)
