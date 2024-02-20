@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type TextDocumentPositionParams, type Definition, Location, Range } from 'vscode-languageserver/node'
+import { type TextDocumentPositionParams, type Definition, Location, Range, SymbolKind } from 'vscode-languageserver/node'
 import { analyzer } from '../tree-sitter/analyzer'
 import { type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
@@ -52,12 +52,8 @@ export function onDefinitionHandler (textDocumentPositionParams: TextDocumentPos
   }
 
   if (word !== null) {
-    const isVariableSymbol = analyzer.isIdentifierOfVariableAssignment(textDocumentPositionParams) ||
-    (analyzer.isVariableExpansion(uri, position.line, position.character) && analyzer.isIdentifier(textDocumentPositionParams))
-    // Variables in declartion and variable expansion syntax
-    if (isVariableSymbol) {
-      const symbolAtPoint = analyzer.findExactSymbolAtPoint(uri, position, word)
-
+    const symbolAtPoint = analyzer.findExactSymbolAtPoint(uri, position, word)
+    if (symbolAtPoint?.kind === SymbolKind.Variable || symbolAtPoint?.kind === SymbolKind.Function) {
       getAllDefinitionSymbolsForSymbolAtPoint(uri, word, symbolAtPoint).forEach((symbol) => {
         definitions.push({
           uri: symbol.location.uri,
