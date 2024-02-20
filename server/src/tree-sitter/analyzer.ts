@@ -843,11 +843,11 @@ export default class Analyzer {
     const scanResultText = lines.slice(index).join('\r\n')
     const scanResultParsedTree = this.parser.parse(scanResultText)
 
-    const scanResultDocGlobalDeclarations = getGlobalDeclarations({ tree: scanResultParsedTree, uri: 'scanResultDummyUri', getFinalValue: true })
-    const scanResultSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultDocGlobalDeclarations)
+    const scanResultGlobalDeclarations = getGlobalDeclarations({ tree: scanResultParsedTree, uri: 'scanResultDummyUri', getFinalValue: true })
+    const scanResultSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultGlobalDeclarations)
 
     this.uriToLastScanResult[chosenRecipe] = {
-      symbols: scanResultSymbols.filter((symbol) => symbol.kind === SymbolKind.Variable),
+      symbols: scanResultSymbols,
       includeHistory: this.extractIncludeHistory(scanResult, index)
     }
   }
