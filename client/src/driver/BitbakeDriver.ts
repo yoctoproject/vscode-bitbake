@@ -224,7 +224,7 @@ export class BitbakeDriver {
 
     // Our process will look something like this in `ps`:
     // deribau+  405680  405597 21 17:13 ?        00:00:00 python3 /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/bitbake/bin/bitbake linux-yocto
-    const ps = pty.spawn('ps', ['-ef'], {})
+    const ps = pty.spawn('ps', ['-efwwa'], {})
     const ret = await finishProcessExecution(Promise.resolve(ps))
 
     const stdout = ret.stdout.toString()
