@@ -639,12 +639,10 @@
     "test": "npm run test:grammar",
     "test:grammar": "vscode-tmgrammar-test ./test/grammars/test-cases/*.bb",
     "snap-grammar": "vscode-tmgrammar-snap ./test/grammars/snaps/*.bb -u",
-    "postinstall": "electron-rebuild -w node-pty -v 27.3.2",
     "vscode:prepublish": "npm install --omit=dev && cd ../server && npm install --omit=dev && npm run installServer",
     "package": "npm run vscode:prepublish && vsce package --target linux-x64 && vsce package --target linux-arm64 && vsce package --target linux-armhf && vsce package --target win32-x64 && vsce package --target win32-arm64"
   },
   "dependencies": {
-    "@electron/rebuild": "^3.6.0",
     "find": "^0.2.7",
     "node-pty": "^1.0.0",
     "vscode-languageclient": "^8.1.0"
