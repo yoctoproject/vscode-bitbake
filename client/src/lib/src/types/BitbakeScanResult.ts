@@ -3,19 +3,14 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { type ParsedPath } from 'path'
 export interface LayerInfo {
   name: string
   path: string
   priority: number
 }
 
-export interface PathInfo {
-  root: string
-  dir: string
-  base: string
-  ext: string
-  name: string
-}
+export interface PathInfo extends ParsedPath {}
 
 export interface ElementInfo {
   name: string
