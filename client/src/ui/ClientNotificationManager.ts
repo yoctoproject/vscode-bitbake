@@ -14,6 +14,7 @@ export class ClientNotificationManager {
   }
 
   showBitbakeSettingsError (message?: string): void {
+    logger.error('BitBake settings error: ' + message)
     if (!this.checkIsNeverShowAgain('bitbake/bitbakeSettingsError')) {
       void window.showErrorMessage(
         'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,

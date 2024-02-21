@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import EventEmitter from 'events'
+import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell } from '../lib/src/BitbakeSettings'
@@ -105,6 +106,11 @@ export class BitbakeDriver {
   }
 
   async checkBitbakeSettingsSanity (): Promise<boolean> {
+    if (!fs.existsSync(this.bitbakeSettings.pathToBitbakeFolder)) {
+      clientNotificationManager.showBitbakeSettingsError('Bitbake folder not found on disk.')
+      return false
+    }
+
     // We could test for devtool and bitbake to know if we are in an eSDK or not
     const command = 'which devtool bitbake || true'
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)

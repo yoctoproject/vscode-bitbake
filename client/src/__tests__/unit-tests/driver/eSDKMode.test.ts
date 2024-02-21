@@ -39,7 +39,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
   it('can detect eSDK mode', async () => {
     const bitbakeDriver = new BitbakeDriver()
     const bitbakeSettings: BitbakeSettings = {
-      pathToBitbakeFolder: 'nonexistent',
+      pathToBitbakeFolder: __dirname,
       workingDirectory: '/path/to/workspace',
       commandWrapper: '',
       pathToEnvScript: 'fakeEnvScript',
