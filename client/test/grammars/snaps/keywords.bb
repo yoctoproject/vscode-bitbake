@@ -22,3 +22,5 @@ fakeroot python foo3() {}
 
 python (){}
 
+inherit_defer foo2
+

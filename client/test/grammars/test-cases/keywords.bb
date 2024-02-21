@@ -37,3 +37,5 @@
 >python (){}
 #^^^^^^ source.bb storage.type.function.python.bb
 
+>inherit_defer foo2
+#^^^^^^^^^^^^^ source.bb keyword.control.bb
