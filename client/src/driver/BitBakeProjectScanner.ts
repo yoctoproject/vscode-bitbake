@@ -373,7 +373,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
       throw new Error('Failed to scan overrides')
     }
     const output = commandResult.output.toString()
-    const outerReg = /\nOVERRIDES="(.*)"\r\n/
+    const outerReg = /\nOVERRIDES="(.*)"\r?\n/
     this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
