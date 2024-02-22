@@ -6,6 +6,7 @@
 /// This files contains the VSCode commands exposed by the extension
 
 import * as vscode from 'vscode'
+import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
@@ -444,6 +445,11 @@ async function openRecipeWorkdirCommand (bitbakeWorkspace: BitbakeWorkspace, bit
 
   // These results are guaranteed to be defined if recipeWorkdir is defined
   recipeWorkdir = await bitBakeProjectScanner.resolveContainerPath(recipeWorkdir, true) as string
+  if (!fs.existsSync(recipeWorkdir)) {
+    await vscode.window.showErrorMessage(`WORKDIR for ${chosenRecipe} was not found. Make sure you have built the recipe.`,
+      { modal: true, detail: `${recipeWorkdir} does not exist` })
+    return
+  }
   const recipeWorkdirURI = vscode.Uri.file(recipeWorkdir)
   await vscode.commands.executeCommand('vscode.openFolder', recipeWorkdirURI, { forceNewWindow: true })
 }
