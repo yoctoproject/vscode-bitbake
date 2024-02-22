@@ -17,7 +17,7 @@ import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTe
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
-import { pathInfoToString, type LayerInfo } from '../lib/src/types/BitbakeScanResult'
+import { type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import { type SpawnSyncReturns } from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
@@ -27,6 +27,7 @@ import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from 
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { type LanguageClient } from 'vscode-languageclient/node'
+import { getVariableValue } from '../language/languageClient'
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -436,15 +437,9 @@ async function openRecipeWorkdirCommand (bitbakeWorkspace: BitbakeWorkspace, bit
   if (chosenRecipe === undefined) { return }
 
   logger.debug(`Command: open-recipe-workdir: ${chosenRecipe}`)
-  const recipeUri = bitBakeProjectScanner.scanResult._recipes.find((recipe) => recipe.name === chosenRecipe)?.path
-  if (recipeUri === undefined) throw Error(`Recipe ${chosenRecipe}: not found in Bitbake scan`)
-  const recipePath = pathInfoToString(recipeUri)
-  let recipeWorkdir: string | undefined | null = await client.sendRequest('bitbake/getVar', { variable: 'WORKDIR', recipe: chosenRecipe })
-  if (recipeWorkdir === undefined || recipeWorkdir === null) {
-    // We may not have scanned the recipe yet. Let's try again.
-    await vscode.commands.executeCommand('bitbake.scan-recipe-env', vscode.Uri.file(recipePath))
-    recipeWorkdir = await client.sendRequest('bitbake/getVar', { variable: 'WORKDIR', recipe: chosenRecipe })
-    if (recipeWorkdir === undefined || recipeWorkdir === null) throw Error(`Recipe ${chosenRecipe}: workdir not found`)
+  let recipeWorkdir = await getVariableValue(client, 'WORKDIR', chosenRecipe, true)
+  if (recipeWorkdir === undefined) {
+    await vscode.window.showErrorMessage(`Could not get WORKDIR value for ${chosenRecipe}`)
   }
 
   // These results are guaranteed to be defined if recipeWorkdir is defined

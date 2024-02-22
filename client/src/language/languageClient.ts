@@ -32,6 +32,7 @@ import { updateDiagnostics } from './diagnosticsSupport'
 import { getLanguageConfiguration } from './languageConfiguration'
 import { BitbakeCodeActionProvider } from './codeActionProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import * as vscode from 'vscode'
 
 export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -169,4 +170,23 @@ export async function deactivateLanguageServer (client: LanguageClient): Promise
     return undefined
   }
   await client.stop()
+}
+
+export async function getVariableValue (client: LanguageClient, variable: string, recipe: string, canTriggerScan: boolean = false): Promise<string | undefined > {
+  let value: string | undefined | null = await client.sendRequest('bitbake/getVar', { variable, recipe })
+  if ((value === undefined || value === null) && canTriggerScan) {
+    // We may not have scanned the recipe yet. Let's try again.
+    const progressOptions: vscode.ProgressOptions = {
+      location: vscode.ProgressLocation.Notification,
+      title: `Recipe ${recipe} has not been scanned yet. Scanning now...`,
+      cancellable: false
+    }
+    await vscode.window.withProgress(progressOptions, async (progress) => {
+      await vscode.commands.executeCommand('bitbake.scan-recipe-env', recipe)
+      progress.report({ increment: 100 })
+    })
+    value = await client.sendRequest('bitbake/getVar', { variable, recipe })
+  }
+  logger.debug(`getVariableValue: ${variable} = ${value}`)
+  return value ?? undefined
 }

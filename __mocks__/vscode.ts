@@ -117,9 +117,26 @@ const languages = {
     Expanded: 2,
   };
 
+  const CallHierarchyItem = jest.fn();
+  const CancellationError = jest.fn();
+  const CodeAction = jest.fn();
+  const CompletionItem = jest.fn();
+  const DocumentLink = jest.fn();
+  const InlayHint = jest.fn();
+  const SymbolInformation = jest.fn();
+  const TypeHierarchyItem = jest.fn();
+
   export = {
     ThemeColor,
     CodeLens,
+    CallHierarchyItem,
+    CancellationError,
+    CodeAction,
+    CompletionItem,
+    DocumentLink,
+    InlayHint,
+    SymbolInformation,
+    TypeHierarchyItem,
     languages,
     StatusBarAlignment,
     window,
