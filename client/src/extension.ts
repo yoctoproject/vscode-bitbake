@@ -74,7 +74,35 @@ async function disableInteferingSettings (): Promise<void> {
   }
 }
 
+async function installExtensions (extensionId: string): Promise<void> {
+  await vscode.window.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title: ` yocto-project.yocto-bitbake depends on extension ${extensionId}, installing it...`,
+    cancellable: false
+  }, async (progress, token) => {
+    try {
+      await vscode.commands.executeCommand('workbench.extensions.installExtension', extensionId).then(() => {
+        progress.report({ message: `${extensionId} has been installed` })
+      })
+    } catch (error) {
+      await vscode.window.showErrorMessage(`Failed to install ${extensionId}: ${JSON.stringify(error)}`)
+    }
+  })
+}
+
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
+  const requiredExtensions = [
+    'mads-hartmann.bash-ide-vscode', // https://marketplace.visualstudio.com/items?itemName=mads-hartmann.bash-ide-vscode
+    'ms-python.python' // https://marketplace.visualstudio.com/items?itemName=ms-python.python
+  ]
+
+  for (const extensionId of requiredExtensions) {
+    // mads-hartmann.bash-ide-vscode is not currently available in the web version of VSCode, thus do not install it
+    if (vscode.extensions.getExtension(extensionId) === undefined && vscode.env.uiKind !== vscode.UIKind.Web) {
+      await installExtensions(extensionId)
+    }
+  }
+
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
 
   loadLoggerSettings()
