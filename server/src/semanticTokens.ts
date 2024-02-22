@@ -111,6 +111,14 @@ export function getParsedTokens (uri: string): ParsedToken[] {
       })
     }
 
+    if (TreeSitterUtils.isBitbakeOperator(node)) {
+      resultTokens.push({
+        ...nodeRange,
+        tokenType: TOKEN_LEGEND.types.keyword,
+        tokenModifiers: []
+      })
+    }
+
     if (TreeSitterUtils.isFunctionIdentifier(node)) {
       resultTokens.push({
         ...nodeRange,

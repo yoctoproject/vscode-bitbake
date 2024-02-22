@@ -69,10 +69,37 @@ export function isVariableReference (n: SyntaxNode): boolean {
  * Check if the node is an override other than `append`, `prepend` or `remove`
  */
 export function isOverride (n: SyntaxNode): boolean {
+  /**
+   * Example:
+   * FOO:append:override1:${PN}:${PN}-foo () {}
+   *
+   * Tree node:
+   *    (function_definition [0, 0] - [0, 42]
+          (identifier [0, 0] - [0, 3])
+          (override [0, 3] - [0, 36]
+            (identifier [0, 11] - [0, 20])
+            (variable_expansion [0, 21] - [0, 26]
+              (identifier [0, 23] - [0, 25]))
+            (concatenation [0, 27] - [0, 36]
+              (variable_expansion [0, 27] - [0, 32]
+                (identifier [0, 29] - [0, 31]))
+              (identifier [0, 32] - [0, 36])))))
+   */
   const parentType = n?.parent?.type
   switch (n.type) {
     case 'identifier':
-      return parentType === 'override' // As per the tree-sitter grammar, an identifier which has a parent of type override is an override other than `append`, `prepend` or `remove`
+      return parentType === 'override' || parentType === 'concatenation'
+    default:
+      return false
+  }
+}
+
+export function isBitbakeOperator (n: SyntaxNode): boolean {
+  switch (n.type) {
+    case 'append':
+    case 'prepend':
+    case 'remove':
+      return true
     default:
       return false
   }
