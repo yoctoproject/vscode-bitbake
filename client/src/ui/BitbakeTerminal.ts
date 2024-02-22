@@ -64,6 +64,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   readonly onDidOpen = new vscode.EventEmitter<void>()
   lastExitCode: number = 0
   outputDataString: string = ''
+  private dimensions: vscode.TerminalDimensions | undefined
 
   readonly parentTerminal: BitbakeTerminal | undefined
   bitbakeDriver: BitbakeDriver
@@ -73,9 +74,23 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     return this.parentTerminal === undefined
   }
 
-  open (): void {
+  open (initialDimensions: vscode.TerminalDimensions | undefined): void {
     if (!this.isTaskTerminal()) { bitbakeTerminals.push(this.parentTerminal as BitbakeTerminal) }
     this.onDidOpen.fire()
+    this.dimensions = initialDimensions
+    this.resizePty()
+  }
+
+  setDimensions (dimensions: vscode.TerminalDimensions): void {
+    this.dimensions = dimensions
+    this.resizePty()
+  }
+
+  private resizePty (): void {
+    void this.process?.then((process) => {
+      if (this.dimensions === undefined) { return }
+      process?.resize(this.dimensions.columns, this.dimensions.rows)
+    })
   }
 
   async close (): Promise<void> {
@@ -116,6 +131,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
 
     this.process = process
     const processResolved = await this.process
+    this.resizePty()
 
     processResolved.onData((data) => {
       this.output(data.toString())
