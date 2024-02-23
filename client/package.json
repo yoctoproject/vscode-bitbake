@@ -369,6 +369,11 @@
         "icon": "$(refresh)"
       },
       {
+        "command": "bitbake.pick-configuration",
+        "title": "BitBake: Pick configuration",
+        "description": "Select the active build configuration from the settings to use for bitbake commands."
+      },
+      {
         "command": "bitbake.build-recipe",
         "title": "BitBake: Build recipe",
         "description": "Build a recipe or an image.",

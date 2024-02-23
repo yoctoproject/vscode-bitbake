@@ -17,6 +17,8 @@ export class BitbakeConfigPicker {
     this.bitbakeSettings = bitbakeSettings
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 0)
 
+    this.statusBarItem.command = 'bitbake.pick-configuration'
+    context.subscriptions.push(vscode.commands.registerCommand('bitbake.pick-configuration', this.pickConfiguration, this))
     this.updateStatusBar(bitbakeSettings)
   }
 
@@ -32,6 +34,22 @@ export class BitbakeConfigPicker {
     } else {
       activeBuildConfiguration = 'No BitBake configuration'
       this.statusBarItem.hide()
+    }
+  }
+
+  public async pickConfiguration (name?: string): Promise<void> {
+    if (this.bitbakeSettings?.buildConfigurations !== undefined && this.bitbakeSettings?.buildConfigurations?.length > 0) {
+      if (name !== undefined && this.bitbakeSettings.buildConfigurations.find((config) => config.name === name) !== undefined) {
+        activeBuildConfiguration = name
+      } else {
+        const options = this.bitbakeSettings.buildConfigurations.map((config) => config.name)
+        const filteredOptions = options.filter((option) => typeof option === 'string') as string[] // Always all according to the definition in client/package.json
+        const selection = await vscode.window.showQuickPick(filteredOptions, { placeHolder: 'Select a BitBake configuration' })
+        if (selection !== undefined) {
+          activeBuildConfiguration = selection
+          this.updateStatusBar(this.bitbakeSettings)
+        }
+      }
     }
   }
 }
