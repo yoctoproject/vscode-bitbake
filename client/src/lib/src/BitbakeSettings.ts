@@ -3,9 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-/// Defines the context of a bitbake workspace with all information to call bitbake
-export interface BitbakeSettings {
-  pathToBitbakeFolder: string
+export interface BitbakeBuildConfigSettings {
   pathToBuildFolder?: string
   pathToEnvScript?: string
   commandWrapper?: string
@@ -13,6 +11,13 @@ export interface BitbakeSettings {
   shellEnv?: NodeJS.Dict<string>
   sshTarget?: string
   sdkImage?: string
+  name?: string
+}
+
+/// Defines the context of a bitbake workspace with all information to call bitbake
+export interface BitbakeSettings extends BitbakeBuildConfigSettings {
+  pathToBitbakeFolder: string
+  buildConfigurations?: BitbakeBuildConfigSettings[]
 }
 
 export function loadBitbakeSettings (settings: any, workspaceFolder: string): BitbakeSettings {
@@ -21,7 +26,7 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
   try {
     process.chdir(workspaceFolder)
   } catch (err: any) {
-    console.error(`chdir: ${err}`)
+    console.error('chdir: $settings.{err}')
   }
 
   const variables = {
@@ -29,16 +34,13 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
     ...Object.fromEntries(Object.entries(process.env).map(([key, value]) => [`env:${key}`, value]))
   }
 
-  const expandedSettings = {
+  const expandedSettings: BitbakeSettings = {
+    ...expandBuildConfig(settings, variables, workspaceFolder),
     pathToBitbakeFolder: expandSettingPath(settings.pathToBitbakeFolder, variables) ?? workspaceFolder,
-    pathToBuildFolder: expandSettingPath(settings.pathToBuildFolder, variables),
-    pathToEnvScript: expandSettingPath(settings.pathToEnvScript, variables),
-    commandWrapper: expandSettingString(settings.commandWrapper, variables),
-    workingDirectory: expandSettingPath(settings.workingDirectory, variables) ?? workspaceFolder,
-    shellEnv: expandStringDict(toStringDict(settings.shellEnv), variables),
-    sdkImage: expandSettingString(settings.sdkImage, variables),
-    sshTarget: expandSettingString(settings.sshTarget, variables)
+    buildConfigurations: expandBuildConfigsSettings(settings.buildConfigurations, variables, workspaceFolder)
   }
+  expandedSettings.workingDirectory = expandedSettings.workingDirectory ?? workspaceFolder
+
   return expandedSettings
 }
 
@@ -79,4 +81,24 @@ export function sanitizeForShell (command: string | undefined): string | undefin
 
 function toStringDict (dict: object | undefined): NodeJS.Dict<string> | undefined {
   return dict as NodeJS.Dict<string> | undefined
+}
+
+function expandBuildConfigsSettings (buildConfigurations: any, variables: NodeJS.Dict<string>, workspaceFolder: string): BitbakeBuildConfigSettings[] | undefined {
+  if (buildConfigurations === undefined) {
+    return undefined
+  }
+  return buildConfigurations.map((settings: any) => expandBuildConfig(settings, variables, workspaceFolder))
+}
+
+function expandBuildConfig (settings: any, variables: NodeJS.Dict<string>, workspaceFolder: string): BitbakeBuildConfigSettings {
+  return {
+    pathToBuildFolder: expandSettingPath(settings.pathToBuildFolder, variables),
+    pathToEnvScript: expandSettingPath(settings.pathToEnvScript, variables),
+    commandWrapper: expandSettingString(settings.commandWrapper, variables),
+    workingDirectory: expandSettingPath(settings.workingDirectory, variables),
+    shellEnv: expandStringDict(toStringDict(settings.shellEnv), variables),
+    sdkImage: expandSettingString(settings.sdkImage, variables),
+    sshTarget: expandSettingString(settings.sshTarget, variables),
+    name: expandSettingString(settings.name, variables)
+  }
 }
