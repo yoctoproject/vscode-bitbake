@@ -7,7 +7,7 @@ import EventEmitter from 'events'
 import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell } from '../lib/src/BitbakeSettings'
+import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell, type BitbakeBuildConfigSettings, getBuildSetting } from '../lib/src/BitbakeSettings'
 import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
@@ -18,7 +18,8 @@ import { type IPty } from 'node-pty'
 
 /// This class is responsible for wrapping up all bitbake classes and exposing them to the extension
 export class BitbakeDriver {
-  bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '', pathToBuildFolder: '', pathToEnvScript: '', workingDirectory: '', commandWrapper: '' }
+  bitbakeSettings: BitbakeSettings = { pathToBitbakeFolder: '' }
+  activeBuildConfiguration: string = 'No BitBake configuration'
   bitbakeProcess: IPty | undefined
   bitbakeProcessCommand: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
@@ -39,10 +40,14 @@ export class BitbakeDriver {
     })
   }
 
+  private getBuildConfig (property: keyof BitbakeBuildConfigSettings): any {
+    return getBuildSetting(this.bitbakeSettings, this.activeBuildConfiguration, property)
+  }
+
   /// Execute a command in the bitbake environment
   async spawnBitbakeProcess (command: string): Promise<IPty> {
     const { shell, script } = this.prepareCommand(command)
-    const cwd = this.bitbakeSettings.workingDirectory
+    const cwd = this.getBuildConfig('workingDirectory')
     await this.waitForBitbakeToFinish()
     logger.debug(`Executing Bitbake command with ${shell} in ${cwd}: ${script}`)
     const child = pty.spawn(
@@ -50,7 +55,7 @@ export class BitbakeDriver {
       ['-c', script],
       {
         cwd,
-        env: { ...process.env, ...this.bitbakeSettings.shellEnv }
+        env: { ...process.env, ...this.getBuildConfig('shellEnv') }
       }
     )
     this.bitbakeProcess = child
@@ -85,20 +90,20 @@ export class BitbakeDriver {
 
     let script = ''
 
-    if (this.bitbakeSettings.commandWrapper !== undefined) {
-      script += this.bitbakeSettings.commandWrapper + " '"
+    if (this.getBuildConfig('commandWrapper') !== undefined) {
+      script += this.getBuildConfig('commandWrapper') + " '"
     }
 
-    if (this.bitbakeSettings.pathToEnvScript !== undefined) {
-      script += `. ${this.bitbakeSettings.pathToEnvScript}`
-      if (this.bitbakeSettings.pathToBuildFolder !== undefined) {
-        script += ` ${this.bitbakeSettings.pathToBuildFolder}`
+    if (this.getBuildConfig('pathToEnvScript') !== undefined) {
+      script += `. ${this.getBuildConfig('pathToEnvScript')}`
+      if (this.getBuildConfig('pathToBuildFolder') !== undefined) {
+        script += ` ${this.getBuildConfig('pathToBuildFolder')}`
       }
       script += ' && '
     }
     script += command
 
-    if (this.bitbakeSettings.commandWrapper !== undefined) {
+    if (this.getBuildConfig('commandWrapper') !== undefined) {
       script += "'"
     }
 
@@ -169,8 +174,8 @@ export class BitbakeDriver {
   }
 
   composeDevtoolIDECommand (recipe: string): string {
-    const sdkImage = this.bitbakeSettings.sdkImage
-    const sshTarget = this.bitbakeSettings.sshTarget
+    const sdkImage = this.getBuildConfig('sdkImage')
+    const sshTarget = this.getBuildConfig('sshTarget')
     let command = `devtool ide-sdk -i code ${recipe} ${sdkImage}`
     if (sshTarget !== undefined && sshTarget !== '') {
       command = appendCommandParam(command, `-t ${sshTarget}`)

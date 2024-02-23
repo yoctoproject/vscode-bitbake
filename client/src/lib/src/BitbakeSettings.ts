@@ -102,3 +102,19 @@ function expandBuildConfig (settings: any, variables: NodeJS.Dict<string>, works
     name: expandSettingString(settings.name, variables)
   }
 }
+
+export function getBuildSetting (settings: BitbakeSettings, buildConfiguration: string, property: keyof BitbakeBuildConfigSettings): any {
+  if (settings.buildConfigurations !== undefined) {
+    const buildConfig = settings.buildConfigurations.find(config => config.name === buildConfiguration)
+    if (buildConfig !== undefined) {
+      return buildConfig[property] ?? settings[property]
+    } else {
+      // This mimics the BitbakeConfigPicker which always selects the first configuration if the active one is not found
+      const firstConfig = settings.buildConfigurations[0]
+      if (firstConfig !== undefined) {
+        return firstConfig[property] ?? settings[property]
+      }
+    }
+  }
+  return settings[property]
+}
