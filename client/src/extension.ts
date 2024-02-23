@@ -24,6 +24,7 @@ import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
+import { scanContainsData } from './lib/src/types/BitbakeScanResult'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -103,6 +104,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
   const bitbakeConfigPicker = new BitbakeConfigPicker(bitbakeDriver.bitbakeSettings, context)
   context.subscriptions.push(bitbakeConfigPicker.statusBarItem)
+  bitbakeDriver.activeBuildConfiguration = bitbakeConfigPicker.activeBuildConfiguration
   terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
   vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
   const terminalLinkProvider = new BitbakeTerminalLinkProvider(bitBakeProjectScanner)
@@ -143,6 +145,10 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
     updatePythonPath()
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
+  }))
+  context.subscriptions.push(bitbakeConfigPicker.onActiveConfigChanged.event((config) => {
+    bitbakeDriver.activeBuildConfiguration = config
+    // Re-scaning here would be very cumbersome, the user should do it manually if desired
   }))
 
   // Check if the document that was just closed was the last one for a recipe
