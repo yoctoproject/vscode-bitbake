@@ -36,7 +36,7 @@ describe('Bitbake ESDK Test Suite', () => {
       sshTarget: 'shouldnt be overwritten'
     }
 
-    copyBitbakeSettings(workspace.path, newSettings)
+    copyBitbakeSettings(workspace.path, newSettings, 'No Bitbake Configuration')
 
     expect(saveJsonMock).toHaveBeenCalledWith(vscodeSettingsPath, expect.objectContaining({
       'bitbake.pathToBitbakeFolder': 'newPath',

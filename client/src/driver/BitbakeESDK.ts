@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
-import { type BitbakeSettings } from '../lib/src/BitbakeSettings'
+import { getBuildSetting, type BitbakeSettings } from '../lib/src/BitbakeSettings'
 import { type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
 import { loadJsonFile, setJsonProperty, saveJsonFile, mergeJsonArray } from '../utils/JSONFile'
 import fs from 'fs'
@@ -25,23 +25,23 @@ function createVSCodeFolderIfNotExists (workspace: string): void {
 }
 
 /// Copy our bitbake settings to the devtool workspace and add tasks definitions
-export function configureDevtoolSDKFallback (workspace: DevtoolWorkspaceInfo, bitbakeSettings: BitbakeSettings): void {
+export function configureDevtoolSDKFallback (workspace: DevtoolWorkspaceInfo, bitbakeSettings: BitbakeSettings, activeConfig: string): void {
   createVSCodeFolderIfNotExists(workspace.path)
-  copyBitbakeSettings(workspace.path, bitbakeSettings)
+  copyBitbakeSettings(workspace.path, bitbakeSettings, activeConfig)
   generateTasksDefinitions(workspace, bitbakeSettings)
   void vscode.window.showInformationMessage(`Devtool workspace for ${workspace.name} successfully configured`)
 }
 
 // exported for testing only
-export function copyBitbakeSettings (workspace: string, bitbakeSettings: BitbakeSettings): void {
+export function copyBitbakeSettings (workspace: string, bitbakeSettings: BitbakeSettings, activeConfig: string): void {
   const vscodeSettingsPath = path.join(workspace, '.vscode', 'settings.json')
   const vscodeSettings = loadJsonFile(vscodeSettingsPath)
   setJsonProperty(vscodeSettings, 'bitbake.pathToBitbakeFolder', bitbakeSettings.pathToBitbakeFolder)
-  setJsonProperty(vscodeSettings, 'bitbake.pathToBuildFolder', bitbakeSettings.pathToBuildFolder)
-  setJsonProperty(vscodeSettings, 'bitbake.pathToEnvScript', bitbakeSettings.pathToEnvScript)
-  setJsonProperty(vscodeSettings, 'bitbake.workingDirectory', bitbakeSettings.workingDirectory)
-  setJsonProperty(vscodeSettings, 'bitbake.commandWrapper', bitbakeSettings.commandWrapper)
-  setJsonProperty(vscodeSettings, 'bitbake.shellEnv', bitbakeSettings.shellEnv ?? {})
+  setJsonProperty(vscodeSettings, 'bitbake.pathToBuildFolder', getBuildSetting(bitbakeSettings, activeConfig, 'pathToBuildFolder'))
+  setJsonProperty(vscodeSettings, 'bitbake.pathToEnvScript', getBuildSetting(bitbakeSettings, activeConfig, 'pathToEnvScript'))
+  setJsonProperty(vscodeSettings, 'bitbake.workingDirectory', getBuildSetting(bitbakeSettings, activeConfig, 'workingDirectory'))
+  setJsonProperty(vscodeSettings, 'bitbake.commandWrapper', getBuildSetting(bitbakeSettings, activeConfig, 'commandWrapper'))
+  setJsonProperty(vscodeSettings, 'bitbake.shellEnv', getBuildSetting(bitbakeSettings, activeConfig, 'shellEnv') ?? {})
   saveJsonFile(vscodeSettingsPath, vscodeSettings)
   logger.info(`Generated ${vscodeSettingsPath}`)
   logger.debug(`Bitbake settings: ${JSON.stringify(vscodeSettings)}`)
