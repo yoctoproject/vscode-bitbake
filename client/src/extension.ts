@@ -126,7 +126,11 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       await clientNotificationManager.resetNeverShowAgain('bitbake/bitbakeSettingsError')
       logger.debug('Bitbake settings changed')
       updatePythonPath()
-      void vscode.commands.executeCommand('bitbake.rescan-project')
+      if (!scanContainsData(bitBakeProjectScanner.scanResult)) {
+        void vscode.commands.executeCommand('bitbake.rescan-project')
+      } else {
+        void vscode.commands.executeCommand('bitbake.parse-recipes')
+      }
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       loadLoggerSettings()
