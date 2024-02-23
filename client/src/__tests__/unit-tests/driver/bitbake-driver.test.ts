@@ -79,6 +79,31 @@ describe('BitbakeDriver Tests', () => {
     expect(script).toEqual(expect.stringContaining("docker run --rm -it -v /home/user/yocto:/workdir crops/poky --workdir=/workdir /bin/bash -c '. /home/user/yocto/poky/oe-init-build-env && bitbake busybox'"))
   })
 
+  it('should handle an alternative build configuration', () => {
+    const driver = new BitbakeDriver()
+    driver.loadSettings({
+      pathToEnvScript: '/tmp/envsetup.sh',
+      pathToBitbakeFolder: '',
+      buildConfigurations: [
+        {
+          name: 'Default',
+          pathToBuildFolder: '/tmp/default-build'
+        },
+        {
+          name: 'Alternative',
+          pathToBuildFolder: '/tmp/alternative-build'
+        }
+      ]
+    })
+
+    const script2 = driver.composeBitbakeScript('bitbake busybox')
+    expect(script2).toEqual(expect.stringContaining('. /tmp/envsetup.sh /tmp/default-build'))
+
+    driver.activeBuildConfiguration = 'Alternative'
+    const script = driver.composeBitbakeScript('bitbake busybox')
+    expect(script).toEqual(expect.stringContaining('. /tmp/envsetup.sh /tmp/alternative-build'))
+  })
+
   describe('composeBitbakeCommand', () => {
     let bitbakeDriver: BitbakeDriver
     beforeEach(() => {
