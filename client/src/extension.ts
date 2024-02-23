@@ -23,6 +23,7 @@ import bitbakeRecipeScanner from './driver/BitbakeRecipeScanner'
 import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
+import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -100,6 +101,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
+  const bitbakeConfigPicker = new BitbakeConfigPicker(bitbakeDriver.bitbakeSettings, context)
+  context.subscriptions.push(bitbakeConfigPicker.statusBarItem)
   terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
   vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
   const terminalLinkProvider = new BitbakeTerminalLinkProvider(bitBakeProjectScanner)
@@ -117,7 +120,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
         event.affectsConfiguration('bitbake.pathToEnvScript') ||
         event.affectsConfiguration('bitbake.pathToBitbakeFolder') ||
         event.affectsConfiguration('bitbake.pathToBuildFolder') ||
-        event.affectsConfiguration('bitbake.commandWrapper')) {
+        event.affectsConfiguration('bitbake.commandWrapper') ||
+        event.affectsConfiguration('bitbake.buildConfigurations')) {
+      bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
       await clientNotificationManager.resetNeverShowAgain('bitbake/bitbakeSettingsError')
       logger.debug('Bitbake settings changed')
       updatePythonPath()
@@ -131,6 +136,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     logger.debug('Bitbake workspace changed: ' + JSON.stringify(event))
     loadLoggerSettings()
     bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
+    bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
     updatePythonPath()
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   }))
