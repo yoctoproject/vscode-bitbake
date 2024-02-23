@@ -48,6 +48,31 @@ Here are some examples using the most popular bitbake wrappers:
 { "bitbake.commandWrapper": "${workspaceFolder}/build.sh --" }
 ```
 
+### Defining Multiple Configurations
+
+Sometimes it is necessary to build the same project with different distros or
+machines configurations. You can define alternative settings for the extension
+through the `bitbake.buildConfigurations` array. It can redefine any property
+illustrated above, including command wrappers. You'll be able to switch between
+them through the status bar at the bottom right.
+
+```json
+{
+    "bitbake.buildConfigurations": [
+        {
+            "name": "Machine 1",
+            "pathToBuildFolder": "${workspaceFolder}/build1"
+        },
+        {
+            "name": "Machine 2",
+            "pathToBuildFolder": "${workspaceFolder}/build2"
+        }
+    ]
+}
+```
+
+![Configuration picker](doc/config-picker.png)
+
 ### Additional settings recommendations
 
 If your workspace contains a Yocto build directory, some other extensions may
