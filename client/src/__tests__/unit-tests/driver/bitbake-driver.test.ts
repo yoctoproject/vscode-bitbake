@@ -10,7 +10,8 @@ import { type BitbakeTaskDefinition } from '../../../ui/BitbakeTaskProvider'
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
     const driver = new BitbakeDriver()
-    void driver.spawnBitbakeProcess(': ; printenv').then((process) => {
+    const command = driver.composeBitbakeCommand({ recipes: [': ; printenv'], type: 'bitbake' })
+    void driver.spawnBitbakeProcess(command).then((process) => {
       process.onData((data) => {
         if (data.toString().includes('USER=')) {
           done('Command injection detected')
