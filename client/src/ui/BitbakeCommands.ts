@@ -312,7 +312,7 @@ async function devtoolSDKFallbackCommand (bitbakeWorkspace: BitbakeWorkspace, bi
     logger.debug(`Command: devtool-sdk-fallback: ${chosenRecipe}`)
     const workspace = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)
     if (workspace === undefined) throw new Error('Devtool Workspace not found')
-    configureDevtoolSDKFallback(workspace, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings)
+    configureDevtoolSDKFallback(workspace, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings, bitBakeProjectScanner.bitbakeDriver.activeBuildConfiguration)
   }
 }
 
