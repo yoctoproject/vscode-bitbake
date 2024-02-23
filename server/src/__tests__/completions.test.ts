@@ -10,6 +10,7 @@ import { generateParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 /**
  * The onCompletion handler doesn't allow other parameters, so we can't pass the analyzer and therefore the same
@@ -984,6 +985,41 @@ describe('On Completion', () => {
           label: 'append',
           kind: 24
         }
+      ])
+    )
+  })
+
+  it('provides additional completion items using symbols found in the scan results (bitbake -e)', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const scanResults = "#  INCLUDE HISTORY\r\n#\r\nFOO_SCAN='123'\r\n#\r\nBAR_SCAN='456'\r\n#\r\nBAZ_SCAN='789'\r\n#\r\n"
+
+    analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 22,
+        character: 1
+      }
+    })
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'FOO_SCAN'
+        }),
+        expect.objectContaining({
+          label: 'BAR_SCAN'
+        }),
+        expect.objectContaining({
+          label: 'BAZ_SCAN'
+        })
       ])
     )
   })

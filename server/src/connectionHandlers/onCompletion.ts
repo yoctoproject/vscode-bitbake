@@ -25,6 +25,7 @@ import { type Position } from 'vscode-languageserver-textdocument'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 let documentUri = ''
 
@@ -370,6 +371,23 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
       }
       completionItems.push(completionItem)
     })
+
+  // Add supplement variables and function completions from the scan results (bitbake -e)
+  const lastScanResult = analyzer.getLastScanResult(extractRecipeName(documentUri))
+  if (lastScanResult !== undefined) {
+    const scanResultCompletionItems = lastScanResult.symbols.filter((symbol) => !completionItems.some((item) => item.label === symbol.name)).map((symbol) => {
+      const completionItem: CompletionItem = {
+        label: symbol.name,
+        kind: symbolKindToCompletionKind(symbol.kind),
+        documentation: symbol.finalValue ?? ''
+      }
+      return completionItem
+    })
+    completionItems = [
+      ...completionItems,
+      ...scanResultCompletionItems
+    ]
+  }
   // Filter duplicates from the included files, current goal is to show only one item for one symbol even though it occurs in multiple included files. The one that remains will still contain the path in its label details but it doesn't necessarily indicate the location of the very first occurance.
   const uniqueItems = new Set()
   completionItems = completionItems.filter(item => {
