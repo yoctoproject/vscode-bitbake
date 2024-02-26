@@ -38,7 +38,7 @@ export class BitbakeConfigPicker {
   updateStatusBar (bitbakeSettings: BitbakeSettings): void {
     this.bitbakeSettings = bitbakeSettings
     if (this.bitbakeSettings?.buildConfigurations !== undefined && this.bitbakeSettings?.buildConfigurations?.length > 0) {
-      if (this.bitbakeSettings?.buildConfigurations.find((config) => config.name === this.activeBuildConfiguration) === undefined) {
+      if (!this.bitbakeSettings.buildConfigurations.some((config) => config.name === this.activeBuildConfiguration)) {
         assert(this.bitbakeSettings.buildConfigurations[0].name !== undefined) // Cannot happen with the definition in client/package.json
         // No need to update the memento here, the same default choice will be selected next time
         this.activeBuildConfiguration = this.bitbakeSettings.buildConfigurations[0].name
