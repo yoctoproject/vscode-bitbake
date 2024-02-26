@@ -1,3 +1,26 @@
+# 2.2.0 - 2024.02.27
+
+ - Add a new buildConfigurations settings array and status bar to manage multiple build configurations
+ - Add a new command to scan a recipe
+    - Generate definitions and completions for the variables from the recipe scan
+    - Generate hovers with final values for the variables from the recipe scan
+    - Automatically start the recipe scan instead of a general parse on save
+    - Resolve variable expensions after the recipe scan for symbols resolution
+ - Restore packaging for Windows, with a limited, stable feature set
+ - Add a new command to start an interactive bitbake shell
+ - Add support for colors, links and progress bars in the bitbake terminal
+ - Add a reference provider for bitbake variables
+ - Add new problem matchers for bitbake output
+ - Suppress some false positives from embedded languages diagnostics
+ - Automatically detect eSDK mode and deprecate previous option
+ - Add definitions to overrides files
+ - Add recipes suggestions for all commands if the project has been scanned
+ - Add a command to open the WORKDIR of a recipe, allowing to inspect sources, builds and logs
+ - Forward Python extension's import quick fixes into bitbake files
+ - Stop resolving relative settings paths into absolute when invoking bitbake
+ - Fix a bug where the settings were not properly updated on the language server
+ - Various bug fixes and improvements
+
 # 2.1.0 - 2024.01.09
 
  - Added definitions and diagnostics providers for embedded python and bash
