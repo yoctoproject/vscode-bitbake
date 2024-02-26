@@ -37,7 +37,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, uri, task) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri, task) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }))
@@ -163,14 +163,14 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
   await vscode.workspace.getConfiguration('task').update('saveBeforeRun', saveBeforeRun, undefined, true)
 }
 
-async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any, task?: any): Promise<void> {
+async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient, uri?: any, task?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     let chosenTask: string | undefined
     if (typeof task === 'string') {
       chosenTask = task
     } else {
-      chosenTask = await selectTask()
+      chosenTask = await selectTask(client, chosenRecipe)
     }
     if (chosenTask !== undefined) {
       logger.debug(`Command: run-task: ${chosenRecipe}, ${chosenTask}`)
@@ -185,8 +185,22 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
   }
 }
 
-async function selectTask (): Promise<string | undefined> {
-  const chosenTask = await vscode.window.showInputBox({ placeHolder: 'Bitbake task to run (bitbake -c)' })
+async function selectTask (client: LanguageClient, recipe: string): Promise<string | undefined> {
+  const taskDeps = await getVariableValue(client, '_task_deps', recipe)
+  let chosenTask: string | undefined
+  if (taskDeps !== undefined) {
+    const parsedTaskDeps = JSON.parse(taskDeps.replace(/'/g, '"'))
+    /**
+     * _task_deps="{'tasks': ['do_patch', ...], 'depends': {...}, ...}"
+     */
+    if (parsedTaskDeps instanceof Object && Array.isArray(parsedTaskDeps?.tasks)) {
+      const quickPickItems = parsedTaskDeps.tasks as string[]
+      logger.debug(`quickPickItems: ${JSON.stringify(parsedTaskDeps.tasks)}`)
+      chosenTask = await vscode.window.showQuickPick(quickPickItems, { placeHolder: 'Select a task' })
+    }
+  } else {
+    chosenTask = await vscode.window.showInputBox({ placeHolder: 'Enter the Bitbake task to run (bitbake -c)' })
+  }
   return sanitizeForShell(chosenTask)
 }
 
