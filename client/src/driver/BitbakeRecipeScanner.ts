@@ -16,8 +16,6 @@ export class BitbakeRecipeScanner {
   private _languageClient: LanguageClient | undefined
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
-  public scanResults: string = ''
-  public processedScanResults: Record<string, unknown> | undefined
   private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri>()
 
   /**
@@ -69,13 +67,13 @@ export class BitbakeRecipeScanner {
 
         const executionEngine = e.execution.task.execution as BitbakeCustomExecution
         if (executionEngine !== undefined) {
-          this.scanResults = executionEngine.pty?.outputDataString ?? ''
+          const scanResults = executionEngine.pty?.outputDataString ?? ''
           if (this._languageClient === undefined) {
             logger.error('[onDidEndTask] Language client not set, unable to forward recipe environment to the server')
           } else {
-            if (this.scanResults !== '' && uri !== undefined && chosenRecipe !== undefined) {
+            if (scanResults !== '' && uri !== undefined && chosenRecipe !== undefined) {
               logger.debug('[onDidEndTask] Sending recipe environment to the server')
-              const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults: this.scanResults, uri, chosenRecipe }
+              const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
               await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
               this.serverScanRequest.fire(uri)
             }
