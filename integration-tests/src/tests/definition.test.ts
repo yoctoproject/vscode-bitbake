@@ -37,7 +37,7 @@ suite('Bitbake Definition Test Suite', () => {
         position
       )
       return definitionResult.length > 0
-    })
+    }, 5000)
     definitionResult.forEach((definition) => {
       const receivedUri = getDefinitionUri(definition)
       assert.equal(receivedUri.fsPath.endsWith(expectedPathEnding), true)
