@@ -5,7 +5,7 @@
     - Generate definitions and completions for the variables from the recipe scan
     - Generate hovers with final values for the variables from the recipe scan
     - Automatically start the recipe scan instead of a general parse on save
-    - Resolve variable expensions after the recipe scan for symbols resolution
+    - Resolve variable expansions after the recipe scan for symbols resolution
  - Restore packaging for Windows, with a limited, stable feature set
  - Add a new command to start an interactive bitbake shell
  - Add support for colors, links and progress bars in the bitbake terminal
