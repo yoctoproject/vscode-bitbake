@@ -399,7 +399,7 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
 async function openDevtoolUpdateBBAppend (res: SpawnSyncReturns<Buffer>, bitBakeProjectScanner: BitBakeProjectScanner): Promise<void> {
   const output = res.stdout.toString()
   // Regex to extract path from: NOTE: Writing append file .../meta-poky/recipes-core/busybox/busybox_1.36.1.bbappend
-  const regex = /NOTE: Writing append file (.*)/g
+  const regex = /Writing append file ([\w/._-]+)/g
   const match = regex.exec(output)
   if (match === null) {
     logger.error('Could not find bbappend file')
