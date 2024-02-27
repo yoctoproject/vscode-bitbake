@@ -59,6 +59,6 @@ jobs:
         add-paths: |
           client/parser.info
           client/tree-sitter-bitbake.wasm
-        title: Auto update tree-sitter-sitter wasm file
-        commit-message: Auto update tree-sitter-sitter wasm file
+        title: Auto update tree-sitter-bitbake wasm file
+        commit-message: Auto update tree-sitter-bitbake wasm file and parser info
         token: ${{ secrets.GITHUB_TOKEN }}
