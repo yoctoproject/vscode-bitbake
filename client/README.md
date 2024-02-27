@@ -102,6 +102,11 @@ Note that the extension deactivates the "files.trimTrailingWhitespace" setting f
 Python and Shell script, as it interferes with the functioning of features related
 to embedded languages.
 
+### Sharing .vscode settings to others
+
+Poky version 5.0 and above allow sharing a pre-configured `.vscode` folder through
+the `TEMPLATECONF` mechanism. See the [official documentation on this subject](https://docs.yoctoproject.org/dev/singleindex.html#creating-a-custom-template-configuration-directory).
+
 ## Features
 
 ### Syntax highlighting
