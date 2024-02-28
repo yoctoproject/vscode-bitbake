@@ -3,10 +3,11 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { copyBitbakeSettings, generateTasksDefinitions } from '../../../driver/BitbakeESDK'
+import { copyBitbakeSettings, generateCPPProperties, generateTasksDefinitions } from '../../../driver/BitbakeESDK'
 import { type BitbakeSettings } from '../../../lib/src/BitbakeSettings'
 
 import * as JSONFile from '../../../utils/JSONFile'
+import * as LanguageClient from '../../../language/languageClient'
 
 describe('Bitbake ESDK Test Suite', () => {
   const workspace = {
@@ -81,6 +82,53 @@ describe('Bitbake ESDK Test Suite', () => {
         expect.objectContaining({
           label: 'Devtool Clean recipeName',
           specialCommand: 'devtool build -c recipeName'
+        })
+      ])
+    }))
+  })
+
+  it('should generate c_cpp_properties.json', async () => {
+    const originalConfig = {
+      configurations: [
+        {
+          name: 'should not be overwritten',
+          browse: {
+            // eslint-disable-next-line no-template-curly-in-string
+            path: ['${workspaceFolder}/**']
+          }
+        }
+      ]
+    }
+    const loadJsonMock = jest.spyOn(JSONFile, 'loadJsonFile')
+    loadJsonMock.mockReturnValueOnce(originalConfig)
+    const saveJsonMock = jest.spyOn(JSONFile, 'saveJsonFile').mockImplementation(() => {})
+
+    const bitBakeProjectScannerMock = { resolveContainerPath: jest.fn().mockImplementation((arg) => arg) } as any
+    const clientMock = jest.fn() as any
+    const getVariableValueMock = jest.spyOn(LanguageClient, 'getVariableValue')
+    getVariableValueMock.mockImplementation(
+      async (client, variable, recipe) => {
+        if (variable === 'STAGING_BINDIR_TOOLCHAIN') {
+          return '/opt'
+        }
+        if (variable === 'TARGET_SYS') {
+          return 'arch-poky'
+        }
+        if (variable === 'CXX') {
+          return 'g++ --sysroot=/opt'
+        }
+        return ''
+      }
+    )
+
+    await generateCPPProperties(workspace, bitBakeProjectScannerMock, clientMock)
+
+    expect(saveJsonMock).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({
+      configurations: expect.arrayContaining([
+        expect.objectContaining({
+          name: 'arch-poky',
+          compilerPath: '/opt/g++',
+          compilerArgs: expect.arrayContaining(['--sysroot=/opt'])
         })
       ])
     }))
