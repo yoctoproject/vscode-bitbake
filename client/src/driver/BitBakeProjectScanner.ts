@@ -43,7 +43,6 @@ export class BitBakeProjectScanner {
   onChange: EventEmitter = new EventEmitter()
 
   private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [] }
-  private _shouldDeepExamine: boolean = false
   private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 
@@ -66,14 +65,6 @@ export class BitBakeProjectScanner {
 
   get scanResult (): BitbakeScanResult {
     return this._bitbakeScanResult
-  }
-
-  get shouldDeepExamine (): boolean {
-    return this._shouldDeepExamine
-  }
-
-  set shouldDeepExamine (shouldDeepExamine: boolean) {
-    this._shouldDeepExamine = shouldDeepExamine
   }
 
   get bitbakeDriver (): BitbakeDriver {
