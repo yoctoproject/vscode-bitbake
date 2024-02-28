@@ -5,6 +5,13 @@
 
 import path from 'path'
 
+export const bitbakeFileExtensions = ['.bb', '.bbappend', '.bbclass', '.conf', '.inc']
+
 export function extractRecipeName (filePath: string): string {
-  return path.parse(filePath).name.split('_')[0]
+  // Ex: gst1.0-plugins-bad_1.18.4.bb -> gst1.0-plugins-bad
+  const baseName = path.parse(filePath).base
+  const stringRegex = '(' + bitbakeFileExtensions.map(ext => `\\${ext}`).join('|') + ')$'
+  const fileName = baseName.replace(new RegExp(stringRegex, 'g'), '')
+  const recipeName = fileName.split('_')[0]
+  return recipeName
 }
