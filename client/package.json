@@ -478,6 +478,11 @@
         "command": "bitbake.terminal-profile",
         "title": "BitBake: Open interactive terminal",
         "description": "Open an interactive terminal with the bitbake environment."
+      },
+      {
+        "command": "bitbake.recipe-devshell",
+        "title": "BitBake: Open recipe's devshell",
+        "description": "Open an interactive BitBake devshell for a recipe."
       }
     ],
     "viewsContainers": {
@@ -532,12 +537,16 @@
           "group": "0@bitbake_recipe@3"
         },
         {
+          "command": "bitbake.recipe-devshell",
+          "group": "0@bitbake_recipe@4"
+        },
+        {
           "command": "bitbake.terminal-profile",
-          "group": "0@bitbake_recipe@3"
+          "group": "0@bitbake_recipe@5"
         },
         {
           "command": "bitbake.open-recipe-workdir",
-          "group": "0@bitbake_recipe@4"
+          "group": "0@bitbake_recipe@6"
         },
         {
           "command": "bitbake.devtool-modify",
@@ -604,13 +613,18 @@
           "when": "viewItem == bitbakeRecipeCtx"
         },
         {
-          "command": "bitbake.terminal-profile",
+          "command": "bitbake.recipe-devshell",
           "group": "0@bitbake_recipe@4",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.terminal-profile",
+          "group": "0@bitbake_recipe@5",
           "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.open-recipe-workdir",
-          "group": "0@bitbake_recipe@5",
+          "group": "0@bitbake_recipe@6",
           "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
         },
         {

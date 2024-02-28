@@ -45,6 +45,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
@@ -466,6 +467,18 @@ async function openRecipeWorkdirCommand (bitbakeWorkspace: BitbakeWorkspace, bit
   }
   const recipeWorkdirURI = vscode.Uri.file(recipeWorkdir)
   await vscode.commands.executeCommand('vscode.openFolder', recipeWorkdirURI, { forceNewWindow: true })
+}
+
+async function openBitbakeDevshell (terminalProvider: BitbakeTerminalProfileProvider, bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<vscode.Terminal | undefined> {
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  if (chosenRecipe === undefined) return
+  console.log(`Command: recipe-devshell: ${chosenRecipe}`)
+
+  const terminal = await openBitbakeTerminalProfile(terminalProvider)
+  const command = bitBakeProjectScanner.bitbakeDriver.composeDevshellCommand(chosenRecipe)
+  terminal.sendText(command + ' && exit')
+
+  return terminal
 }
 
 async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
