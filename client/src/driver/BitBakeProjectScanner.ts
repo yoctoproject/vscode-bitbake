@@ -556,7 +556,9 @@ You should adjust your docker volumes to use the same URIs as those present on y
               recipe.appends = new Array < PathInfo >()
             }
             if (bbappendVersionMatches(recipeVersion, recipe.version)) {
-              recipe.appends.push(path.parse(matchInner[0]))
+              const resolvedPath = await this.resolveContainerPath(matchInner[0])
+              const parsedPath = path.parse(resolvedPath ?? matchInner[0])
+              recipe.appends.push(parsedPath)
             }
           }
         }
