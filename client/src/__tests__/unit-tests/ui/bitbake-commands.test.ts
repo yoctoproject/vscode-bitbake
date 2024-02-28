@@ -77,6 +77,7 @@ describe('Devtool ide-sdk command', () => {
     const commandSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(undefined as any)
     jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValue({ status: 0 } as any)
 
+    jest.spyOn(vscode.window, 'showInformationMessage').mockReturnValue({ then: jest.fn() } as any)
     await ideSDKCommand('busybox')
     expect(commandSpy).toHaveBeenCalledWith(expect.anything(), 'devtool ide-sdk -i code busybox core-image-minimal -t root@192.168.0.3', expect.anything())
   })
