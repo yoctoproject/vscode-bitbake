@@ -55,11 +55,14 @@ export class ClientNotificationManager {
 It looks like you just configured a new devtool workspace.
 You can configure the sources' workspace to use the Yocto SDK for cross-compilation and debugging.`,
         'Configure SDK',
+        'Configure devtool fallback',
         'Don\'t Show Again'
       )
         .then((item) => {
           if (item === 'Configure SDK') {
             void commands.executeCommand('bitbake.devtool-ide-sdk', recipe)
+          } else if (item === 'Configure devtool fallback') {
+            void commands.executeCommand('bitbake.devtool-sdk-fallback', recipe)
           } else if (item === 'Don\'t Show Again') {
             void this.neverShowAgain('bitbake/sdkSuggestion')
           }
