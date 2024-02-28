@@ -173,6 +173,10 @@ export class BitbakeDriver {
     return 'bash'
   }
 
+  composeDevshellCommand (recipe: string): string {
+    return `bitbake -c devshell ${recipe}`
+  }
+
   composeDevtoolIDECommand (recipe: string): string {
     const sdkImage = this.getBuildConfig('sdkImage')
     const sshTarget = this.getBuildConfig('sshTarget')
