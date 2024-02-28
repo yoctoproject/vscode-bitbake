@@ -412,40 +412,80 @@ You should adjust your docker volumes to use the same URIs as those present on y
   }
 
   private async scanForRecipesPath (): Promise<void> {
-    const tmpFiles = this.searchFiles(this._recipesFileExtension)
+    const showRecipeFileNameOutput = await this.executeBitBakeCommand('bitbake-layers show-recipes -f')
+    if (showRecipeFileNameOutput.status !== 0) {
+      logger.error('Failed to scan recipes path')
+      return
+    }
 
-    for (const file of tmpFiles) {
-      const recipeName: string = file.name.split(/[_]/g)[0]
+    const output = showRecipeFileNameOutput.output.toString()
+    const splittedOutput = output.split(/\r?\n/g)
+    const startingIndex = splittedOutput.findIndex((line) => line.includes('Available recipes'))
 
-      const element: ElementInfo | undefined = this._bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
-        return obj.name === recipeName
+    const allFileNames: string[] = []
+    if (startingIndex === -1) {
+      logger.error('[scanForRecipesPath] Failed to find available recipes')
+      return
+    }
+
+    const recipePathRegex = /(.*\.bb)/
+
+    // All lines after the '=== Available recipes: ===' line are file names, and only keep the valid ones
+    allFileNames.push(...splittedOutput.slice(startingIndex + 1).filter((line) => !line.includes('skipped') && recipePathRegex.exec(line) !== null))
+
+    const notMatchedFileNames: string[] = []
+    for (const fileName of allFileNames) {
+      const match = recipePathRegex.exec(fileName)
+      if (match === null) {
+        continue
+      }
+
+      const recipePath = match[0].trim()
+      const foundRecipe = this._bitbakeScanResult._recipes.find((recipe) => {
+        return recipe.name === extractRecipeName(recipePath)
       })
-
-      if (element !== undefined) {
-        element.path = file.path
+      if (foundRecipe !== undefined) {
+        foundRecipe.path = path.parse(recipePath)
+      } else {
+        notMatchedFileNames.push(fileName)
       }
     }
 
-    if (this._shouldDeepExamine) {
-      const recipesWithOutPath: ElementInfo[] = this._bitbakeScanResult._recipes.filter((obj: ElementInfo): boolean => {
-        return obj.path === undefined
+    const recipesWithOutPath = this._bitbakeScanResult._recipes.filter((recipe) => {
+      return recipe.path === undefined
+    })
+
+    logger.debug(`${recipesWithOutPath.length} recipes did not get the path from the 'bitbake-layers show-recipes -f' command.`)
+    logger.debug(`${notMatchedFileNames.length} file names (from 'bitbake-layers show-recipes -f) are not matched with any recipes.`)
+
+    const matchedFileNamesAfterInfer: string[] = []
+
+    // Infer the path of the recipes that didn't get a path from the previous step
+    for (const recipe of recipesWithOutPath) {
+      // Some recipes name found by 'bitbake-layers show-recipes' have extra strings appended to them, but in the path found with option '-f' it is not present
+      /**
+       * name: go-cross-core2-64
+         path: /home/projects/poky/meta/recipes-devtools/go/go-cross_1.20.14.bb
+       */
+      const possiblePaths = notMatchedFileNames.filter((fileName) => {
+        return recipe.name.includes(extractRecipeName(fileName))
       })
-
-      logger.info(`${recipesWithOutPath.length} recipes must be examined more deeply.`)
-
-      for (const recipeWithOutPath of recipesWithOutPath) {
-        const commandResult = await this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
-        if (commandResult.status !== 0) {
-          logger.error(`Failed to scan recipes path: ${commandResult.stderr.toString()}`)
-          continue
-        }
-        const output = commandResult.output.toString()
-        const regExp: RegExp = /(\s.*\.bb)/g
-
-        for (const match of output.matchAll(regExp)) {
-          recipeWithOutPath.path = path.parse(match[0].trim())
-        }
+      if (possiblePaths.length > 0) {
+        // longer file names are more likely to be the correct one
+        possiblePaths.sort((a, b) => extractRecipeName(b).length - extractRecipeName(a).length)
+        logger.debug(`${possiblePaths[0]} is inferred as the path of ${recipe.name} recipe.`)
+        recipe.path = path.parse(possiblePaths[0])
+        matchedFileNamesAfterInfer.push(possiblePaths[0])
       }
+    }
+
+    const remainingRecipesWithoutPath = this._bitbakeScanResult._recipes.filter((recipe) => {
+      return recipe.path === undefined
+    })
+
+    logger.debug(`${remainingRecipesWithoutPath.length} recipes still don't have a path after infer.`)
+    if (remainingRecipesWithoutPath.length > 0) {
+      logger.debug(`Remaining recipes without path: \n${JSON.stringify(remainingRecipesWithoutPath)}`)
     }
   }
 
