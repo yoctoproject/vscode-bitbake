@@ -343,6 +343,8 @@ function showSDKConfigurationDone (recipe: string): void {
     if (choice === 'Open Workspace') {
       void vscode.commands.executeCommand('bitbake.devtool-open-workspace', recipe)
     }
+  }, (reason) => {
+    logger.error(`Failed to show SDK configuration done message: ${reason}`)
   })
 }
 
