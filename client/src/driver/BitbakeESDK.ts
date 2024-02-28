@@ -9,7 +9,9 @@ import { type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
 import { loadJsonFile, setJsonProperty, saveJsonFile, mergeJsonArray } from '../utils/JSONFile'
 import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
-import * as vscode from 'vscode'
+import { type LanguageClient } from 'vscode-languageclient/node'
+import { getVariableValue } from '../language/languageClient'
+import { type BitBakeProjectScanner } from './BitBakeProjectScanner'
 
 export let bitbakeESDKMode: boolean = false
 
@@ -29,7 +31,6 @@ export function configureDevtoolSDKFallback (workspace: DevtoolWorkspaceInfo, bi
   createVSCodeFolderIfNotExists(workspace.path)
   copyBitbakeSettings(workspace.path, bitbakeSettings, activeConfig)
   generateTasksDefinitions(workspace, bitbakeSettings)
-  void vscode.window.showInformationMessage(`Devtool workspace for ${workspace.name} successfully configured`)
 }
 
 // exported for testing only
@@ -84,4 +85,28 @@ export function generateTasksDefinitions (workspace: DevtoolWorkspaceInfo, bitba
   saveJsonFile(vscodeTasksPath, vscodeTasks)
   logger.info(`Generated ${vscodeTasksPath} for ${recipeName}`)
   logger.debug(`Tasks: ${JSON.stringify(vscodeTasks)}`)
+}
+
+export async function generateCPPProperties (workspace: DevtoolWorkspaceInfo, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient): Promise<void> {
+  const vscodeCppPropertiesPath = path.join(workspace.path, '.vscode', 'c_cpp_properties.json')
+  const vscodeCppProperties = loadJsonFile(vscodeCppPropertiesPath)
+  const recipe = workspace.name
+
+  const STAGING_BINDIR_TOOLCHAIN = await bitBakeProjectScanner.resolveContainerPath(await getVariableValue(client, 'STAGING_BINDIR_TOOLCHAIN', recipe, true), true) ?? ''
+  const CXX = await getVariableValue(client, 'CXX', recipe, true)
+  const CXXFLAGS = await getVariableValue(client, 'CXXFLAGS', recipe)
+  const TARGET_SYS = await getVariableValue(client, 'TARGET_SYS', recipe)
+  const configuration = {
+    name: TARGET_SYS,
+    compilerPath: path.join(STAGING_BINDIR_TOOLCHAIN, CXX?.split(/\s+/)[0] ?? ''),
+    compilerArgs: CXX?.split(/\s+/).slice(1).concat(CXXFLAGS?.split(/\s+/) ?? [])
+  }
+
+  const configurations = vscodeCppProperties.configurations
+  if (configurations === undefined) {
+    vscodeCppProperties.configurations = [configuration]
+  } else {
+    mergeJsonArray(configurations, [configuration])
+  }
+  saveJsonFile(vscodeCppPropertiesPath, vscodeCppProperties)
 }
