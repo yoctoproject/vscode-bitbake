@@ -21,6 +21,7 @@ function mockExtensionContext (bitBakeProjectScanner: BitBakeProjectScanner): an
       push: jest.fn()
     }
   } as any
+  const clientMock = jest.fn() as any
 
   let ideSDKCommand: any
   vscode.commands.registerCommand = jest.fn().mockImplementation(
@@ -29,7 +30,7 @@ function mockExtensionContext (bitBakeProjectScanner: BitBakeProjectScanner): an
         ideSDKCommand = callback
       }
     })
-  registerDevtoolCommands(contextMock, bitbakeWorkspace, bitBakeProjectScanner)
+  registerDevtoolCommands(contextMock, bitbakeWorkspace, bitBakeProjectScanner, clientMock)
   expect(ideSDKCommand).toBeDefined()
   return ideSDKCommand
 }

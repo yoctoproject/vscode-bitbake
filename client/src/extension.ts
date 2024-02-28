@@ -168,7 +168,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   }))
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, terminalProvider, client)
-  registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner)
+  registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner, client)
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 
