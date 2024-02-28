@@ -25,6 +25,7 @@ import fs from 'fs'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode } from './BitbakeESDK'
 import { finishProcessExecution } from '../utils/ProcessUtils'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -330,33 +331,47 @@ You should adjust your docker volumes to use the same URIs as those present on y
     }
 
     const output = commandResult.output.toString()
+    const splittedOutput = output.split(/\r?\n/g)
+    // All recipes found will follow the line: === Available recipes: ===
+    const startingIndex = splittedOutput.findIndex((line) => line.includes('Available recipes'))
+    logger.debug(`Starting index: ${startingIndex}`)
 
-    const outerReg: RegExp = /(.+):\r?\n((?:\s+\S+\s+\S+(?:\s+\(skipped\))?\r?\n)+)/g
-    const innerReg: RegExp = /\s+(\S+)\s+(\S+(?:\s+\(skipped\))?)\r?\n/g
+    let outputRecipeSection = ''
+    if (startingIndex === -1) {
+      logger.error('Failed to find available recipes')
+    } else {
+      outputRecipeSection = splittedOutput.slice(startingIndex).join('\n')
+    }
 
-    for (const match of output.matchAll(outerReg)) {
-      const extraInfoString: string[] = new Array < string >()
-      let layerName: string
-      let version: string = ''
+    /**
+     * Example:
+     * zstd:
+        meta                 1.5.5
 
-      for (const matchInner of match[2].matchAll(innerReg)) {
-        if (extraInfoString.length === 0) {
-          layerName = matchInner[1]
-          version = matchInner[2]
-        }
+       The ones that are followed by (skipped) are not included.
+     */
+    const recipeRegex = /(?<name>.+):\r?\n((?:\s+(?<layer>\S+)\s+(?<version>\S+)(?:\s+\(skipped\))?\r?\n)+)/g
 
-        extraInfoString.push(`layer: ${matchInner[1]}`)
-        extraInfoString.push(`version: ${matchInner[2]} `)
+    for (const match of outputRecipeSection.matchAll(recipeRegex)) {
+      const name = match.groups?.name
+      const layerName = match.groups?.layer
+      const version = match.groups?.version
+
+      if (name === undefined) {
+        logger.error('[scanForRecipes] recipeName is undefined')
+        continue
       }
 
-      const layer = this._bitbakeScanResult._layers.find((obj: LayerInfo): boolean => {
-        return obj.name === layerName
+      const extraInfo = [`layer: ${layerName}`, `version: ${version} `].join('\r\n')
+
+      const layerInfo = this._bitbakeScanResult._layers.find((layer) => {
+        return layer.name === layerName
       })
 
       const element: ElementInfo = {
-        name: match[1],
-        extraInfo: extraInfoString.join('\r\n'),
-        layerInfo: layer,
+        name,
+        extraInfo,
+        layerInfo,
         version
       }
 
