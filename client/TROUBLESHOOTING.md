@@ -14,9 +14,9 @@ We haven't found a way to prevent these tabs from opening, but we try to close t
 
 ### BrokenPipeError on BitBake commands
 
-If you are using a `bitbake.commandWrapper` that relies on docker containers, you may encounter the following error:
+If you are using a `bitbake.commandWrapper` that relies on docker containers, you may encounter the following errors:
 
-```bash
+```log
 [Errno 32] Broken pipeTraceback (most recent call last):
   File "/home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/bitbake/lib/bb/ui/knotty.py", line 647, in main
     ret, error = server.runCommand(["ping"])
@@ -34,6 +34,10 @@ Traceback (most recent call last):
   File "/usr/lib/python3.8/multiprocessing/connection.py", line 368, in _send
     n = write(self._handle, buf)
 BrokenPipeError: [Errno 32] Broken pipe
+```
+
+```log
+ERROR: Attempting to set server environment: bitbake-server might have died or been forcibly stopped, ie. OOM killed
 ```
 
 These are due to a limitation of the bitbake server when running through containers in parallel. You'll get this error
