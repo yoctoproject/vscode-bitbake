@@ -422,7 +422,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const recipePathRegex = /(.*\.bb)/
 
     // All lines after the '=== Available recipes: ===' line are file names, and only keep the valid ones
-    allFileNames.push(...splittedOutput.slice(startingIndex + 1).filter((line) => !line.includes('skipped') && recipePathRegex.exec(line) !== null))
+    allFileNames.push(...splittedOutput.slice(startingIndex + 1).filter((line) => !line.includes('(skipped') && recipePathRegex.exec(line) !== null))
 
     const notMatchedFileNames: string[] = []
     for (const fileName of allFileNames) {
