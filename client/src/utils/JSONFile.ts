@@ -6,10 +6,14 @@
 import fs from 'fs'
 
 export function loadJsonFile (path: string): any {
-  if (!fs.existsSync(path)) {
-    return {}
+  try {
+    if (!fs.existsSync(path)) {
+      return {}
+    }
+    return JSON.parse(fs.readFileSync(path, 'utf-8'))
+  } catch (e: any) {
+    throw new Error(`Error while reading JSON file ${path}: ${e}`)
   }
-  return JSON.parse(fs.readFileSync(path, 'utf-8'))
 }
 
 export function saveJsonFile (path: string, json: any): void {
