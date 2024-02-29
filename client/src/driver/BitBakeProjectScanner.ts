@@ -43,6 +43,7 @@ export class BitBakeProjectScanner {
   onChange: EventEmitter = new EventEmitter()
 
   private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [] }
+  private _shouldDeepExamine: boolean = false
   private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 
@@ -65,6 +66,14 @@ export class BitBakeProjectScanner {
 
   get scanResult (): BitbakeScanResult {
     return this._bitbakeScanResult
+  }
+
+  get shouldDeepExamine (): boolean {
+    return this._shouldDeepExamine
+  }
+
+  set shouldDeepExamine (shouldDeepExamine: boolean) {
+    this._shouldDeepExamine = shouldDeepExamine
   }
 
   get bitbakeDriver (): BitbakeDriver {
@@ -446,27 +455,15 @@ You should adjust your docker volumes to use the same URIs as those present on y
       return recipe.path === undefined
     })
 
-    logger.debug(`${recipesWithOutPath.length} recipes did not get the path from the 'bitbake-layers show-recipes -f' command.`)
-    logger.debug(`${notMatchedFileNames.length} file names (from 'bitbake-layers show-recipes -f) are not matched with any recipes.`)
+    if (recipesWithOutPath.length > 0) {
+      logger.debug(`${recipesWithOutPath.length} recipes did not get the path from the previous step.`)
+      logger.debug(`${notMatchedFileNames.length} file names from 'bitbake-layers show-recipes -f' were not matched with any recipes.`)
 
-    const matchedFileNamesAfterInfer: string[] = []
-
-    // Infer the path of the recipes that didn't get a path from the previous step
-    for (const recipe of recipesWithOutPath) {
-      // Some recipes name found by 'bitbake-layers show-recipes' have extra strings appended to them, but in the path found with option '-f' it is not present
-      /**
-       * name: go-cross-core2-64
-         path: /home/projects/poky/meta/recipes-devtools/go/go-cross_1.20.14.bb
-       */
-      const possiblePaths = notMatchedFileNames.filter((fileName) => {
-        return recipe.name.includes(extractRecipeName(fileName))
-      })
-      if (possiblePaths.length > 0) {
-        // longer file names are more likely to be the correct one
-        possiblePaths.sort((a, b) => extractRecipeName(b).length - extractRecipeName(a).length)
-        logger.debug(`${possiblePaths[0]} is inferred as the path of ${recipe.name} recipe.`)
-        recipe.path = path.parse(possiblePaths[0])
-        matchedFileNamesAfterInfer.push(possiblePaths[0])
+      // deep examine gives the correct result but takes a long time
+      if (this._shouldDeepExamine) {
+        await this.deepExamineRecipes(recipesWithOutPath, recipePathRegex)
+      } else {
+        this.inferRecipePath(recipesWithOutPath, notMatchedFileNames)
       }
     }
 
@@ -474,9 +471,54 @@ You should adjust your docker volumes to use the same URIs as those present on y
       return recipe.path === undefined
     })
 
-    logger.debug(`${remainingRecipesWithoutPath.length} recipes still don't have a path after infer.`)
     if (remainingRecipesWithoutPath.length > 0) {
-      logger.debug(`Remaining recipes without path: \n${JSON.stringify(remainingRecipesWithoutPath)}`)
+      logger.debug(`Remaining recipes without path: \n${JSON.stringify(remainingRecipesWithoutPath.map((recipe) => recipe.name))}`)
+    }
+  }
+
+  private async deepExamineRecipes (recipesWithOutPath: ElementInfo[], recipePathRegex: RegExp): Promise<void> {
+    logger.info('[deepExamineRecipes] Deep examine is on, running \'bitbake-layers show-recipes -f\' for each of the recipes without a path.')
+
+    for (const recipeWithOutPath of recipesWithOutPath) {
+      const commandResult = await this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
+      if (commandResult.status !== 0) {
+        logger.error(`Failed to scan recipes path for ${recipeWithOutPath.name}: ${commandResult.stderr.toString()}`)
+        continue
+      }
+      const output = commandResult.output.toString()
+      const match = recipePathRegex.exec(output)
+      if (match === null) {
+        continue
+      }
+
+      const recipePath = await this.resolveContainerPath(match[0].trim())
+      if (recipePath === undefined) {
+        continue
+      }
+      recipeWithOutPath.path = path.parse(recipePath)
+    }
+  }
+
+  private inferRecipePath (recipesWithOutPath: ElementInfo[], notMatchedFileNames: string[]): void {
+    logger.info('[inferRecipePath] Deep examine is off, inferring the paths by comparing the recipe name and the unmatched file names.')
+    for (const recipe of recipesWithOutPath) {
+      /**
+       * Some recipes name found by 'bitbake-layers show-recipes' have extra strings appended to them, but in the path found
+       * with option '-f' it is not present
+       *
+       * Example:
+       * name: go-cross-core2-64
+         path: /home/projects/poky/meta/recipes-devtools/go/go-cross_1.20.14.bb
+      */
+      const possiblePaths = notMatchedFileNames.filter((fileName) => {
+        return recipe.name.includes(extractRecipeName(fileName))
+      })
+      if (possiblePaths.length > 0) {
+        // longer file names are more likely to be the correct one
+        possiblePaths.sort((a, b) => extractRecipeName(b).length - extractRecipeName(a).length)
+        logger.debug(`${possiblePaths[0]} is inferred as the path of recipe: ${recipe.name} .`)
+        recipe.path = path.parse(possiblePaths[0])
+      }
     }
   }
 
