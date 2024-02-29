@@ -406,7 +406,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const showRecipeFileNameOutput = await this.executeBitBakeCommand('bitbake-layers show-recipes -f')
     if (showRecipeFileNameOutput.status !== 0) {
       logger.error('Failed to scan recipes path')
-      return
+      throw new Error('Failed to scan recipes path')
     }
 
     const output = showRecipeFileNameOutput.output.toString()
