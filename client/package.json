@@ -90,7 +90,7 @@
         "bitbake.shouldDeepExamine": {
           "type": "boolean",
           "default": false,
-          "description": "Activate deep examination. If a recipe exports an additional package with a different name than the recipe file, the normal scan will not detect these packages. To find these packages, you need to activate this option."
+          "markdownDescription": "Activate deep examination. If a recipe exports an additional package with a different name than the recipe file, the normal scan will not detect these packages. To find these packages, you need to activate this option.\n\n`Attention`: This takes extra time which scales with the number of recipes that weren't detected by the normal scan"
         },
         "bitbake.parseOnSave": {
           "type": "boolean",
