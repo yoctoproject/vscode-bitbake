@@ -484,6 +484,12 @@
         "command": "bitbake.recipe-devshell",
         "title": "BitBake: Open recipe's devshell",
         "description": "Open an interactive BitBake devshell for a recipe."
+      },
+      {
+        "command": "bitbake.collapse-list",
+        "title": "BitBake: Collapse list",
+        "description": "Collapse the focused list of recipes or devtool workspaces.",
+        "icon": "$(collapse-all)"
       }
     ],
     "viewsContainers": {
@@ -635,8 +641,13 @@
           "when": "view == bitbakeRecipes"
         },
         {
-          "command": "bitbake.drop-all-recipes",
+          "command": "bitbake.collapse-list",
           "group": "navigation@2",
+          "when": "view == bitbakeRecipes"
+        },
+        {
+          "command": "bitbake.drop-all-recipes",
+          "group": "navigation@3",
           "when": "view == bitbakeRecipes"
         },
         {
