@@ -46,6 +46,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
@@ -527,4 +528,8 @@ async function devtoolCleanCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
       } satisfies BitbakeTaskDefinition,
     `Bitbake: Devtool Clean: ${chosenRecipe}`)
   }
+}
+
+async function collapseActiveList (): Promise<void> {
+  await vscode.commands.executeCommand('list.collapseAll')
 }
