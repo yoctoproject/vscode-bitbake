@@ -417,7 +417,7 @@
         "command": "bitbake.drop-all-recipes",
         "title": "BitBake: Drop all recipes from the active workspace",
         "description": "Clear all recipes in the recipes view and from all command suggestions.",
-        "icon": "$(close)"
+        "icon": "$(close-all)"
       },
       {
         "command": "bitbake.parse-recipes",
@@ -427,7 +427,8 @@
       {
         "command": "bitbake.devtool-modify",
         "title": "BitBake: Devtool: Modify recipe",
-        "description": "Open a new devtool workspace to modify a recipe's sources."
+        "description": "Open a new devtool workspace to modify a recipe's sources.",
+        "icon": "$(add)"
       },
       {
         "command": "bitbake.devtool-ide-sdk",
@@ -515,42 +516,90 @@
     "submenus": [
       {
         "id": "bitbake/main",
-        "label": "BitBake"
+        "label": "BitBake",
+        "icon": "$(ellipsis)"
+      },
+      {
+        "id": "devtool/main",
+        "label": "BitBake",
+        "icon": "$(ellipsis)"
       }
     ],
     "menus": {
       "bitbake/main": [
         {
-          "command": "bitbake.clean-recipe",
-          "group": "0@bitbake_recipe@1"
+          "command": "bitbake.build-recipe",
+          "group": "0@bitbake_build@0"
         },
         {
-          "command": "bitbake.build-recipe",
-          "group": "0@bitbake_recipe@0"
+          "command": "bitbake.clean-recipe",
+          "group": "0@bitbake_build@1"
         },
         {
           "command": "bitbake.run-task",
-          "group": "0@bitbake_recipe@2"
+          "group": "0@bitbake_build@2"
+        },
+        {
+          "command": "bitbake.drop-recipe",
+          "group": "0@bitbake_build@3"
         },
         {
           "command": "bitbake.scan-recipe-env",
-          "group": "0@bitbake_recipe@3"
+          "group": "1@bitbake_dev@0"
         },
         {
           "command": "bitbake.recipe-devshell",
-          "group": "0@bitbake_recipe@4"
+          "group": "1@bitbake_dev@1"
         },
         {
           "command": "bitbake.terminal-profile",
-          "group": "0@bitbake_recipe@5"
+          "group": "1@bitbake_dev@2"
         },
         {
           "command": "bitbake.open-recipe-workdir",
-          "group": "0@bitbake_recipe@6"
+          "group": "1@bitbake_dev@3"
         },
         {
           "command": "bitbake.devtool-modify",
-          "group": "1@bitbake_devtool@0"
+          "group": "2@bitbake_devtool@0"
+        }
+      ],
+      "devtool/main": [
+        {
+          "command": "bitbake.devtool-build",
+          "group": "0@devtool_build@0"
+        },
+        {
+          "command": "bitbake.devtool-clean",
+          "group": "0@devtool_build@1"
+        },
+        {
+          "command": "bitbake.devtool-deploy",
+          "group": "0@devtool_build@2"
+        },
+        {
+          "command": "bitbake.devtool-open-workspace",
+          "group": "1@devtool_dev@0"
+        },
+        {
+          "command": "bitbake.devtool-ide-sdk",
+          "group": "1@devtool_dev@1"
+        },
+        {
+          "command": "bitbake.devtool-sdk-fallback",
+          "group": "1@devtool_dev@2"
+        },
+        {
+          "command": "bitbake.terminal-profile",
+          "group": "1@devtool_dev@3"
+        },
+        {
+          "command": "bitbake.devtool-update",
+          "group": "1@devtool_finalize@0"
+        },
+        {
+          "command": "bitbake.devtool-reset",
+          "group": "1@devtool_finalize@1"
         }
       ],
       "explorer/context": [
@@ -589,44 +638,29 @@
           "command": "bitbake.drop-all-recipes",
           "group": "navigation@2",
           "when": "view == bitbakeRecipes"
+        },
+        {
+          "submenu": "bitbake/main",
+          "group": "navigation@99",
+          "when": "view == bitbakeRecipes"
+        },
+        {
+          "command": "bitbake.devtool-modify",
+          "group": "navigation@0",
+          "when": "view == devtoolWorkspaces"
+        },
+        {
+          "command": "bitbake.rescan-project",
+          "group": "navigation@1",
+          "when": "view == devtoolWorkspaces"
+        },
+        {
+          "submenu": "devtool/main",
+          "group": "navigation@99",
+          "when": "view == devtoolWorkspaces"
         }
       ],
       "view/item/context": [
-        {
-          "command": "bitbake.clean-recipe",
-          "group": "0@bitbake_recipe@1",
-          "when": "viewItem == bitbakeRecipeCtx"
-        },
-        {
-          "command": "bitbake.build-recipe",
-          "group": "0@bitbake_recipe@0",
-          "when": "viewItem == bitbakeRecipeCtx"
-        },
-        {
-          "command": "bitbake.run-task",
-          "group": "0@bitbake_recipe@2",
-          "when": "viewItem == bitbakeRecipeCtx"
-        },
-        {
-          "command": "bitbake.drop-recipe",
-          "group": "0@bitbake_recipe@3",
-          "when": "viewItem == bitbakeRecipeCtx"
-        },
-        {
-          "command": "bitbake.recipe-devshell",
-          "group": "0@bitbake_recipe@4",
-          "when": "viewItem == bitbakeRecipeCtx"
-        },
-        {
-          "command": "bitbake.terminal-profile",
-          "group": "0@bitbake_recipe@5",
-          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
-        },
-        {
-          "command": "bitbake.open-recipe-workdir",
-          "group": "0@bitbake_recipe@6",
-          "when": "viewItem == bitbakeRecipeCtx || viewItem == devtoolWorskpaceCtx"
-        },
         {
           "command": "bitbake.build-recipe",
           "group": "inline@0",
@@ -638,69 +672,133 @@
           "when": "viewItem == bitbakeRecipeCtx"
         },
         {
-          "command": "bitbake.devtool-build",
-          "group": "inline@0",
-          "when": "viewItem == devtoolWorskpaceCtx"
-        },
-        {
           "command": "bitbake.drop-recipe",
           "group": "inline@2",
           "when": "viewItem == bitbakeRecipeCtx"
         },
         {
-          "command": "bitbake.devtool-modify",
-          "group": "1@bitbake_devtool@0",
+          "submenu": "bitbake/main",
+          "group": "inline@99",
           "when": "viewItem == bitbakeRecipeCtx"
         },
         {
-          "command": "bitbake.devtool-open-workspace",
-          "group": "1@bitbake_devtool@1",
-          "when": "viewItem == devtoolWorskpaceCtx"
-        },
-        {
-          "command": "bitbake.devtool-reset",
-          "group": "1@bitbake_devtool@5",
+          "command": "bitbake.devtool-build",
+          "group": "inline@0",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.devtool-update",
-          "group": "1@bitbake_devtool@4",
-          "when": "viewItem == devtoolWorskpaceCtx"
-        },
-        {
-          "command": "bitbake.devtool-ide-sdk",
-          "group": "1@bitbake_devtool@2",
-          "when": "viewItem == devtoolWorskpaceCtx"
-        },
-        {
-          "command": "bitbake.devtool-sdk-fallback",
-          "group": "1@bitbake_devtool@3",
+          "group": "inline@1",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
           "command": "bitbake.devtool-reset",
-          "group": "inline@5",
+          "group": "inline@2",
           "when": "viewItem == devtoolWorskpaceCtx"
         },
         {
-          "command": "bitbake.devtool-update",
-          "group": "inline@4",
+          "submenu": "devtool/main",
+          "group": "inline@99",
           "when": "viewItem == devtoolWorskpaceCtx"
+        },
+        {
+          "command": "bitbake.build-recipe",
+          "group": "0@bitbake_build@0",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.clean-recipe",
+          "group": "0@bitbake_build@1",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.run-task",
+          "group": "0@bitbake_build@2",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.drop-recipe",
+          "group": "0@bitbake_build@3",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.scan-recipe-env",
+          "group": "1@bitbake_dev@0",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.recipe-devshell",
+          "group": "1@bitbake_dev@1",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.terminal-profile",
+          "group": "1@bitbake_dev@2",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.open-recipe-workdir",
+          "group": "1@bitbake_dev@3",
+          "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.devtool-modify",
+          "group": "2@bitbake_devtool@0",
+          "when": "viewItem == bitbakeRecipeCtx"
         },
         {
           "command": "bitbake.devtool-build",
-          "group": "0@bitbake_recipe@0",
+          "group": "0@devtool_build@0",
           "when": "viewItem == devtoolWorskpaceCtx"
-        },
-        {
-          "command": "bitbake.devtool-deploy",
-          "group": "0@bitbake_recipe@2",
-          "when": "viewItem == devtoolWorskpaceCtx"
+
         },
         {
           "command": "bitbake.devtool-clean",
-          "group": "0@bitbake_recipe@1",
+          "group": "0@devtool_build@1",
           "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.devtool-deploy",
+          "group": "0@devtool_build@2",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.devtool-open-workspace",
+          "group": "1@devtool_dev@0",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.devtool-ide-sdk",
+          "group": "1@devtool_dev@1",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.devtool-sdk-fallback",
+          "group": "1@devtool_dev@2",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.terminal-profile",
+          "group": "1@devtool_dev@3",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.devtool-update",
+          "group": "1@devtool_finalize@0",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
+        },
+        {
+          "command": "bitbake.devtool-reset",
+          "group": "1@devtool_finalize@1",
+          "when": "viewItem == devtoolWorskpaceCtx"
+
         }
       ]
     },
