@@ -37,6 +37,8 @@ export class BitbakeTerminalProfileProvider implements vscode.TerminalProfilePro
 }
 
 export async function openBitbakeTerminalProfile (terminalProvider: BitbakeTerminalProfileProvider): Promise<vscode.Terminal> {
+  // This doesn't take the bitbake driver lock. If the user opens a terminal while a command is running,
+  // broken pipe errors to the bitbake server can occur. This is docummented in TROUBLESHOOTING.md.
   const profile = await terminalProvider.provideTerminalProfile() as vscode.TerminalProfile
   const terminal = vscode.window.createTerminal(profile.options)
   terminal.show()
