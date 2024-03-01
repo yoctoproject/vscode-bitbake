@@ -176,7 +176,11 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 }
 
 export function deactivate (): Thenable<void> | undefined {
-  taskProvider.dispose()
-  logger.outputChannel?.dispose()
+  // The server has to be handled before the disposables.
+  // Otherwise it might attempt to use anything that has been disposed.
   return deactivateLanguageServer(client)
+    .then(() => {
+      taskProvider.dispose()
+      logger.outputChannel?.dispose()
+    })
 }
