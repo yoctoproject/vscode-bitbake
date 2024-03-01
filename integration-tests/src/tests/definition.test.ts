@@ -28,10 +28,10 @@ suite('Bitbake Definition Test Suite', () => {
     expectedPathEnding: string,
     expectedRange?: vscode.Range
   ): Promise<void> => {
-    let definitionResult: vscode.Location[] | vscode.Location[] = []
+    let definitionResult: vscode.Location[] | vscode.LocationLink[] = []
 
     await assertWillComeTrue(async () => {
-      definitionResult = await vscode.commands.executeCommand<vscode.Location[] | vscode.Location[]>(
+      definitionResult = await vscode.commands.executeCommand<vscode.Location[] | vscode.LocationLink[]>(
         'vscode.executeDefinitionProvider',
         docUri,
         position
@@ -42,7 +42,11 @@ suite('Bitbake Definition Test Suite', () => {
       const receivedUri = getDefinitionUri(definition)
       assert.equal(receivedUri.fsPath.endsWith(expectedPathEnding), true)
       if (expectedRange !== undefined) {
-        checkIsRangeEqual(definition.range, expectedRange)
+        if (definition instanceof vscode.Location) {
+          checkIsRangeEqual(definition?.range, expectedRange)
+        } else {
+          checkIsRangeEqual(definition.targetRange, expectedRange)
+        }
       }
     })
   }
