@@ -7,6 +7,7 @@ export interface OutputChannel {
   appendLine: (message: string) => void
   show: () => void
   clear: () => void
+  dispose: () => void
 }
 
 export class OutputLogger {
