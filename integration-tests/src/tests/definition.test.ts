@@ -43,9 +43,9 @@ suite('Bitbake Definition Test Suite', () => {
       assert.equal(receivedUri.fsPath.endsWith(expectedPathEnding), true)
       if (expectedRange !== undefined) {
         if (definition instanceof vscode.Location) {
-          checkIsRangeEqual(definition?.range, expectedRange)
+          assert.equal(checkIsRangeEqual(definition?.range, expectedRange), true)
         } else {
-          checkIsRangeEqual(definition.targetRange, expectedRange)
+          assert.equal(checkIsRangeEqual(definition.targetRange, expectedRange), true)
         }
       }
     })
@@ -90,7 +90,7 @@ suite('Bitbake Definition Test Suite', () => {
   test('Definition appears properly on Bash variable', async () => {
     const position = new vscode.Position(15, 3)
     const expectedPathEnding = filePath
-    const expectedRange = new vscode.Range(13, 2, 13, 8)
+    const expectedRange = new vscode.Range(14, 2, 14, 8)
     await testDefinition(position, expectedPathEnding, expectedRange)
   }).timeout(300000)
 })
