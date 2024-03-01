@@ -425,7 +425,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const allFileNames: string[] = []
     if (startingIndex === -1) {
       logger.error('[scanForRecipesPath] Failed to find available recipes')
-      return
+      throw new Error('Failed to find available recipes')
     }
 
     const recipePathRegex = /(.*\.bb)/
