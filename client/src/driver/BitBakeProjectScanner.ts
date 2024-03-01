@@ -445,7 +445,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
         return recipe.name === extractRecipeName(recipePath)
       })
       if (foundRecipe !== undefined) {
-        foundRecipe.path = path.parse(recipePath)
+        foundRecipe.path = path.parse(await this.resolveContainerPath(recipePath) as string)
       } else {
         notMatchedFileNames.push(fileName)
       }
@@ -463,7 +463,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
       if (this._shouldDeepExamine) {
         await this.deepExamineRecipes(recipesWithOutPath, recipePathRegex)
       } else {
-        this.inferRecipePath(recipesWithOutPath, notMatchedFileNames)
+        await this.inferRecipePath(recipesWithOutPath, notMatchedFileNames)
       }
     }
 
@@ -499,7 +499,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     }
   }
 
-  private inferRecipePath (recipesWithOutPath: ElementInfo[], notMatchedFileNames: string[]): void {
+  private async inferRecipePath (recipesWithOutPath: ElementInfo[], notMatchedFileNames: string[]): Promise<void> {
     logger.info('[inferRecipePath] Deep examine is off, inferring the paths by comparing the recipe name and the unmatched file names.')
     for (const recipe of recipesWithOutPath) {
       /**
@@ -516,8 +516,9 @@ You should adjust your docker volumes to use the same URIs as those present on y
       if (possiblePaths.length > 0) {
         // longer file names are more likely to be the correct one
         possiblePaths.sort((a, b) => extractRecipeName(b).length - extractRecipeName(a).length)
-        logger.debug(`${possiblePaths[0]} is inferred as the path of recipe: ${recipe.name} .`)
-        recipe.path = path.parse(possiblePaths[0])
+        const resolvedPath = await this.resolveContainerPath(possiblePaths[0]) as string
+        logger.debug(`${resolvedPath} is inferred as the path of recipe: ${recipe.name} .`)
+        recipe.path = path.parse(resolvedPath)
       }
     }
   }
