@@ -56,6 +56,21 @@ export default class EmbeddedLanguageDocsManager {
     })
   }
 
+  async deleteEmbeddedLanguageDocsFolder (): Promise<void> {
+    logger.debug(`Delete embedded language documents folder: ${this.embeddedLanguageDocsFolder}.`)
+    await new Promise<void>((resolve) => {
+      if (this.embeddedLanguageDocsFolder === undefined) {
+        return
+      }
+      fs.rm(this.embeddedLanguageDocsFolder, { recursive: true }, (err) => {
+        if (err !== null) {
+          logger.error(`Failed to delete embedded language documents folder: ${err as any}`)
+        }
+        resolve()
+      })
+    })
+  }
+
   private registerEmbeddedLanguageDocInfos (embeddedLanguageDoc: EmbeddedLanguageDoc, uri: Uri): void {
     const embeddedLanguageDocInfos: EmbeddedLanguageDocInfos = {
       ...embeddedLanguageDoc,

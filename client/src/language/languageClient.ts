@@ -154,10 +154,10 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
 }
 
 export async function deactivateLanguageServer (client: LanguageClient): Promise<void> {
-  if (client === undefined) {
-    return undefined
-  }
-  await client.stop()
+  await Promise.all([
+    embeddedLanguageDocsManager.deleteEmbeddedLanguageDocsFolder(),
+    client.stop()
+  ])
 }
 
 export async function getVariableValue (client: LanguageClient, variable: string, recipe: string, canTriggerScan: boolean = false): Promise<string | undefined > {
