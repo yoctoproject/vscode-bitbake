@@ -785,7 +785,7 @@ describe('On Completion', () => {
     // string_start has symbol among the completion items
     expect(
       resultOnStringStart.find((item) => item.label === 'DVAR')
-    ).not.toBeUndefined()
+    ).toBeDefined()
 
     // string_start does not have task among the completion items
     expect(resultOnStringStart).not.toEqual(
@@ -844,7 +844,7 @@ describe('On Completion', () => {
     // string_content has symbol among the completion items
     expect(
       resultOnStringContent.find((item) => item.label === 'DVAR')
-    ).not.toBeUndefined()
+    ).toBeDefined()
 
     // string_content does not have task among the completion items
     expect(resultOnStringContent).not.toEqual(
@@ -894,7 +894,7 @@ describe('On Completion', () => {
     })
     expect(
       resultOnVariableExpansion.find((item) => item.label === 'FULL_OPTIMIZATION')
-    ).not.toBeUndefined()
+    ).toBeDefined()
 
     const pnCompletionItems = resultOnVariableExpansion.filter((item) => item.label === 'PN')
     expect(pnCompletionItems.length).toBe(1) // not duplicated with common directories
@@ -911,7 +911,7 @@ describe('On Completion', () => {
     })
     expect(
       resultOnPythonDatastoreVariable.find((item) => item.label === 'DEBIAN_MIRROR')
-    ).not.toBeUndefined()
+    ).toBeDefined()
 
     const resultOnVariableAssignation = onCompletionHandler({
       textDocument: {
