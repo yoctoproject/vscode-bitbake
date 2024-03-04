@@ -31,6 +31,7 @@ export class BitbakeConfigPicker {
     this.activeBuildConfiguration = this.memento?.get('BitbakeConfigPicker.activeBuildConfiguration', 'No BitBake configuration') as string
 
     this.statusBarItem.command = 'bitbake.pick-configuration'
+    this.statusBarItem.tooltip = 'Select BitBake buildConfiguration'
     context.subscriptions.push(vscode.commands.registerCommand('bitbake.pick-configuration', this.pickConfiguration, this))
     this.updateStatusBar(bitbakeSettings)
   }
