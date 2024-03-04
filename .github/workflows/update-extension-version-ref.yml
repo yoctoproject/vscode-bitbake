@@ -1,0 +1,52 @@
+name: Update required extension version
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 1 * *' # Run on the first day of every month
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+
+    env:
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
+      SHELL: /usr/bin/bash
+
+    strategy:
+      matrix:
+        node-version: [20]
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+
+    - name: Update required extension version
+      run: bash scripts/update-extension-version.sh
+
+    - name: Verify file changes
+      uses: tj-actions/verify-changed-files@v17
+      id: verify-changed-files
+      with:
+        files: |
+            integration-tests/src/utils/version.ts
+
+    - name: Create pull request
+      if: steps.verify-changed-files.outputs.files_changed == 'true'
+      uses: peter-evans/create-pull-request@v5
+      with:
+        add-paths: |
+          integration-tests/src/utils/version.ts
+        title: Auto update required extension version
+        commit-message: Auto update required extension version
+        token: ${{ secrets.GITHUB_TOKEN }}
