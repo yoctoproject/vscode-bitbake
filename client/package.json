@@ -30,7 +30,7 @@
   ],
   "activationEvents": [],
   "main": "./out/extension",
-  "browser": "./out/extension",
+  "browser": "./out/extension-web",
   "contributes": {
     "languages": [
       {
