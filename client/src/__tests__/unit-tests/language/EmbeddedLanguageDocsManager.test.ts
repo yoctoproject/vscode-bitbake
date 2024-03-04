@@ -11,7 +11,7 @@ describe('EmbeddedLanguageDocsManager', () => {
   it('can create and delete embedded language documents folder', async () => {
     const storagePath = path.join(__dirname, 'generated-content')
     await embeddedLanguageDocsManager.setStoragePath(storagePath)
-    expect(embeddedLanguageDocsManager.embeddedLanguageDocsFolder).not.toBeUndefined()
+    expect(embeddedLanguageDocsManager.embeddedLanguageDocsFolder).toBeDefined()
     if (embeddedLanguageDocsManager.embeddedLanguageDocsFolder === undefined) {
       return
     }

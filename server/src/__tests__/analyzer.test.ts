@@ -204,9 +204,9 @@ describe('sourceIncludeFiles', () => {
     expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.BAR_INC.replace('file://', ''), 'utf8')
     expect(fsReadFileSyncMock).toHaveBeenCalledWith(FIXTURE_URI.BAR_INC.replace('file://', ''), 'utf8')
 
-    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.FOO_INC)).not.toBeUndefined()
-    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAR_INC)).not.toBeUndefined()
-    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAZ_BBCLASS)).not.toBeUndefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.FOO_INC)).toBeDefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAR_INC)).toBeDefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAZ_BBCLASS)).toBeDefined()
   })
 
   it('does not read the files and parse the syntax tree when the documents were already analyzed ', async () => {
@@ -238,9 +238,9 @@ describe('sourceIncludeFiles', () => {
     // All 4 files were analyzed before, so the logger should be called 4 times
     expect(loggerDebugCalledTimes).toEqual(4)
 
-    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.FOO_INC)).not.toBeUndefined()
-    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAR_INC)).not.toBeUndefined()
-    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAZ_BBCLASS)).not.toBeUndefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.FOO_INC)).toBeDefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAR_INC)).toBeDefined()
+    expect(analyzer.getAnalyzedDocument(FIXTURE_URI.BAZ_BBCLASS)).toBeDefined()
   })
 
   it('gets symbols from the include files', async () => {
