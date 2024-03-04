@@ -10,6 +10,7 @@ import {
   resolveCliArgsFromVSCodeExecutablePath,
   runTests
 } from '@vscode/test-electron'
+import { pythonVersion, bashVersion } from './utils/version'
 
 async function main (): Promise<void> {
   try {
@@ -20,8 +21,8 @@ async function main (): Promise<void> {
       cliPath,
       [
         ...args,
-        '--install-extension', 'mads-hartmann.bash-ide-vscode@1.39.0',
-        '--install-extension', 'ms-python.python@2023.20.0'
+        '--install-extension', `mads-hartmann.bash-ide-vscode@${bashVersion}`,
+        '--install-extension', `ms-python.python@${pythonVersion}`
       ],
       {
         encoding: 'utf-8',
