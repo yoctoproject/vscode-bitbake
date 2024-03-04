@@ -75,19 +75,26 @@ async function disableInteferingSettings (): Promise<void> {
 }
 
 async function installExtensions (extensionId: string): Promise<void> {
-  await vscode.window.withProgress({
-    location: vscode.ProgressLocation.Notification,
-    title: ` yocto-project.yocto-bitbake depends on extension ${extensionId}, installing it...`,
-    cancellable: false
-  }, async (progress, token) => {
-    try {
-      await vscode.commands.executeCommand('workbench.extensions.installExtension', extensionId).then(() => {
-        progress.report({ message: `${extensionId} has been installed` })
-      })
-    } catch (error) {
-      await vscode.window.showErrorMessage(`Failed to install ${extensionId}: ${JSON.stringify(error)}`)
-    }
-  })
+  await vscode.window.showInformationMessage(`The extension ${extensionId} is required for yocto-project.yocto-bitbake to work properly. Do you want to install it?`, 'Install', 'Show extension page', 'Cancel')
+    .then((item) => {
+      if (item === 'Install') {
+        void vscode.window.withProgress({
+          location: vscode.ProgressLocation.Notification,
+          title: `Installing ${extensionId}...`,
+          cancellable: false
+        }, async (progress, token) => {
+          try {
+            await vscode.commands.executeCommand('workbench.extensions.installExtension', extensionId).then(() => {
+              progress.report({ message: `${extensionId} has been installed` })
+            })
+          } catch (error) {
+            await vscode.window.showErrorMessage(`Failed to install ${extensionId}: ${JSON.stringify(error)}`)
+          }
+        })
+      } else if (item === 'Show extension page') {
+        void vscode.commands.executeCommand('extension.open', extensionId)
+      }
+    })
 }
 
 export async function activate (context: vscode.ExtensionContext): Promise<void> {
