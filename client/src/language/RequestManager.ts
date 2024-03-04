@@ -18,6 +18,14 @@ export class RequestManager {
     const params: RequestParams['EmbeddedLanguageTypeOnPosition'] = { uriString, position }
     return await this.client?.sendRequest(RequestMethod.EmbeddedLanguageTypeOnPosition, params)
   }
+
+  checkIsSymbolDefinedInRecipe = async (
+    recipeName: string,
+    symbolName: string
+  ): RequestResult['IsSymbolDefinedInRecipe'] => {
+    const params: RequestParams['IsSymbolDefinedInRecipe'] = { recipeName, symbolName }
+    return await this.client?.sendRequest(RequestMethod.IsSymbolDefinedInRecipe, params)
+  }
 }
 
 export const requestsManager = new RequestManager()

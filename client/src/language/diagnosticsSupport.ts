@@ -8,8 +8,9 @@ import * as vscode from 'vscode'
 import { getOriginalDocRange } from './utils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
-import { commonDirectoriesVariables } from '../lib/src/availableVariables'
+import { requestsManager } from '../language/RequestManager'
 import path from 'path'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -45,8 +46,8 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
   const embeddedLanguageDoc = await vscode.workspace.openTextDocument(embeddedLanguageDocInfos.uri.fsPath)
   const dirtyDiagnostics = vscode.languages.getDiagnostics(embeddedLanguageDocInfos.uri)
   const cleanDiagnostics: vscode.Diagnostic[] = []
-  dirtyDiagnostics.forEach((diagnostic) => {
-    if (checkIsIgnoredShellcheckSc2154(diagnostic)) {
+  await Promise.all(dirtyDiagnostics.map(async (diagnostic) => {
+    if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalUri)) {
       return
     }
     if (diagnostic.range === undefined) {
@@ -66,7 +67,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
       range: newRange
     }
     cleanDiagnostics.push(newDiagnostic)
-  })
+  }))
   const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
   diagnosticCollection.set(originalTextDocument.uri, cleanDiagnostics)
 }
@@ -82,7 +83,7 @@ const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefi
   return undefined
 }
 
-const checkIsIgnoredShellcheckSc2154 = (diagnostic: vscode.Diagnostic): boolean => {
+const checkIsIgnoredShellcheckSc2154 = async (diagnostic: vscode.Diagnostic, originalUri: vscode.Uri): Promise<boolean> => {
   if (diagnostic.source !== 'shellcheck' && diagnostic.code !== 'SC2154') {
     return false
   }
@@ -92,5 +93,7 @@ const checkIsIgnoredShellcheckSc2154 = (diagnostic: vscode.Diagnostic): boolean 
   if (variableName === undefined) {
     return false
   }
-  return commonDirectoriesVariables.has(variableName)
+  const recipeName = extractRecipeName(originalUri.fsPath)
+  const isSymbolDefinedInRecipe = await requestsManager.checkIsSymbolDefinedInRecipe(recipeName, variableName)
+  return isSymbolDefinedInRecipe === true
 }
