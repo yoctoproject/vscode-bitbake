@@ -45,6 +45,7 @@ export default class EmbeddedLanguageDocsManager {
     this._storagePath = newStoragePath // also changes the value of this.embeddedLanguageDocsFolder
     await new Promise<void>((resolve) => {
       if (this.embeddedLanguageDocsFolder === undefined) {
+        resolve()
         return
       }
       fs.mkdir(this.embeddedLanguageDocsFolder, { recursive: true }, (err) => {
@@ -60,6 +61,7 @@ export default class EmbeddedLanguageDocsManager {
     logger.debug(`Delete embedded language documents folder: ${this.embeddedLanguageDocsFolder}.`)
     await new Promise<void>((resolve) => {
       if (this.embeddedLanguageDocsFolder === undefined) {
+        resolve()
         return
       }
       fs.rm(this.embeddedLanguageDocsFolder, { recursive: true }, (err) => {
