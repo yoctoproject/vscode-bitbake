@@ -24,7 +24,7 @@ import fs from 'fs'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode } from './BitbakeESDK'
 import { finishProcessExecution } from '../utils/ProcessUtils'
-import { extractRecipeName } from '../lib/src/utils/files'
+import { extractRecipeName, extractRecipeVersion } from '../lib/src/utils/files'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -42,7 +42,6 @@ export class BitBakeProjectScanner {
   onChange: EventEmitter = new EventEmitter()
 
   private readonly _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [] }
-  private _shouldDeepExamine: boolean = false
   private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 
@@ -65,14 +64,6 @@ export class BitBakeProjectScanner {
 
   get scanResult (): BitbakeScanResult {
     return this._bitbakeScanResult
-  }
-
-  get shouldDeepExamine (): boolean {
-    return this._shouldDeepExamine
-  }
-
-  set shouldDeepExamine (shouldDeepExamine: boolean) {
-    this._shouldDeepExamine = shouldDeepExamine
   }
 
   get bitbakeDriver (): BitbakeDriver {

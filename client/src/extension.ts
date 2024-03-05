@@ -153,9 +153,6 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
     const currentSettings = vscode.workspace.getConfiguration('bitbake')
     bitbakeDriver.loadSettings(currentSettings, vscode.workspace.workspaceFolders?.[0].uri.fsPath)
-    if (event.affectsConfiguration('bitbake.shouldDeepExamine')) {
-      bitBakeProjectScanner.shouldDeepExamine = currentSettings.get('shouldDeepExamine') ?? false
-    }
     if (event.affectsConfiguration('bitbake.shellEnv') ||
         event.affectsConfiguration('bitbake.workingDirectory') ||
         event.affectsConfiguration('bitbake.pathToEnvScript') ||
