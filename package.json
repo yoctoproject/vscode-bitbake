@@ -24,7 +24,7 @@
 		"postinstall": "cd server && npm install && cd ../client && npm install",
 		"fetch": "npm run fetch:poky && npm run fetch:docs",
 		"fetch:docs": "sh scripts/fetch-docs.sh",
-		"fetch:poky": "mkdir -p resources/poky && curl -L -o resources/poky.tar.bz2 https://downloads.yoctoproject.org/releases/yocto/yocto-4.2.3/poky-aa63b25cbe25d89ab07ca11ee72c17cab68df8de.tar.bz2 && tar -xvjf resources/poky.tar.bz2 -C resources",
+		"fetch:poky": "sh scripts/fetch-poky.sh",
 		"compile": "npm run installServer && tsc -b",
 		"watch": "npm run installServer && tsc -b -w",
 		"installServer": "cd server && npm run installServer",
