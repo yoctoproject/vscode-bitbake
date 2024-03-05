@@ -83,6 +83,55 @@ describe('BitBakeProjectScanner', () => {
     )
   })
 
+  it('can get recipes appends', async () => {
+    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const busyboxRecipe = recipes.find((recipe) => recipe.name === 'busybox')
+    expect(busyboxRecipe).toEqual(
+      expect.objectContaining(
+        {
+          appends: expect.arrayContaining([
+            expect.objectContaining({
+              base: expect.stringContaining('busybox_%.bbappend')
+            })
+          ])
+        }
+      )
+    )
+  })
+
+  it('can get recipes paths', async () => {
+    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const busyboxRecipe = recipes.find((recipe) => recipe.name === 'busybox')
+    expect(busyboxRecipe).toEqual(
+      expect.objectContaining({
+        path: expect.objectContaining({
+          base: expect.stringContaining('.bb')
+        })
+      })
+    )
+  })
+
+  it('can get tricky recipes paths', async () => {
+    // These recipes change their PN and require the recipesWithoutPaths code
+    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const gccSourceRecipe = recipes.find((recipe) => recipe.name.includes('gcc-source-'))
+    expect(gccSourceRecipe).toEqual(
+      expect.objectContaining({
+        path: expect.objectContaining({
+          base: expect.stringContaining('.bb')
+        })
+      })
+    )
+    const goCrossRecipe = recipes.find((recipe) => recipe.name.includes('go-cross-'))
+    expect(goCrossRecipe).toEqual(
+      expect.objectContaining({
+        path: expect.objectContaining({
+          base: expect.stringContaining('.bb')
+        })
+      })
+    )
+  })
+
   it('can get a list of classes', async () => {
     const classes = bitBakeProjectScanner.scanResult._classes
     expect(classes.length).toBeGreaterThan(50)
