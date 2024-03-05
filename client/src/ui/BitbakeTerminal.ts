@@ -106,6 +106,13 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     if (this.process === undefined) {
       this.closeEmitter.fire(0)
       if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
+    } else {
+      if (!this.isTaskTerminal()) {
+        if (data === '\x03') {
+          logger.info('Bitbake process killed by user')
+          void this.bitbakeDriver.killBitbake()
+        }
+      }
     }
   }
 
