@@ -8,6 +8,7 @@ import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
 import { mockVscodeEvents } from '../../utils/vscodeMock'
+import { addLayer, removeLayer } from '../../utils/bitbake'
 
 let bitBakeProjectScanner: BitBakeProjectScanner
 
@@ -36,6 +37,9 @@ describe('BitBakeProjectScanner', () => {
     mockVscodeEvents()
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
       child.onExit(() => {
+        addLayer(
+          path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions'),
+          path.resolve(__dirname, '../../../../../integration-tests/project-folder/build'))
         void bitBakeProjectScanner.rescanProject()
       })
     }, (error) => {
@@ -44,6 +48,9 @@ describe('BitBakeProjectScanner', () => {
   }, BITBAKE_TIMEOUT)
 
   afterAll((done) => {
+    removeLayer(
+      path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions'),
+      path.resolve(__dirname, '../../../../../integration-tests/project-folder/build'))
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
       child.onExit(() => {
         done()
@@ -128,6 +135,27 @@ describe('BitBakeProjectScanner', () => {
         path: expect.objectContaining({
           base: expect.stringContaining('.bb')
         })
+      })
+    )
+  })
+
+  it('respects PREFERRED_VERSION', async () => {
+    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const fixtureVersionRecipe = recipes.find((recipe) => recipe.name === 'fixture-version')
+    expect(fixtureVersionRecipe).toEqual(
+      expect.objectContaining({
+        version: '0.2.0',
+        path: expect.objectContaining({
+          base: 'fixture-version_0.2.0.bb'
+        }),
+        appends: expect.arrayContaining([
+          expect.objectContaining({
+            base: 'fixture-version_%.bbappend'
+          }),
+          expect.objectContaining({
+            base: 'fixture-version_0.2.0.bbappend'
+          })
+        ])
       })
     )
   })
