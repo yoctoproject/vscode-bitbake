@@ -3,7 +3,6 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import type childProcess from 'child_process'
 import find from 'find'
 import path from 'path'
 import EventEmitter from 'events'
@@ -135,8 +134,7 @@ export class BitBakeProjectScanner {
   }
 
   private async getContainerParentInodes (filepath: string): Promise<number[]> {
-    const commandResult = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`)
-    const stdout = commandResult.stdout.toString().trim()
+    const stdout = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`)
     const regex = /^\d+$/gm
     const matches = stdout.match(regex)
     return (matches != null) ? matches.map((match) => parseInt(match)) : [NaN]
@@ -204,36 +202,28 @@ export class BitBakeProjectScanner {
     this._bitbakeScanResult._layers = new Array < LayerInfo >()
     this.containerMountPoint = undefined
 
-    const commandResult = await this.executeBitBakeCommand('bitbake-layers show-layers')
+    const output = await this.executeBitBakeCommand('bitbake-layers show-layers')
+    const outputLines = output.split(/\r?\n/g)
 
-    if (commandResult.status === 0) {
-      const output = commandResult.stdout.toString()
-      const outputLines = output.split(/\r?\n/g)
+    const layersStartRegex = /^layer *path *priority$/
+    let layersFirstLine = 0
+    for (; layersFirstLine < outputLines.length; layersFirstLine++) {
+      if (layersStartRegex.test(outputLines[layersFirstLine])) {
+        break
+      }
+    }
 
-      const layersStartRegex = /^layer *path *priority$/
-      let layersFirstLine = 0
-      for (; layersFirstLine < outputLines.length; layersFirstLine++) {
-        if (layersStartRegex.test(outputLines[layersFirstLine])) {
-          break
-        }
+    for (const element of outputLines.slice(layersFirstLine + 2)) {
+      const tempElement = element.split(/\s+/)
+      const layerElement = {
+        name: tempElement[0],
+        path: await this.resolveContainerPath(tempElement[1]),
+        priority: parseInt(tempElement[2])
       }
 
-      for (const element of outputLines.slice(layersFirstLine + 2)) {
-        const tempElement = element.split(/\s+/)
-        const layerElement = {
-          name: tempElement[0],
-          path: await this.resolveContainerPath(tempElement[1]),
-          priority: parseInt(tempElement[2])
-        }
-
-        if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && (layerElement.priority !== undefined)) {
-          this._bitbakeScanResult._layers.push(layerElement as LayerInfo)
-        }
+      if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && (layerElement.priority !== undefined)) {
+        this._bitbakeScanResult._layers.push(layerElement as LayerInfo)
       }
-    } else {
-      const error = commandResult.stderr.toString()
-      logger.error(`can not scan available layers error: ${error}`)
-      throw new Error('can not scan available layers')
     }
   }
 
@@ -324,13 +314,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
   async scanForRecipes (): Promise<void> {
     this._bitbakeScanResult._recipes = new Array < ElementInfo >()
 
-    const commandResult = await this.executeBitBakeCommand('bitbake-layers show-recipes')
-    if (commandResult.status !== 0) {
-      logger.error(`Failed to scan recipes: ${commandResult.stderr.toString()}`)
-      throw new Error('Failed to scan recipes')
-    }
-
-    const output = commandResult.output.toString()
+    const output = await this.executeBitBakeCommand('bitbake-layers show-recipes')
     const splittedOutput = output.split(/\r?\n/g)
     // All recipes found will follow the line: === Available recipes: ===
     const startingIndex = splittedOutput.findIndex((line) => line.includes('Available recipes'))
@@ -382,24 +366,14 @@ You should adjust your docker volumes to use the same URIs as those present on y
   }
 
   async scanOverrides (): Promise<void> {
-    const commandResult = await this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
-    if (commandResult.status !== 0) {
-      logger.error(`Failed to scan overrides: ${commandResult.stderr.toString()}`)
-      throw new Error('Failed to scan overrides')
-    }
-    const output = commandResult.output.toString()
+    const output = await this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
     const outerReg = /\nOVERRIDES="(.*)"\r?\n/
     this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
   private async scanDevtoolWorkspaces (): Promise<void> {
     this._bitbakeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
-    const commandResult = await this.executeBitBakeCommand('devtool status')
-    if (commandResult.status !== 0) {
-      logger.error(`Failed to scan devtool workspaces: ${commandResult.stderr.toString()}`)
-      throw new Error('Failed to scan devtool workspaces')
-    }
-    const output = commandResult.output.toString()
+    const output = await this.executeBitBakeCommand('devtool status')
     const regex = /^([^\s]+):\s([^\s]+)$/gm
     let match
     while ((match = regex.exec(output)) !== null) {
@@ -412,13 +386,8 @@ You should adjust your docker volumes to use the same URIs as those present on y
   }
 
   private async scanForRecipesPath (): Promise<void> {
-    const showRecipeFileNameOutput = await this.executeBitBakeCommand('bitbake-layers show-recipes -f')
-    if (showRecipeFileNameOutput.status !== 0) {
-      logger.error('Failed to scan recipes path')
-      throw new Error('Failed to scan recipes path')
-    }
+    const output = await this.executeBitBakeCommand('bitbake-layers show-recipes -f')
 
-    const output = showRecipeFileNameOutput.output.toString()
     const splittedOutput = output.split(/\r?\n/g)
     const startingIndex = splittedOutput.findIndex((line) => line.includes('Available recipes'))
 
@@ -524,14 +493,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
   }
 
   private async scanRecipesAppends (): Promise<void> {
-    const commandResult = await this.executeBitBakeCommand('bitbake-layers show-appends')
-
-    if (commandResult.status !== 0) {
-      logger.error(`Failed to scan appends: ${commandResult.stderr.toString()}`)
-      throw new Error('Failed to scan appends')
-    }
-
-    const output = commandResult.output.toString()
+    const output = await this.executeBitBakeCommand('bitbake-layers show-appends')
 
     // Example:
     // \r\nbusybox_1.36.1.bb:\r\n  /home/user/yocto/sources/poky/meta-poky/recipes-core/busybox/busybox_%.bbappend
@@ -566,12 +528,17 @@ You should adjust your docker volumes to use the same URIs as those present on y
     }
   }
 
-  private async executeBitBakeCommand (command: string): Promise<childProcess.SpawnSyncReturns<Buffer>> {
+  private async executeBitBakeCommand (command: string): Promise<string> {
     if (this._bitbakeDriver === undefined) {
       throw new Error('Bitbake driver is not set')
     }
-    return await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true),
+    const result = await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true),
       async () => { await this.bitbakeDriver.killBitbake() })
+    if (result.status !== 0) {
+      logger.error(`Failed to execute bitbake command: ${command}`)
+      throw new Error(`Failed to execute bitbake command: ${command}\r\n${result.stderr.toString()}`)
+    }
+    return result.output.toString()
   }
 }
 
