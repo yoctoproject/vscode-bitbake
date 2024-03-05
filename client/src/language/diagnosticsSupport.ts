@@ -11,6 +11,7 @@ import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { requestsManager } from '../language/RequestManager'
 import path from 'path'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -18,6 +19,7 @@ const diagnosticCollections = {
 }
 
 export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
+  logger.debug(`[updateDiagnostics] for uri: ${uri.toString()}`)
   const embeddedLanguageType = getEmbeddedLanguageType(uri)
   if (embeddedLanguageType === undefined) {
     return
@@ -46,6 +48,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
   const embeddedLanguageDoc = await vscode.workspace.openTextDocument(embeddedLanguageDocInfos.uri.fsPath)
   const dirtyDiagnostics = vscode.languages.getDiagnostics(embeddedLanguageDocInfos.uri)
   const cleanDiagnostics: vscode.Diagnostic[] = []
+  const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
   await Promise.all(dirtyDiagnostics.map(async (diagnostic) => {
     if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalUri)) {
       return
@@ -64,12 +67,39 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     }
     const newDiagnostic = {
       ...diagnostic,
-      range: newRange
+      range: newRange,
+      source: `${diagnostic.source}, ${diagnosticCollection.name}`
     }
     cleanDiagnostics.push(newDiagnostic)
   }))
-  const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
   diagnosticCollection.set(originalTextDocument.uri, cleanDiagnostics)
+}
+
+// Review diagnostics that already exist for the documents of a recipe
+// This is intended to be called when a new scan finished, so diagnostics can be updated with the available information.
+export const reviewRecipeDiagnostics = async (recipeName: string): Promise<void> => {
+  logger.debug(`[reviewRecipeDiagnostics] for recipe: ${recipeName}`)
+  const allDiagnostics = vscode.languages.getDiagnostics()
+  await Promise.all(allDiagnostics.map(async ([uri, diagnostics]): Promise<void> => {
+    const embeddedLanguageType = getEmbeddedLanguageType(uri)
+    if (embeddedLanguageType !== undefined) {
+      // We update only diagnostics of original documents
+      return
+    }
+    if (extractRecipeName(uri.fsPath) !== recipeName) {
+      return
+    }
+    const newBashDiagnostics: vscode.Diagnostic[] = []
+    await Promise.all(diagnostics.map(async (diagnostic): Promise<void> => {
+      if (diagnostic.source?.includes(diagnosticCollections.bash.name) === true) {
+        if (await checkIsIgnoredShellcheckSc2154(diagnostic, uri)) {
+          return
+        }
+        newBashDiagnostics.push(diagnostic)
+      }
+    }))
+    diagnosticCollections.bash.set(uri, newBashDiagnostics)
+  }))
 }
 
 const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefined => {
@@ -84,7 +114,7 @@ const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefi
 }
 
 const checkIsIgnoredShellcheckSc2154 = async (diagnostic: vscode.Diagnostic, originalUri: vscode.Uri): Promise<boolean> => {
-  if (diagnostic.source !== 'shellcheck' && diagnostic.code !== 'SC2154') {
+  if (diagnostic.source?.includes('shellcheck') !== true && diagnostic.code !== 'SC2154') {
     return false
   }
   const message = diagnostic.message
