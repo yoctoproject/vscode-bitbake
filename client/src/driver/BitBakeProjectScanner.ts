@@ -387,107 +387,40 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
   private async scanForRecipesPath (): Promise<void> {
     const output = await this.executeBitBakeCommand('bitbake-layers show-recipes -f')
+    const lines = output.split(/\r?\n/g)
+    // Example output (indentation or skipped means not used):
+    /* === Available recipes: ===
+     * /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta/recipes-core/busybox/busybox_1.36.2.bb
+     *   /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta/recipes-core/busybox/busybox_1.36.1.bb
+     *   /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta/recipes-core/busybox/busybox_1.36.3.bb
+     * /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta-selftest/recipes-test/images/wic-image-minimal.bb (skipped: ...)
+    */
+    const regex = /^([\w/._-]+\.bb)$/
+    const matches = lines.filter((line) => regex.test(line))
+    if (matches === null) { return }
 
-    const splittedOutput = output.split(/\r?\n/g)
-    const startingIndex = splittedOutput.findIndex((line) => line.includes('Available recipes'))
+    await this.assignRecipesPaths(matches, this._bitbakeScanResult._recipes, (a: string, b: string) => a === b)
 
-    const allFileNames: string[] = []
-    if (startingIndex === -1) {
-      logger.error('[scanForRecipesPath] Failed to find available recipes')
-      throw new Error('Failed to find available recipes')
-    }
-
-    const recipePathRegex = /(.*\.bb)/
-
-    // All lines after the '=== Available recipes: ===' line are file names, and only keep the valid ones
-    allFileNames.push(...splittedOutput.slice(startingIndex + 1).filter((line) => !line.includes('(skipped') && recipePathRegex.exec(line) !== null))
-
-    const notMatchedFileNames: string[] = []
-    for (const fileName of allFileNames) {
-      const match = recipePathRegex.exec(fileName)
-      if (match === null) {
-        continue
-      }
-
-      const recipePath = match[0].trim()
-      const foundRecipe = this._bitbakeScanResult._recipes.find((recipe) => {
-        return recipe.name === extractRecipeName(recipePath)
-      })
-      if (foundRecipe !== undefined) {
-        foundRecipe.path = path.parse(await this.resolveContainerPath(recipePath) as string)
-      } else {
-        notMatchedFileNames.push(fileName)
-      }
-    }
-
-    const recipesWithOutPath = this._bitbakeScanResult._recipes.filter((recipe) => {
-      return recipe.path === undefined
-    })
-
-    if (recipesWithOutPath.length > 0) {
-      logger.debug(`${recipesWithOutPath.length} recipes did not get the path from the previous step.`)
-      logger.debug(`${notMatchedFileNames.length} file names from 'bitbake-layers show-recipes -f' were not matched with any recipes.`)
-
-      // deep examine gives the correct result but takes a long time
-      if (this._shouldDeepExamine) {
-        await this.deepExamineRecipes(recipesWithOutPath, recipePathRegex)
-      } else {
-        await this.inferRecipePath(recipesWithOutPath, notMatchedFileNames)
-      }
-    }
-
-    const remainingRecipesWithoutPath = this._bitbakeScanResult._recipes.filter((recipe) => {
-      return recipe.path === undefined
-    })
-
-    if (remainingRecipesWithoutPath.length > 0) {
-      logger.debug(`Remaining recipes without path: \n${JSON.stringify(remainingRecipesWithoutPath.map((recipe) => recipe.name))}`)
-    }
+    // Some recipes change their PN like gcc-source -> gcc-source-13.2
+    // We allow the recipe to be found by just including part of the name
+    const recipesWithoutPaths = this._bitbakeScanResult._recipes.filter((recipe) => recipe.path === undefined)
+    await this.assignRecipesPaths(matches, recipesWithoutPaths, (a: string, b: string) => a.includes(b))
   }
 
-  private async deepExamineRecipes (recipesWithOutPath: ElementInfo[], recipePathRegex: RegExp): Promise<void> {
-    logger.info('[deepExamineRecipes] Deep examine is on, running \'bitbake-layers show-recipes -f\' for each of the recipes without a path.')
-
-    for (const recipeWithOutPath of recipesWithOutPath) {
-      const commandResult = await this.executeBitBakeCommand(`bitbake-layers show-recipes -f ${recipeWithOutPath.name}`)
-      if (commandResult.status !== 0) {
-        logger.error(`Failed to scan recipes path for ${recipeWithOutPath.name}: ${commandResult.stderr.toString()}`)
-        continue
-      }
-      const output = commandResult.output.toString()
-      const match = recipePathRegex.exec(output)
-      if (match === null) {
-        continue
-      }
-
-      const recipePath = await this.resolveContainerPath(match[0].trim())
-      if (recipePath === undefined) {
-        continue
-      }
-      recipeWithOutPath.path = path.parse(recipePath)
-    }
-  }
-
-  private async inferRecipePath (recipesWithOutPath: ElementInfo[], notMatchedFileNames: string[]): Promise<void> {
-    logger.info('[inferRecipePath] Deep examine is off, inferring the paths by comparing the recipe name and the unmatched file names.')
-    for (const recipe of recipesWithOutPath) {
-      /**
-       * Some recipes name found by 'bitbake-layers show-recipes' have extra strings appended to them, but in the path found
-       * with option '-f' it is not present
-       *
-       * Example:
-       * name: go-cross-core2-64
-         path: /home/projects/poky/meta/recipes-devtools/go/go-cross_1.20.14.bb
-      */
-      const possiblePaths = notMatchedFileNames.filter((fileName) => {
-        return recipe.name.includes(extractRecipeName(fileName))
+  private async assignRecipesPaths (filePaths: string[], recipesArray: ElementInfo[], nameMatchFunc: (a: string, b: string) => boolean): Promise<void> {
+    for (const filePath of filePaths) {
+      const recipePath = await this.resolveContainerPath(filePath.trim()) as string
+      const recipeName = extractRecipeName(recipePath)
+      const recipeVersion = extractRecipeVersion(recipePath)
+      const recipe = recipesArray.find((element: ElementInfo): boolean => {
+        return nameMatchFunc(element.name, recipeName)
       })
-      if (possiblePaths.length > 0) {
-        // longer file names are more likely to be the correct one
-        possiblePaths.sort((a, b) => extractRecipeName(b).length - extractRecipeName(a).length)
-        const resolvedPath = await this.resolveContainerPath(possiblePaths[0]) as string
-        logger.debug(`${resolvedPath} is inferred as the path of recipe: ${recipe.name} .`)
-        recipe.path = path.parse(resolvedPath)
+      if (recipe !== undefined) {
+        recipe.path = path.parse(recipePath)
+        // The recipe version may be overriden through PREFERRED_VERSION. This one is more accurate
+        if (recipe.version !== recipeVersion) {
+          recipe.version = recipeVersion
+        }
       }
     }
   }
