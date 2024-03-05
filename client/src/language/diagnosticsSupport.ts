@@ -18,8 +18,10 @@ const diagnosticCollections = {
   python: vscode.languages.createDiagnosticCollection('bitbake-python')
 }
 
-export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
-  logger.debug(`[updateDiagnostics] for uri: ${uri.toString()}`)
+// Create diagnostics for an "original document" from the diagnostics of its "embedded language documents"
+// This is intended to be called when the diagnostics of the "embedded language documents" are updated
+export const handleEmbeddedLanguageDocumentDiagnostics = async (uri: vscode.Uri): Promise<void> => {
+  logger.debug(`[handleEmbeddedLanguageDocumentDiagnostics] for uri: ${uri.toString()}`)
   const embeddedLanguageType = getEmbeddedLanguageType(uri)
   if (embeddedLanguageType === undefined) {
     return

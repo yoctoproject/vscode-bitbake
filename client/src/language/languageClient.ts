@@ -28,7 +28,7 @@ import { middlewareProvideDefinition } from './middlewareDefinition'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { NotificationMethod, type NotificationParams } from '../lib/src/types/notifications'
-import { updateDiagnostics } from './diagnosticsSupport'
+import { handleEmbeddedLanguageDocumentDiagnostics } from './diagnosticsSupport'
 import { getLanguageConfiguration } from './languageConfiguration'
 import { BitbakeCodeActionProvider } from './codeActionProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
@@ -73,7 +73,7 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
 
   languages.onDidChangeDiagnostics(e => {
     e.uris.forEach(uri => {
-      void updateDiagnostics(uri)
+      void handleEmbeddedLanguageDocumentDiagnostics(uri)
     })
   })
 
