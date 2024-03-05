@@ -9,9 +9,22 @@ export const bitbakeFileExtensions = ['.bb', '.bbappend', '.bbclass', '.conf', '
 
 export function extractRecipeName (filePath: string): string {
   // Ex: gst1.0-plugins-bad_1.18.4.bb -> gst1.0-plugins-bad
-  const baseName = path.parse(filePath).base
-  const stringRegex = '(' + bitbakeFileExtensions.map(ext => `\\${ext}`).join('|') + ')$'
-  const fileName = baseName.replace(new RegExp(stringRegex, 'g'), '')
+  const fileName = extractRecipeFileName(filePath)
   const recipeName = fileName.split('_')[0]
   return recipeName
+}
+
+export function extractRecipeVersion (filePath: string): string {
+  // Ex: gst1.0-plugins-bad_1.18.4.bb -> 1.18.4
+  const fileName = extractRecipeFileName(filePath)
+  const version = fileName.split('_')[1]
+  return version
+}
+
+function extractRecipeFileName (filePath: string): string {
+  // Ex: gst1.0-plugins-bad_1.18.4.bb -> gst1.0-plugins-bad_1.18.4
+  const FileName = path.parse(filePath).base
+  const stringRegex = '(' + bitbakeFileExtensions.map(ext => `\\${ext}`).join('|') + ')$'
+  const fileName = FileName.replace(new RegExp(stringRegex, 'g'), '')
+  return fileName
 }
