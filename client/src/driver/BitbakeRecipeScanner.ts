@@ -10,6 +10,7 @@ import { runBitbakeTask } from '../ui/BitbakeCommands'
 import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/BitbakeTaskProvider'
 import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
 
+type ScanDoneListener = (recipeName: string) => Promise<void>
 export class BitbakeRecipeScanner {
   static readonly taskName = 'Bitbake: Scan recipe env'
 
@@ -17,6 +18,7 @@ export class BitbakeRecipeScanner {
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
   private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri>()
+  private readonly scanDoneListeners: ScanDoneListener[] = []
 
   /**
    *
@@ -57,6 +59,8 @@ export class BitbakeRecipeScanner {
         }
       })
     })
+
+    await this.notifyScanDone(chosenRecipe)
   }
 
   subscribeToTaskEnd (context: vscode.ExtensionContext, taskProvider: BitbakeTaskProvider): void {
@@ -87,6 +91,17 @@ export class BitbakeRecipeScanner {
         }
       }
     }))
+  }
+
+  subscribeToScanDone (listener: ScanDoneListener): void {
+    this.scanDoneListeners.push(listener)
+  }
+
+  private async notifyScanDone (recipeName: string): Promise<void> {
+    logger.debug(`[BitbakeRecipeScanner] Call listeners of serverScanRequest with ${recipeName}`)
+    await Promise.all(
+      this.scanDoneListeners.map(async (listener) => { await listener(recipeName) })
+    )
   }
 
   setLanguageClient (client: LanguageClient): void {

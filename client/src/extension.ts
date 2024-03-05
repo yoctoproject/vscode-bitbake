@@ -25,6 +25,7 @@ import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
 import { scanContainsData } from './lib/src/types/BitbakeScanResult'
+import { reviewRecipeDiagnostics } from './language/diagnosticsSupport'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -128,6 +129,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   bitbakeRecipeScanner.setLanguageClient(client)
   bitbakeRecipeScanner.subscribeToTaskEnd(context, bitbakeTaskProvider)
+  bitbakeRecipeScanner.subscribeToScanDone(reviewRecipeDiagnostics)
 
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
