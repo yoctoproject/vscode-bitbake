@@ -577,6 +577,28 @@ describe('On Completion', () => {
       }
     })
 
+    const resultForInheritDefer = onCompletionHandler({
+      textDocument: {
+        uri: documentUri
+      },
+      position: {
+        line: 13,
+        character: 14
+      }
+    })
+
+    expect(resultForInheritDefer).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'copyleft_filter',
+            kind: 7,
+            insertText: 'copyleft_filter'
+          }
+        )
+      ])
+    )
+
     expect(resultForInclude).toEqual(
       expect.arrayContaining([
         expect.objectContaining(
