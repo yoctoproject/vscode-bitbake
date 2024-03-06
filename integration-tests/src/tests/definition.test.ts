@@ -7,7 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
-import { checkIsRangeEqual, getDefinitionUri } from '../utils/vscode-tools'
+import { getDefinitionUri } from '../utils/vscode-tools'
 
 suite('Bitbake Definition Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/definition.bb')
@@ -43,9 +43,9 @@ suite('Bitbake Definition Test Suite', () => {
       assert.equal(receivedUri.fsPath.endsWith(expectedPathEnding), true)
       if (expectedRange !== undefined) {
         if (definition instanceof vscode.Location) {
-          assert.equal(checkIsRangeEqual(definition?.range, expectedRange), true)
+          assert.equal(definition?.range.isEqual(expectedRange), true)
         } else {
-          assert.equal(checkIsRangeEqual(definition.targetRange, expectedRange), true)
+          assert.equal(definition.targetRange.isEqual(expectedRange), true)
         }
       }
     })
