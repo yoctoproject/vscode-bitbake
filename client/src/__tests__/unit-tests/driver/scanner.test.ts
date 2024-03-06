@@ -129,11 +129,19 @@ describe('BitBakeProjectScanner', () => {
         })
       })
     )
-    const goCrossRecipe = recipes.find((recipe) => recipe.name.includes('go-cross-'))
+    const goCrossCanadianRecipe = recipes.find((recipe) => recipe.name.includes('go-cross-canadian'))
+    expect(goCrossCanadianRecipe).toEqual(
+      expect.objectContaining({
+        path: expect.objectContaining({
+          base: expect.stringContaining('go-cross-canadian')
+        })
+      })
+    )
+    const goCrossRecipe = recipes.find((recipe) => recipe.name.includes('go-cross-core2-64'))
     expect(goCrossRecipe).toEqual(
       expect.objectContaining({
         path: expect.objectContaining({
-          base: expect.stringContaining('.bb')
+          base: expect.stringContaining('go-cross_')
         })
       })
     )

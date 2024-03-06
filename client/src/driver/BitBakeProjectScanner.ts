@@ -385,6 +385,9 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const matches = lines.filter((line) => regex.test(line))
     if (matches === null) { return }
 
+    // Sort by decreasing length to avoid partial matches
+    matches.sort((a, b) => b.length - a.length)
+    this._bitbakeScanResult._recipes.sort((a, b) => b.name.length - a.name.length)
     await this.assignRecipesPaths(matches, this._bitbakeScanResult._recipes, (a: string, b: string) => a === b)
 
     // Some recipes change their PN like gcc-source -> gcc-source-13.2
@@ -394,12 +397,13 @@ You should adjust your docker volumes to use the same URIs as those present on y
   }
 
   private async assignRecipesPaths (filePaths: string[], recipesArray: ElementInfo[], nameMatchFunc: (a: string, b: string) => boolean): Promise<void> {
-    for (const filePath of filePaths) {
+    for (let i = 0; i < filePaths.length; i++) {
+      const filePath = filePaths[i]
       const recipePath = await this.resolveContainerPath(filePath.trim()) as string
       const recipeName = extractRecipeName(recipePath)
       const recipeVersion = extractRecipeVersion(recipePath)
       const recipe = recipesArray.find((element: ElementInfo): boolean => {
-        return nameMatchFunc(element.name, recipeName)
+        return element.path === undefined && nameMatchFunc(element.name, recipeName)
       })
       if (recipe !== undefined) {
         recipe.path = path.parse(recipePath)
