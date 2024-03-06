@@ -58,7 +58,8 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
 
-  const extensionPath = params.initializationOptions.extensionPath as string
+  const extensionPath = params.initializationOptions?.extensionPath ?? workspaceFolder as string
+  pokyFolder = pokyFolder ?? workspaceFolder
 
   logger.info('[onInitialize] Setting yocto doc path and parsing doc files')
   bitBakeDocScanner.setDocPathAndParse(extensionPath)
@@ -94,8 +95,8 @@ connection.onShutdown(() => {
 })
 
 connection.onDidChangeConfiguration((change) => {
-  logger.level = change.settings.bitbake.loggingLevel
-  parseOnSave = change.settings.bitbake.parseOnSave
+  logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
+  parseOnSave = change.settings.bitbake?.parseOnSave ?? parseOnSave
   const bitbakeFolder = expandSettingPath(change.settings.bitbake.pathToBitbakeFolder, { workspaceFolder })
   if (bitbakeFolder !== undefined) {
     pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
