@@ -125,6 +125,7 @@ function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStateme
   let elementInfos: ElementInfo[] = []
   switch (directiveStatementKeyword) {
     case 'inherit':
+    case 'inherit_defer':
       elementInfos = bitBakeProjectScannerClient.bitbakeScanResult._classes.filter((bbclass): boolean => {
         return bbclass.name === directivePath
       })
