@@ -58,6 +58,8 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
 
+  // If the language server is not started by VSCode, extensionPath and pathToBitbakeFolder can be undefined
+  // We provide alternatives here to prevent crashes when these variables are used
   const extensionPath = params.initializationOptions?.extensionPath ?? workspaceFolder as string
   pokyFolder = pokyFolder ?? workspaceFolder
 
