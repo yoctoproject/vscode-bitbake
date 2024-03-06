@@ -33,6 +33,7 @@ import { getLanguageConfiguration } from './languageConfiguration'
 import { BitbakeCodeActionProvider } from './codeActionProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import * as vscode from 'vscode'
+import { middlewareProvideReferences } from './middlewareReferences'
 
 export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
@@ -65,7 +66,8 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     middleware: {
       provideCompletionItem: middlewareProvideCompletion,
       provideDefinition: middlewareProvideDefinition,
-      provideHover: middlewareProvideHover
+      provideHover: middlewareProvideHover,
+      provideReferences: middlewareProvideReferences
     }
   }
 
