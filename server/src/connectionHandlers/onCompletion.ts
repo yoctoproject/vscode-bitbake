@@ -264,6 +264,7 @@ function getCompletionItemForDirectiveStatementKeyword (keyword: string): Comple
 
   switch (keyword) {
     case 'inherit':
+    case 'inherit_defer':
       completionItem = [
         ...convertElementInfoListToCompletionItemList(
           bitBakeProjectScannerClient.bitbakeScanResult._classes,

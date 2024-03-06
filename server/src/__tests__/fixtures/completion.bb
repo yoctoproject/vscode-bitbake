@@ -11,7 +11,7 @@ MYVAR:append: = '123'
 include i
 require i
 inherit co
-
+inherit_defer co
 def myFunc(param = [1,2,3]):
     pass
 
