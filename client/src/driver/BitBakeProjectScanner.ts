@@ -197,12 +197,7 @@ export class BitBakeProjectScanner {
     const outputLines = output.split(/\r?\n/g)
 
     const layersStartRegex = /^layer *path *priority$/
-    let layersFirstLine = 0
-    for (; layersFirstLine < outputLines.length; layersFirstLine++) {
-      if (layersStartRegex.test(outputLines[layersFirstLine])) {
-        break
-      }
-    }
+    const layersFirstLine = outputLines.findIndex(line => layersStartRegex.test(line))
 
     for (const element of outputLines.slice(layersFirstLine + 2)) {
       const tempElement = element.split(/\s+/)
