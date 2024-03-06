@@ -17,6 +17,9 @@ jobs:
     env:
       DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
       SHELL: /usr/bin/bash
+      FILE_PATHS: |
+        integration-tests/src/utils/version.ts
+        scripts/fetch-docs.sh
 
     strategy:
       matrix:
@@ -41,16 +44,13 @@ jobs:
       uses: tj-actions/verify-changed-files@v17
       id: verify-changed-files
       with:
-        files: |
-            integration-tests/src/utils/version.ts
-            scripts/fetch-docs.sh
+        files: ${{ env.FILE_PATHS }}
 
     - name: Create pull request
       if: steps.verify-changed-files.outputs.files_changed == 'true'
       uses: peter-evans/create-pull-request@v5
       with:
-        add-paths: |
-          integration-tests/src/utils/version.ts
+        add-paths: ${{ env.FILE_PATHS }}
         title: Auto update references for commits, tags, etc
         commit-message: Auto update references for commits, tags, etc
         token: ${{ secrets.GITHUB_TOKEN }}
