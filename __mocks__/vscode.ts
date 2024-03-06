@@ -101,8 +101,10 @@ const languages = {
   const ThemeColor = jest.fn();
 
   const EventEmitter = jest.fn(() => {
-    fire: jest.fn()
-    event: jest.fn()
+    return {
+      fire: jest.fn(),
+      event: jest.fn()
+    }
   });
 
   const QuickPickItemKind = {
