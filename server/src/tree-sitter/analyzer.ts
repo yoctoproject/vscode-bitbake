@@ -191,7 +191,7 @@ export default class Analyzer {
   }
 
   /**
-   * Get the directive keyword when the statement is either include, require or inherit directive by looking up the tree nodes
+   * Get the directive keyword whether the expression is a directive statement by looking up the tree nodes
    */
   public getDirectiveStatementKeywordByNodeType (
     params: TextDocumentPositionParams
@@ -208,6 +208,9 @@ export default class Analyzer {
       case 'inherit_path':
         if (parentType === 'inherit_directive') {
           return 'inherit'
+        }
+        if (parentType === 'inherit_defer_directive') {
+          return 'inherit_defer'
         }
         return undefined
       case 'include_path':
@@ -483,7 +486,7 @@ export default class Analyzer {
   }
 
   /**
-   * Check if the current line starts with any directive statement keyword. The keyword is one of `include`, `inherit` and `require`
+   * Check if the current line starts with any directive statement keyword defined in 'DirectiveStatementKeyword'
    *
    * Tree-sitter functionalities are not used here since they (as of @1.0.1) can't reliably treat a line as directive statement if the keyword presents but nothing follows.
    */
