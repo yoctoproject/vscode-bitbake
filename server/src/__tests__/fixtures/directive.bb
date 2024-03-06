@@ -31,3 +31,5 @@ PACKAGECONFIG[some-package3] = "--enable-some-package,--disable-some-package,som
 require inc/${PN}.inc
 # if there is a poky.conf, go-to-definition should be provided for override 'poky'
 VAR:poky = '123'
+
+inherit_defer baz

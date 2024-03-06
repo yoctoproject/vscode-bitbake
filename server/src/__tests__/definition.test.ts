@@ -91,6 +91,16 @@ describe('on definition', () => {
         character: 9
       }
     })
+    // inherit_defer
+    const definition4 = await onDefinitionHandler({
+      textDocument: {
+        uri: FIXTURE_URI.DIRECTIVE
+      },
+      position: {
+        line: 34,
+        character: 15
+      }
+    })
 
     // Resolve the directive path with ${} and provide go-to-definition
     const scanResults = '#INCLUDE HISTORY\r\n#some operation history for PN\r\nPN = \'foo\'\r\n'
@@ -124,6 +134,8 @@ describe('on definition', () => {
         }
       ])
     )
+
+    expect(definition).toEqual(definition4)
 
     expect(definition2).toEqual(
       expect.arrayContaining([
