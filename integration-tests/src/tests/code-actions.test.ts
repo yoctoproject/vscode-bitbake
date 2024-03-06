@@ -8,7 +8,6 @@ import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
-import { checkIsPositionEqual } from '../utils/vscode-tools'
 
 suite('Bitbake CodeAction Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/code-actions.bb')
@@ -56,7 +55,7 @@ suite('Bitbake CodeAction Test Suite', () => {
     assert.strictEqual(textEdit.length, 1)
     assert.strictEqual(textEdit[0].newText, expectedNewText)
     const range = textEdit[0].range
-    assert.strictEqual(checkIsPositionEqual(range.start, expectedRange.start), true)
+    assert.strictEqual(range.start.isEqual(expectedRange.start), true)
   }
 
   test('CodeAction can properly show "import random"', async () => {

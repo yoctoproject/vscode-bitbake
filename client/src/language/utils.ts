@@ -55,14 +55,6 @@ export const getEmbeddedLanguageDocRange = (
   return new Range(start, end)
 }
 
-export const checkIsPositionEqual = (position1: Position, position2: Position): boolean => {
-  return position1.line === position2.line && position1.character === position2.character
-}
-
-export const checkIsRangeEqual = (range1: Range, range2: Range): boolean => {
-  return checkIsPositionEqual(range1.start, range2.start) && checkIsPositionEqual(range1.end, range2.end)
-}
-
 export const getIndentationOnLine = (document: TextDocument, lineNumber: number): string => {
   const line = document.lineAt(lineNumber)
   return line.text.slice(0, line.firstNonWhitespaceCharacterIndex)
@@ -92,9 +84,9 @@ export const getDefinitionUri = (definition: Location | LocationLink): Uri => {
 
 export const checkIsDefinitionRangeEqual = (definition: Location | LocationLink, range: Range): boolean => {
   if (definition instanceof Location) {
-    return checkIsRangeEqual(definition.range, range)
+    return definition.range.isEqual(range)
   }
-  return checkIsRangeEqual(definition.targetRange, range)
+  return definition.targetRange.isEqual(range)
 }
 
 export const convertDefinitionToLocation = (definition: Location | LocationLink): Location => {
