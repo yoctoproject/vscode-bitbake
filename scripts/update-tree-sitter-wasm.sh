@@ -4,6 +4,7 @@
 # Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/scripts/upgrade-tree-sitter.sh
 
 set -euox pipefail
+cd "$(dirname "$(readlink -f "$0")")/.."
 
 cd client
 npm install -D tree-sitter-cli https://github.com/tree-sitter-grammars/tree-sitter-bitbake
