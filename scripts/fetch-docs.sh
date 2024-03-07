@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Tag: yocto-4.3.3
 BITBAKE_DOCS_COMMIT=380a9ac97de5774378ded5e37d40b79b96761a0c
@@ -9,6 +9,7 @@ BITBAKE_DOCS_LIST="bitbake-user-manual-metadata.rst bitbake-user-manual-ref-vari
 YOCTO_DOCS_LIST=" tasks.rst variables.rst"
 
 set -e
+cd "$(dirname "$(readlink -f "$0")")/.."
 
 mkdir -p client/resources/docs
 #  Bitbake docs
