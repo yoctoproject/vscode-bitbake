@@ -136,36 +136,43 @@ const processDefinitions = async <DefinitionType extends Location | LocationLink
       }
     }
     changeDefinitionUri(definition, originalTextDocument.uri)
-    ajustDefinitionRange(definition, originalTextDocument, embeddedLanguageTextDocument, embeddedLanguageDocInfos.characterIndexes)
-    result.push(definition)
+    const couldAjustRange = ajustDefinitionRange(definition, originalTextDocument, embeddedLanguageTextDocument, embeddedLanguageDocInfos.characterIndexes)
+    if (couldAjustRange) {
+      result.push(definition)
+    }
   }))
   return result
 }
 
-// Map the range of the definitin from the embedded language document to the original document
+// Map the range of the definition from the embedded language document to the original document
+// return whether the adjustment could be done or not
 const ajustDefinitionRange = (
   definition: Location | LocationLink,
   originalTextDocument: TextDocument,
   embeddedLanguageTextDocument: TextDocument,
   characterIndexes: number[]
-): void => {
+): boolean => {
   if (definition instanceof Location) {
     const newRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.range)
-    if (newRange !== undefined) {
-      definition.range = newRange
+    if (newRange === undefined) {
+      return false
     }
+    definition.range = newRange
   } else {
     const newTargetRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.targetRange)
-    if (newTargetRange !== undefined) {
-      definition.targetRange = newTargetRange
+    if (newTargetRange === undefined) {
+      return false
     }
+    definition.targetRange = newTargetRange
     if (definition.targetSelectionRange !== undefined) {
       const newTargetSelectionRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.targetSelectionRange)
       if (newTargetSelectionRange !== undefined) {
-        definition.targetSelectionRange = newTargetRange
+        return false
       }
+      definition.targetSelectionRange = newTargetRange
     }
   }
+  return true
 }
 
 // Redirect a definition to an other definition
