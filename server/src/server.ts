@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 /* --------------------------------------------------------------------------------------------
  * Copyright (c) Eugen Wiens. All rights reserved.
  * Licensed under the MIT License. See License.txt in the project root for license information.
@@ -51,7 +52,7 @@ let currentActiveTextDocument: TextDocument = TextDocument.create(
 )
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
-  logger.level = 'debug'
+  logger.level = params.initializationOptions?.loggingLevel ?? 'error'
   logger.info('[onInitialize] Initializing connection')
   bitBakeProjectScannerClient.setConnection(connection)
   disposables.push(...bitBakeProjectScannerClient.buildHandlers())
@@ -60,7 +61,7 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   // If the language server is not started by VSCode, extensionPath and pathToBitbakeFolder can be undefined
   // We provide alternatives here to prevent crashes when these variables are used
-  const extensionPath = params.initializationOptions?.extensionPath ?? workspaceFolder as string
+  const extensionPath = params.initializationOptions?.extensionPath ?? path.join(__dirname, '..')
   pokyFolder = pokyFolder ?? workspaceFolder
 
   logger.info('[onInitialize] Setting yocto doc path and parsing doc files')
@@ -99,7 +100,7 @@ connection.onShutdown(() => {
 connection.onDidChangeConfiguration((change) => {
   logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
   parseOnSave = change.settings.bitbake?.parseOnSave ?? parseOnSave
-  const bitbakeFolder = expandSettingPath(change.settings.bitbake.pathToBitbakeFolder, { workspaceFolder })
+  const bitbakeFolder = expandSettingPath(change.settings.bitbake?.pathToBitbakeFolder, { workspaceFolder })
   if (bitbakeFolder !== undefined) {
     pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
   }
