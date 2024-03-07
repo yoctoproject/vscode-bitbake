@@ -198,6 +198,10 @@ export class BitBakeProjectScanner {
 
     const layersStartRegex = /^layer *path *priority$/
     const layersFirstLine = outputLines.findIndex(line => layersStartRegex.test(line))
+    if (layersFirstLine === -1) {
+      logger.error('Failed to find layers in bitbake-layers output')
+      throw new Error('Failed to find layers in bitbake-layers output')
+    }
 
     for (const element of outputLines.slice(layersFirstLine + 2)) {
       const tempElement = element.split(/\s+/)
@@ -309,6 +313,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     let outputRecipeSection = ''
     if (startingIndex === -1) {
       logger.error('Failed to find available recipes')
+      throw new Error('Failed to find available recipes')
     } else {
       outputRecipeSection = splittedOutput.slice(startingIndex).join('\n')
     }
