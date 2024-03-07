@@ -28,7 +28,9 @@
   "categories": [
     "Programming Languages"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "workspaceContains:**/bblayers.conf"
+  ],
   "main": "./out/extension",
   "browser": "./out/extension-web",
   "contributes": {
