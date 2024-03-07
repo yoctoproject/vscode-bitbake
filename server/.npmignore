@@ -1,0 +1,10 @@
+/*
+!/README.md
+!/package.json
+!/out/
+*.map
+/out/__tests__/
+/out/lib/src/__tests__/
+
+!/*.wasm
+!/resources
