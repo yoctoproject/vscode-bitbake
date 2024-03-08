@@ -443,6 +443,14 @@ export default class Analyzer {
     return n?.parent?.type === 'variable_expansion' || (n?.type === 'identifier' && n?.parent?.type === 'variable_expansion')
   }
 
+  public isBashVariableExpansion (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    return this.isInsideBashRegion(uri, line, column) && this.isVariableExpansion(uri, line, column)
+  }
+
   /**
    * Check if the node is the identifier in a variable assignment syntax (identifiers are only on the left hand side)
    */
