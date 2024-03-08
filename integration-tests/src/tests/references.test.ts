@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
 
-suite('Bitbake Definition Test Suite', () => {
+suite('Bitbake References Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/references.bb')
   const docUri = vscode.Uri.parse(`file://${filePath}`)
 
