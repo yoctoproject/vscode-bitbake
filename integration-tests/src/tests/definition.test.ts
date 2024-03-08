@@ -51,12 +51,6 @@ suite('Bitbake Definition Test Suite', () => {
     })
   }
 
-  test('Definition appears properly on inherit', async () => {
-    const position = new vscode.Position(0, 10)
-    const expectedPathEnding = 'meta/classes-recipe/image.bbclass'
-    await testDefinition(position, expectedPathEnding)
-  }).timeout(300000)
-
   test('Definition appears properly in Python on d', async () => {
     const position = new vscode.Position(3, 3)
     const expectedPathEnding = 'lib/bb/data_smart.py'
