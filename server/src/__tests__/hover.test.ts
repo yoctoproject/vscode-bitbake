@@ -486,6 +486,43 @@ describe('on hover', () => {
     expect(shouldNotShow5).toBe(null)
   })
 
+  it('shows definition on hovering variable expansion inside bash region', async () => {
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 52,
+        character: 9
+      }
+    })
+
+    const shouldNotShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 52,
+        character: 21
+      }
+    })
+
+    expect(shouldShow1).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
+
+    expect(shouldNotShow1).toBe(null)
+  })
+
   it('should show comments above the global declarations', async () => {
     bitBakeDocScanner.parseYoctoTaskFile()
     bitBakeDocScanner.parseBitbakeVariablesFile()
