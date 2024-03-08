@@ -28,5 +28,9 @@ DESCRIPTION:
 def dummy() {
 }
 
+do_foo() {
+    "${D} D"
+}
+
 # Show completion at the last line https://github.com/amaanq/tree-sitter-bitbake/issues/9
 MYVAR:append:
