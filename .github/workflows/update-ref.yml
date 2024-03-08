@@ -36,10 +36,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Update required extension version
-      run: bash scripts/update-extension-version.sh
-
-    - name: Update fetch-docs script
-      run: bash scripts/update-fetch-docs-commits.sh
+      run: bash scripts/update-ref.sh
 
     - name: Verify file changes
       uses: tj-actions/verify-changed-files@v17
