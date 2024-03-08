@@ -29,7 +29,8 @@
     "Programming Languages"
   ],
   "activationEvents": [
-    "workspaceContains:**/bblayers.conf"
+    "workspaceContains:**/bblayers.conf",
+    "workspaceContains:**/*.bb"
   ],
   "main": "./out/extension",
   "browser": "./out/extension-web",
