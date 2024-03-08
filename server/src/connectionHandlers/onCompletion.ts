@@ -46,7 +46,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
   logger.debug(`[onCompletion] current word: ${word}`)
 
   if (analyzer.isInsideBashRegion(documentUri, wordPosition.line, wordPosition.character)) {
-    return getBashCompletionItems()
+    return getBashCompletionItems(documentUri, word, wordPosition)
   }
 
   if (analyzer.isInsidePythonRegion(documentUri, wordPosition.line, wordPosition.character)) {
@@ -150,7 +150,16 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
   )
 }
 
-function getBashCompletionItems (): CompletionItem[] {
+function getBashCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
+  if (analyzer.isBashVariableExpansion(documentUri, wordPosition.line, wordPosition.character)) {
+    const symbolCompletionItems = getSymbolCompletionItems(word)
+    return mergeArraysDistinctly(
+      (completionItem) => completionItem.label,
+      getVariablecompletionItems(symbolCompletionItems),
+      symbolCompletionItems,
+      allCommonDirectoriesCompletionItems
+    )
+  }
   return getYoctoTaskSnippets()
 }
 
