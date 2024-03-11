@@ -4,8 +4,9 @@
 
 **For a description of the extension itself, please see [the client's README](./client/README.md)**.
 
-The changelog for the extension can be found [here](./client/CHANGELOG.md).
+**It is also possible to use some features of the language server on other editors (Vim, ...). Follow [the server's README](./server/README.md)**.
 
+The changelog for the extension can be found [here](./client/CHANGELOG.md).
 
 ## Installing from [VS Code Extension Marketplace](https://marketplace.visualstudio.com/VSCode)
 
