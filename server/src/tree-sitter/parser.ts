@@ -14,7 +14,14 @@ export async function generateParser (): Promise<Parser> {
   await Parser.init()
   const parser = new Parser()
 
-  const language = await Parser.Language.load(path.join(__dirname, '/../../tree-sitter-bitbake.wasm'))
-  parser.setLanguage(language)
+  try {
+    // Expected path under VSCode (no out/ folder)
+    const language = await Parser.Language.load(path.join(__dirname, '/../tree-sitter-bitbake.wasm'))
+    parser.setLanguage(language)
+  } catch (e) {
+    // Expected path when running server standalone (out/ folder)
+    const language = await Parser.Language.load(path.join(__dirname, '/../../tree-sitter-bitbake.wasm'))
+    parser.setLanguage(language)
+  }
   return parser
 }

@@ -75,7 +75,7 @@ export class BitBakeDocScanner {
   private _variableFlagInfo: VariableFlagInfo[] = []
   private _yoctoTaskInfo: DocInfo[] = []
   private _pythonDatastoreFunction: string[] = []
-  private _docPath: string = path.join(__dirname, '../../client/resources/docs') // This default path is for the test. The path after the compilation can be different
+  private _docPath: string = path.join(__dirname, '../resources/docs') // This default path is for the test. The path after the compilation can be different
   private readonly _keywordInfo: DocInfo[] = KEYWORDS
 
   get bitbakeVariableInfo (): VariableInfo[] {
@@ -111,7 +111,12 @@ export class BitBakeDocScanner {
   }
 
   public setDocPathAndParse (extensionPath: string): void {
-    this._docPath = path.join(extensionPath, 'resources/docs')
+    // Expected path on VSCode
+    this._docPath = path.join(extensionPath, 'server/resources/docs')
+    if (!fs.existsSync(this._docPath)) {
+      // Expected path on standalone npm language-server-bitbake package
+      this._docPath = path.join(extensionPath, 'resources/docs')
+    }
     this.parseVariableFlagFile()
     this.parseBitbakeVariablesFile()
     this.parseYoctoVariablesFile()

@@ -27,7 +27,8 @@
   },
   "scripts": {
     "prepack": "../scripts/fetch-docs.sh && tsc --outDir out",
-    "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json"
+    "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json && npm run installServerResources",
+    "installServerResources": "cp -r ./resources ./tree-sitter-bitbake.wasm ../client/server/"
   },
   "devDependencies": {
     "@types/glob": "^8.1.0",
