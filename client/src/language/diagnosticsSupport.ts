@@ -19,9 +19,9 @@ const diagnosticCollections = {
 }
 
 // Create diagnostics for an "original document" from the diagnostics of its "embedded language documents"
-// This is intended to be called when the diagnostics of the "embedded language documents" are updated
-export const handleEmbeddedLanguageDocumentDiagnostics = async (uri: vscode.Uri): Promise<void> => {
-  logger.debug(`[handleEmbeddedLanguageDocumentDiagnostics] for uri: ${uri.toString()}`)
+// It ignores the uris for documents that are not "embedded language documents"
+export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
+  logger.debug(`[updateDiagnostics] for uri: ${uri.toString()}`)
   const embeddedLanguageType = getEmbeddedLanguageType(uri)
   if (embeddedLanguageType === undefined) {
     return
@@ -77,30 +77,15 @@ export const handleEmbeddedLanguageDocumentDiagnostics = async (uri: vscode.Uri)
   diagnosticCollection.set(originalTextDocument.uri, cleanDiagnostics)
 }
 
-// Review diagnostics that already exist for the documents of a recipe
+// Regenerate diagnostics for all "original documents" that already have diagnostics
 // This is intended to be called when a new scan finished, so diagnostics can be updated with the available information.
-export const reviewRecipeDiagnostics = async (recipeName: string): Promise<void> => {
-  logger.debug(`[reviewRecipeDiagnostics] for recipe: ${recipeName}`)
+export const reviewDiagnostics = async (): Promise<void> => {
+  logger.debug('[reviewDiagnostics]')
   const allDiagnostics = vscode.languages.getDiagnostics()
-  await Promise.all(allDiagnostics.map(async ([uri, diagnostics]): Promise<void> => {
-    const embeddedLanguageType = getEmbeddedLanguageType(uri)
-    if (embeddedLanguageType !== undefined) {
-      // We update only diagnostics of original documents
-      return
-    }
-    if (extractRecipeName(uri.fsPath) !== recipeName) {
-      return
-    }
-    const newBashDiagnostics: vscode.Diagnostic[] = []
-    await Promise.all(diagnostics.map(async (diagnostic): Promise<void> => {
-      if (diagnostic.source?.includes(diagnosticCollections.bash.name) === true) {
-        if (await checkIsIgnoredShellcheckSc2154(diagnostic, uri)) {
-          return
-        }
-        newBashDiagnostics.push(diagnostic)
-      }
-    }))
-    diagnosticCollections.bash.set(uri, newBashDiagnostics)
+  await Promise.all(allDiagnostics.map(async ([uri, _diagnostics]): Promise<void> => {
+    // uri might be for an "original document", an "embedded language document", and even something else.
+    // updateDiagnostics ignores the uris that are not for an "embedded language documents"
+    await updateDiagnostics(uri)
   }))
 }
 
