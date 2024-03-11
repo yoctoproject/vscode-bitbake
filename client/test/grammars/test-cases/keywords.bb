@@ -39,3 +39,6 @@
 
 >inherit_defer foo2
 #^^^^^^^^^^^^^ source.bb keyword.control.bb
+
+>python(){}
+#^^^^^^ source.bb storage.type.function.python.bb
