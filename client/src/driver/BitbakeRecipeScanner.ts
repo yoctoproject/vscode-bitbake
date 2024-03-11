@@ -9,16 +9,34 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { runBitbakeTask } from '../ui/BitbakeCommands'
 import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/BitbakeTaskProvider'
 import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
+import { extractRecipeName } from '../lib/src/utils/files'
 
-type ScanDoneListener = (recipeName: string) => Promise<void>
-export class BitbakeRecipeScanner {
+type ServerScanRequestListener = (recipeName: string) => Promise<void>
+export class BitbakeRecipeScanner implements vscode.Disposable {
   static readonly taskName = 'Bitbake: Scan recipe env'
 
   private _languageClient: LanguageClient | undefined
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
   private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri>()
-  private readonly scanDoneListeners: ScanDoneListener[] = []
+  private readonly serverScanRequestListeners: ServerScanRequestListener[] = []
+
+  private readonly disposables: vscode.Disposable[] = []
+
+  constructor () {
+    this.disposables.push(this.serverScanRequest)
+    this.disposables.push(this.serverScanRequest.event(async (uri) => {
+      logger.debug(`[BitbakeRecipeScanner] Call listeners of serverScanRequest with ${uri.fsPath}`)
+      const recipeName = extractRecipeName(uri.fsPath)
+      await Promise.all(
+        this.serverScanRequestListeners.map(async (listener) => { await listener(recipeName) })
+      )
+    }))
+  }
+
+  dispose (): void {
+    this.disposables.forEach((disposable) => disposable.dispose())
+  }
 
   /**
    *
@@ -59,8 +77,6 @@ export class BitbakeRecipeScanner {
         }
       })
     })
-
-    await this.notifyScanDone(chosenRecipe)
   }
 
   subscribeToTaskEnd (context: vscode.ExtensionContext, taskProvider: BitbakeTaskProvider): void {
@@ -93,15 +109,8 @@ export class BitbakeRecipeScanner {
     }))
   }
 
-  subscribeToScanDone (listener: ScanDoneListener): void {
-    this.scanDoneListeners.push(listener)
-  }
-
-  private async notifyScanDone (recipeName: string): Promise<void> {
-    logger.debug(`[BitbakeRecipeScanner] Call listeners of serverScanRequest with ${recipeName}`)
-    await Promise.all(
-      this.scanDoneListeners.map(async (listener) => { await listener(recipeName) })
-    )
+  subscribeToServerScanRequestEvent (listener: ServerScanRequestListener): void {
+    this.serverScanRequestListeners.push(listener)
   }
 
   setLanguageClient (client: LanguageClient): void {
