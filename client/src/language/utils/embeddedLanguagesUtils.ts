@@ -54,8 +54,3 @@ export const getEmbeddedLanguageDocRange = (
   const end = getEmbeddedLanguageDocPosition(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, originalRange.end)
   return new Range(start, end)
 }
-
-export const getIndentationOnLine = (document: TextDocument, lineNumber: number): string => {
-  const line = document.lineAt(lineNumber)
-  return line.text.slice(0, line.firstNonWhitespaceCharacterIndex)
-}

@@ -7,7 +7,7 @@ import { CompletionList, commands, Range, workspace } from 'vscode'
 import { type CompletionMiddleware } from 'vscode-languageclient/node'
 
 import { requestsManager } from './RequestManager'
-import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
+import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils/embeddedLanguagesUtils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 

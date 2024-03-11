@@ -6,7 +6,7 @@
 import { type HoverMiddleware } from 'vscode-languageclient'
 import { type Hover, commands, workspace, MarkdownString, type TextDocument, Position } from 'vscode'
 
-import { getEmbeddedLanguageDocPosition, getOriginalDocPosition } from './utils'
+import { getEmbeddedLanguageDocPosition, getOriginalDocPosition } from './utils/embeddedLanguagesUtils'
 import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { requestsManager } from './RequestManager'
 import path from 'path'
