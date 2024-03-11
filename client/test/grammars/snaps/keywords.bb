@@ -24,3 +24,5 @@ python (){}
 
 inherit_defer foo2
 
+python(){}
+
