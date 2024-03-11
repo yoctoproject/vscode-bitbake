@@ -7,7 +7,7 @@ import { type ReferencesMiddleware } from 'vscode-languageclient'
 import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { requestsManager } from './RequestManager'
 import { type Location, commands, workspace, type TextDocument } from 'vscode'
-import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
+import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils/embeddedLanguagesUtils'
 
 export const middlewareProvideReferences: ReferencesMiddleware['provideReferences'] = async (document, position, options, token, next) => {
   const nextResult = await next(document, position, options, token)

@@ -3,13 +3,14 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { Location, Position, Range, commands, type LocationLink, type TextDocument, workspace, type Uri } from 'vscode'
+import { Location, Position, Range, commands, type LocationLink, type TextDocument, workspace } from 'vscode'
 import { type DefinitionMiddleware } from 'vscode-languageclient'
 
 import { requestsManager } from './RequestManager'
-import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils'
+import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils/embeddedLanguagesUtils'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { changeDefinitionUri, checkIsDefinitionRangeEqual, checkIsDefinitionUriEqual, convertToSameDefinitionType, getDefinitionUri } from './utils/definitions'
 
 export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinition'] = async (document, position, token, next) => {
   logger.debug(`[middlewareProvideDefinition] ${document.uri.toString()}, line ${position.line}, character ${position.character}`)
@@ -46,67 +47,6 @@ export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinitio
     return await processDefinitions(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
   } else {
     return await processDefinitions(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
-  }
-}
-
-export const checkIsDefinitionUriEqual = (definition: Location | LocationLink, uri: Uri): boolean => {
-  if (definition instanceof Location) {
-    return definition.uri.fsPath === uri.fsPath
-  }
-  return definition.targetUri.fsPath === uri.fsPath
-}
-
-export const changeDefinitionUri = (definition: Location | LocationLink, uri: Uri): void => {
-  if (definition instanceof Location) {
-    definition.uri = uri
-  } else {
-    definition.targetUri = uri
-  }
-}
-
-export const getDefinitionUri = (definition: Location | LocationLink): Uri => {
-  if (definition instanceof Location) {
-    return definition.uri
-  }
-  return definition.targetUri
-}
-
-export const checkIsDefinitionRangeEqual = (definition: Location | LocationLink, range: Range): boolean => {
-  if (definition instanceof Location) {
-    return definition.range.isEqual(range)
-  }
-  return definition.targetRange.isEqual(range)
-}
-
-export const convertDefinitionToLocation = (definition: Location | LocationLink): Location => {
-  if (definition instanceof Location) {
-    return definition
-  }
-  return {
-    uri: definition.targetUri,
-    range: definition.targetRange
-  }
-}
-
-export const convertDefinitionToLocationLink = (definition: Location | LocationLink): LocationLink => {
-  if (definition instanceof Location) {
-    return {
-      targetUri: definition.uri,
-      targetRange: definition.range,
-      targetSelectionRange: definition.range
-    }
-  }
-  return definition
-}
-
-export const convertToSameDefinitionType = <DefinitionType extends Location | LocationLink>(
-  referenceDefinition: DefinitionType,
-  definitionToConvert: Location | LocationLink
-): DefinitionType => {
-  if (referenceDefinition instanceof Location) {
-    return convertDefinitionToLocation(definitionToConvert) as DefinitionType
-  } else {
-    return convertDefinitionToLocationLink(definitionToConvert) as DefinitionType
   }
 }
 

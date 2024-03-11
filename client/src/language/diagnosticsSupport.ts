@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode'
 
-import { getOriginalDocRange } from './utils'
+import { getOriginalDocRange } from './utils/embeddedLanguagesUtils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'

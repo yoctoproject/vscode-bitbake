@@ -6,10 +6,11 @@
 import vscode from 'vscode'
 import { requestsManager } from './RequestManager'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
-import { getEmbeddedLanguageDocRange, getIndentationOnLine, getOriginalDocPosition } from './utils'
+import { getEmbeddedLanguageDocRange, getOriginalDocPosition } from './utils/embeddedLanguagesUtils'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type Range } from 'vscode-languageclient'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { getIndentationOnLine } from './utils/textDocumentUtils'
 
 export class BitbakeCodeActionProvider implements vscode.CodeActionProvider {
   async provideCodeActions (document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext, token: vscode.CancellationToken): Promise<vscode.CodeAction[]> {
