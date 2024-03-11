@@ -145,9 +145,9 @@ connection.onRequest('bitbake/getVar', async (params: { variable: string, recipe
   return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
 })
 
-connection.onRequest(RequestMethod.IsSymbolDefinedInRecipe, async (params: RequestParams['IsSymbolDefinedInRecipe']) => {
-  const scanResult = analyzer.getLastScanResult(params.recipeName)
-  return scanResult?.symbols.some(symbolInfo => symbolInfo.name === params.symbolName)
+connection.onRequest('bitbake/getAllVar', async (params: { recipe: string }) => {
+  const scanResult = analyzer.getLastScanResult(params.recipe)
+  return scanResult?.symbols.map(symbolInfo => ({ name: symbolInfo.name, value: symbolInfo.finalValue }))
 })
 
 connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {

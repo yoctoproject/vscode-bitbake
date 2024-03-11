@@ -51,8 +51,12 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
   const dirtyDiagnostics = vscode.languages.getDiagnostics(embeddedLanguageDocInfos.uri)
   const cleanDiagnostics: vscode.Diagnostic[] = []
   const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
+
+  const recipe = extractRecipeName(originalUri.fsPath)
+  const variableValues = await requestsManager.getAllVariableValues(recipe)
+
   await Promise.all(dirtyDiagnostics.map(async (diagnostic) => {
-    if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalUri)) {
+    if (await checkIsIgnoredShellcheckSc2154(diagnostic, variableValues)) {
       return
     }
     if (diagnostic.range === undefined) {
@@ -100,7 +104,13 @@ const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefi
   return undefined
 }
 
-const checkIsIgnoredShellcheckSc2154 = async (diagnostic: vscode.Diagnostic, originalUri: vscode.Uri): Promise<boolean> => {
+const checkIsIgnoredShellcheckSc2154 = async (
+  diagnostic: vscode.Diagnostic,
+  variablevalues: Array<{ name: string, value: string }> | undefined
+): Promise<boolean> => {
+  if (variablevalues === undefined) {
+    return false
+  }
   if (diagnostic.source?.includes('shellcheck') !== true && diagnostic.code !== 'SC2154') {
     return false
   }
@@ -110,7 +120,6 @@ const checkIsIgnoredShellcheckSc2154 = async (diagnostic: vscode.Diagnostic, ori
   if (variableName === undefined) {
     return false
   }
-  const recipeName = extractRecipeName(originalUri.fsPath)
-  const isSymbolDefinedInRecipe = await requestsManager.checkIsSymbolDefinedInRecipe(recipeName, variableName)
-  return isSymbolDefinedInRecipe === true
+
+  return variablevalues.find((variable) => variable.name === variableName) !== undefined
 }

@@ -162,21 +162,46 @@ export async function deactivateLanguageServer (client: LanguageClient): Promise
   ])
 }
 
-export async function getVariableValue (client: LanguageClient, variable: string, recipe: string, canTriggerScan: boolean = false): Promise<string | undefined > {
-  let value: string | undefined | null = await client.sendRequest('bitbake/getVar', { variable, recipe })
+export async function getScanResult<
+  MethodName extends string,
+  ParamsType extends { recipe: string },
+  ReturnType
+> (
+  client: LanguageClient,
+  methodName: MethodName,
+  params: ParamsType,
+  canTriggerScan: boolean = false
+): Promise<ReturnType | undefined> {
+  let value: ReturnType = await client.sendRequest(methodName, params)
   if ((value === undefined || value === null) && canTriggerScan) {
     // We may not have scanned the recipe yet. Let's try again.
     const progressOptions: vscode.ProgressOptions = {
       location: vscode.ProgressLocation.Notification,
-      title: `Recipe ${recipe} has not been scanned yet. Scanning now...`,
+      title: `Recipe ${params.recipe} has not been scanned yet. Scanning now...`,
       cancellable: false
     }
     await vscode.window.withProgress(progressOptions, async (progress) => {
-      await vscode.commands.executeCommand('bitbake.scan-recipe-env', recipe)
+      await vscode.commands.executeCommand('bitbake.scan-recipe-env', params.recipe)
       progress.report({ increment: 100 })
     })
-    value = await client.sendRequest('bitbake/getVar', { variable, recipe })
+    value = await client.sendRequest(methodName, params)
   }
-  logger.debug(`getVariableValue: ${variable} = ${value}`)
+  logger.debug(`[getScanResult] (${methodName}): ${JSON.stringify(params)}, ${JSON.stringify(value)}`)
   return value ?? undefined
+}
+
+export async function getVariableValue (
+  client: LanguageClient,
+  variable: string, recipe: string,
+  canTriggerScan: boolean = false
+): Promise<string | undefined> {
+  return await getScanResult(client, 'bitbake/getVar', { variable, recipe }, canTriggerScan)
+}
+
+export async function getAllVariableValues (
+  client: LanguageClient,
+  recipe: string,
+  canTriggerScan: boolean = false
+): Promise<Array<{ name: string, value: string }> | undefined> {
+  return await getScanResult(client, 'bitbake/getAllVar', { recipe }, canTriggerScan)
 }
