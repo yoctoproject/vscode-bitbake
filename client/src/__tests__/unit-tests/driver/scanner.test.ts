@@ -36,7 +36,8 @@ describe('BitBakeProjectScanner', () => {
     })
     mockVscodeEvents()
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
-      child.onExit(() => {
+      child.onExit((event) => {
+        expect(event.exitCode).toBe(0)
         addLayer(
           path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions'),
           path.resolve(__dirname, '../../../../../integration-tests/project-folder/build'))
