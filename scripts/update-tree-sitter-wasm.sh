@@ -6,7 +6,7 @@
 set -euox pipefail
 cd "$(dirname "$(readlink -f "$0")")/.."
 
-cd client
+cd server
 npm install -D tree-sitter-cli https://github.com/tree-sitter-grammars/tree-sitter-bitbake
 npx tree-sitter build-wasm node_modules/tree-sitter-bitbake
 
