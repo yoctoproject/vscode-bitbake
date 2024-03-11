@@ -2,12 +2,20 @@
 
 Language server for bitbake.
 
-![screenshot](https://github.com/yoctoproject/vscode-bitbake/assets/32936898/82e16428-e5fb-4e37-a2fa-b56c00cc4f4c)
+![screenshot](doc/neovim-completion.jpg)
 
 ## Install
 
 ```sh
 npm install -g language-server-bitbake
+```
+
+Or install from the sources:
+
+```sh
+npm install
+npm pack
+npm install -g .
 ```
 
 ## Configure
@@ -42,7 +50,11 @@ For vim:
 }
 ```
 
-#### [vim-lsp](https://github.com/prabirshrestha/vim-lsp)
+Note: You need the [vim-bitbake](https://github.com/kergoth/vim-bitbake)
+language plugin. It is now part of recent neoVim releases, but you may need to
+install it manually for older versions.
+
+#### [vim-lsp](https://github.com/prabirshrestha/vim-lsp) [Not tested]
 
 `~/.config/nvim/init.vim`:
 
@@ -59,7 +71,7 @@ if executable('language-server-bitbake')
 endif
 ```
 
-### [Neovim](https://neovim.io)
+### [Neovim](https://neovim.io) [Not tested]
 
 `~/.config/nvim/init.lua`:
 
@@ -75,7 +87,7 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
 })
 ```
 
-### [Emacs](https://www.gnu.org/software/emacs)
+### [Emacs](https://www.gnu.org/software/emacs) [Not tested]
 
 `~/.emacs.d/init.el`:
 
@@ -87,7 +99,7 @@ vim.api.nvim_create_autocmd({ "BufEnter" }, {
   :server-id "bitbake")))
 ```
 
-### [Helix](https://helix-editor.com/)
+### [Helix](https://helix-editor.com/) [Not tested]
 
 `~/.config/helix/languages.toml`:
 
@@ -100,7 +112,7 @@ language-servers = [ "language-server-bitbake",]
 command = "language-server-bitbake --stdio"
 ```
 
-### [KaKoune](https://kakoune.org/)
+### [KaKoune](https://kakoune.org/) [Not tested]
 
 #### [kak-lsp](https://github.com/kak-lsp/kak-lsp)
 
@@ -112,7 +124,7 @@ filetypes = [ "bitbake",]
 command = "language-server-bitbake --stdio"
 ```
 
-### [Sublime](https://www.sublimetext.com)
+### [Sublime](https://www.sublimetext.com) [Not tested]
 
 `~/.config/sublime-text-3/Packages/Preferences.sublime-settings`:
 
