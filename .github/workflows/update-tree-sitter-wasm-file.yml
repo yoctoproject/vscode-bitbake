@@ -50,15 +50,15 @@ jobs:
         # The script generates a new wasm file and replaces the existing one. Git will treat it as a different file even it is generated with the same commit and CLI  
         # Hence, we only compare the parser.info. It should be enough to tell the difference
         files: |
-            client/parser.info
+            server/parser.info
 
     - name: Create pull request
       if: steps.verify-changed-files.outputs.files_changed == 'true'
       uses: peter-evans/create-pull-request@v5
       with:
         add-paths: |
-          client/parser.info
-          client/tree-sitter-bitbake.wasm
+          server/parser.info
+          server/tree-sitter-bitbake.wasm
         title: Auto update tree-sitter-bitbake wasm file
         commit-message: Auto update tree-sitter-bitbake wasm file and parser info
         token: ${{ secrets.GITHUB_TOKEN }}
