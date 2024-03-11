@@ -4,3 +4,4 @@ test
 src
 **/*.map
 tsconfig.*
+server/package_lock.json
