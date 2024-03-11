@@ -1,5 +1,6 @@
 python() {
-    oe
+    foo = ''
+    print(foo)
 }
 
 do_foo() {
