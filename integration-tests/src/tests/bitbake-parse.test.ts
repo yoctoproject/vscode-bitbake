@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 
 import path from 'path'
 import { BITBAKE_TIMEOUT, addLayer, excludeRecipes, resetExcludedRecipes, awaitBitbakeParsingResult, resetLayer } from '../utils/bitbake'
-import { assertWorkspaceWillBeOpen, delay } from '../utils/async'
+import { assertWillComeTrue, assertWorkspaceWillBeOpen, delay } from '../utils/async'
 
 suite('Bitbake Parsing Test Suite', () => {
   let workspaceURI: vscode.Uri
@@ -68,9 +68,12 @@ suite('Bitbake Parsing Test Suite', () => {
     // Wait for the diagnostics to be updated. Another method would be to use
     // the onDidChangeDiagnostics event, but it is not useful with the other test
     // that checks for no diagnostics.
-    await delay(500)
+    let diagnostics: ReturnType<typeof vscode.languages.getDiagnostics> = []
+    await assertWillComeTrue(async () => {
+      diagnostics = vscode.languages.getDiagnostics()
+      return diagnostics.length > 0
+    })
 
-    const diagnostics = vscode.languages.getDiagnostics()
     // Only 1 file has problem(s)
     assert.strictEqual(diagnostics.length, 1)
     // Only 1 problem on the file
