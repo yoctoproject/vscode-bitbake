@@ -18,7 +18,7 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
   private _languageClient: LanguageClient | undefined
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
-  private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri>()
+  private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri | undefined>()
   private readonly serverScanRequestListeners: ServerScanRequestListener[] = []
 
   private readonly disposables: vscode.Disposable[] = []
@@ -26,7 +26,10 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
   constructor () {
     this.disposables.push(this.serverScanRequest)
     this.disposables.push(this.serverScanRequest.event(async (uri) => {
-      logger.debug(`[BitbakeRecipeScanner] Call listeners of serverScanRequest with ${uri.fsPath}`)
+      logger.debug(`[BitbakeRecipeScanner] Call listeners of serverScanRequest with ${uri?.fsPath}`)
+      if (uri === undefined) {
+        return
+      }
       const recipeName = extractRecipeName(uri.fsPath)
       await Promise.all(
         this.serverScanRequestListeners.map(async (listener) => { await listener(recipeName) })

@@ -7,6 +7,7 @@ import { type Position } from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 
 import { RequestMethod, type RequestParams, type RequestResult } from '../lib/src/types/requests'
+import { getAllVariableValues } from './languageClient'
 
 export class RequestManager {
   client: LanguageClient | undefined
@@ -19,12 +20,13 @@ export class RequestManager {
     return await this.client?.sendRequest(RequestMethod.EmbeddedLanguageTypeOnPosition, params)
   }
 
-  checkIsSymbolDefinedInRecipe = async (
-    recipeName: string,
-    symbolName: string
-  ): RequestResult['IsSymbolDefinedInRecipe'] => {
-    const params: RequestParams['IsSymbolDefinedInRecipe'] = { recipeName, symbolName }
-    return await this.client?.sendRequest(RequestMethod.IsSymbolDefinedInRecipe, params)
+  getAllVariableValues = async (
+    recipe: string
+  ): Promise<ReturnType<typeof getAllVariableValues>> => {
+    if (this.client === undefined) {
+      return
+    }
+    return await getAllVariableValues(this.client, recipe, false)
   }
 }
 
