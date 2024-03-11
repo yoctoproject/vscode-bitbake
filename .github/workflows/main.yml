@@ -72,3 +72,37 @@ jobs:
       - run: npx vsce publish --packagePath $(find . -iname yocto-bitbake*.vsix)
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  build-language-server-standalone:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+      - run: npm run clean
+      - run: cd server && npm install
+      - run: cd server && npm pack
+      - name: Archive server package
+        uses: actions/upload-artifact@v3
+        with:
+          name: language-server-bitbake
+          path: server/language-server-bitbake-*.tgz
+
+  # Inspired by https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages
+  publish-npm:
+    runs-on: ubuntu-latest
+    environment: NPM
+    needs: [build, build-language-server-standalone]
+    if: success() && startsWith( github.ref, 'refs/tags/')
+    steps:
+      # Setup .npmrc file to publish to npm
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          registry-url: 'https://registry.npmjs.org'
+      - uses: actions/download-artifact@v3
+      - name: Publish to npm
+        run: npm publish $(find . -iname language-server-bitbake-*.tgz)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
