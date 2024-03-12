@@ -130,7 +130,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(bitbakeRecipeScanner)
   bitbakeRecipeScanner.setLanguageClient(client)
   bitbakeRecipeScanner.subscribeToTaskEnd(context, bitbakeTaskProvider)
-  bitbakeRecipeScanner.subscribeToServerScanRequestEvent(reviewDiagnostics)
+  context.subscriptions.push(
+    bitbakeRecipeScanner.serverRecipeScanComplete.event(reviewDiagnostics)
+  )
 
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
