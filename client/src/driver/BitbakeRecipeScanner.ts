@@ -9,36 +9,17 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { runBitbakeTask } from '../ui/BitbakeCommands'
 import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/BitbakeTaskProvider'
 import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
-import { extractRecipeName } from '../lib/src/utils/files'
 
-type ServerScanRequestListener = (recipeName: string) => Promise<void>
 export class BitbakeRecipeScanner implements vscode.Disposable {
   static readonly taskName = 'Bitbake: Scan recipe env'
 
   private _languageClient: LanguageClient | undefined
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
-  private readonly serverScanRequest = new vscode.EventEmitter<vscode.Uri | undefined>()
-  private readonly serverScanRequestListeners: ServerScanRequestListener[] = []
-
-  private readonly disposables: vscode.Disposable[] = []
-
-  constructor () {
-    this.disposables.push(this.serverScanRequest)
-    this.disposables.push(this.serverScanRequest.event(async (uri) => {
-      logger.debug(`[BitbakeRecipeScanner] Call listeners of serverScanRequest with ${uri?.fsPath}`)
-      if (uri === undefined) {
-        return
-      }
-      const recipeName = extractRecipeName(uri.fsPath)
-      await Promise.all(
-        this.serverScanRequestListeners.map(async (listener) => { await listener(recipeName) })
-      )
-    }))
-  }
+  readonly serverRecipeScanComplete = new vscode.EventEmitter<vscode.Uri>()
 
   dispose (): void {
-    this.disposables.forEach((disposable) => disposable.dispose())
+    this.serverRecipeScanComplete.dispose()
   }
 
   /**
@@ -73,7 +54,7 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
     await runBitbakeTask(scanRecipeEnvTask, taskProvider)
     // Wait for the task and server side to have done the processing
     await new Promise<void>((resolve) => {
-      const disposable = this.serverScanRequest.event((uri) => {
+      const disposable = this.serverRecipeScanComplete.event((uri) => {
         if (uri === scanRecipeEnvTask.definition.uri) {
           disposable.dispose()
           resolve()
@@ -98,7 +79,7 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
               logger.debug('[onDidEndTask] Sending recipe environment to the server')
               const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
               await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
-              this.serverScanRequest.fire(uri)
+              this.serverRecipeScanComplete.fire(uri)
             }
           }
         }
@@ -110,10 +91,6 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
         }
       }
     }))
-  }
-
-  subscribeToServerScanRequestEvent (listener: ServerScanRequestListener): void {
-    this.serverScanRequestListeners.push(listener)
   }
 
   setLanguageClient (client: LanguageClient): void {
