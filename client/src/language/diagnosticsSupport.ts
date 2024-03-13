@@ -12,6 +12,7 @@ import { requestsManager } from '../language/RequestManager'
 import path from 'path'
 import { extractRecipeName } from '../lib/src/utils/files'
 import { logger } from '../lib/src/utils/OutputLogger'
+import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -108,9 +109,6 @@ const checkIsIgnoredShellcheckSc2154 = async (
   diagnostic: vscode.Diagnostic,
   variablevalues: Array<{ name: string, value: string }> | undefined
 ): Promise<boolean> => {
-  if (variablevalues === undefined) {
-    return false
-  }
   if (diagnostic.source?.includes('shellcheck') !== true && diagnostic.code !== 'SC2154') {
     return false
   }
@@ -121,5 +119,10 @@ const checkIsIgnoredShellcheckSc2154 = async (
     return false
   }
 
-  return variablevalues.find((variable) => variable.name === variableName) !== undefined
+  if (variablevalues === undefined) {
+    // We use a static list of common directories as fallback when the scan is not done
+    return commonDirectoriesVariables.has(variableName)
+  }
+
+  return variablevalues.some((variable) => variable.name === variableName)
 }
