@@ -26,6 +26,7 @@ import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
 import { scanContainsData } from './lib/src/types/BitbakeScanResult'
 import { reviewDiagnostics } from './language/diagnosticsSupport'
+import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -41,6 +42,14 @@ let terminalProvider: BitbakeTerminalProfileProvider | undefined
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
   logger.info('Bitbake logging level: ' + logger.level)
+}
+
+function loadEmbeddedLanguageDocsManagerSettings (): void {
+  const isDisabled = vscode.workspace.getConfiguration('bitbake').get('disableTemporaryFiles')
+  logger.info(`Disable embedded language features ${isDisabled as any}`)
+  if (typeof isDisabled === 'boolean') {
+    embeddedLanguageDocsManager.isDisabled = isDisabled
+  }
 }
 
 function updatePythonPath (): void {
@@ -114,6 +123,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.outputChannel = vscode.window.createOutputChannel('BitBake')
 
   loadLoggerSettings()
+  loadEmbeddedLanguageDocsManagerSettings()
   bitbakeExtensionContext = context
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
@@ -177,6 +187,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       loadLoggerSettings()
+    }
+    if (event.affectsConfiguration('bitbake.disableTemporaryFiles')) {
+      loadEmbeddedLanguageDocsManagerSettings()
     }
   }))
   context.subscriptions.push(vscode.workspace.onDidChangeWorkspaceFolders((event) => {

@@ -161,6 +161,11 @@
           "markdownDescription": "SDK image to use for cross-compilation and debugging.\n\nExample: `core-image-minimal`",
           "examples": "core-image-minimal"
         },
+        "bitbake.disableTemporaryFiles": {
+          "type": "boolean",
+          "markdownDescription": "Disables temporary files generated for BitBake's embedded languages. This action will turn off most features within Shell and Python regions of BitBake code. This is intended for users who don't want temporary files to be saved on their drive, or do not want to see the diagnostics of these temporary files polluting their 'PROBLEMS' tab. Please note a reload of VS Code might be required after activating or deactivating this setting for the full change to take effect.",
+          "default": false
+        },
         "bitbake.buildConfigurations": {
           "type": "array",
           "description": "Array of alternative configurations for starting bitbake. It can be useful to handle multiple build folders for multiple targets (MACHINE configurations). If an option is not defined, the value from the main configuration will be used.",

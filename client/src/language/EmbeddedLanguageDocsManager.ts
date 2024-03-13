@@ -25,6 +25,7 @@ export interface EmbeddedLanguageDocInfos {
   characterIndexes: number[]
 }
 export default class EmbeddedLanguageDocsManager {
+  isDisabled = false
   private readonly embeddedLanguageDocsInfosMap = new Map<string, EmbeddedLanguageDocInfos>() // map of the embedded document name with its infos
   private _storagePath: string | undefined
   private readonly filesWaitingToUpdate = new Map<string, EmbeddedLanguageDoc>()
@@ -38,6 +39,22 @@ export default class EmbeddedLanguageDocsManager {
       return
     }
     return path.join(this._storagePath, EMBEDDED_DOCUMENTS_FOLDER)
+  }
+
+  constructor () {
+    // The class is wrapped into a Proxy to easily disable all methods when the manager is disabled
+    return new Proxy(this, {
+      get (target: EmbeddedLanguageDocsManager, prop, receiver) {
+        const originalProperty = Reflect.get(target, prop, receiver)
+        if (target.isDisabled && typeof originalProperty === 'function') {
+          // Note this works because all methods return either void or undefined
+          return () => {
+            logger.debug(`[EmbeddedLanguageDocsManager] Method ${String(prop)} is disabled`)
+          }
+        }
+        return originalProperty
+      }
+    })
   }
 
   async setStoragePath (newStoragePath: string | undefined): Promise<void> {
@@ -156,7 +173,7 @@ export default class EmbeddedLanguageDocsManager {
     this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc, uri)
   }
 
-  async saveEmbeddedLanguageDoc (
+  private async saveEmbeddedLanguageDoc (
     embeddedLanguageDoc: EmbeddedLanguageDoc
   ): Promise<void> {
     logger.debug(`Save embedded document (${embeddedLanguageDoc.language}) for ${embeddedLanguageDoc.originalUri}`)
