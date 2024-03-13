@@ -426,6 +426,18 @@
         "description": "This command runs bitbake in parse-only mode."
       },
       {
+        "command": "bitbake.start-toaster-webview",
+        "title": "BitBake: Start Toaster Webview",
+        "description": "Start the Toaster web interface in a new window or reveal the existing one.",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "bitbake.stop-toaster-webview",
+        "title": "BitBake: Stop Toaster Webview",
+        "description": "Close the Toaster web interface and stop the toaster.",
+        "icon": "$(stop-circle)"
+      },
+      {
         "command": "bitbake.devtool-modify",
         "title": "BitBake: Devtool: Modify recipe",
         "description": "Open a new devtool workspace to modify a recipe's sources.",
@@ -619,7 +631,12 @@
       "editor/context": [
         {
           "submenu": "bitbake/main",
-          "group": "bitbake",
+          "group": "bitbake@0",
+          "when": "editorLangId == bitbake"
+        },
+        {
+          "command": "bitbake.start-toaster-webview",
+          "group": "bitbake@1",
           "when": "editorLangId == bitbake"
         }
       ],

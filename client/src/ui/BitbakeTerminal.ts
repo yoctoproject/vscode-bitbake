@@ -26,7 +26,7 @@ export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDri
   return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
 }
 
-const bitbakeTerminals: BitbakeTerminal[] = []
+export const bitbakeTerminals: BitbakeTerminal[] = []
 async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<IPty> {
   let terminal: BitbakeTerminal | undefined
   for (const t of bitbakeTerminals) {
@@ -175,7 +175,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 }
 
-class BitbakeTerminal {
+export class BitbakeTerminal {
   readonly terminal: vscode.Terminal
   readonly pty: BitbakePseudoTerminal
 

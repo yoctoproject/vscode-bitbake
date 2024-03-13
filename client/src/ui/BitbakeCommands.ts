@@ -29,6 +29,7 @@ import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { getVariableValue } from '../language/languageClient'
+import { ToasterPanel } from './ToasterWebview'
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -47,6 +48,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.start-toaster-webview', async () => { ToasterPanel.createOrShow() }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.stop-toaster-webview', async () => { ToasterPanel.stop() }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
