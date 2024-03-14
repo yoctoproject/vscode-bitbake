@@ -3,6 +3,8 @@ python() {
     print(foo)
 }
 
+foo = ''
+
 do_foo() {
     foo=''
     echo "${foo}"
