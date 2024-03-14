@@ -44,7 +44,7 @@ suite('Bitbake References Test Suite', () => {
     })
   }
 
-  test('References appear properly in Python on oe', async () => {
+  test('References appear properly in Python on variable', async () => {
     const position = new vscode.Position(1, 5)
     const referenceRanges = [
       new vscode.Range(1, 4, 1, 7),
