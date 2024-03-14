@@ -24,7 +24,7 @@ import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
-import { scanContainsData } from './lib/src/types/BitbakeScanResult'
+import { type BitbakeScanResult, scanContainsData } from './lib/src/types/BitbakeScanResult'
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
 
@@ -224,7 +224,23 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   logger.info('Congratulations, your extension "BitBake" is now active!')
 
-  void vscode.commands.executeCommand('bitbake.rescan-project')
+  // Update the scan result stored in the global state
+  bitBakeProjectScanner.onChange.on('scanReady', (bitbakeScanResult: BitbakeScanResult) => {
+    void context.workspaceState.update('bitbake.ScanResult', bitbakeScanResult).then(() => {
+      logger.debug('BitBake scan result saved to global state')
+    })
+  })
+
+  const lastBitbakeScanResult: BitbakeScanResult | undefined = context.workspaceState.get('bitbake.ScanResult')
+
+  if (lastBitbakeScanResult === undefined) {
+    logger.debug('No previous scan result found, rescanning the project')
+    void vscode.commands.executeCommand('bitbake.rescan-project')
+  } else {
+    logger.debug('Loading previous scan result')
+    bitBakeProjectScanner.onChange.emit('scanReady', lastBitbakeScanResult)
+    void client.sendNotification('bitbake/scanReady', lastBitbakeScanResult)
+  }
 }
 
 export function deactivate (): Thenable<void> | undefined {
