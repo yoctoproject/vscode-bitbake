@@ -50,6 +50,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.start-toaster-webview', async () => { ToasterPanel.createOrShow() }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.stop-toaster-webview', async () => { ToasterPanel.stop() }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await ToasterPanel.startToasterInBrowser() }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(

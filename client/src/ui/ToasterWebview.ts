@@ -46,6 +46,16 @@ export class ToasterPanel {
     ToasterPanel.currentPanel = new ToasterPanel(panel)
   }
 
+  public static async startToasterInBrowser (): Promise<void> {
+    await ToasterPanel.runToasterCommand('source toaster start', true)
+    const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
+    await vscode.env.openExternal(vscode.Uri.parse(url)).then(success => {
+      if (!success) {
+        void vscode.window.showErrorMessage(`Failed to open URL ${url}`)
+      }
+    })
+  }
+
   // Close the webview and stop the toaster
   public static stop (): void {
     ToasterPanel.currentPanel?.dispose()

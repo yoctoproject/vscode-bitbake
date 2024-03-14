@@ -432,6 +432,12 @@
         "icon": "$(play-circle)"
       },
       {
+        "command": "bitbake.start-toaster-in-browser",
+        "title": "BitBake: Start toaster in browser",
+        "description": "Start the toaster and reveal it in the browser.",
+        "icon": "$(preview)"
+      },
+      {
         "command": "bitbake.stop-toaster-webview",
         "title": "BitBake: Stop Toaster Webview",
         "description": "Close the Toaster web interface and stop the toaster.",
@@ -637,6 +643,11 @@
         {
           "command": "bitbake.start-toaster-webview",
           "group": "bitbake@1",
+          "when": "editorLangId == bitbake"
+        },
+        {
+          "command": "bitbake.start-toaster-in-browser",
+          "group": "bitbake@2",
           "when": "editorLangId == bitbake"
         }
       ],
