@@ -36,6 +36,7 @@ suite('Bitbake References Test Suite', () => {
       )
       return referencesResult.length > 0
     }, 5000)
+    console.log('sfl-debug', referencesResult)
     assert.equal(referencesResult.length === referenceRanges.length, true)
     referencesResult.forEach((reference, index) => {
       assert.equal(reference.uri.fsPath.includes('workspaceStorage'), false)
