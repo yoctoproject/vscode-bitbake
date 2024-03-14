@@ -54,10 +54,11 @@ suite('Bitbake References Test Suite', () => {
   }).timeout(300000)
 
   test('References appear properly in Bash on variable', async () => {
-    const position = new vscode.Position(7, 13)
+    const position = new vscode.Position(9, 13)
     const referenceRanges = [
-      new vscode.Range(6, 4, 6, 7),
-      new vscode.Range(7, 12, 7, 15)
+      new vscode.Range(5, 0, 5, 3),
+      new vscode.Range(8, 4, 8, 7),
+      new vscode.Range(9, 12, 9, 15)
     ]
     await testReferences(position, referenceRanges)
   }).timeout(300000)
