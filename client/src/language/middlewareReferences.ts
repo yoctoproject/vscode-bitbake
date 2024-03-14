@@ -8,19 +8,17 @@ import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './Em
 import { requestsManager } from './RequestManager'
 import { type Location, commands, workspace, type TextDocument } from 'vscode'
 import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils/embeddedLanguagesUtils'
+import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 
 export const middlewareProvideReferences: ReferencesMiddleware['provideReferences'] = async (document, position, options, token, next) => {
-  const nextResult = await next(document, position, options, token)
-  if (nextResult !== undefined && nextResult !== null) {
-    return nextResult
-  }
+  const nextResult = await next(document, position, options, token) ?? []
   const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
-    return
+    return nextResult
   }
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
-    return
+    return nextResult
   }
   const embeddedLanguageTextDocument = await workspace.openTextDocument(embeddedLanguageDocInfos.uri)
   const adjustedPosition = getEmbeddedLanguageDocPosition(
@@ -29,13 +27,22 @@ export const middlewareProvideReferences: ReferencesMiddleware['provideReference
     embeddedLanguageDocInfos.characterIndexes,
     position
   )
-  const tempResult = await commands.executeCommand<Location[]>(
+  const dirtyForwardedResults = await commands.executeCommand<Location[]>(
     'vscode.executeReferenceProvider',
     embeddedLanguageDocInfos.uri,
     adjustedPosition
   )
 
-  return processReferences(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
+  const forwardedResults = processReferences(dirtyForwardedResults, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
+
+  const result = mergeArraysDistinctly(
+    // There can't be two different references with the same "start" position
+    (location) => `${location.uri.toString()}${location.range.start.line}${location.range.start.character}`,
+    nextResult,
+    forwardedResults
+  )
+
+  return result
 }
 
 const processReferences = (
