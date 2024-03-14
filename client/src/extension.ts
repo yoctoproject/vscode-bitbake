@@ -33,7 +33,6 @@ const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
 const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
-export let bitbakeExtensionContext: vscode.ExtensionContext
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 let bitbakeRecipesView: BitbakeRecipesView | undefined
 let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
@@ -124,7 +123,6 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   loadLoggerSettings()
   loadEmbeddedLanguageDocsManagerSettings()
-  bitbakeExtensionContext = context
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
