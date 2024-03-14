@@ -108,7 +108,7 @@ export class BitBakeProjectScanner {
         void this._languageClient?.sendNotification('bitbake/scanReady', this._bitbakeScanResult)
         this.onChange.emit('scanReady', this._bitbakeScanResult)
       } catch (error) {
-        logger.error(`scanning of project is abborted: ${error as any}`)
+        logger.error(`scanning of project is aborted: ${error as any}`)
         this.onChange.emit('scanReady', this._bitbakeScanResult)
       }
 
