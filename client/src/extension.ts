@@ -238,6 +238,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     void vscode.commands.executeCommand('bitbake.rescan-project')
   } else {
     logger.debug('Loading previous scan result')
+    bitBakeProjectScanner.scanResult = lastBitbakeScanResult
     bitBakeProjectScanner.onChange.emit('scanReady', lastBitbakeScanResult)
     void client.sendNotification('bitbake/scanReady', lastBitbakeScanResult)
   }
