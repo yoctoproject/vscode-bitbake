@@ -9,19 +9,25 @@ import { type EmbeddedLanguageType } from './embedded-languages'
 export enum RequestType {
   EmbeddedLanguageTypeOnPosition = 'EmbeddedLanguageTypeOnPosition',
   getLinksInDocument = 'getLinksInDocument',
-  ProcessRecipeScanResults = 'ProcessRecipeScanResults'
+  ProcessRecipeScanResults = 'ProcessRecipeScanResults',
+  GetVar = 'getVar',
+  GetAllVar = 'getAllVar'
 }
 
 export const RequestMethod: Record<RequestType, string> = {
   [RequestType.EmbeddedLanguageTypeOnPosition]: 'bitbake/requestEmbeddedLanguageDocInfos',
   [RequestType.getLinksInDocument]: 'bitbake/getLinksInDocument',
-  [RequestType.ProcessRecipeScanResults]: 'bitbake/ProcessRecipeScanResults'
+  [RequestType.ProcessRecipeScanResults]: 'bitbake/ProcessRecipeScanResults',
+  [RequestType.GetVar]: 'bitbake/getVar',
+  [RequestType.GetAllVar]: 'bitbake/getAllVar'
 }
 
 export interface RequestParams {
   [RequestType.EmbeddedLanguageTypeOnPosition]: { uriString: string, position: Position }
   [RequestType.getLinksInDocument]: { documentUri: string }
   [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any, chosenRecipe: string }
+  [RequestType.GetVar]: { variable: string, recipe: string }
+  [RequestType.GetAllVar]: { recipe: string }
 }
 
 export interface RequestResult {
