@@ -45,7 +45,7 @@ function loadLoggerSettings (): void {
 }
 
 function loadEmbeddedLanguageDocsManagerSettings (): void {
-  const isDisabled = vscode.workspace.getConfiguration('bitbake').get('disableTemporaryFiles')
+  const isDisabled = vscode.workspace.getConfiguration('bitbake').get('disableEmbeddedLanguagesFiles')
   logger.info(`Disable embedded language features ${isDisabled as any}`)
   if (typeof isDisabled === 'boolean') {
     embeddedLanguageDocsManager.isDisabled = isDisabled
@@ -188,7 +188,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       loadLoggerSettings()
     }
-    if (event.affectsConfiguration('bitbake.disableTemporaryFiles')) {
+    if (event.affectsConfiguration('bitbake.disableEmbeddedLanguagesFiles')) {
       loadEmbeddedLanguageDocsManagerSettings()
     }
   }))
