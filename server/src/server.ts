@@ -138,12 +138,12 @@ connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestPara
   analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
 })
 
-connection.onRequest('bitbake/getVar', async (params: { variable: string, recipe: string }) => {
+connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
   const scanResult = analyzer.getLastScanResult(params.recipe)
   return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
 })
 
-connection.onRequest('bitbake/getAllVar', async (params: { recipe: string }) => {
+connection.onRequest(RequestMethod.getAllVar, async (params: RequestParams['getAllVar']) => {
   const scanResult = analyzer.getLastScanResult(params.recipe)
   return scanResult?.symbols.map(symbolInfo => ({ name: symbolInfo.name, value: symbolInfo.finalValue }))
 })

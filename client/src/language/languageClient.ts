@@ -34,6 +34,7 @@ import { BitbakeCodeActionProvider } from './codeActionProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import * as vscode from 'vscode'
 import { middlewareProvideReferences } from './middlewareReferences'
+import { RequestMethod } from '../lib/src/types/requests'
 
 export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'src', 'server.js'))
@@ -192,7 +193,7 @@ export async function getVariableValue (
   variable: string, recipe: string,
   canTriggerScan: boolean = false
 ): Promise<string | undefined> {
-  return await getScanResult(client, 'bitbake/getVar', { variable, recipe }, canTriggerScan)
+  return await getScanResult(client, RequestMethod.getVar, { variable, recipe }, canTriggerScan)
 }
 
 export async function getAllVariableValues (
@@ -200,5 +201,5 @@ export async function getAllVariableValues (
   recipe: string,
   canTriggerScan: boolean = false
 ): Promise<Array<{ name: string, value: string }> | undefined> {
-  return await getScanResult(client, 'bitbake/getAllVar', { recipe }, canTriggerScan)
+  return await getScanResult(client, RequestMethod.getAllVar, { recipe }, canTriggerScan)
 }
