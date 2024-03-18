@@ -7,14 +7,14 @@ Errors and warnings appear twice in the "PROBLEMS" tab. They first appear for th
 
 Unfortunately, the VS Code API does not offer a way to programmatically filter the "PROBLEMS" tab. However, manual filtering is still possible. Typing `!workspaceStorage` or `!workspaceStorage/**/yocto-project.yocto-bitbake/embedded-documents` (if more precision is needed) should filter out all these unwanted problems.
 
-If this problem gets to annoying, consider activating the `bitbake.disableTemporaryFiles` setting.
+If this problem gets too annoying, consider activating the `bitbake.disableEmbeddedLanguagesFiles` setting.
 
 ### Tabs from Unknown Files Open and Close Quickly
 While typing, tabs with hash names (ex. 9dab97ca1ef2b71ea07d42d4609e9e54.sh) might occasionally open in the tabs bar and then close shortly thereafter.  This occurs as a result of our method for handling diagnostics (errors and warnings). See [Trade-offs on Diagnostics](TROUBLESHOOTING.md#trade-offs-on-diagnostics).
 
 We haven't found a way to prevent these tabs from opening, but we try to close them as quickly as possible.
 
-If this problem gets to annoying, consider activating the `bitbake.disableTemporaryFiles` setting.
+If this problem gets too annoying, consider activating the `bitbake.disableEmbeddedLanguagesFiles` setting.
 
 ### BrokenPipeError on BitBake commands
 
