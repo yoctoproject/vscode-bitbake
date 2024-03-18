@@ -227,14 +227,14 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   // Update the scan result stored in the global state
   bitBakeProjectScanner.onChange.on('scanReady', (bitbakeScanResult: BitbakeScanResult) => {
     void context.workspaceState.update('bitbake.ScanResult', bitbakeScanResult).then(() => {
-      logger.debug('BitBake scan result saved to global state')
+      logger.debug('BitBake scan result saved to workspace state')
     })
   })
 
   const lastBitbakeScanResult: BitbakeScanResult | undefined = context.workspaceState.get('bitbake.ScanResult')
 
   if (lastBitbakeScanResult === undefined) {
-    logger.debug('No previous scan result found, rescanning the project')
+    logger.debug('No previous scan result found, scanning the project')
     void vscode.commands.executeCommand('bitbake.rescan-project')
   } else {
     logger.debug('Loading previous scan result')
