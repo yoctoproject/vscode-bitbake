@@ -84,16 +84,19 @@ user settings.
 ```json
 {
     "files.watcherExclude": {
-        "**/build/**": true
+        "**/build": true
     },
     "search.exclude": {
-        "**/build/**": true
+        "**/build": true
     },
     "C_Cpp.files.exclude": {
         "**/build": true
     },
     "python.analysis.exclude": [
-        "**/build/**"
+        "**/build"
+    ],
+    "git.repositoryScanIgnoredFolders": [
+        "**/build"
     ]
 }
 ```
