@@ -15,7 +15,8 @@ import {
   ProposedFeatures,
   TextDocumentSyncKind,
   type InitializeParams,
-  type TextDocumentChangeEvent
+  type TextDocumentChangeEvent,
+  SemanticTokensRequest
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
@@ -122,9 +123,9 @@ connection.onRequest(
     return getEmbeddedLanguageTypeOnPosition(uriString, position)
   }
 )
-// This request method 'textDocument/semanticTokens' will be sent when semanticTokensProvider capability is enabled
-connection.onRequest('textDocument/semanticTokens/full', ({ textDocument }) => {
-  logger.debug(`[OnRequest] <textDocument/semanticTokens/full> Document uri: ${textDocument.uri}`)
+// Reference: https://github.com/microsoft/vscode-languageserver-node/blob/ed3cd0f78c1495913bda7318ace2be7f968008af/protocol/src/common/protocol.semanticTokens.ts#L61
+connection.onRequest(SemanticTokensRequest.method, ({ textDocument }) => {
+  logger.debug(`[OnRequest] <${SemanticTokensRequest.method}> Document uri: ${textDocument.uri}`)
   return getSemanticTokens(textDocument.uri)
 })
 
