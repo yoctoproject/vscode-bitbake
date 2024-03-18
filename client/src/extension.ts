@@ -63,7 +63,8 @@ function updatePythonPath (): void {
   const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
   const pathToPokyMetaLib = path.join(pathToBitbakeFolder, '../meta/lib') // We assume BitBake is into Poky
   for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
-    const extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
+    let extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
+    if (!Object.isExtensible(extraPaths)) extraPaths = []
     for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib]) {
       if (!extraPaths.includes(pathToAdd)) {
         extraPaths.push(pathToAdd)
