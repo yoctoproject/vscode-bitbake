@@ -1,7 +1,7 @@
 {
   "name": "language-server-bitbake",
   "description": "Implementation of a language server for bitbake.",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "author": "Eugen Wiens",
   "contributors": [
     "Savoir-faire Linux"
