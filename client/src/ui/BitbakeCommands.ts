@@ -47,6 +47,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }))
   context.subscriptions.push(vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await startToasterInBrowser(bitBakeProjectScanner.bitbakeDriver) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }))
 
   // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
@@ -186,6 +188,25 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
       `Bitbake: Task: ${chosenTask}: ${chosenRecipe}`)
     }
   }
+}
+
+async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<void> {
+  const DEFAULT_TOASTER_PORT = 8000
+  const command = 'nohup bash -c "source toaster start"'
+  const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
+  process.onExit(() => {
+    const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
+    void vscode.env.openExternal(vscode.Uri.parse(url)).then(success => {
+      if (!success) {
+        void vscode.window.showErrorMessage(`Failed to open URL ${url}`)
+      }
+    })
+  })
+}
+
+async function stopToaster (bitbakeDriver: BitbakeDriver): Promise<void> {
+  const command = 'source toaster stop'
+  await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
 }
 
 async function selectTask (client: LanguageClient, recipe: string): Promise<string | undefined> {
