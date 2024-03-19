@@ -1,3 +1,21 @@
+# 2.3.0 - 2024.03.19
+
+ - Added limited support for MacOS and Web
+ - Enabled language server compatibility with other IDEs (thanks @Freed-Wu)
+    - The language server can now be fetched from npm
+    - It can run autonomously, without the need for the extension
+    - It has been tested to provided documentation hover and completion in CoC.nvim
+ - Added an option to disable embedded languages files
+ - Added a command to spawn a devshell terminal
+ - Added a basic C++ configuration when using the devtool SDK fallback
+ - Added Ctrl+C support to kill bitbake terminals
+ - Improved recipe scan detection accuracy and performance
+ - Improve code completion after a recipe scan
+ - Improve bash embedded languages diagnostics, completion and hover
+ - Forward references for embedded languages
+ - Store project scan results in a cache to improve performance on reopen
+ - Various bug fixes and improvements
+
 # 2.2.0 - 2024.02.27
 
  - Add a new buildConfigurations settings array and status bar to manage multiple build configurations
