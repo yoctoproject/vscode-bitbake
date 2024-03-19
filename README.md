@@ -92,6 +92,7 @@ Publishing is automated via GitHub Actions and reserved to project maintainers. 
  - Update all the `package.json` files with the new version number `X.Y.Z`.
  - Document new changes in the `client/CHANGELOG.md` file.
  - Make sure the `VSCE_PAT` secret is valid in the [GitHub repository settings](https://github.com/yoctoproject/vscode-bitbake/settings/secrets/actions).
+ - Make sure the `NODE_AUTH_TOKEN` secret is valid in the [GitHub repository settings](https://github.com/yoctoproject/vscode-bitbake/settings/secrets/actions).
  - Update the main branch with the latest staging branch.
  - Create a [new release on GitHub](https://github.com/yoctoproject/vscode-bitbake/releases/new) with a tag in the format `vX.Y.Z`.
  - Admin approval is required to run the GitHub Action.
@@ -99,6 +100,8 @@ Publishing is automated via GitHub Actions and reserved to project maintainers. 
 The release will be published to the VS Code Marketplace automatically by the GitHub Action. Admin approval is required to run the GitHub Action, and the `VSCE_PAT` must be updated to match a valid token for the `yocto-project` Azure DevOps publisher. See:
  - https://code.visualstudio.com/api/working-with-extensions/publishing-extension
  - https://code.visualstudio.com/api/working-with-extensions/continuous-integration
+The `NODE_AUTH_TOKEN` secret is used to push the language server package to the npm registry. The token must be linked to account with push permission on:
+ - https://www.npmjs.com/package/language-server-bitbake
 
 ## Contributing
 
