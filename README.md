@@ -92,6 +92,7 @@ Publishing is automated via GitHub Actions and reserved to project maintainers. 
  - Update all the `package.json` files with the new version number `X.Y.Z`.
  - Document new changes in the `client/CHANGELOG.md` file.
  - Make sure the `VSCE_PAT` secret is valid in the [GitHub repository settings](https://github.com/yoctoproject/vscode-bitbake/settings/secrets/actions).
+ - Update the main branch with the latest staging branch.
  - Create a [new release on GitHub](https://github.com/yoctoproject/vscode-bitbake/releases/new) with a tag in the format `vX.Y.Z`.
  - Admin approval is required to run the GitHub Action.
 
