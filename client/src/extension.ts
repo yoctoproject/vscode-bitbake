@@ -65,7 +65,7 @@ function updatePythonPath (): void {
   for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
     const extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
     for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib]) {
-      if (!extraPaths.includes(pathToAdd)) {
+      if (!extraPaths.includes(pathToAdd) && Object.isExtensible(extraPaths)) {
         extraPaths.push(pathToAdd)
       }
       void pythonConfig.update(pythonSubConf, extraPaths, vscode.ConfigurationTarget.Workspace)
