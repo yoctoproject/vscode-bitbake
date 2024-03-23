@@ -60,9 +60,6 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     // Register the server for bitbake documents
     // TODO: check new documentSelector
     documentSelector: [{ scheme: 'file', language: 'bitbake' }],
-    initializationOptions: {
-      extensionPath: context.extensionPath
-    },
     middleware: {
       provideCompletionItem: middlewareProvideCompletion,
       provideDefinition: middlewareProvideDefinition,
