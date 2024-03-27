@@ -95,6 +95,8 @@ export class BitbakeStatusBar {
       let displayText = 'Building...'
       if (this.commandInProgress.includes('devtool')) displayText = 'Devtool...'
       if (this.commandInProgress.includes('which devtool')) displayText = 'Scanning...'
+      if (this.commandInProgress.includes('toaster start')) displayText = 'Starting...'
+      if (this.commandInProgress.includes('toaster stop')) displayText = 'Stopping...'
       this.statusBarItem.text = '$(loading~spin) BitBake: ' + displayText
       this.statusBarItem.tooltip = 'BitBake: ' + displayText
       this.statusBarItem.command = undefined

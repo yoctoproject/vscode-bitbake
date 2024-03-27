@@ -110,6 +110,10 @@ export class BitbakeDriver {
     return script
   }
 
+  composeToasterCommand (command: string): string {
+    return 'source toaster ' + command
+  }
+
   async checkBitbakeSettingsSanity (): Promise<boolean> {
     if (!fs.existsSync(this.bitbakeSettings.pathToBitbakeFolder)) {
       clientNotificationManager.showBitbakeSettingsError('Bitbake folder not found on disk.')
