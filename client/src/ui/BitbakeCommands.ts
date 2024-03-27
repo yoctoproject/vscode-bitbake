@@ -192,7 +192,7 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
 
 async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<void> {
   const DEFAULT_TOASTER_PORT = 8000
-  const command = 'nohup bash -c "source toaster start"'
+  const command = `nohup bash -c "${bitbakeDriver.composeToasterCommand('start')}"`
   const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
   process.onExit(() => {
     const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
@@ -205,7 +205,7 @@ async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<voi
 }
 
 async function stopToaster (bitbakeDriver: BitbakeDriver): Promise<void> {
-  const command = 'source toaster stop'
+  const command = bitbakeDriver.composeToasterCommand('stop')
   await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
 }
 
