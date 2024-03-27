@@ -27,7 +27,7 @@ export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDri
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
-export async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<IPty> {
+async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<IPty> {
   let terminal: BitbakeTerminal | undefined
   for (const t of bitbakeTerminals) {
     if (!t.pty.isBusy()) {
