@@ -431,13 +431,13 @@
       {
         "command": "bitbake.start-toaster-in-browser",
         "title": "BitBake: Start toaster in browser",
-        "description": "Start the toaster and reveal it in the browser.",
+        "description": "Start Toaster and reveal it in the browser.",
         "icon": "$(preview)"
       },
       {
         "command": "bitbake.stop-toaster",
         "title": "BitBake: Stop Toaster",
-        "description": "This stops the toaster by running `source toaster stop`.",
+        "description": "This stops Toaster by running `source toaster stop`.",
         "icon": "$(stop-circle)"
       },
       {
