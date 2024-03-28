@@ -51,6 +51,14 @@ function loadEmbeddedLanguageDocsManagerSettings (): void {
   }
 }
 
+function configureBitBakeFileAssociation (): void {
+  const filesSettings = vscode.workspace.getConfiguration('files')
+  const associations = filesSettings.get<Record<string, string>>('associations') ?? {}
+  associations['*.conf'] = 'bitbake'
+  associations['*.inc'] = 'bitbake'
+  void filesSettings.update('associations', associations, vscode.ConfigurationTarget.Workspace)
+}
+
 function updatePythonPath (): void {
   // Deliberately load the workspace configuration here instead of using
   // bitbakeDriver.bitbakeSettings, because the latter contains resolved
@@ -161,6 +169,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   const provider = new BitbakeDocumentLinkProvider(client)
   const selector = { scheme: 'file', language: 'bitbake' }
   context.subscriptions.push(vscode.languages.registerDocumentLinkProvider(selector, provider))
+
+  configureBitBakeFileAssociation()
 
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
