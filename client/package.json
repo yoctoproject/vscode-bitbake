@@ -45,9 +45,7 @@
         "extensions": [
           ".bb",
           ".bbappend",
-          ".bbclass",
-          ".inc",
-          ".conf"
+          ".bbclass"
         ],
         "configuration": "./language-configuration.json",
         "icon": {
