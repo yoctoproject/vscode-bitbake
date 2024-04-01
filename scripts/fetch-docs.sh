@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 # Tag: yocto-4.3.3
 BITBAKE_DOCS_COMMIT=380a9ac97de5774378ded5e37d40b79b96761a0c
