@@ -584,12 +584,12 @@
           "group": "1@bitbake_dev@3"
         },
         {
-          "command": "bitbake.devtool-modify",
-          "group": "2@bitbake_devtool@0"
+          "command": "bitbake.start-toaster-in-browser",
+          "group": "1@bitbake_dev@4"
         },
         {
-          "command": "bitbake.start-toaster-in-browser",
-          "group": "3@bitbake_devtool@0"
+          "command": "bitbake.devtool-modify",
+          "group": "2@bitbake_devtool@0"
         }
       ],
       "devtool/main": [
