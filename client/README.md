@@ -240,7 +240,7 @@ You may toggle this behaviour through the setting `bitbake.parseOnSave`.
 The extension will receive additional information about the recipe from the `bitbake -e` command and provide more advanced features such as `Go to definition` for symbols with variable expansion (e.g., `require recipe_${PN}.bb`) and showing the final values of variables (values in the command output) on hover.
 
 ### Toaster
-Toaster users may start the toaster through the **main context menu** -> **Bitbake** -> **Start toaster in browser**. It will open the web UI in the default browser. The toaster can also be stopped by the command `Bitbake: Stop Toaster`
+Toaster users may start toaster through the **main context menu** -> **Bitbake** -> **Start toaster in browser**. It will open the web UI in the default browser. Toaster can also be stopped by the command `Bitbake: Stop Toaster`
 
 ## Troubleshooting
 See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
