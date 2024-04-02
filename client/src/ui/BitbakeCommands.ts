@@ -65,7 +65,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
   context.subscriptions.push(
     {
       dispose: async () => {
-        await stopToasterShutdown(bitBakeProjectScanner.bitbakeDriver)
+        await stopToasterOnShutdown(bitBakeProjectScanner.bitbakeDriver)
       }
     }
   )
@@ -234,7 +234,7 @@ async function stopToaster (bitbakeDriver: BitbakeDriver): Promise<void> {
   isToasterStarted = false
 }
 
-export async function stopToasterShutdown (bitbakeDriver: BitbakeDriver): Promise<void> {
+export async function stopToasterOnShutdown (bitbakeDriver: BitbakeDriver): Promise<void> {
   if (!isToasterStarted) {
     return
   }
