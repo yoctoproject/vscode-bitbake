@@ -20,7 +20,7 @@ import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
 import { type DevtoolWorkspaceInfo, type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
-import { type SpawnSyncReturns } from 'child_process'
+import * as child_process from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { bitbakeESDKMode, configureDevtoolSDKFallback, generateCPPProperties } from '../driver/BitbakeESDK'
 import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
@@ -60,6 +60,14 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
         }
       }
     })
+  )
+  // Close Toaster on extension shutdown
+  context.subscriptions.push(
+    {
+      dispose: async () => {
+        await stopToasterShutdown(bitBakeProjectScanner.bitbakeDriver)
+      }
+    }
   )
 }
 
@@ -221,7 +229,20 @@ async function stopToaster (bitbakeDriver: BitbakeDriver): Promise<void> {
     return
   }
   const command = bitbakeDriver.composeToasterCommand('stop')
-  await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
+  const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
+  await finishProcessExecution(process)
+  isToasterStarted = false
+}
+
+export async function stopToasterShutdown (bitbakeDriver: BitbakeDriver): Promise<void> {
+  if (!isToasterStarted) {
+    return
+  }
+  const command = bitbakeDriver.composeToasterCommand('stop')
+  const script = bitbakeDriver.composeBitbakeScript(command)
+  // We can't spawn terminals or ptys when closing the extension, so we use child_process to stop Toaster
+  // Use BitbakeTerminals to spawn commands outside of this context! This is a special shutdown case.
+  child_process.execSync(script, { shell: '/bin/bash' })
   isToasterStarted = false
 }
 
@@ -453,7 +474,7 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   }
 }
 
-async function openDevtoolUpdateBBAppend (res: SpawnSyncReturns<Buffer>, bitBakeProjectScanner: BitBakeProjectScanner): Promise<void> {
+async function openDevtoolUpdateBBAppend (res: child_process.SpawnSyncReturns<Buffer>, bitBakeProjectScanner: BitBakeProjectScanner): Promise<void> {
   const output = res.stdout.toString()
   // Regex to extract path from: NOTE: Writing append file .../meta-poky/recipes-core/busybox/busybox_1.36.1.bbappend
   const regex = /Writing append file ([\w/._-]+)/g
