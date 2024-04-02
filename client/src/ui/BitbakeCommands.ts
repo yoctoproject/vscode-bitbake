@@ -194,7 +194,11 @@ async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<voi
   const DEFAULT_TOASTER_PORT = 8000
   const command = `nohup bash -c "${bitbakeDriver.composeToasterCommand('start')}"`
   const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
-  process.onExit(() => {
+  process.onExit((e) => {
+    if (e.exitCode !== 0) {
+      void vscode.window.showErrorMessage(`Failed to start Toaster with exit code ${e.exitCode}. See terminal output.`)
+      return
+    }
     const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
     void vscode.env.openExternal(vscode.Uri.parse(url)).then(success => {
       if (!success) {
