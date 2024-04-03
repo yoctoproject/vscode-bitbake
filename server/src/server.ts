@@ -59,13 +59,10 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
 
-  // If the language server is not started by VSCode, extensionPath and pathToBitbakeFolder can be undefined
-  // We provide alternatives here to prevent crashes when these variables are used
-  const extensionPath = params.initializationOptions?.extensionPath ?? path.join(__dirname, '..')
   pokyFolder = pokyFolder ?? workspaceFolder
 
-  logger.info('[onInitialize] Setting yocto doc path and parsing doc files')
-  bitBakeDocScanner.setDocPathAndParse(extensionPath)
+  logger.info('[onInitialize] Parsing doc files')
+  bitBakeDocScanner.parseDocs()
 
   const parser = await generateParser()
   analyzer.initialize(parser)
