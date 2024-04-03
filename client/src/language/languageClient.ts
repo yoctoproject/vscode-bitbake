@@ -36,7 +36,7 @@ import * as vscode from 'vscode'
 import { middlewareProvideReferences } from './middlewareReferences'
 
 export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
-  const serverModule = context.asAbsolutePath(path.join('server', 'server.js'))
+  const serverModule = context.asAbsolutePath(path.join('server', 'src', 'server.js'))
   // The debug options for the server
   // Use --inspect-brk instead of --inspect if you want to debug the server startup code
   const debugOptions = { execArgv: ['--nolazy', '--inspect=localhost:6010'] }
