@@ -4,7 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "sourceMap": true,
-    "rootDir": "src",
+    "rootDir": ".",
     "outDir": "../client/server",
     "strict": true,
     "esModuleInterop": true,
@@ -12,6 +12,6 @@
     "forceConsistentCasingInFileNames": true,
 		"composite": true
   },
-  "include": ["src", ".eslintrc.js"],
+  "include": ["src"],
   "exclude": ["node_modules"]
 }
