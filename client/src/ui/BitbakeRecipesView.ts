@@ -124,7 +124,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   private getBitbakeRecipes (): BitbakeRecipeTreeItem[] {
     return this.bitbakeWorkspace.activeRecipes.map((recipe: string) => {
       return new BitbakeRecipeTreeItem(recipe, vscode.TreeItemCollapsibleState.Collapsed)
-    })
+    }).sort((a, b) => a.label.localeCompare(b.label))
   }
 
   private getAddRecipeItem (): BitbakeRecipeTreeItem {
