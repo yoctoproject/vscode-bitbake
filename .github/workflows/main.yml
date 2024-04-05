@@ -62,7 +62,7 @@ jobs:
         path: client/yocto-bitbake*.vsix
 
   # Inspired by https://github.com/microsoft/vscode-platform-specific-sample/blob/a0192a21122dfa5c90934b006f027cdf4e4d892d/.github/workflows/ci.yml#L64C11-L64C11 MIT License
-  publish:
+  publish-vsce:
     runs-on: ubuntu-latest
     environment: VSCE
     needs: build
@@ -72,6 +72,18 @@ jobs:
       - run: npx vsce publish --packagePath $(find . -iname yocto-bitbake*.vsix)
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+  # Instructions on https://github.com/eclipse/openvsx/wiki/Publishing-Extensions
+  publish-open-vsx:
+    runs-on: ubuntu-latest
+    environment: OPEN-VSX
+    needs: build
+    if: success() && startsWith( github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v3
+      - run: npx ovsx publish $(find . -iname yocto-bitbake*.vsix) -p ${VSX_PAT}
+        env:
+          VSX_PAT: ${{ secrets.VSX_PAT }}
 
   build-language-server-standalone:
     runs-on: ubuntu-latest
