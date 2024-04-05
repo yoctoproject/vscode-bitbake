@@ -34,24 +34,23 @@ let parsingPending = false
 let bitbakeSanity = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider, client: LanguageClient): void {
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri, task) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await startToasterInBrowser(bitBakeProjectScanner.bitbakeDriver) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }))
-
-  // Handles enqueued parsing requests (onSave)
   context.subscriptions.push(
+    vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }),
+    vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri, task) }),
+    vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }),
+    vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }),
+    vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }),
+    vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }),
+    vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
+    vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }),
+    vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await startToasterInBrowser(bitBakeProjectScanner.bitbakeDriver) }),
+    vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }),
+    // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {
         if (parsingPending) {
@@ -59,10 +58,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
           void parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider)
         }
       }
-    })
-  )
-  // Close Toaster on extension shutdown
-  context.subscriptions.push(
+    }),
+    // Close Toaster on extension shutdown
     {
       dispose: async () => {
         await stopToasterOnShutdown(bitBakeProjectScanner.bitbakeDriver)
@@ -72,15 +69,16 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
 }
 
 export function registerDevtoolCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient): void {
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-modify', async (uri) => { await devtoolModifyCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-deploy', async (uri) => { await devtoolDeployCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
-  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-clean', async (uri) => { await devtoolCleanCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }))
+  context.subscriptions.push(vscode.commands.registerCommand('bitbake.devtool-modify', async (uri) => { await devtoolModifyCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-deploy', async (uri) => { await devtoolDeployCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-clean', async (uri) => { await devtoolCleanCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) })
+  )
 }
 
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
