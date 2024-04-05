@@ -102,6 +102,8 @@ The release will be published to the VS Code Marketplace automatically by the Gi
  - https://code.visualstudio.com/api/working-with-extensions/continuous-integration
 The `NODE_AUTH_TOKEN` secret is used to push the language server package to the npm registry. The token must be linked to account with push permission on:
  - https://www.npmjs.com/package/language-server-bitbake
+The `VSX_PAT` secret is used for VS Codium / Open-VSX. Instructions:
+ - https://open-vsx.org/extension/yocto-project/yocto-bitbake
 
 ## Contributing
 
