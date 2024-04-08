@@ -781,55 +781,46 @@
           "command": "bitbake.devtool-build",
           "group": "0@devtool_build@0",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-clean",
           "group": "0@devtool_build@1",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-deploy",
           "group": "0@devtool_build@2",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-open-workspace",
           "group": "1@devtool_dev@0",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-ide-sdk",
           "group": "1@devtool_dev@1",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-sdk-fallback",
           "group": "1@devtool_dev@2",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.terminal-profile",
           "group": "1@devtool_dev@3",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-update",
           "group": "1@devtool_finalize@0",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         },
         {
           "command": "bitbake.devtool-reset",
           "group": "1@devtool_finalize@1",
           "when": "viewItem == devtoolWorskpaceCtx"
-
         }
       ]
     },
@@ -851,6 +842,7 @@
   },
   "dependencies": {
     "find": "^0.2.7",
+    "language-server-bitbake": "^2.3.0",
     "node-pty": "^1.0.0",
     "vscode-languageclient": "^8.1.0"
   },
