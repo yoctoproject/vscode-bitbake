@@ -1,3 +1,12 @@
+# 2.4.0 - 2024.03.08
+
+ - Publish on open-vsx/Codium open source alternative
+ - Add commands to start and open Toaster
+ - Stop activating when .conf and .inc files are opened
+   - Instead uses the "files.association" setting
+ - Alphabetically sort recipes in the tree view pannel
+ - Internal refactoring for packaging
+
 # 2.3.0 - 2024.03.19
 
  - Added limited support for MacOS and Web
