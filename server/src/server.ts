@@ -52,7 +52,7 @@ let currentActiveTextDocument: TextDocument = TextDocument.create(
 )
 
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
-  logger.level = 'debug'
+  logger.level = 'error'
   logger.info('[onInitialize] Initializing connection')
   bitBakeProjectScannerClient.setConnection(connection)
   disposables.push(...bitBakeProjectScannerClient.buildHandlers())
