@@ -7,7 +7,7 @@
     "Savoir-faire Linux"
   ],
   "license": "MIT",
-  "bin": "out/server.js",
+  "bin": "out/src/server.js",
   "engines": {
     "node": "*"
   },
@@ -26,7 +26,7 @@
     "web-tree-sitter": "^0.20.8"
   },
   "scripts": {
-    "prepack": "../scripts/fetch-docs.sh && tsc --outDir out",
+    "prepack": "../scripts/fetch-docs.sh && tsc --outDir out && cp -r ./resources ./tree-sitter-bitbake.wasm out/",
     "installServer": "installServerIntoExtension ../client ./package.json ./tsconfig.json && npm run installServerResources",
     "installServerResources": "cp -r ./resources ./tree-sitter-bitbake.wasm ../client/server/"
   },
