@@ -9,10 +9,8 @@ import {
   workspace,
   type ExtensionContext,
   window,
-  commands,
   languages,
-  TabInputText,
-  Uri
+  TabInputText
 } from 'vscode'
 
 import {
@@ -100,18 +98,6 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
           void window.showErrorMessage(`Failed to associate this file (${param.filePath}) with BitBake Language mode. Current language mode: ${languageId}. Please make sure there is no other extension that is causing the conflict. (e.g. Txt Syntax)`)
         }
       }, 1000)
-    }
-  })
-
-  client.onRequest('bitbake/parseAllRecipes', async () => {
-    await commands.executeCommand('bitbake.parse-recipes')
-  })
-
-  client.onRequest('bitbake/scanRecipe', async (param) => {
-    if (typeof param.uri === 'string') {
-      await commands.executeCommand('bitbake.scan-recipe-env', Uri.parse(param.uri))
-    } else {
-      logger.error(`[OnRequest] <bitbake/scanRecipe>: Invalid uri: ${JSON.stringify(param.uri)}`)
     }
   })
 
