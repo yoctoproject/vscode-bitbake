@@ -214,21 +214,49 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     // Re-scaning here would be very cumbersome, the user should do it manually if desired
   }))
 
-  // Check if the document that was just closed was the last one for a recipe
-  context.subscriptions.push(vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
-    const ext = ['.bb', '.bbappend', '.inc']
-    const { fsPath } = document.uri
-    if (ext.includes(path.extname(fsPath))) {
-      const recipeName = extractRecipeName(fsPath)
-      const recipeFile = vscode.window.visibleTextEditors.find((editor) => {
-        return ext.includes(path.extname(editor.document.uri.fsPath)) && extractRecipeName(editor.document.uri.fsPath) === recipeName
-      })
-      if (recipeFile === undefined) {
-        logger.debug(`No files related to the recipe ${recipeName}, sending notification to remove scan results`)
-        void client.sendNotification('bitbake/removeScanResult', { recipeName })
+  context.subscriptions.push(
+    // Check if the document that was just closed was the last one for a recipe
+    vscode.workspace.onDidCloseTextDocument((document: vscode.TextDocument) => {
+      const ext = ['.bb', '.bbappend', '.inc']
+      const { fsPath } = document.uri
+      if (ext.includes(path.extname(fsPath))) {
+        const recipeName = extractRecipeName(fsPath)
+        const recipeFile = vscode.window.visibleTextEditors.find((editor) => {
+          return ext.includes(path.extname(editor.document.uri.fsPath)) && extractRecipeName(editor.document.uri.fsPath) === recipeName
+        })
+        if (recipeFile === undefined) {
+          logger.debug(`No files related to the recipe ${recipeName}, sending notification to remove scan results`)
+          void client.sendNotification('bitbake/removeScanResult', { recipeName })
+        }
       }
-    }
-  }))
+    }),
+    // Run different bitbake commands based on the saved document type
+    vscode.workspace.onDidSaveTextDocument(async (document: vscode.TextDocument) => {
+      if (document.languageId !== 'bitbake') {
+        // Embedded files also trigger this event, but we don't do anything with them
+        return
+      }
+      const parseOnSave = vscode.workspace.getConfiguration('bitbake').get('parseOnSave')
+      if (parseOnSave !== true) {
+        return
+      }
+      const exts = ['.bb', '.bbappend', '.inc']
+      const { fsPath } = document.uri
+
+      if (exts.includes(path.extname(fsPath))) {
+        const foundRecipe = bitBakeProjectScanner.scanResult._recipes.find((recipe) => recipe.name === extractRecipeName(fsPath))
+        if (foundRecipe !== undefined) {
+          logger.debug(`[onDidSave] Running 'bitbake -e' against the saved recipe: ${foundRecipe.name}`)
+          // Note that it pends only one scan at a time. See client/src/driver/BitbakeRecipeScanner.ts.
+          // Saving more than 2 files at the same time could cause the server to miss some of the scans.
+          await vscode.commands.executeCommand('bitbake.scan-recipe-env', document.uri)
+        }
+        return
+      }
+      // saving other files or no recipe is resolved
+      await vscode.commands.executeCommand('bitbake.parse-recipes')
+    })
+  )
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, terminalProvider, client)
   registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner, client)
