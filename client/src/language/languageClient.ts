@@ -89,19 +89,6 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
   const client: LanguageClient = new LanguageClient('bitbake', 'Bitbake Language Server', serverOptions, clientOptions)
   requestsManager.client = client
 
-  client.onRequest('bitbake/verifyConfigurationFileAssociation', async (param) => {
-    if (param.filePath?.endsWith('.conf') === true) {
-      const doc = await workspace.openTextDocument(param.filePath)
-      const { languageId } = doc
-      //  The modifications from other extensions may happen later than this handler, hence the setTimeOut
-      setTimeout(() => {
-        if (languageId !== 'bitbake') {
-          void window.showErrorMessage(`Failed to associate this file (${param.filePath}) with BitBake Language mode. Current language mode: ${languageId}. Please make sure there is no other extension that is causing the conflict. (e.g. Txt Syntax)`)
-        }
-      }, 1000)
-    }
-  })
-
   client.onRequest('bitbake/resolveContainerPath', async (uri) => {
     return await bitBakeProjectScanner.resolveContainerPath(uri, true)
   })
