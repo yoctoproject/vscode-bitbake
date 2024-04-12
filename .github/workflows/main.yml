@@ -59,7 +59,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: vscode-bitbake
-        path: client/yocto-bitbake*.vsix
+        path: ./yocto-bitbake*.vsix
 
   # Inspired by https://github.com/microsoft/vscode-platform-specific-sample/blob/a0192a21122dfa5c90934b006f027cdf4e4d892d/.github/workflows/ci.yml#L64C11-L64C11 MIT License
   publish-vsce:
@@ -93,7 +93,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: npm run clean
-      - run: cd server && npm install
+      - run: npm install && npm run fetch:docs
       - run: cd server && npm pack
       - name: Archive server package
         uses: actions/upload-artifact@v4

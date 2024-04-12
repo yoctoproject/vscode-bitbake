@@ -1,0 +1,13 @@
+__mocks__/
+.github/
+.vscode/
+integration-tests/
+resources/
+scripts/
+**/*.d.ts
+**/__tests__
+test
+src
+**/*.map
+tsconfig.*
+.gitignore

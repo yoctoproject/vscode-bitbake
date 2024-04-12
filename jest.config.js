@@ -10,7 +10,7 @@ module.exports = {
   ],
   modulePathIgnorePatterns: [
     "<rootDir>/.vscode-test",
-    "<rootDir>/client/server",
+    "<rootDir>/server/out",
     "<rootDir>/integration-tests",
     "<rootDir>/client/out"
   ],
