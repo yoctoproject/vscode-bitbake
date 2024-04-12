@@ -1,4 +1,4 @@
-# Language server bitbkae
+# Language server bitbake
 
 Language server for bitbake.
 
