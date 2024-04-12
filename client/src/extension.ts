@@ -250,8 +250,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
           // Note that it pends only one scan at a time. See client/src/driver/BitbakeRecipeScanner.ts.
           // Saving more than 2 files at the same time could cause the server to miss some of the scans.
           await vscode.commands.executeCommand('bitbake.scan-recipe-env', document.uri)
+          return
         }
-        return
       }
       // saving other files or no recipe is resolved
       await vscode.commands.executeCommand('bitbake.parse-recipes')
