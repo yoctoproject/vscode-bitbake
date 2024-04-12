@@ -8,11 +8,12 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/client"
+				"--extensionDevelopmentPath=${workspaceRoot}"
 			],
 			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/client/out/**/*.js",
+				"${workspaceRoot}/server/out/**/*.js"
 			],
 			"preLaunchTask": "watch"
 
@@ -23,12 +24,13 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceRoot}/client",
+				"--extensionDevelopmentPath=${workspaceRoot}",
 				"--extensionDevelopmentKind=web"
 			],
 			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/client/out/**/*.js",
+				"${workspaceRoot}/server/out/**/*.js"
 			],
 			"preLaunchTask": "watch"
 
@@ -40,7 +42,7 @@
 			"port": 6010,
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/client/server/**/*.js",
+				"${workspaceRoot}/server/out/**/*.js",
 			],
 			"preLaunchTask": "watch"
 		},
@@ -52,7 +54,7 @@
 			"sourceMaps": true,
 			"outFiles": [
 				"${workspaceRoot}/client/out/**/*.js",
-				"${workspaceRoot}/client/server/**/*.js"
+				"${workspaceRoot}/server/out/**/*.js"
 			],
 			"preLaunchTask": "compile",
 			"console": "integratedTerminal"
@@ -64,15 +66,15 @@
 			"request": "launch",
 			"runtimeExecutable": "${execPath}",
 			"args": [
-			  "--extensionDevelopmentPath=${workspaceRoot}/client",
+			  "--extensionDevelopmentPath=${workspaceRoot}",
 			  "--extensionTestsPath=${workspaceRoot}/integration-tests/out/index",
 			  "--disable-workspace-trust",
 			  "${workspaceRoot}/integration-tests/project-folder"
 			],
 			"sourceMaps": true,
 			"outFiles": [
-				"${workspaceRoot}/*/out/**/*.js",
-				"${workspaceRoot}/client/server/**/*.js"
+				"${workspaceRoot}/client/out/**/*.js",
+				"${workspaceRoot}/server/out/**/*.js"
 			],
 			"preLaunchTask": "compile",
 		  }
