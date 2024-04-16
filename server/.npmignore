@@ -2,8 +2,9 @@
 !/README.md
 !/package.json
 !/out/
+!/resources/
+!tree-sitter-bitbake.wasm
 *.map
-/out/src/__tests__/
-/out/src/lib/src/__tests__/
+**/__tests__/
 
 *.tsbuildinfo
