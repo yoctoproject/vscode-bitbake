@@ -852,9 +852,11 @@
 		"clean": "npm run clean:lib && npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out integration-tests/project-folder/build* .vscode-test .eslintcache resources coverage ./out",
 		"lint": "eslint . --ext js,ts --cache",
 		"jest": "jest",
-		"test": "npm run jest && npm run test:integration && cd client && npm run test:grammar",
+		"test": "npm run jest && npm run test:integration && npm run test:grammar",
 		"test:integration": "xvfb-run node ./integration-tests/out/runTest.js",
-		"test:watch": "jest --watchAll"
+		"test:watch": "jest --watchAll",
+		"test:grammar": "vscode-tmgrammar-test ./client/test/grammars/test-cases/*.bb",
+		"snap-grammar": "vscode-tmgrammar-snap ./client/test/grammars/snaps/*.bb -u"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",

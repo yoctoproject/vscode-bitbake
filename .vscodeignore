@@ -11,3 +11,5 @@ src
 **/*.map
 tsconfig.*
 .gitignore
+.eslint*
+jest.config.js
