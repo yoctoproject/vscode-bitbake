@@ -842,7 +842,6 @@
 		"fetch:docs": "sh scripts/fetch-docs.sh",
 		"fetch:poky": "sh scripts/fetch-poky.sh",
 		"compile": "tsc -b",
-		"postcompile": "cp -r ./server/resources ./server/tree-sitter-bitbake.wasm ./server/out",
 		"watch": "tsc -b -w && npm run postcompile",
 		"vscode:prepublish": "cd server && npm install --omit=dev && cd ../client && npm install --omit=dev && cd ..",
 		"package": "vsce package",
