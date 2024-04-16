@@ -288,6 +288,11 @@ function getCompletionItemForDirectiveStatementKeyword (keyword: string): Comple
           bitBakeProjectScannerClient.bitbakeScanResult._includes,
           CompletionItemKind.Interface,
           'inc'
+        ),
+        ...convertElementInfoListToCompletionItemList(
+          bitBakeProjectScannerClient.bitbakeScanResult._recipes,
+          CompletionItemKind.Interface,
+          'bb'
         )
       ]
       break
@@ -298,13 +303,15 @@ function getCompletionItemForDirectiveStatementKeyword (keyword: string): Comple
   return completionItem
 }
 
-function convertElementInfoListToCompletionItemList (elementInfoList: ElementInfo[], completionItemKind: CompletionItemKind, fileType: string): CompletionItem[] {
+function convertElementInfoListToCompletionItemList (elementInfoList: ElementInfo[], completionItemKind: CompletionItemKind, fileType: 'bbclass' | 'bb' | 'inc'): CompletionItem[] {
   const completionItems: CompletionItem[] = []
 
   for (const element of elementInfoList) {
     const filePath = getFilePath(element, fileType)
+    const base = element.name + '.' + fileType
     const completionItem: CompletionItem = {
-      label: element.name + (element.path?.ext === '.inc' ? '.inc' : ''),
+      label: fileType === 'bbclass' ? element.name : base,
+      detail: base,
       labelDetails: {
         description: filePath ?? fileType
       },
@@ -332,8 +339,8 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
   return completionItems
 }
 
-function getFilePath (elementInfo: ElementInfo, fileType: string): string | undefined {
-  if (fileType === 'inc') {
+function getFilePath (elementInfo: ElementInfo, fileType: 'bbclass' | 'bb' | 'inc'): string | undefined {
+  if (fileType === 'inc' || fileType === 'bb') {
     const path = elementInfo.path
     if (path === undefined) {
       return undefined
