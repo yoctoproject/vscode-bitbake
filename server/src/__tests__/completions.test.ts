@@ -542,6 +542,23 @@ describe('On Completion', () => {
       }
     }]
 
+    bitBakeProjectScannerClient.bitbakeScanResult._recipes = [{
+      name: 'busybox',
+      path: {
+        root: '/',
+        dir: '/home/projects/poky/meta/recipe-core',
+        base: 'busybox.bb',
+        ext: '.bb',
+        name: 'busybox'
+      },
+      extraInfo: 'layer: core',
+      layerInfo: {
+        name: 'core',
+        path: '/home/projects/poky/meta',
+        priority: 5
+      }
+    }]
+
     analyzer.analyze({
       uri: documentUri,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -623,6 +640,14 @@ describe('On Completion', () => {
             label: 'init-manager-none.inc',
             kind: 8,
             insertText: 'conf/distro/include/init-manager-none.inc'
+          }
+        ),
+        expect.objectContaining(
+          {
+            label: 'busybox.bb',
+            detail: 'busybox.bb',
+            kind: 8,
+            insertText: 'recipe-core/busybox.bb'
           }
         )
       ])

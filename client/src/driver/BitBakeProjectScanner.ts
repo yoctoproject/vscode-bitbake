@@ -343,8 +343,21 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
       const extraInfo = [`layer: ${layerName}`, `version: ${version} `].join('\r\n')
 
+      /**
+       * The output of 'bitbake-layers show-layers' is like this:
+       * layer                 path                                                              priority
+         =================================================================================================
+         core                  /home/projects/poky/meta                                          5
+
+         The output of 'bitbake-layers show-recipes' is like this:
+         acl:
+         meta                 2.3.2
+
+         Here 'meta' is used to refer to the layer instead of 'core'. So in such case we need to compare
+         the basename of the path found in 'show-layers' with the layer name found in this function.
+       */
       const layerInfo = this._bitbakeScanResult._layers.find((layer) => {
-        return layer.name === layerName
+        return layer.name === layerName || path.parse(layer.path).name === layerName
       })
 
       const element: ElementInfo = {
