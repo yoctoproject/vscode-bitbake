@@ -178,7 +178,7 @@ describe('On Completion', () => {
     )
   })
 
-  it("doesn't provide suggestions when it is pure string content", async () => {
+  it("doesn't provide suggestions when it is in a string content that is not allowed to have completion", async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.COMPLETION
@@ -195,6 +195,52 @@ describe('On Completion', () => {
     })
 
     expect(result).toEqual([])
+  })
+
+  it('provides recipe (.bb) suggestions in the string conent of certain variable assignments', async () => {
+    bitBakeProjectScannerClient.bitbakeScanResult._recipes = [{
+      name: 'busybox',
+      path: {
+        root: '/',
+        dir: '/home/projects/poky/meta/recipe-core',
+        base: 'busybox.bb',
+        ext: '.bb',
+        name: 'busybox'
+      },
+      extraInfo: 'layer: core',
+      layerInfo: {
+        name: 'core',
+        path: '/home/projects/poky/meta',
+        priority: 5
+      }
+    }]
+
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 26,
+        character: 20
+      }
+    })
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'busybox.bb',
+            kind: 8,
+            insertText: 'busybox'
+          }
+        )
+      ])
+    )
   })
 
   it("doesn't provide duplicate completion items for local custom variables", async () => {
