@@ -280,6 +280,33 @@ export default class Analyzer {
     return false
   }
 
+  /**
+   * Check if the current position is inside a string content of a variable assignment.
+   * Pass an array of variable names to check if the string content is of any of the variable assignments.
+   */
+  public isStringContentOfVariableAssignment (
+    uri: string,
+    line: number,
+    column: number,
+    variableNames?: string[]
+  ): boolean {
+    const n = this.nodeAtPoint(uri, line, column)
+    if (n?.type !== 'string_content') {
+      return false
+    }
+    if (n?.parent?.parent?.parent?.type !== 'variable_assignment') {
+      return false
+    }
+    if (variableNames !== undefined) {
+      if (n.parent.parent.parent.firstNamedChild?.type === 'identifier') {
+        const name = n.parent.parent.parent.firstNamedChild.text
+        return variableNames.includes(name)
+      }
+      return false
+    }
+    return true
+  }
+
   public isOverride (
     uri: string,
     line: number,

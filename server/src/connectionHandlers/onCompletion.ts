@@ -58,6 +58,17 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 
 function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): CompletionItem[] {
   if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
+    const variablesAllowedForRecipeCompletion = ['RDEPENDS', 'IMAGE_INSTALL', 'DEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RCONFLICTS', 'RREPLACES', 'CORE_IMAGE_EXTRA_INSTALL', 'PACKAGE_INSTALL', 'PACKAGE_INSTALL_ATTEMPTONLY']
+    const isVariableAllowedForRecipeCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForRecipeCompletion)
+
+    if (isVariableAllowedForRecipeCompletion) {
+      return convertElementInfoListToCompletionItemList(
+        bitBakeProjectScannerClient.bitbakeScanResult._recipes,
+        CompletionItemKind.Interface,
+        'bb',
+        true
+      )
+    }
     return []
   }
 
@@ -303,7 +314,7 @@ function getCompletionItemForDirectiveStatementKeyword (keyword: string): Comple
   return completionItem
 }
 
-function convertElementInfoListToCompletionItemList (elementInfoList: ElementInfo[], completionItemKind: CompletionItemKind, fileType: 'bbclass' | 'bb' | 'inc'): CompletionItem[] {
+function convertElementInfoListToCompletionItemList (elementInfoList: ElementInfo[], completionItemKind: CompletionItemKind, fileType: 'bbclass' | 'bb' | 'inc', nameOnly: boolean = false): CompletionItem[] {
   const completionItems: CompletionItem[] = []
 
   for (const element of elementInfoList) {
@@ -315,7 +326,7 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
       labelDetails: {
         description: filePath ?? fileType
       },
-      insertText: filePath ?? element.name,
+      insertText: nameOnly ? element.name : filePath ?? element.name,
       documentation: element.extraInfo,
       data: element,
       kind: completionItemKind
