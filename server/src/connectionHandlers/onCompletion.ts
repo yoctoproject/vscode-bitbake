@@ -321,7 +321,7 @@ function convertElementInfoListToCompletionItemList (elementInfoList: ElementInf
     const filePath = getFilePath(element, fileType)
     const base = element.name + '.' + fileType
     const completionItem: CompletionItem = {
-      label: fileType === 'bbclass' ? element.name : base,
+      label: (nameOnly || fileType === 'bbclass') ? element.name : base,
       detail: base,
       labelDetails: {
         description: filePath ?? fileType
