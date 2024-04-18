@@ -881,7 +881,7 @@
 		"vscode-tmgrammar-test": "^0.1.2"
 	},
 	"vsce": {
-		"baseContentUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/client",
-		"baseImageUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/client"
+		"baseContentUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/",
+		"baseImageUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/"
 	}
 }
