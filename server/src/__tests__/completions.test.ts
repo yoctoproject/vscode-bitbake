@@ -234,7 +234,7 @@ describe('On Completion', () => {
       expect.arrayContaining([
         expect.objectContaining(
           {
-            label: 'busybox.bb',
+            label: 'busybox',
             kind: 8,
             insertText: 'busybox'
           }
