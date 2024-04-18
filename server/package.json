@@ -7,7 +7,7 @@
     "Savoir-faire Linux"
   ],
   "license": "MIT",
-  "bin": "out/src/server.js",
+  "bin": "out/server.js",
   "engines": {
     "node": "*"
   },
