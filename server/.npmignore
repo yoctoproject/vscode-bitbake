@@ -6,5 +6,5 @@
 !tree-sitter-bitbake.wasm
 *.map
 **/__tests__/
-
+**/*.tgz
 *.tsbuildinfo
