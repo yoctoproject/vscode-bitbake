@@ -845,17 +845,19 @@
 		"watch": "tsc -b -w && npm run postcompile",
 		"vscode:prepublish": "cd server && npm install --omit=dev && cd ../client && npm install --omit=dev && cd ..",
 		"package": "vsce package",
-		"clean:server": "rm -fr ./server/node_modules ./client/server ./server/out ./server/resources server/tsconfig.tsbuildinfo server/.vscode-test server/*.tgz",
-		"clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test client/*.vsix",
+		"clean:server": "rm -fr ./server/node_modules ./server/out ./server/resources server/tsconfig.tsbuildinfo server/.vscode-test server/*.tgz",
+		"clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test",
 		"clean:lib": "rm -fr ./lib/node_modules",
-		"clean": "npm run clean:lib && npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out integration-tests/project-folder/build* .vscode-test .eslintcache resources coverage ./out",
+		"clean": "npm run clean:lib && npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out integration-tests/project-folder/build* .vscode-test .eslintcache resources coverage ./out *.vsix",
 		"lint": "eslint . --ext js,ts --cache",
 		"jest": "jest",
 		"test": "npm run jest && npm run test:integration && npm run test:grammar",
 		"test:integration": "xvfb-run node ./integration-tests/out/runTest.js",
 		"test:watch": "jest --watchAll",
 		"test:grammar": "vscode-tmgrammar-test ./client/test/grammars/test-cases/*.bb",
-		"snap-grammar": "vscode-tmgrammar-snap ./client/test/grammars/snaps/*.bb -u"
+		"snap-grammar": "vscode-tmgrammar-snap ./client/test/grammars/snaps/*.bb -u",
+		"dev:vsix": "npm run clean && npm install && npm run fetch:docs && npm run compile && npm run package",
+		"dev:npm": "npm run clean && npm install && npm run fetch:docs && cd server && npm pack"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
