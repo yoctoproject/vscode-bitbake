@@ -25,6 +25,7 @@ import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode } from './BitbakeESDK'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { extractRecipeName, extractRecipeVersion } from '../lib/src/utils/files'
+import { NotificationMethod } from '../lib/src/types/notifications'
 
 interface ScannStatus {
   scanIsRunning: boolean
@@ -114,7 +115,7 @@ export class BitBakeProjectScanner {
         logger.info('scan ready')
         this.printScanStatistic()
 
-        void this._languageClient?.sendNotification('bitbake/scanReady', this._bitbakeScanResult)
+        void this._languageClient?.sendNotification(NotificationMethod.ScanComplete, this._bitbakeScanResult)
         this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
       } catch (error) {
         logger.error(`scanning of project is aborted: ${error as any}`)

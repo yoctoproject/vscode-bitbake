@@ -27,6 +27,7 @@ import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
 import { type BitbakeScanResult, scanContainsData } from './lib/src/types/BitbakeScanResult'
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
+import { NotificationMethod } from './lib/src/types/notifications'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -279,7 +280,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     logger.debug('Loading previous scan result')
     bitBakeProjectScanner.scanResult = lastBitbakeScanResult
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, lastBitbakeScanResult)
-    void client.sendNotification('bitbake/scanReady', lastBitbakeScanResult)
+    void client.sendNotification(NotificationMethod.ScanComplete, lastBitbakeScanResult)
   }
 }
 
