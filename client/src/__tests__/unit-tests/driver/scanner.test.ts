@@ -31,7 +31,7 @@ describe('BitBakeProjectScanner', () => {
       workspaceFolder
     )
     bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
-    bitBakeProjectScanner.onChange.on(('scanReady'), () => {
+    bitBakeProjectScanner.onChange.on((BitBakeProjectScanner.EventType.SCAN_COMPLETE), () => {
       DoneCallback()
     })
     mockVscodeEvents()

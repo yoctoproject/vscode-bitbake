@@ -76,6 +76,6 @@ describe('BitbakeDriver Recipes View', () => {
 
     const bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
     bitbakeRecipesView.registerView(contextMock)
-    bitBakeProjectScanner.onChange.emit('scanReady', scanResult)
+    bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, scanResult)
   })
 })

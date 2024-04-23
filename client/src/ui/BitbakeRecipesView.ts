@@ -4,10 +4,10 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
-import { type BitbakeWorkspace } from './BitbakeWorkspace'
+import { BitbakeWorkspace } from './BitbakeWorkspace'
 import { type ElementInfo, type BitbakeScanResult, type PathInfo, scanContainsData, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
-import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { bitbakeESDKMode } from '../driver/BitbakeESDK'
 
 export class BitbakeRecipesView {
@@ -57,13 +57,13 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     this.bitbakeWorkspace = bitbakeWorkspace
     this.bitbakeProjectScanner = bitbakeProjectScanner
 
-    bitbakeWorkspace.onChange.on('recipeAdded', (recipe: string) => {
+    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_ADDED, (recipe: string) => {
       this._onDidChangeTreeData.fire(undefined)
     })
-    bitbakeWorkspace.onChange.on('recipeDropped', (recipe: string) => {
+    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_DROPPED, (recipe: string) => {
       this._onDidChangeTreeData.fire(undefined)
     })
-    bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
+    bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
       if (this.bitbakeScanResults === undefined || !scanContainsRecipes(this.bitbakeScanResults) || scanContainsRecipes(scanResults)) {
         this.bitbakeScanResults = scanResults

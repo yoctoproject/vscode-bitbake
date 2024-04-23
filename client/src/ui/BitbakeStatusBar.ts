@@ -7,7 +7,7 @@ import * as vscode from 'vscode'
 
 import { type BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 import { type BitbakeCustomExecution } from './BitbakeTaskProvider'
-import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { BitbakeRecipeScanner } from '../driver/BitbakeRecipeScanner'
 
 export class BitbakeStatusBar {
@@ -26,12 +26,12 @@ export class BitbakeStatusBar {
     this.updateStatusBar()
     this.statusBarItem.show()
 
-    this.bitbakeProjectScanner.onChange.on('scanReady', (bitbakeScanResult: BitbakeScanResult) => {
+    this.bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (bitbakeScanResult: BitbakeScanResult) => {
       this.scanInProgress = false
       this.bitbakeScanResults = bitbakeScanResult
       this.updateStatusBar()
     })
-    this.bitbakeProjectScanner.onChange.on('startScan', () => {
+    this.bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.START_SCAN, () => {
       this.scanInProgress = true
       this.updateStatusBar()
     })

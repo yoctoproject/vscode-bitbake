@@ -63,7 +63,7 @@ describe('Devtool Worskapces View', () => {
     mockVscodeEvents()
 
     const devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
-    bitBakeProjectScanner.onChange.emit('scanReady', scanResult)
+    bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, scanResult)
     devtoolWorkspacesView.registerView(contextMock)
   })
 })
