@@ -275,7 +275,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.info('Congratulations, your extension "BitBake" is now active!')
 
   // Update the scan result stored in the global state
-  bitBakeProjectScanner.onChange.on('scanReady', (bitbakeScanResult: BitbakeScanResult) => {
+  bitBakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (bitbakeScanResult: BitbakeScanResult) => {
     void context.workspaceState.update('bitbake.ScanResult', bitbakeScanResult).then(() => {
       logger.debug('BitBake scan result saved to workspace state')
     })
@@ -289,7 +289,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   } else {
     logger.debug('Loading previous scan result')
     bitBakeProjectScanner.scanResult = lastBitbakeScanResult
-    bitBakeProjectScanner.onChange.emit('scanReady', lastBitbakeScanResult)
+    bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, lastBitbakeScanResult)
     void client.sendNotification('bitbake/scanReady', lastBitbakeScanResult)
   }
 }

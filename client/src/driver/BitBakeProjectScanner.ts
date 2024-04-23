@@ -35,6 +35,11 @@ interface ScannStatus {
  * BitBakeProjectScanner
  */
 export class BitBakeProjectScanner {
+  public static readonly EventType = {
+    SCAN_COMPLETE: 'scanComplete',
+    START_SCAN: 'startScan'
+  }
+
   private readonly _classFileExtension: string = 'bbclass'
   private readonly _includeFileExtension: string = 'inc'
   private readonly _recipesFileExtension: string = 'bb'
@@ -82,7 +87,7 @@ export class BitBakeProjectScanner {
   async rescanDevtoolWorkspaces (): Promise<void> {
     logger.info('request rescanDevtoolWorkspaces')
     await this.scanDevtoolWorkspaces()
-    this.onChange.emit('scanReady', this._bitbakeScanResult)
+    this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
   }
 
   async rescanProject (): Promise<void> {
@@ -91,7 +96,7 @@ export class BitBakeProjectScanner {
     if (!this._scanStatus.scanIsRunning) {
       this._scanStatus.scanIsRunning = true
       logger.info('start rescanProject')
-      this.onChange.emit('startScan')
+      this.onChange.emit(BitBakeProjectScanner.EventType.START_SCAN)
 
       try {
         if (!bitbakeESDKMode) { // Has been set by sanity checking
@@ -110,10 +115,10 @@ export class BitBakeProjectScanner {
         this.printScanStatistic()
 
         void this._languageClient?.sendNotification('bitbake/scanReady', this._bitbakeScanResult)
-        this.onChange.emit('scanReady', this._bitbakeScanResult)
+        this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
       } catch (error) {
         logger.error(`scanning of project is aborted: ${error as any}`)
-        this.onChange.emit('scanReady', this._bitbakeScanResult)
+        this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
       }
 
       this._scanStatus.scanIsRunning = false

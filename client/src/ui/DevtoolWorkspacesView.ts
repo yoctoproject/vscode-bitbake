@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode'
 import { scanContainsData, type BitbakeScanResult, type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
-import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 
 export class DevtoolWorkspacesView {
   private readonly devtoolTreeProvider: DevtoolTreeDataProvider
@@ -27,7 +27,7 @@ class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspac
   private bitbakeScanResults: BitbakeScanResult | undefined
 
   constructor (bitbakeProjectScanner: BitBakeProjectScanner) {
-    bitbakeProjectScanner.onChange.on('scanReady', (scanResults: BitbakeScanResult) => {
+    bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
       if (this.bitbakeScanResults === undefined || !scanContainsData(this.bitbakeScanResults) || scanContainsData(scanResults)) {
         this.bitbakeScanResults = scanResults
