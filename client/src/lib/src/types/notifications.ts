@@ -7,12 +7,14 @@ import { type EmbeddedLanguageDoc } from './embedded-languages'
 
 enum NotificationType {
   EmbeddedLanguageDocs = 'EmbeddedLanguageDocs',
-  RemoveScanResult = 'RemoveScanResult'
+  RemoveScanResult = 'RemoveScanResult',
+  ScanComplete = 'ScanComplete'
 }
 
 export const NotificationMethod: Record<NotificationType, string> = {
   [NotificationType.EmbeddedLanguageDocs]: 'bitbake/EmbeddedLanguageDocs',
-  [NotificationType.RemoveScanResult]: 'bitbake/removeScanResult'
+  [NotificationType.RemoveScanResult]: 'bitbake/removeScanResult',
+  [NotificationType.ScanComplete]: 'bitbake/ScanComplete'
 }
 
 export interface NotificationParams {

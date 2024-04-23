@@ -144,7 +144,7 @@ connection.onNotification(NotificationMethod.RemoveScanResult, (param: Notificat
   analyzer.removeLastScanResultForRecipe(param.recipeName)
 })
 
-connection.onNotification('bitbake/scanReady', (scanResults: BitbakeScanResult) => {
+connection.onNotification(NotificationMethod.ScanComplete, (scanResults: BitbakeScanResult) => {
   bitBakeProjectScannerClient.setScanResults(scanResults)
 
   logger.debug('Analyzing the current document again...')
