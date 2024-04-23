@@ -265,22 +265,30 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.info('Congratulations, your extension "BitBake" is now active!')
 
   // Update the scan result stored in the global state
-  bitBakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (bitbakeScanResult: BitbakeScanResult) => {
-    void context.workspaceState.update('bitbake.ScanResult', bitbakeScanResult).then(() => {
+  bitBakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResult: BitbakeScanResult) => {
+    void context.workspaceState.update('bitbake.ScanResult', scanResult).then(() => {
       logger.debug('BitBake scan result saved to workspace state')
+    })
+    void context.workspaceState.update('bitbake.ScanResultVersion', bitBakeProjectScanner.scanResultVersion).then(() => {
+      logger.debug('BitBake scan result version saved to workspace state')
     })
   })
 
   const lastBitbakeScanResult: BitbakeScanResult | undefined = context.workspaceState.get('bitbake.ScanResult')
+  const lastBitbakeScanResultVersion: number | undefined = context.workspaceState.get('bitbake.ScanResultVersion')
 
-  if (lastBitbakeScanResult === undefined) {
-    logger.debug('No previous scan result found, scanning the project')
+  const needToScan = lastBitbakeScanResult === undefined ||
+    lastBitbakeScanResultVersion === undefined ||
+    lastBitbakeScanResultVersion !== bitBakeProjectScanner.scanResultVersion
+
+  if (needToScan) {
+    logger.debug('No valid scan result found, scanning the project')
     void vscode.commands.executeCommand('bitbake.rescan-project')
   } else {
     logger.debug('Loading previous scan result')
     bitBakeProjectScanner.scanResult = lastBitbakeScanResult
-    bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, lastBitbakeScanResult)
-    void client.sendNotification(NotificationMethod.ScanComplete, lastBitbakeScanResult)
+    bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.scanResult)
+    void client.sendNotification(NotificationMethod.ScanComplete, bitBakeProjectScanner.scanResult)
   }
 }
 

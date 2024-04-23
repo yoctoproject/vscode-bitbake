@@ -48,6 +48,7 @@ export class BitBakeProjectScanner {
   onChange: EventEmitter = new EventEmitter()
 
   private _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [] }
+  private static readonly _scanResultVersion: number = 1
   private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 
@@ -74,6 +75,10 @@ export class BitBakeProjectScanner {
 
   set scanResult (scanResult: BitbakeScanResult) {
     this._bitbakeScanResult = scanResult
+  }
+
+  get scanResultVersion (): number {
+    return BitBakeProjectScanner._scanResultVersion
   }
 
   get bitbakeDriver (): BitbakeDriver {
