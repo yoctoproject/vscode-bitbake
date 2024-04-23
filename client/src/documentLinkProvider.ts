@@ -19,6 +19,30 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     this.client = client
   }
 
+  public static async findFilesAndDirs (filePatterns: Array<{ base: string, pattern: string }>, dirPatterns: string[], maxFileResults?: number, token?: vscode.CancellationToken): Promise<{ foundFiles: vscode.Uri[], foundDirs: string[] }> {
+    const foundFiles: vscode.Uri[] = []
+    const foundDirs: string[] = []
+    try {
+      for (let i = 0; i < filePatterns.length; i++) {
+        foundFiles.push(
+          ...(await vscode.workspace.findFiles(new vscode.RelativePattern(filePatterns[i].base, filePatterns[i].pattern), undefined, maxFileResults, token))
+        )
+      }
+    } catch (err) {
+      logger.error(`An error occurred while finding files. ${JSON.stringify(err)}`)
+    }
+
+    try {
+      for (let i = 0; i < dirPatterns.length; i++) {
+        if (fs.existsSync(dirPatterns[i])) foundDirs.push(...find.dirSync(dirPatterns[i]))
+      }
+    } catch (error) {
+      logger.error(`An error occurred while finding directories. ${JSON.stringify(error)}`)
+    }
+
+    return { foundFiles, foundDirs }
+  }
+
   private basenameIsEqual (path1: string, path2: string): boolean {
     return path.basename(path1) === path.basename(path2)
   }
@@ -47,22 +71,11 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     const pnDir = path.join(parentDir, extractRecipeName(uri.fsPath))
     const filesDir = path.join(parentDir, 'files')
 
-    const foundFiles: vscode.Uri[] = []
-    try {
-      foundFiles.push(...[
-        ...(await vscode.workspace.findFiles(new vscode.RelativePattern(pnDir, '**/' + filenamesRegex), undefined, filenames.length, token)),
-        ...(await vscode.workspace.findFiles(new vscode.RelativePattern(filesDir, '**/' + filenamesRegex), undefined, filenames.length, token))
-      ])
-    } catch (err) {
-      logger.error(`An error occurred when finding files with pattern: ${filenamesRegex}. ${JSON.stringify(err)}`)
-    }
-    let foundDirs: string[] = []
-    try {
-      if (fs.existsSync(pnDir)) foundDirs = foundDirs.concat(find.dirSync(pnDir))
-      if (fs.existsSync(filesDir)) foundDirs = foundDirs.concat(find.dirSync(filesDir))
-    } catch (error) {
-      logger.error(`An error occurred when finding directories within: ${pnDir}. ${JSON.stringify(error)}`)
-    }
+    const filePatterns = [
+      { base: pnDir, pattern: '**/' + filenamesRegex },
+      { base: filesDir, pattern: '**/' + filenamesRegex }
+    ]
+    const { foundFiles, foundDirs } = await BitbakeDocumentLinkProvider.findFilesAndDirs(filePatterns, [pnDir, filesDir], filenames.length, token)
 
     /**
      * Important:
