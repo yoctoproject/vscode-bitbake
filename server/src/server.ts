@@ -51,109 +51,117 @@ let currentActiveTextDocument: TextDocument = TextDocument.create(
   ''
 )
 
-connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
-  logger.level = 'error'
-  logger.info('[onInitialize] Initializing connection')
+disposables.push(
+  connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
+    logger.level = 'error'
+    logger.info('[onInitialize] Initializing connection')
 
-  workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
+    workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
 
-  pokyFolder = pokyFolder ?? workspaceFolder
+    pokyFolder = pokyFolder ?? workspaceFolder
 
-  logger.info('[onInitialize] Parsing doc files')
-  bitBakeDocScanner.parseDocs()
+    logger.info('[onInitialize] Parsing doc files')
+    bitBakeDocScanner.parseDocs()
 
-  const parser = await generateParser()
-  analyzer.initialize(parser)
+    const parser = await generateParser()
+    analyzer.initialize(parser)
 
-  return {
-    capabilities: {
-      textDocumentSync: TextDocumentSyncKind.Incremental,
-      completionProvider: {
-        resolveProvider: true,
-        triggerCharacters: [':', '[']
-      },
-      definitionProvider: true,
-      referencesProvider: true,
-      hoverProvider: true,
-      semanticTokensProvider: {
-        legend,
-        full: true
+    return {
+      capabilities: {
+        textDocumentSync: TextDocumentSyncKind.Incremental,
+        completionProvider: {
+          resolveProvider: true,
+          triggerCharacters: [':', '[']
+        },
+        definitionProvider: true,
+        referencesProvider: true,
+        hoverProvider: true,
+        semanticTokensProvider: {
+          legend,
+          full: true
+        }
       }
     }
-  }
-})
+  }),
 
-connection.onShutdown(() => {
-  disposables.forEach((disposable) => { disposable.dispose() })
-})
+  connection.onDidChangeConfiguration((change) => {
+    logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
+    const bitbakeFolder = expandSettingPath(change.settings.bitbake?.pathToBitbakeFolder, { workspaceFolder })
+    if (bitbakeFolder !== undefined) {
+      pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
+    }
+  }),
 
-connection.onDidChangeConfiguration((change) => {
-  logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
-  const bitbakeFolder = expandSettingPath(change.settings.bitbake?.pathToBitbakeFolder, { workspaceFolder })
-  if (bitbakeFolder !== undefined) {
-    pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
-  }
-})
+  connection.onCompletion(onCompletionHandler),
 
-connection.onCompletion(onCompletionHandler)
+  connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
+    logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
+    return item
+  }),
 
-connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-  logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
-  return item
-})
+  connection.onDefinition(onDefinitionHandler),
 
-connection.onDefinition(onDefinitionHandler)
+  connection.onReferences(onReferenceHandler),
 
-connection.onReferences(onReferenceHandler)
+  connection.onHover(onHoverHandler),
 
-connection.onHover(onHoverHandler)
+  connection.onRequest(
+    RequestMethod.EmbeddedLanguageTypeOnPosition,
+    async ({ uriString, position }: RequestParams['EmbeddedLanguageTypeOnPosition']): RequestResult['EmbeddedLanguageTypeOnPosition'] => {
+      return getEmbeddedLanguageTypeOnPosition(uriString, position)
+    }
+  ),
+  // Reference: https://github.com/microsoft/vscode-languageserver-node/blob/ed3cd0f78c1495913bda7318ace2be7f968008af/protocol/src/common/protocol.semanticTokens.ts#L61
+  connection.onRequest(SemanticTokensRequest.method, ({ textDocument }) => {
+    logger.debug(`[OnRequest] <${SemanticTokensRequest.method}> Document uri: ${textDocument.uri}`)
+    return getSemanticTokens(textDocument.uri)
+  }),
 
-connection.onRequest(
-  RequestMethod.EmbeddedLanguageTypeOnPosition,
-  async ({ uriString, position }: RequestParams['EmbeddedLanguageTypeOnPosition']): RequestResult['EmbeddedLanguageTypeOnPosition'] => {
-    return getEmbeddedLanguageTypeOnPosition(uriString, position)
-  }
+  connection.onRequest(RequestMethod.getLinksInDocument, (params: RequestParams['getLinksInDocument']) => {
+    return analyzer.getLinksInStringContent(params.documentUri)
+  }),
+
+  connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
+    logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
+    analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
+  }),
+
+  connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
+    const scanResult = analyzer.getLastScanResult(params.recipe)
+    return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
+  }),
+
+  connection.onRequest(RequestMethod.getAllVar, async (params: RequestParams['getAllVar']) => {
+    const scanResult = analyzer.getLastScanResult(params.recipe)
+    return scanResult?.symbols.map(symbolInfo => ({ name: symbolInfo.name, value: symbolInfo.finalValue }))
+  }),
+
+  connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {
+    logger.debug(`[onNotification] <${NotificationMethod.RemoveScanResult}> recipe: ${param.recipeName}`)
+    analyzer.removeLastScanResultForRecipe(param.recipeName)
+  }),
+
+  connection.onNotification(NotificationMethod.ScanComplete, (scanResults: BitbakeScanResult) => {
+    bitBakeProjectScannerClient.setScanResults(scanResults)
+
+    logger.debug('Analyzing the current document again...')
+    analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
+  }),
+
+  connection.onShutdown(() => {
+    disposables.forEach((disposable) => { disposable.dispose() })
+  }),
+
+  documents.onDidOpen(analyzeDocument),
+
+  documents.onDidChangeContent(analyzeDocument)
 )
-// Reference: https://github.com/microsoft/vscode-languageserver-node/blob/ed3cd0f78c1495913bda7318ace2be7f968008af/protocol/src/common/protocol.semanticTokens.ts#L61
-connection.onRequest(SemanticTokensRequest.method, ({ textDocument }) => {
-  logger.debug(`[OnRequest] <${SemanticTokensRequest.method}> Document uri: ${textDocument.uri}`)
-  return getSemanticTokens(textDocument.uri)
-})
-
-connection.onRequest(RequestMethod.getLinksInDocument, (params: RequestParams['getLinksInDocument']) => {
-  return analyzer.getLinksInStringContent(params.documentUri)
-})
-
-connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
-  logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
-  analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
-})
-
-connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
-  const scanResult = analyzer.getLastScanResult(params.recipe)
-  return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
-})
-
-connection.onRequest(RequestMethod.getAllVar, async (params: RequestParams['getAllVar']) => {
-  const scanResult = analyzer.getLastScanResult(params.recipe)
-  return scanResult?.symbols.map(symbolInfo => ({ name: symbolInfo.name, value: symbolInfo.finalValue }))
-})
-
-connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {
-  logger.debug(`[onNotification] <${NotificationMethod.RemoveScanResult}> recipe: ${param.recipeName}`)
-  analyzer.removeLastScanResultForRecipe(param.recipeName)
-})
-
-connection.onNotification(NotificationMethod.ScanComplete, (scanResults: BitbakeScanResult) => {
-  bitBakeProjectScannerClient.setScanResults(scanResults)
-
-  logger.debug('Analyzing the current document again...')
-  analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
-})
 
 connection.listen()
 
-const analyzeDocument = async (event: TextDocumentChangeEvent<TextDocument>): Promise<void> => {
+documents.listen(connection)
+
+async function analyzeDocument (event: TextDocumentChangeEvent<TextDocument>): Promise<void> {
   const textDocument = event.document
   const previousVersion = analyzer.getAnalyzedDocument(textDocument.uri)?.version ?? -1
   if (textDocument.getText().length > 0 && previousVersion < textDocument.version) {
@@ -167,9 +175,3 @@ const analyzeDocument = async (event: TextDocumentChangeEvent<TextDocument>): Pr
 
   currentActiveTextDocument = textDocument
 }
-
-documents.onDidOpen(analyzeDocument)
-
-documents.onDidChangeContent(analyzeDocument)
-
-documents.listen(connection)
