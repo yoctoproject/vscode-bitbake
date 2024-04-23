@@ -3,9 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { type Connection, type Disposable } from 'vscode-languageserver'
 import { scanContainsRecipes, type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
-import EventEmitter from 'events'
 import { logger } from './lib/src/utils/OutputLogger'
 
 /// Keeps track of the bitbake scan results from the language server
@@ -20,31 +18,12 @@ export class BitBakeProjectScannerClient {
     _workspaces: []
   }
 
-  private connection: Connection | undefined
-  onChange: EventEmitter = new EventEmitter()
-
-  setConnection (connection: Connection): void {
-    this.connection = connection
-  }
-
-  buildHandlers (): Disposable[] {
-    return this.bitbakeScanHandler()
-  }
-
-  private bitbakeScanHandler (): Disposable[] {
-    if (this.connection === undefined) {
-      throw new Error('BitBakeProjectScannerClient: connection is undefined')
+  public setScanResults (scanResults: BitbakeScanResult): void {
+    logger.info('Project scan results received')
+    // In case a parsing error occurred, we keep the previous results such that the relevant language features can still work
+    if (!scanContainsRecipes(this.bitbakeScanResult) || scanContainsRecipes(scanResults)) {
+      this.bitbakeScanResult = scanResults
     }
-    const subscriptions: Disposable[] = []
-    subscriptions.push(this.connection.onNotification('bitbake/scanReady', (scanResults: BitbakeScanResult) => {
-      // In case a parsing error was just introduce, we keep the previous results to keep navigation functional
-      if (!scanContainsRecipes(this.bitbakeScanResult) || scanContainsRecipes(scanResults)) {
-        this.bitbakeScanResult = scanResults
-      }
-      this.onChange.emit('scanReady', scanResults)
-      logger.info('Bitbake scan results received from language server')
-    }))
-    return subscriptions
   }
 }
 

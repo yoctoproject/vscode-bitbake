@@ -33,6 +33,7 @@ import { RequestMethod, type RequestParams, type RequestResult } from './lib/src
 import { NotificationMethod, type NotificationParams } from './lib/src/types/notifications'
 import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { onReferenceHandler } from './connectionHandlers/onReference'
+import { type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 export const connection: Connection = createConnection(ProposedFeatures.all)
@@ -53,8 +54,6 @@ let currentActiveTextDocument: TextDocument = TextDocument.create(
 connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
   logger.level = 'error'
   logger.info('[onInitialize] Initializing connection')
-  bitBakeProjectScannerClient.setConnection(connection)
-  disposables.push(...bitBakeProjectScannerClient.buildHandlers())
 
   workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
 
@@ -65,11 +64,6 @@ connection.onInitialize(async (params: InitializeParams): Promise<InitializeResu
 
   const parser = await generateParser()
   analyzer.initialize(parser)
-
-  bitBakeProjectScannerClient.onChange.on('scanReady', () => {
-    logger.debug('Analyzing the current document again...')
-    analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
-  })
 
   return {
     capabilities: {
@@ -148,6 +142,13 @@ connection.onRequest(RequestMethod.getAllVar, async (params: RequestParams['getA
 connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {
   logger.debug(`[onNotification] <${NotificationMethod.RemoveScanResult}> recipe: ${param.recipeName}`)
   analyzer.removeLastScanResultForRecipe(param.recipeName)
+})
+
+connection.onNotification('bitbake/scanReady', (scanResults: BitbakeScanResult) => {
+  bitBakeProjectScannerClient.setScanResults(scanResults)
+
+  logger.debug('Analyzing the current document again...')
+  analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
 })
 
 connection.listen()
