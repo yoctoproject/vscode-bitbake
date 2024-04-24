@@ -51,6 +51,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await startToasterInBrowser(bitBakeProjectScanner.bitbakeDriver) }),
     vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }),
     vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
+    vscode.commands.registerCommand('bitbake.examine-dependency-taskexp', async (uri) => { await examineDependenciesTaskexp(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {
@@ -542,6 +543,32 @@ async function openRecipeWorkdirCommand (bitbakeWorkspace: BitbakeWorkspace, bit
   }
   const recipeWorkdirURI = vscode.Uri.file(recipeWorkdir)
   await vscode.commands.executeCommand('vscode.openFolder', recipeWorkdirURI, { forceNewWindow: true })
+}
+
+export let isTaskexpStarted = false
+
+export async function examineDependenciesTaskexp (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
+  if (isTaskexpStarted) {
+    void vscode.window.showInformationMessage('taskexp is already started')
+    return
+  }
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  if (chosenRecipe !== undefined) {
+    logger.debug(`Command: examine-dependency-taskexp: ${chosenRecipe}`)
+    isTaskexpStarted = true
+    const process = await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
+    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+      {
+        specialCommand: `bitbake -g ${chosenRecipe} -u taskexp`
+      } as BitbakeTaskDefinition,
+    `Bitbake: taskexp: ${chosenRecipe}`)
+    process.onExit((e) => {
+      isTaskexpStarted = false
+      if (e.exitCode !== 0) {
+        void vscode.window.showErrorMessage(`Failed to start taskexp with exit code ${e.exitCode}. See terminal output.`)
+      }
+    })
+  }
 }
 
 async function openBitbakeDevshell (terminalProvider: BitbakeTerminalProfileProvider, bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<vscode.Terminal | undefined> {
