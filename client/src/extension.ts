@@ -38,6 +38,11 @@ let bitbakeRecipesView: BitbakeRecipesView | undefined
 let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
 let terminalProvider: BitbakeTerminalProfileProvider | undefined
 
+export function canModifyConfig (): boolean {
+  const disableConfigModification = vscode.workspace.getConfiguration('bitbake').get('disableConfigModification')
+  return disableConfigModification !== true
+}
+
 function loadLoggerSettings (): void {
   logger.level = vscode.workspace.getConfiguration('bitbake').get('loggingLevel') ?? 'info'
   logger.info('Bitbake logging level: ' + logger.level)
@@ -56,7 +61,9 @@ function configureBitBakeFileAssociation (): void {
   const associations = filesSettings.get<Record<string, string>>('associations') ?? {}
   associations['*.conf'] = 'bitbake'
   associations['*.inc'] = 'bitbake'
-  void filesSettings.update('associations', associations, vscode.ConfigurationTarget.Workspace)
+  if (canModifyConfig()) {
+    void filesSettings.update('associations', associations, vscode.ConfigurationTarget.Workspace)
+  }
 }
 
 function updatePythonPath (): void {
@@ -77,7 +84,9 @@ function updatePythonPath (): void {
       if (!extraPaths.includes(pathToAdd)) {
         extraPaths.push(pathToAdd)
       }
-      void pythonConfig.update(pythonSubConf, extraPaths, vscode.ConfigurationTarget.Workspace)
+      if (canModifyConfig()) {
+        void pythonConfig.update(pythonSubConf, extraPaths, vscode.ConfigurationTarget.Workspace)
+      }
     }
   }
 }
@@ -88,7 +97,9 @@ async function disableInteferingSettings (): Promise<void> {
     const languageConfig = config.get<Record<string, unknown>>(languageKey) ?? {}
     // 'files.trimTrailingWhitespace' modifies the embedded languages documents and breaks the mapping of the positions
     languageConfig['files.trimTrailingWhitespace'] = false
-    await config.update(languageKey, languageConfig, vscode.ConfigurationTarget.Workspace)
+    if (canModifyConfig()) {
+      await config.update(languageKey, languageConfig, vscode.ConfigurationTarget.Workspace)
+    }
   }
 }
 
