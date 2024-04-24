@@ -201,6 +201,11 @@
 				  "name"
 				]
 			  }
+			},
+			"bitbake.disableConfigModification":{
+				"type": "boolean",
+				"default": false,
+				"description": "Turn on this setting to stop this extension from modifying the VS Code configuration of the workspace. Note that this will also disable some features related to embedded Python and Shell code."
 			}
 		  }
 		},
