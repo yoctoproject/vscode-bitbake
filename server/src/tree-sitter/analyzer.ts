@@ -22,7 +22,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type BitbakeSymbolInformation, getGlobalDeclarations, type GlobalDeclarations, nodeToSymbolInformation } from './declarations'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
-import { DIRECTIVE_STATEMENT_KEYWORDS, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
+import { checkIsDirectiveStatementKeyword, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { logger } from '../lib/src/utils/OutputLogger'
 import fs from 'fs'
 import path, { type ParsedPath } from 'path'
@@ -692,8 +692,8 @@ export default class Analyzer {
     const lineTillCurrentPosition = currentLine.substring(0, position.character)
     const words = lineTillCurrentPosition.split(' ')
 
-    if (DIRECTIVE_STATEMENT_KEYWORDS.includes(words[0])) {
-      return words[0] as DirectiveStatementKeyword
+    if (checkIsDirectiveStatementKeyword(words[0])) {
+      return words[0]
     }
 
     return undefined
