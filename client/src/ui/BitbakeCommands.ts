@@ -50,6 +50,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }),
     vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await startToasterInBrowser(bitBakeProjectScanner.bitbakeDriver) }),
     vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }),
+    vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
     // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {
@@ -66,6 +67,15 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
       }
     }
   )
+}
+
+async function clearAllWorkspaceState (context: vscode.ExtensionContext, key?: string): Promise<void> {
+  for (const key of context.workspaceState.keys()) {
+    await context.workspaceState.update(key, undefined).then(
+      () => { logger.log(`Cleared state for key: ${key}`) },
+      (error) => { logger.error(`Failed to clear state for key: ${key}: ${error}`) }
+    )
+  }
 }
 
 export function registerDevtoolCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient): void {
