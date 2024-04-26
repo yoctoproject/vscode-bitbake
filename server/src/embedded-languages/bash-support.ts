@@ -5,8 +5,8 @@
 
 import * as TreeSitterUtils from '../tree-sitter/utils'
 import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
-import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 import type Parser from 'web-tree-sitter'
+import { type EmbeddedLanguageDoc } from '../lib/src/embedded-languages'
 import { type SyntaxNode } from 'web-tree-sitter'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type TextDocument } from 'vscode-languageserver-textdocument'

@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type Range, type Position } from 'vscode'
-import { type EmbeddedLanguageType } from './embedded-languages'
+import { type EmbeddedLanguageType } from '../embedded-languages'
 
 export enum RequestType {
   EmbeddedLanguageTypeOnPosition = 'EmbeddedLanguageTypeOnPosition',

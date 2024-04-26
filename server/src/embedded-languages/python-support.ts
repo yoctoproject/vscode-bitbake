@@ -9,8 +9,8 @@ import { type SyntaxNode } from 'web-tree-sitter'
 import * as TreeSitterUtils from '../tree-sitter/utils'
 
 import { insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
-import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
 import { type TextDocument } from 'vscode-languageserver-textdocument'
+import { type EmbeddedLanguageDoc } from '../lib/src/embedded-languages'
 
 export const imports = [
   'import bb, bb.build, bb.compress.zstd, bb.data, bb.data_smart, bb.event, bb.fetch2, bb.parse, bb.persist_data, bb.process, bb.progress, bb.runqueue, bb.siggen, bb.utils',

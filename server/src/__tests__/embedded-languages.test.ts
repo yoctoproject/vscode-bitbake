@@ -9,7 +9,7 @@ import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from 
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 import { imports } from '../embedded-languages/python-support'
 import { bashHeader } from '../embedded-languages/bash-support'
 

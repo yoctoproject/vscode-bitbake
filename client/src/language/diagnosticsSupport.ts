@@ -7,7 +7,7 @@ import * as vscode from 'vscode'
 
 import { getOriginalDocRange } from './utils/embeddedLanguagesUtils'
 import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
-import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 import { requestsManager } from '../language/RequestManager'
 import path from 'path'
 import { extractRecipeName } from '../lib/src/utils/files'

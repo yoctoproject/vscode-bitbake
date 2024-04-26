@@ -5,7 +5,7 @@
 
 import { type TextDocument } from 'vscode-languageserver-textdocument'
 
-import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 
 const replaceTextForSpaces = (text: string): string => {
   return text.replace(/[^\r\n]+/g, (match) => ' '.repeat(match.length))

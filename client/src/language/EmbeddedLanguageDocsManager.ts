@@ -6,7 +6,7 @@
 import path from 'path'
 import fs from 'fs'
 
-import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { Range, Uri, WorkspaceEdit, workspace } from 'vscode'
 import { hashString } from '../lib/src/utils/hash'
