@@ -440,6 +440,11 @@
 			"icon": "$(stop-circle)"
 		  },
 		  {
+			"command": "bitbake.clear-workspace-state",
+			"title": "BitBake: Clear workspace State",
+			"description": "This clears all the data stored in the workspace state which would persist between sessions. This can potentially solve the crash caused by downgrading the extension to a version that is not able to handle the new workspace state data format."
+		  },
+		  {
 			"command": "bitbake.devtool-modify",
 			"title": "BitBake: Devtool: Modify recipe",
 			"description": "Open a new devtool workspace to modify a recipe's sources.",
