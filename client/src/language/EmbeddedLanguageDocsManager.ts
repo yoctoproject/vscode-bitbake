@@ -6,18 +6,11 @@
 import path from 'path'
 import fs from 'fs'
 
-import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
+import { getEmbeddedLanguageDocFilename, type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { Range, Uri, WorkspaceEdit, workspace } from 'vscode'
-import { hashString } from '../lib/src/utils/hash'
 
 const EMBEDDED_DOCUMENTS_FOLDER = 'embedded-documents'
-
-const fileExtensionsMap = {
-  bash: '.sh',
-  python: '.py'
-}
-
 export interface EmbeddedLanguageDocInfos {
   uri: Uri
   originalUri: Uri
@@ -120,9 +113,7 @@ export default class EmbeddedLanguageDocsManager {
     if (this.embeddedLanguageDocsFolder === undefined) {
       return undefined
     }
-    const hashedName = hashString(originalUri.toString())
-    const fileExtension = fileExtensionsMap[languageType]
-    const embeddedLanguageDocFilename = hashedName + fileExtension
+    const embeddedLanguageDocFilename = getEmbeddedLanguageDocFilename(originalUri.toString(), languageType)
     const pathToEmbeddedLanguageDocsFolder = this.embeddedLanguageDocsFolder
     return Uri.parse(`file://${pathToEmbeddedLanguageDocsFolder}/${embeddedLanguageDocFilename}`)
   }
