@@ -9,7 +9,7 @@
  */
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind } from 'vscode-languageserver/node'
+import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind, type Position } from 'vscode-languageserver/node'
 import { symbolKindToCompletionKind } from '../utils/lsp'
 import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
@@ -21,7 +21,6 @@ import { VARIABLE_FLAGS } from '../completions/variable-flags'
 import type { ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
-import { type Position } from 'vscode-languageserver-textdocument'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
@@ -69,6 +68,34 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
         true
       )
     }
+
+    const variablesAllowedForUriCompletion = ['SRC_URI']
+    const isVariableAllowedForUriCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForUriCompletion)
+    const recipeLocalFiles = analyzer.getRecipeLocalFiles(documentUri)
+    if (isVariableAllowedForUriCompletion && recipeLocalFiles !== undefined) {
+      const fileUriCompletionItems = recipeLocalFiles.foundFileUris.map<CompletionItem>((fileUri) => {
+        return {
+          label: path.basename(fileUri),
+          kind: CompletionItemKind.File,
+          detail: fileUri,
+          insertText: `file://${path.basename(fileUri)}`
+        }
+      })
+
+      const dirCompletionItems = recipeLocalFiles.foundDirs.map<CompletionItem>((dir) => {
+        return {
+          label: path.basename(dir),
+          kind: CompletionItemKind.Folder,
+          insertText: `file://${path.basename(dir)}/`
+        }
+      })
+
+      return [
+        ...fileUriCompletionItems,
+        ...dirCompletionItems
+      ]
+    }
+
     return []
   }
 

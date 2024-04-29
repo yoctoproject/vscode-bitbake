@@ -243,6 +243,61 @@ describe('On Completion', () => {
     )
   })
 
+  it('provides uri suggestions in the SRC_URI', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.CORRECT
+    })
+
+    const recipeLocalFiles = {
+      foundFileUris: [
+        'file:///home/projects/poky/meta/recipe-core/busybox/foo',
+        'file:///home/projects/poky/meta/recipe-core/busybox/bar'
+      ],
+      foundDirs: [
+        'file:///home/projects/poky/meta/recipe-core/busybox/busybox/images'
+      ]
+    }
+
+    analyzer.setRecipeLocalFiles(DUMMY_URI, recipeLocalFiles)
+
+    const result = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 6,
+        character: 25
+      }
+    })
+
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(
+          {
+            label: 'foo',
+            kind: 17,
+            insertText: 'file://foo'
+          }
+        ),
+        expect.objectContaining(
+          {
+            label: 'bar',
+            kind: 17,
+            insertText: 'file://bar'
+          }
+        ),
+        expect.objectContaining(
+          {
+            label: 'images',
+            kind: 19,
+            insertText: 'file://images/'
+          }
+        )
+      ])
+    )
+  })
+
   it("doesn't provide duplicate completion items for local custom variables", async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
