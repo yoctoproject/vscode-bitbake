@@ -68,6 +68,34 @@ disposables.push(
 
     return {
       capabilities: {
+        workspace: {
+          fileOperations: {
+            didCreate: {
+              filters: [
+                {
+                  pattern: { glob: '**/*' },
+                  scheme: 'file'
+                }
+              ]
+            },
+            didDelete: {
+              filters: [
+                {
+                  pattern: { glob: '**/*' },
+                  scheme: 'file'
+                }
+              ]
+            },
+            didRename: {
+              filters: [
+                {
+                  pattern: { glob: '**/*' },
+                  scheme: 'file'
+                }
+              ]
+            }
+          }
+        },
         textDocumentSync: TextDocumentSyncKind.Incremental,
         completionProvider: {
           resolveProvider: true,
@@ -104,6 +132,21 @@ disposables.push(
   connection.onReferences(onReferenceHandler),
 
   connection.onHover(onHoverHandler),
+
+  connection.workspace.onDidCreateFiles((event) => {
+    logger.debug(`[onDidCreateFiles] ${JSON.stringify(event)}`)
+    analyzer.clearRecipeLocalFiles()
+  }),
+
+  connection.workspace.onDidDeleteFiles((event) => {
+    logger.debug(`[onDidDeleteFiles] ${JSON.stringify(event)}`)
+    analyzer.clearRecipeLocalFiles()
+  }),
+
+  connection.workspace.onDidRenameFiles((event) => {
+    logger.debug(`[onDidRenameFiles] ${JSON.stringify(event)}`)
+    analyzer.clearRecipeLocalFiles()
+  }),
 
   connection.onRequest(
     RequestMethod.EmbeddedLanguageTypeOnPosition,
@@ -154,7 +197,14 @@ disposables.push(
 
   documents.onDidOpen(analyzeDocument),
 
-  documents.onDidChangeContent(analyzeDocument)
+  documents.onDidChangeContent(async (event) => {
+    await analyzeDocument(event)
+
+    if (analyzer.getRecipeLocalFiles(event.document.uri) === undefined) {
+      const recipeLocalFiles = await connection.sendRequest<RequestResult['getRecipeLocalFiles']>(RequestMethod.getRecipeLocalFiles, { uri: event.document.uri.replace('file://', '') })
+      analyzer.setRecipeLocalFiles(event.document.uri, recipeLocalFiles)
+    }
+  })
 )
 
 connection.listen()
