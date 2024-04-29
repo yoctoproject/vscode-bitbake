@@ -29,6 +29,7 @@ import path, { type ParsedPath } from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import { type RequestResult } from '../lib/src/types/requests'
 
 export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
@@ -48,6 +49,7 @@ export default class Analyzer {
   private parser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
   private readonly uriToLastScanResult: Record<string, LastScanResult | undefined> = {} // Store the results of the last scan for each recipe
+  private uriToRecipeLocalFiles: Record<string, RequestResult['getRecipeLocalFiles']> = {}
 
   public getDocumentTexts (uri: string): string[] | undefined {
     return this.uriToAnalyzedDocument[uri]?.document.getText().split(/\r?\n/g)
@@ -59,6 +61,18 @@ export default class Analyzer {
 
   public getLastScanResult (recipe: string): LastScanResult | undefined {
     return this.uriToLastScanResult[recipe]
+  }
+
+  public getRecipeLocalFiles (uri: string): RequestResult['getRecipeLocalFiles'] | undefined {
+    return this.uriToRecipeLocalFiles[uri]
+  }
+
+  public setRecipeLocalFiles (uri: string, recipeLocalFiles: RequestResult['getRecipeLocalFiles']): void {
+    this.uriToRecipeLocalFiles[uri] = recipeLocalFiles
+  }
+
+  public clearRecipeLocalFiles (): void {
+    this.uriToRecipeLocalFiles = {}
   }
 
   public getIncludeUrisForUri (uri: string): string[] {
