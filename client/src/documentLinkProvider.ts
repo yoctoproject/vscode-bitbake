@@ -43,6 +43,14 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     return { foundFiles, foundDirs }
   }
 
+  public static getLocalFoldersForRecipeUri (uri: string): { pnDir: string, filesDir: string } {
+    const parentDir = path.dirname(uri)
+    const pnDir = path.join(parentDir, extractRecipeName(uri))
+    const filesDir = path.join(parentDir, 'files')
+
+    return { pnDir, filesDir }
+  }
+
   private basenameIsEqual (path1: string, path2: string): boolean {
     return path.basename(path1) === path.basename(path2)
   }
@@ -67,9 +75,7 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     })
     const filenames = LinksWithoutTails.map(link => link.value)
     const filenamesRegex = '{' + filenames.join(',') + '}'
-    const parentDir = path.dirname(uri.path)
-    const pnDir = path.join(parentDir, extractRecipeName(uri.fsPath))
-    const filesDir = path.join(parentDir, 'files')
+    const { pnDir, filesDir } = BitbakeDocumentLinkProvider.getLocalFoldersForRecipeUri(uri.fsPath)
 
     const filePatterns = [
       { base: pnDir, pattern: '**/' + filenamesRegex },
