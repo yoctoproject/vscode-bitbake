@@ -32,7 +32,8 @@ import { BitbakeCodeActionProvider } from './codeActionProvider'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import * as vscode from 'vscode'
 import { middlewareProvideReferences } from './middlewareReferences'
-import { RequestMethod } from '../lib/src/types/requests'
+import { RequestMethod, type RequestParams, type RequestResult } from '../lib/src/types/requests'
+import { BitbakeDocumentLinkProvider } from '../documentLinkProvider'
 
 export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
   const serverModule = context.asAbsolutePath(path.join('server', 'out', 'server.js'))
@@ -91,6 +92,23 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
 
   client.onRequest('bitbake/resolveContainerPath', async (uri) => {
     return await bitBakeProjectScanner.resolveContainerPath(uri, true)
+  })
+
+  client.onRequest(RequestMethod.getRecipeLocalFiles, async (params: RequestParams['getRecipeLocalFiles']): Promise<RequestResult['getRecipeLocalFiles']> => {
+    if (params.uri === undefined) {
+      logger.error(`[${RequestMethod.getRecipeLocalFiles}] No uri is provided`)
+      return { foundFileUris: [], foundDirs: [] }
+    }
+
+    const { pnDir, filesDir } = BitbakeDocumentLinkProvider.getLocalFoldersForRecipeUri(params.uri)
+
+    const filePatterns = [
+      { base: pnDir, pattern: '**/*' },
+      { base: filesDir, pattern: '**/*' }
+    ]
+    const { foundFiles, foundDirs } = await BitbakeDocumentLinkProvider.findFilesAndDirs(filePatterns, [pnDir, filesDir])
+
+    return { foundFileUris: foundFiles.map(uri => uri.fsPath), foundDirs }
   })
 
   client.onNotification(NotificationMethod.EmbeddedLanguageDocs, (embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs']) => {

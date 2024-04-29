@@ -11,7 +11,8 @@ export enum RequestType {
   getLinksInDocument = 'getLinksInDocument',
   ProcessRecipeScanResults = 'ProcessRecipeScanResults',
   GetVar = 'getVar',
-  GetAllVar = 'getAllVar'
+  GetAllVar = 'getAllVar',
+  GetRecipeLocalFiles = 'getRecipeLocalFiles'
 }
 
 export const RequestMethod: Record<RequestType, string> = {
@@ -19,7 +20,8 @@ export const RequestMethod: Record<RequestType, string> = {
   [RequestType.getLinksInDocument]: 'bitbake/getLinksInDocument',
   [RequestType.ProcessRecipeScanResults]: 'bitbake/ProcessRecipeScanResults',
   [RequestType.GetVar]: 'bitbake/getVar',
-  [RequestType.GetAllVar]: 'bitbake/getAllVar'
+  [RequestType.GetAllVar]: 'bitbake/getAllVar',
+  [RequestType.GetRecipeLocalFiles]: 'bitbake/getRecipeLocalFiles'
 }
 
 export interface RequestParams {
@@ -28,10 +30,12 @@ export interface RequestParams {
   [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any, chosenRecipe: string }
   [RequestType.GetVar]: { variable: string, recipe: string }
   [RequestType.GetAllVar]: { recipe: string }
+  [RequestType.GetRecipeLocalFiles]: { uri: string }
 }
 
 export interface RequestResult {
   [RequestType.EmbeddedLanguageTypeOnPosition]: Promise<EmbeddedLanguageType | undefined | null> // for unknown reasons, the client receives null instead of undefined
   [RequestType.getLinksInDocument]: Promise<Array<{ value: string, range: Range }>>
   [RequestType.ProcessRecipeScanResults]: Record<string, unknown> | undefined
+  [RequestType.GetRecipeLocalFiles]: { foundFileUris: string[], foundDirs: string[] }
 }
