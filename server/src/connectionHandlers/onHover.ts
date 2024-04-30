@@ -28,7 +28,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 
   // Show documentation of a bitbake variable
   // Triggers on global declaration expressions like "VAR = 'foo'" and inside variable expansion like "FOO = ${VAR}" but skip the ones like "python VAR(){}"
-  const canShowHoverDefinitionForVariableName: boolean = (analyzer.getGlobalDeclarationSymbols(textDocument.uri).some((symbol) => symbol.name === word) && analyzer.isIdentifierOfVariableAssignment(params)) || analyzer.isVariableExpansion(textDocument.uri, position.line, position.character) || analyzer.isPythonDatastoreVariable(textDocument.uri, position.line, position.character) || analyzer.isBashVariableExpansion(textDocument.uri, position.line, position.character)
+  const canShowHoverDefinitionForVariableName: boolean = (analyzer.getGlobalDeclarationSymbolsForUri(textDocument.uri).some((symbol) => symbol.name === word) && analyzer.isIdentifierOfVariableAssignment(params)) || analyzer.isVariableExpansion(textDocument.uri, position.line, position.character) || analyzer.isPythonDatastoreVariable(textDocument.uri, position.line, position.character) || analyzer.isBashVariableExpansion(textDocument.uri, position.line, position.character)
   if (canShowHoverDefinitionForVariableName) {
     const found = [
       ...bitBakeDocScanner.bitbakeVariableInfo.filter((bitbakeVariable) => !bitBakeDocScanner.yoctoVariableInfo.some(yoctoVariable => yoctoVariable.name === bitbakeVariable.name)),
@@ -121,11 +121,11 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 }
 
 function getGlobalSymbolComments (uri: string, word: string, currentSymbolAtPoint: BitbakeSymbolInformation): string | null {
-  const localSymbolsWithComments = analyzer.getGlobalDeclarationSymbols(uri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0)
+  const localSymbolsWithComments = analyzer.getGlobalDeclarationSymbolsForUri(uri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0)
   const externalSymbolsWithComments: BitbakeSymbolInformation[] = []
 
   analyzer.getIncludeUrisForUri(uri).forEach((includeFileUri) => {
-    externalSymbolsWithComments.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0))
+    externalSymbolsWithComments.push(...analyzer.getGlobalDeclarationSymbolsForUri(includeFileUri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0))
   })
   const priority = ['.bbclass', '.conf', '.inc', '.bb', '.bbappend']
 

@@ -238,7 +238,7 @@ const allCommonDirectoriesCompletionItems: CompletionItem[] = Array.from(commonD
 function getSymbolCompletionItems (word: string | null): CompletionItem[] {
   if (word !== null) {
     const uniqueSymbolSet = new Set()
-    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbols(documentUri).filter(symbol => {
+    const globalDeclarationSymbols = analyzer.getGlobalDeclarationSymbolsForUri(documentUri).filter(symbol => {
       if (!uniqueSymbolSet.has(symbol.name)) {
         uniqueSymbolSet.add(symbol.name)
         return true
@@ -397,7 +397,7 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   logger.debug(`[onCompletion] convertSymbolsToCompletionItems: ${uri}`)
   let completionItems: CompletionItem[] = []
   analyzer.getIncludeUrisForUri(uri).map((includeUri) => {
-    return analyzer.getGlobalDeclarationSymbols(includeUri)
+    return analyzer.getGlobalDeclarationSymbolsForUri(includeUri)
   })
     .flat()
     .reduce<BitbakeSymbolInformation[]>((acc, symbol) => {
