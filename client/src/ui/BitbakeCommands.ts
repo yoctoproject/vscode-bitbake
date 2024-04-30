@@ -52,6 +52,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }),
     vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
     vscode.commands.registerCommand('bitbake.examine-dependency-taskexp', async (uri) => { await examineDependenciesTaskexp(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.codeLens.showReferences', async (uri, position) => { await showReferences(uri, position) }),
+
     // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {
@@ -68,6 +70,21 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
       }
     }
   )
+}
+
+async function showReferences (uri: any, position: any): Promise<void> {
+  if (typeof uri !== 'string' || position === undefined) {
+    return
+  }
+
+  let _position: vscode.Position
+  try {
+    _position = new vscode.Position(position.line, position.character)
+    const locations = await vscode.commands.executeCommand('vscode.executeReferenceProvider', vscode.Uri.parse(uri), position)
+    await vscode.commands.executeCommand('editor.action.showReferences', vscode.Uri.parse(uri), _position, locations)
+  } catch (error: any) {
+    void vscode.window.showErrorMessage('Failed to show references: ' + JSON.stringify(error))
+  }
 }
 
 async function clearAllWorkspaceState (context: vscode.ExtensionContext, key?: string): Promise<void> {

@@ -5,6 +5,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
+import * as LSP from 'vscode-languageserver/node'
 import {
   type Connection,
   type InitializeResult,
@@ -111,6 +112,9 @@ disposables.push(
         },
         renameProvider: {
           prepareProvider: true
+        },
+        codeLensProvider: {
+          resolveProvider: true
         }
       }
     }
@@ -154,6 +158,33 @@ disposables.push(
   connection.workspace.onDidRenameFiles((event) => {
     logger.debug(`[onDidRenameFiles] ${JSON.stringify(event)}`)
     analyzer.clearRecipeLocalFiles()
+  }),
+
+  connection.onCodeLens(async (params): Promise<LSP.CodeLens[]> => {
+    const codeLenses: LSP.CodeLens[] = []
+    const uri = params.textDocument.uri
+    // TODO: check the setting to see if showing the references code lens is allowed
+    const allSymbols = analyzer.getGlobalDeclarationSymbolsForUri(uri)
+    allSymbols.forEach((symbol) => {
+      if (symbol.kind === LSP.SymbolKind.Function) {
+        const codeLens = LSP.CodeLens.create(symbol.location.range)
+
+        codeLens.command = {
+          title: 'Show References',
+          command: 'bitbake.codeLens.showReferences',
+          arguments: [uri, symbol.location.range.start]
+        }
+
+        codeLens.data = { uri, position: symbol.location.range.start }
+
+        codeLenses.push(codeLens)
+      }
+    })
+    return codeLenses
+  }),
+
+  connection.onCodeLensResolve((codeLens): LSP.CodeLens => {
+    return codeLens
   }),
 
   connection.onRequest(
