@@ -43,7 +43,7 @@ setDefinitionsConnection(connection)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let workspaceFolder: string | undefined
 let pokyFolder: string | undefined
-
+let enableCodeLensReferencesOnFunctions: boolean = false
 const disposables: Disposable[] = []
 
 let currentActiveTextDocument: TextDocument = TextDocument.create(
@@ -122,6 +122,7 @@ disposables.push(
 
   connection.onDidChangeConfiguration((change) => {
     logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
+    enableCodeLensReferencesOnFunctions = change.settings.bitbake?.enableCodeLensReferencesOnFunctions ?? enableCodeLensReferencesOnFunctions
     const bitbakeFolder = expandSettingPath(change.settings.bitbake?.pathToBitbakeFolder, { workspaceFolder })
     if (bitbakeFolder !== undefined) {
       pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
@@ -163,7 +164,11 @@ disposables.push(
   connection.onCodeLens(async (params): Promise<LSP.CodeLens[]> => {
     const codeLenses: LSP.CodeLens[] = []
     const uri = params.textDocument.uri
-    // TODO: check the setting to see if showing the references code lens is allowed
+
+    if (!enableCodeLensReferencesOnFunctions) {
+      return []
+    }
+
     const allSymbols = analyzer.getGlobalDeclarationSymbolsForUri(uri)
     allSymbols.forEach((symbol) => {
       if (symbol.kind === LSP.SymbolKind.Function) {
