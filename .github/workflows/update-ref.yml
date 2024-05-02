@@ -17,6 +17,7 @@ jobs:
     env:
       DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
       SHELL: /usr/bin/bash
+      BASE_BRANCH: staging
       FILE_PATHS: |
         integration-tests/src/utils/version.ts
         scripts/fetch-docs.sh
@@ -29,6 +30,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
+      with:
+        ref: ${{ env.BASE_BRANCH }}
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
@@ -51,4 +54,6 @@ jobs:
         add-paths: ${{ env.FILE_PATHS }}
         title: Auto update references for commits, tags, etc
         commit-message: Auto update references for commits, tags, etc
+        branch: update-ref
+        base: ${{ env.BASE_BRANCH }}
         token: ${{ secrets.GITHUB_TOKEN }}

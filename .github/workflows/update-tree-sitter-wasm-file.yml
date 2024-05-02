@@ -20,6 +20,7 @@ jobs:
     env:
       DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
       SHELL: /usr/bin/bash
+      BASE_BRANCH: staging
 
     strategy:
       matrix:
@@ -28,6 +29,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
+      with:
+        ref: ${{ env.BASE_BRANCH }}
 
     - name: Setup Node.js
       uses: actions/setup-node@v3
@@ -61,4 +64,6 @@ jobs:
           server/tree-sitter-bitbake.wasm
         title: Auto update tree-sitter-bitbake wasm file
         commit-message: Auto update tree-sitter-bitbake wasm file and parser info
+        branch: update-tree-sitter-wasm-file
+        base: ${{ env.BASE_BRANCH }}
         token: ${{ secrets.GITHUB_TOKEN }}
