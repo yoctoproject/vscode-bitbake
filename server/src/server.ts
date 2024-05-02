@@ -34,6 +34,7 @@ import { NotificationMethod, type NotificationParams } from './lib/src/types/not
 import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { onReferenceHandler } from './connectionHandlers/onReference'
 import { type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
+import { onPrepareRenameHandler, onRenameRequestHandler } from './connectionHandlers/onRename'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 export const connection: Connection = createConnection(ProposedFeatures.all)
@@ -107,6 +108,9 @@ disposables.push(
         semanticTokensProvider: {
           legend,
           full: true
+        },
+        renameProvider: {
+          prepareProvider: true
         }
       }
     }
@@ -132,6 +136,10 @@ disposables.push(
   connection.onReferences(onReferenceHandler),
 
   connection.onHover(onHoverHandler),
+
+  connection.onRenameRequest(onRenameRequestHandler),
+
+  connection.onPrepareRename(onPrepareRenameHandler),
 
   connection.workspace.onDidCreateFiles((event) => {
     logger.debug(`[onDidCreateFiles] ${JSON.stringify(event)}`)
