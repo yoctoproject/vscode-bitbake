@@ -11,10 +11,10 @@
 import {
   type TextDocumentPositionParams,
   type Diagnostic,
-  type SymbolInformation,
-  type Range,
+  SymbolInformation,
+  Range,
   SymbolKind,
-  type Position,
+  Position,
   Location
 } from 'vscode-languageserver'
 import type Parser from 'web-tree-sitter'
@@ -36,6 +36,7 @@ export interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   variableExpansionSymbols: BitbakeSymbolInformation[]
+  pythonDatastoreVariableSymbols: BitbakeSymbolInformation[]
   includeFileUris: string[]
   tree: Parser.Tree
 }
@@ -108,13 +109,14 @@ export default class Analyzer {
     const tree = this.parser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ tree, uri })
 
-    const variableExpansionSymbols = this.getVariableExpansionSymbolsFromTree({ tree, uri })
+    const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromTree({ tree, uri })
 
     this.uriToAnalyzedDocument[uri] = {
       version: document.version,
       document,
       globalDeclarations,
       variableExpansionSymbols,
+      pythonDatastoreVariableSymbols,
       includeFileUris: this.extractIncludeFileUris(uri, tree),
       tree
     }
@@ -130,22 +132,45 @@ export default class Analyzer {
     return diagnostics
   }
 
-  public getVariableExpansionSymbolsFromTree ({ tree, uri }: { tree: Tree, uri: string }): BitbakeSymbolInformation[] {
+  // TODO: Traverse the tree once to get all the symbols: globalDeclarations, variable expansion symbols, python datastore variables symbols
+  public getSymbolsFromTree ({ tree, uri }: { tree: Tree, uri: string }): { variableExpansionSymbols: BitbakeSymbolInformation[], pythonDatastoreVariableSymbols: BitbakeSymbolInformation[] } {
     const variableExpansionSymbols: BitbakeSymbolInformation[] = []
-
+    const pythonDatastoreVariableSymbols: BitbakeSymbolInformation[] = []
     TreeSitterUtils.forEach(tree.rootNode, (node) => {
       const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion')
-      const followChildren = !isNonEmptyVariableExpansion
+      const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node.startPosition.row, node.startPosition.column)
+
+      const followChildren = !(isNonEmptyVariableExpansion || isPythonDatastoreVariable)
 
       if (isNonEmptyVariableExpansion) {
         const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isVariableExpansion: true })
         symbol !== null && variableExpansionSymbols.push(symbol)
       }
 
+      if (isPythonDatastoreVariable) {
+        const actualVariableNode = node?.parent
+        if (actualVariableNode !== null) {
+          const range = TreeSitterUtils.range(actualVariableNode)
+          const symbol: BitbakeSymbolInformation = {
+            ...SymbolInformation.create(
+              // The node text includes the leading and trailing single quotes, so we need to remove them.
+              // The range is adjusted for the same reason.
+              actualVariableNode.text.replace(/'/g, ''),
+              SymbolKind.Variable,
+              Range.create(Position.create(range.start.line, range.start.character + 1), Position.create(range.end.line, range.end.character - 1)),
+              uri
+            ),
+            commentsAbove: [],
+            overrides: []
+          }
+          pythonDatastoreVariableSymbols.push(symbol)
+        }
+      }
+
       return followChildren
     })
 
-    return variableExpansionSymbols
+    return { variableExpansionSymbols, pythonDatastoreVariableSymbols }
   }
 
   public getGlobalDeclarationSymbols (uri: string): BitbakeSymbolInformation[] {
@@ -637,11 +662,13 @@ export default class Analyzer {
           )
           parsedTree = this.parser.parse(textDocument.getText())
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
+          const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromTree({ tree: parsedTree, uri })
           this.uriToAnalyzedDocument[uri] = {
             version: textDocument.version,
             document: textDocument,
             globalDeclarations: getGlobalDeclarations({ tree: parsedTree, uri }),
-            variableExpansionSymbols: this.getVariableExpansionSymbolsFromTree({ tree: parsedTree, uri }),
+            variableExpansionSymbols,
+            pythonDatastoreVariableSymbols,
             includeFileUris: [],
             tree: parsedTree
           }

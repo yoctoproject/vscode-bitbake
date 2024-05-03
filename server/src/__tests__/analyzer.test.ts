@@ -409,7 +409,7 @@ describe('getVariableExpansionSymbols', () => {
       fail('Tree is undefined')
     }
 
-    const symbols = analyzer.getVariableExpansionSymbolsFromTree({ tree, uri })
+    const symbols = analyzer.getSymbolsFromTree({ tree, uri }).variableExpansionSymbols
 
     expect(symbols).toEqual(
       expect.arrayContaining([
