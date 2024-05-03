@@ -84,6 +84,18 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]?.variableExpansionSymbols ?? []
   }
 
+  public getPythonDatastoreVariableSymbols (uri: string): BitbakeSymbolInformation[] {
+    return this.uriToAnalyzedDocument[uri]?.pythonDatastoreVariableSymbols ?? []
+  }
+
+  public getAllSymbols (uri: string): BitbakeSymbolInformation[] {
+    return [
+      ...this.getGlobalDeclarationSymbols(uri),
+      ...this.getVariableExpansionSymbols(uri),
+      ...this.getPythonDatastoreVariableSymbols(uri)
+    ]
+  }
+
   public removeLastScanResultForRecipe (recipe: string): void {
     this.uriToLastScanResult[recipe] = undefined
   }
@@ -191,7 +203,8 @@ export default class Analyzer {
   }
 
   public findExactSymbolAtPoint (uri: string, position: Position, wordAtPoint: string): BitbakeSymbolInformation | undefined {
-    return analyzer.getGlobalDeclarationSymbols(uri).find((symbol) => symbol.name === wordAtPoint && analyzer.positionIsInRange(position.line, position.character, symbol.location.range)) ?? analyzer.uriToAnalyzedDocument[uri]?.variableExpansionSymbols.find((symbol) => symbol.name === wordAtPoint && analyzer.positionIsInRange(position.line, position.character, symbol.location.range))
+    const allSymbols = this.getAllSymbols(uri)
+    return allSymbols.find((symbol) => symbol.name === wordAtPoint && this.positionIsInRange(position.line, position.character, symbol.location.range))
   }
 
   public getParsedTreeForUri (uri: string): Tree | undefined {
