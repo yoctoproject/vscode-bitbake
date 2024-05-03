@@ -20,10 +20,7 @@ export function onRenameRequestHandler (renameParams: LSP.RenameParams): LSP.Wor
     return null
   }
 
-  const allSymbols = [
-    ...analyzer.getGlobalDeclarationSymbols(uri).filter(symbol => symbol.name === word && symbol.kind === exactSymbol.kind),
-    ...analyzer.getVariableExpansionSymbols(uri).filter(symbol => symbol.name === word && symbol.kind === exactSymbol.kind)
-  ]
+  const allSymbols = analyzer.getAllSymbols(uri).filter(symbol => symbol.name === word && symbol.kind === exactSymbol.kind)
 
   const edits = {
     changes: {
