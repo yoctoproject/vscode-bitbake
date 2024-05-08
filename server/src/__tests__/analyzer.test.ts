@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { generateBitBakeParser } from '../tree-sitter/parser'
+import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import Analyzer from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
@@ -14,8 +14,9 @@ import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 
 async function getAnalyzer (): Promise<Analyzer> {
   const bitBakeParser = await generateBitBakeParser()
+  const bashParser = await generateBashParser()
   const analyzer = new Analyzer()
-  analyzer.initialize(bitBakeParser)
+  analyzer.initialize(bitBakeParser, bashParser)
   return analyzer
 }
 

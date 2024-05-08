@@ -21,7 +21,7 @@ import {
 import { bitBakeDocScanner } from './BitBakeDocScanner'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
-import { generateBitBakeParser } from './tree-sitter/parser'
+import { generateBashParser, generateBitBakeParser } from './tree-sitter/parser'
 import { logger } from './lib/src/utils/OutputLogger'
 import { onCompletionHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler, setDefinitionsConnection } from './connectionHandlers/onDefinition'
@@ -64,8 +64,9 @@ disposables.push(
     logger.info('[onInitialize] Parsing doc files')
     bitBakeDocScanner.parseDocs()
 
-    const parser = await generateBitBakeParser()
-    analyzer.initialize(parser)
+    const bitBakeParser = await generateBitBakeParser()
+    const bashParser = await generateBashParser()
+    analyzer.initialize(bitBakeParser, bashParser)
 
     return {
       capabilities: {

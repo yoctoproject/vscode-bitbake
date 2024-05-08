@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { analyzer } from '../tree-sitter/analyzer'
-import { generateBitBakeParser } from '../tree-sitter/parser'
+import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { onDefinitionHandler } from '../connectionHandlers/onDefinition'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import path from 'path'
@@ -13,9 +13,10 @@ import { extractRecipeName } from '../lib/src/utils/files'
 
 describe('on definition', () => {
   beforeAll(async () => {
-    if (!analyzer.hasParser()) {
+    if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
-      analyzer.initialize(bitBakeParser)
+      const bashParser = await generateBashParser()
+      analyzer.initialize(bitBakeParser, bashParser)
     }
     analyzer.resetAnalyzedDocuments()
   })

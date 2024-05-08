@@ -4,15 +4,16 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { analyzer } from '../tree-sitter/analyzer'
-import { generateBitBakeParser } from '../tree-sitter/parser'
+import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { getParsedTokens, TOKEN_LEGEND } from '../semanticTokens'
 import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 
 describe('Semantic tokens', () => {
   beforeAll(async () => {
-    if (!analyzer.hasParser()) {
+    if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
-      analyzer.initialize(bitBakeParser)
+      const bashParser = await generateBashParser()
+      analyzer.initialize(bitBakeParser, bashParser)
     }
     analyzer.resetAnalyzedDocuments()
   })
