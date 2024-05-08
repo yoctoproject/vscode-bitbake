@@ -5,14 +5,15 @@
 
 import { onRenameRequestHandler, onPrepareRenameHandler } from '../connectionHandlers/onRename'
 import { analyzer } from '../tree-sitter/analyzer'
-import { generateBitBakeParser } from '../tree-sitter/parser'
+import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { DUMMY_URI, FIXTURE_DOCUMENT } from './fixtures/fixtures'
 
 describe('onRenameRequestHandler', () => {
   beforeAll(async () => {
-    if (!analyzer.hasParser()) {
+    if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
-      analyzer.initialize(bitBakeParser)
+      const bashParser = await generateBashParser()
+      analyzer.initialize(bitBakeParser, bashParser)
     }
     analyzer.resetAnalyzedDocuments()
   })

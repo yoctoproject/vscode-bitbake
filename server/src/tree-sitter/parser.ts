@@ -24,3 +24,8 @@ export async function generateBitBakeParser (): Promise<Parser> {
   const wasmPath = path.join(__dirname, '/../../tree-sitter-bitbake.wasm')
   return await generateParser(wasmPath)
 }
+
+export async function generateBashParser (): Promise<Parser> {
+  const wasmPath = path.join(__dirname, '/../../tree-sitter-bash.wasm')
+  return await generateParser(wasmPath)
+}

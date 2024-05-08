@@ -6,7 +6,7 @@
 import { onCompletionHandler } from '../connectionHandlers/onCompletion'
 import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
-import { generateBitBakeParser } from '../tree-sitter/parser'
+import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
@@ -19,9 +19,10 @@ import { extractRecipeName } from '../lib/src/utils/files'
  */
 describe('On Completion', () => {
   beforeAll(async () => {
-    if (!analyzer.hasParser()) {
+    if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
-      analyzer.initialize(bitBakeParser)
+      const bashParser = await generateBashParser()
+      analyzer.initialize(bitBakeParser, bashParser)
     }
     analyzer.resetAnalyzedDocuments()
   })
