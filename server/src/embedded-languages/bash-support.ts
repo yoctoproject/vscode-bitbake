@@ -27,7 +27,7 @@ export const bashHeader = [
 
 export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument, pokyFolder?: string): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'bash')
-  TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
+  TreeSitterUtils.forEach(analyzedDocument.bitBakeTree.rootNode, (node) => {
     switch (node.type) {
       case 'recipe':
         return true

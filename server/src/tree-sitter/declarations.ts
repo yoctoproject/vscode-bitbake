@@ -43,17 +43,17 @@ const GLOBAL_DECLARATION_NODE_TYPES = new Set([
  *
  */
 export function getGlobalDeclarations ({
-  tree,
+  bitBakeTree,
   uri,
   getFinalValue = false // Whether to get the final value from the scan results obtained from scan recipe command, which is the only use case as of now
 }: {
-  tree: Parser.Tree
+  bitBakeTree: Parser.Tree
   uri: string
   getFinalValue?: boolean
 }): GlobalDeclarations {
   const globalDeclarations: GlobalDeclarations = {}
 
-  TreeSitterUtil.forEach(tree.rootNode, (node) => {
+  TreeSitterUtil.forEach(bitBakeTree.rootNode, (node) => {
     const followChildren = !GLOBAL_DECLARATION_NODE_TYPES.has(node.type)
 
     const symbol = getDeclarationSymbolFromNode({ node, uri, getFinalValue })

@@ -38,7 +38,7 @@ export interface AnalyzedDocument {
   variableExpansionSymbols: BitbakeSymbolInformation[]
   pythonDatastoreVariableSymbols: BitbakeSymbolInformation[]
   includeFileUris: string[]
-  tree: Parser.Tree
+  bitBakeTree: Parser.Tree
 }
 
 interface LastScanResult {
@@ -120,10 +120,10 @@ export default class Analyzer {
 
     const fileContent = document.getText()
 
-    const tree = this.bitBakeParser.parse(fileContent)
-    const globalDeclarations = getGlobalDeclarations({ tree, uri })
+    const bitBakeTree = this.bitBakeParser.parse(fileContent)
+    const globalDeclarations = getGlobalDeclarations({ bitBakeTree, uri })
 
-    const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromTree({ tree, uri })
+    const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromBitBakeTree({ bitBakeTree, uri })
 
     this.uriToAnalyzedDocument[uri] = {
       version: document.version,
@@ -131,26 +131,26 @@ export default class Analyzer {
       globalDeclarations,
       variableExpansionSymbols,
       pythonDatastoreVariableSymbols,
-      includeFileUris: this.extractIncludeFileUris(uri, tree),
-      tree
+      includeFileUris: this.extractIncludeFileUris(uri, bitBakeTree),
+      bitBakeTree
     }
 
-    return this.executeAnalyzation(document, uri, tree)
+    return this.executeAnalyzation(document, uri, bitBakeTree)
   }
 
-  private executeAnalyzation (document: TextDocument, uri: string, tree: Tree): Diagnostic[] {
+  private executeAnalyzation (document: TextDocument, uri: string, bitBakeTree: Tree): Diagnostic[] {
     const diagnostics: Diagnostic[] = []
 
-    // It was used to provide diagnostics from tree-sitter, but it is not yet reliable.
+    // It was used to provide diagnostics from bitBakeTree-sitter, but it is not yet reliable.
 
     return diagnostics
   }
 
   // TODO: Traverse the tree once to get all the symbols: globalDeclarations, variable expansion symbols, python datastore variables symbols
-  public getSymbolsFromTree ({ tree, uri }: { tree: Tree, uri: string }): { variableExpansionSymbols: BitbakeSymbolInformation[], pythonDatastoreVariableSymbols: BitbakeSymbolInformation[] } {
+  public getSymbolsFromBitBakeTree ({ bitBakeTree, uri }: { bitBakeTree: Tree, uri: string }): { variableExpansionSymbols: BitbakeSymbolInformation[], pythonDatastoreVariableSymbols: BitbakeSymbolInformation[] } {
     const variableExpansionSymbols: BitbakeSymbolInformation[] = []
     const pythonDatastoreVariableSymbols: BitbakeSymbolInformation[] = []
-    TreeSitterUtils.forEach(tree.rootNode, (node) => {
+    TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
       const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion')
       const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node.startPosition.row, node.startPosition.column)
 
@@ -209,8 +209,8 @@ export default class Analyzer {
     return allSymbols.find((symbol) => symbol.name === wordAtPoint && this.positionIsInRange(position.line, position.character, symbol.location.range))
   }
 
-  public getParsedTreeForUri (uri: string): Tree | undefined {
-    return this.uriToAnalyzedDocument[uri]?.tree
+  public getParsedBitBakeTreeForUri (uri: string): Tree | undefined {
+    return this.uriToAnalyzedDocument[uri]?.bitBakeTree
   }
 
   /**
@@ -631,31 +631,31 @@ export default class Analyzer {
     line: number,
     column: number
   ): Parser.SyntaxNode | null {
-    const tree = this.uriToAnalyzedDocument[uri]?.tree
+    const bitBakeTree = this.uriToAnalyzedDocument[uri]?.bitBakeTree
 
-    if (tree === undefined) {
+    if (bitBakeTree === undefined) {
       return null
     }
 
-    if (tree.rootNode === null) {
+    if (bitBakeTree.rootNode === null) {
       // Check for lacking rootNode (due to failed parse?)
       return null
     }
 
-    return tree.rootNode.descendantForPosition({ row: line, column })
+    return bitBakeTree.rootNode.descendantForPosition({ row: line, column })
   }
 
   // Return the uris in the diretive statements for unlimited depth
-  public extractIncludeFileUris (uri: string, tree?: Parser.Tree): string[] {
+  public extractIncludeFileUris (uri: string, bitBakeTree?: Parser.Tree): string[] {
     const includeUris: string[] = []
-    this.sourceIncludeFiles(uri, includeUris, tree)
+    this.sourceIncludeFiles(uri, includeUris, bitBakeTree)
     return includeUris
   }
 
   /**
    * The files pointed by the include URIs will analyzed if not yet done so such that the symbols in the included files are available for querying.
    */
-  private sourceIncludeFiles (uri: string, includeFileUris: string[], tree?: Parser.Tree): void {
+  private sourceIncludeFiles (uri: string, includeFileUris: string[], bitBakeTree?: Parser.Tree): void {
     if (this.bitBakeParser === undefined) {
       logger.error('[Analyzer] The analyzer is not initialized with a parser')
       return
@@ -664,8 +664,8 @@ export default class Analyzer {
     logger.debug(`[Analyzer] Sourcing file: ${filePath}`)
     try {
       let parsedTree: Parser.Tree
-      if (tree !== undefined) {
-        parsedTree = tree
+      if (bitBakeTree !== undefined) {
+        parsedTree = bitBakeTree
       } else {
         const analyzedDocument = this.uriToAnalyzedDocument[uri]
         if (analyzedDocument === undefined) {
@@ -677,19 +677,19 @@ export default class Analyzer {
           )
           parsedTree = this.bitBakeParser.parse(textDocument.getText())
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
-          const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromTree({ tree: parsedTree, uri })
+          const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromBitBakeTree({ bitBakeTree: parsedTree, uri })
           this.uriToAnalyzedDocument[uri] = {
             version: textDocument.version,
             document: textDocument,
-            globalDeclarations: getGlobalDeclarations({ tree: parsedTree, uri }),
+            globalDeclarations: getGlobalDeclarations({ bitBakeTree: parsedTree, uri }),
             variableExpansionSymbols,
             pythonDatastoreVariableSymbols,
             includeFileUris: [],
-            tree: parsedTree
+            bitBakeTree: parsedTree
           }
         } else {
           logger.debug('[Analyzer] File already analyzed')
-          parsedTree = analyzedDocument.tree
+          parsedTree = analyzedDocument.bitBakeTree
         }
       }
 
@@ -835,7 +835,7 @@ export default class Analyzer {
   public getLinksInStringContent (uri: string): Array<{ value: string, range: Range }> {
     const links: Array<{ value: string, range: Range }> = []
     const uriRegex = /(file:\/\/)(?<uri>.*)\b/g
-    const parsedTree = this.getAnalyzedDocument(uri)?.tree
+    const parsedTree = this.getAnalyzedDocument(uri)?.bitBakeTree
     if (parsedTree === undefined) {
       return []
     }
@@ -937,7 +937,7 @@ export default class Analyzer {
     const scanResultText = lines.slice(index).join('\r\n')
     const scanResultParsedTree = this.bitBakeParser.parse(scanResultText)
 
-    const scanResultGlobalDeclarations = getGlobalDeclarations({ tree: scanResultParsedTree, uri: 'scanResultDummyUri', getFinalValue: true })
+    const scanResultGlobalDeclarations = getGlobalDeclarations({ bitBakeTree: scanResultParsedTree, uri: 'scanResultDummyUri', getFinalValue: true })
     const scanResultSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultGlobalDeclarations)
 
     this.uriToLastScanResult[chosenRecipe] = {

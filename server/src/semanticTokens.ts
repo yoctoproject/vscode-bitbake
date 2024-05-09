@@ -81,7 +81,7 @@ function encodeTokenModifiers (strTokenModifiers: string[]): number {
 
 export function getParsedTokens (uri: string): ParsedToken[] {
   const resultTokens: ParsedToken[] = []
-  const Tree = analyzer.getParsedTreeForUri(uri)
+  const Tree = analyzer.getParsedBitBakeTreeForUri(uri)
   if (Tree === undefined) {
     logger.warn(`[getSemanticTokens] Syntax tree not found for ${uri}`)
     return []
