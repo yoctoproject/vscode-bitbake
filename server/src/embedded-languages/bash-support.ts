@@ -3,12 +3,13 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { type AnalyzedDocument } from '../tree-sitter/analyzer'
 import * as TreeSitterUtils from '../tree-sitter/utils'
 import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
+import type Parser from 'web-tree-sitter'
 import { type SyntaxNode } from 'web-tree-sitter'
 import { logger } from '../lib/src/utils/OutputLogger'
+import { type TextDocument } from 'vscode-languageserver-textdocument'
 
 const shebang = '#!/bin/sh\n'
 
@@ -25,9 +26,13 @@ export const bashHeader = [
   ''
 ].join('\n')
 
-export const generateBashEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument, pokyFolder?: string): EmbeddedLanguageDoc => {
-  const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'bash')
-  TreeSitterUtils.forEach(analyzedDocument.bitBakeTree.rootNode, (node) => {
+export const generateBashEmbeddedLanguageDoc = (
+  textDocument: TextDocument,
+  bitBakeTree: Parser.Tree,
+  pokyFolder?: string
+): EmbeddedLanguageDoc => {
+  const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'bash')
+  TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
     switch (node.type) {
       case 'recipe':
         return true

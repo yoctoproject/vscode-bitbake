@@ -17,8 +17,15 @@ export const generateEmbeddedLanguageDocs = (textDocument: TextDocument, pokyFol
     return
   }
   return [
-    generateBashEmbeddedLanguageDoc(analyzedDocument, pokyFolder),
-    generatePythonEmbeddedLanguageDoc(analyzedDocument)
+    generateBashEmbeddedLanguageDoc(
+      analyzedDocument.document,
+      analyzedDocument.bitBakeTree,
+      pokyFolder
+    ),
+    generatePythonEmbeddedLanguageDoc(
+      analyzedDocument.document,
+      analyzedDocument.bitBakeTree
+    )
   ]
 }
 

@@ -3,13 +3,14 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import type Parser from 'web-tree-sitter'
 import { type SyntaxNode } from 'web-tree-sitter'
 
-import { type AnalyzedDocument } from '../tree-sitter/analyzer'
 import * as TreeSitterUtils from '../tree-sitter/utils'
 
 import { insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
 import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
+import { type TextDocument } from 'vscode-languageserver-textdocument'
 
 export const imports = [
   'import bb, bb.build, bb.compress.zstd, bb.data, bb.data_smart, bb.event, bb.fetch2, bb.parse, bb.persist_data, bb.process, bb.progress, bb.runqueue, bb.siggen, bb.utils',
@@ -21,9 +22,12 @@ export const imports = [
   ''
 ].join('\n')
 
-export const generatePythonEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
-  const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'python')
-  TreeSitterUtils.forEach(analyzedDocument.bitBakeTree.rootNode, (node) => {
+export const generatePythonEmbeddedLanguageDoc = (
+  textDocument: TextDocument,
+  bitBakeTree: Parser.Tree
+): EmbeddedLanguageDoc => {
+  const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'python')
+  TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
     switch (node.type) {
       case 'python_function_definition':
         handlePythonFunctionDefinition(node, embeddedLanguageDoc)
