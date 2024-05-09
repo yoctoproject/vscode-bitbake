@@ -30,6 +30,7 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { type RequestResult } from '../lib/src/types/requests'
+import { generateBashEmbeddedLanguageDoc } from '../embedded-languages/bash-support'
 
 export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
@@ -39,6 +40,7 @@ export interface AnalyzedDocument {
   pythonDatastoreVariableSymbols: BitbakeSymbolInformation[]
   includeFileUris: string[]
   bitBakeTree: Parser.Tree
+  bashTree: Parser.Tree
 }
 
 interface LastScanResult {
@@ -113,14 +115,16 @@ export default class Analyzer {
     document: TextDocument
     uri: string
   }): Diagnostic[] {
-    if (this.bitBakeParser === undefined) {
-      logger.debug('[Analyzer] The analyzer is not initialized with a parser')
+    const bitBakeTree = this.generateBitBakeTree(document)
+    if (bitBakeTree === undefined) {
       return []
     }
 
-    const fileContent = document.getText()
+    const bashTree = this.generateBashTree(document, bitBakeTree)
+    if (bashTree === undefined) {
+      return []
+    }
 
-    const bitBakeTree = this.bitBakeParser.parse(fileContent)
     const globalDeclarations = getGlobalDeclarations({ bitBakeTree, uri })
 
     const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromBitBakeTree({ bitBakeTree, uri })
@@ -132,10 +136,35 @@ export default class Analyzer {
       variableExpansionSymbols,
       pythonDatastoreVariableSymbols,
       includeFileUris: this.extractIncludeFileUris(uri, bitBakeTree),
-      bitBakeTree
+      bitBakeTree,
+      bashTree
     }
 
     return this.executeAnalyzation(document, uri, bitBakeTree)
+  }
+
+  private generateBitBakeTree (document: TextDocument): Parser.Tree | undefined {
+    if (this.bitBakeParser === undefined) {
+      logger.debug('[Analyzer] The analyzer is not initialized with a BitBake parser')
+      return
+    }
+
+    return this.bitBakeParser?.parse(document.getText())
+  }
+
+  private generateBashTree (document: TextDocument, bitBakeTree: Parser.Tree): Parser.Tree | undefined {
+    if (this.bashParser === undefined) {
+      logger.debug('[Analyzer] The analyzer is not initialized with a Bash parser')
+      return
+    }
+
+    const bashContent = generateBashEmbeddedLanguageDoc(
+      document,
+      bitBakeTree,
+      true
+    ).content
+
+    return this.bashParser.parse(bashContent)
   }
 
   private executeAnalyzation (document: TextDocument, uri: string, bitBakeTree: Tree): Diagnostic[] {
@@ -656,10 +685,6 @@ export default class Analyzer {
    * The files pointed by the include URIs will analyzed if not yet done so such that the symbols in the included files are available for querying.
    */
   private sourceIncludeFiles (uri: string, includeFileUris: string[], bitBakeTree?: Parser.Tree): void {
-    if (this.bitBakeParser === undefined) {
-      logger.error('[Analyzer] The analyzer is not initialized with a parser')
-      return
-    }
     const filePath = uri.replace('file://', '')
     logger.debug(`[Analyzer] Sourcing file: ${filePath}`)
     try {
@@ -675,7 +700,15 @@ export default class Analyzer {
             0,
             fs.readFileSync(uri.replace('file://', ''), 'utf8')
           )
-          parsedTree = this.bitBakeParser.parse(textDocument.getText())
+          const bitBakeTree = this.generateBitBakeTree(textDocument)
+          if (bitBakeTree === undefined) {
+            return
+          }
+          parsedTree = bitBakeTree
+          const bashTree = this.generateBashTree(textDocument, bitBakeTree)
+          if (bashTree === undefined) {
+            return
+          }
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
           const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromBitBakeTree({ bitBakeTree: parsedTree, uri })
           this.uriToAnalyzedDocument[uri] = {
@@ -685,7 +718,8 @@ export default class Analyzer {
             variableExpansionSymbols,
             pythonDatastoreVariableSymbols,
             includeFileUris: [],
-            bitBakeTree: parsedTree
+            bitBakeTree: parsedTree,
+            bashTree
           }
         } else {
           logger.debug('[Analyzer] File already analyzed')
