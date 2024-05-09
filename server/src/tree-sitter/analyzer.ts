@@ -37,6 +37,7 @@ export interface AnalyzedDocument {
   document: TextDocument
   globalDeclarations: GlobalDeclarations
   variableExpansionSymbols: BitbakeSymbolInformation[]
+  bashGlobalVariablesSymbols: BitbakeSymbolInformation[] // We let Bash IDE handle local variables
   pythonDatastoreVariableSymbols: BitbakeSymbolInformation[]
   includeFileUris: string[]
   bitBakeTree: Parser.Tree
@@ -46,6 +47,11 @@ export interface AnalyzedDocument {
 interface LastScanResult {
   symbols: BitbakeSymbolInformation[]
   includeHistory: ParsedPath[]
+}
+
+interface BashScopeLocalVariables {
+  variables: Set<string>
+  scope: Parser.SyntaxNode
 }
 
 export default class Analyzer {
@@ -87,6 +93,10 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]?.variableExpansionSymbols ?? []
   }
 
+  public getBashGlobalVariablesSymbols (uri: string): BitbakeSymbolInformation[] {
+    return this.uriToAnalyzedDocument[uri]?.bashGlobalVariablesSymbols ?? []
+  }
+
   public getPythonDatastoreVariableSymbols (uri: string): BitbakeSymbolInformation[] {
     return this.uriToAnalyzedDocument[uri]?.pythonDatastoreVariableSymbols ?? []
   }
@@ -95,6 +105,7 @@ export default class Analyzer {
     return [
       ...this.getGlobalDeclarationSymbols(uri),
       ...this.getVariableExpansionSymbols(uri),
+      ...this.getBashGlobalVariablesSymbols(uri),
       ...this.getPythonDatastoreVariableSymbols(uri)
     ]
   }
@@ -128,12 +139,14 @@ export default class Analyzer {
     const globalDeclarations = getGlobalDeclarations({ bitBakeTree, uri })
 
     const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromBitBakeTree({ bitBakeTree, uri })
+    const { bashGlobalVariablesSymbols } = this.getSymbolsFromBashTree({ bashTree, uri })
 
     this.uriToAnalyzedDocument[uri] = {
       version: document.version,
       document,
       globalDeclarations,
       variableExpansionSymbols,
+      bashGlobalVariablesSymbols,
       pythonDatastoreVariableSymbols,
       includeFileUris: this.extractIncludeFileUris(uri, bitBakeTree),
       bitBakeTree,
@@ -180,7 +193,9 @@ export default class Analyzer {
     const variableExpansionSymbols: BitbakeSymbolInformation[] = []
     const pythonDatastoreVariableSymbols: BitbakeSymbolInformation[] = []
     TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
-      const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion')
+      // Bash variable expansions are handled separately in getSymbolsFromBashTree
+      const isInsideBashRegion = this.isInsideBashRegion(uri, node.startPosition.row, node.startPosition.column)
+      const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion' && !isInsideBashRegion)
       const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node.startPosition.row, node.startPosition.column)
 
       const followChildren = !(isNonEmptyVariableExpansion || isPythonDatastoreVariable)
@@ -214,6 +229,55 @@ export default class Analyzer {
     })
 
     return { variableExpansionSymbols, pythonDatastoreVariableSymbols }
+  }
+
+  public getSymbolsFromBashTree ({ bashTree, uri }: { bashTree: Tree, uri: string }): { bashGlobalVariablesSymbols: BitbakeSymbolInformation[] } {
+    const bashGlobalVariablesSymbols: BitbakeSymbolInformation[] = []
+    const scopeLocalVariablesStack: BashScopeLocalVariables[] = []
+    TreeSitterUtils.forEach(bashTree.rootNode, (node) => {
+      const isFunctionDefinition = node.type === 'function_definition'
+      const isBashVariableName = node.type === 'variable_name'
+
+      if (isFunctionDefinition || isBashVariableName) {
+        // Popping scopes that are no longer valid
+        for (const parentScopeLocalVariables of Array(...scopeLocalVariablesStack).reverse()) {
+          if (parentScopeLocalVariables.scope.endIndex > node.startIndex) {
+            break
+          }
+          scopeLocalVariablesStack.pop()
+        }
+      }
+
+      if (isFunctionDefinition) {
+        scopeLocalVariablesStack.push({ variables: new Set<string>(), scope: node })
+      }
+
+      if (isBashVariableName) {
+        const isLocalVariableDeclaration = node.previousSibling?.type === 'local' || node.parent?.previousSibling?.type === 'local'
+        if (isLocalVariableDeclaration) {
+          scopeLocalVariablesStack.at(-1)?.variables.add(node.text)
+        } else {
+          // Note local variable declarations are a special case of local variables that have already been handled
+          const isLocalVariable = scopeLocalVariablesStack.some((scopeLocalVariables) => scopeLocalVariables.variables.has(node.text))
+          if (!isLocalVariable) {
+            const symbol: BitbakeSymbolInformation = {
+              ...SymbolInformation.create(
+                node.text,
+                SymbolKind.Variable,
+                TreeSitterUtils.range(node),
+                uri
+              ),
+              commentsAbove: [],
+              overrides: []
+            }
+            bashGlobalVariablesSymbols.push(symbol)
+          }
+        }
+      }
+      return true
+    })
+
+    return { bashGlobalVariablesSymbols }
   }
 
   public getGlobalDeclarationSymbols (uri: string): BitbakeSymbolInformation[] {
@@ -553,12 +617,13 @@ export default class Analyzer {
     return n?.parent?.type === 'variable_expansion' || (n?.type === 'identifier' && n?.parent?.type === 'variable_expansion')
   }
 
-  public isBashVariableExpansion (
+  public isBashVariableName (
     uri: string,
     line: number,
     column: number
   ): boolean {
-    return this.isInsideBashRegion(uri, line, column) && this.isVariableExpansion(uri, line, column)
+    const n = this.bashNodeAtPoint(uri, line, column)
+    return n?.type === 'variable_name'
   }
 
   /**
@@ -734,11 +799,13 @@ export default class Analyzer {
           }
           // Store it in analyzedDocument just like what analyze() does to avoid re-reading the file from disk and re-parsing the tree when editing on the same file
           const { variableExpansionSymbols, pythonDatastoreVariableSymbols } = this.getSymbolsFromBitBakeTree({ bitBakeTree: parsedTree, uri })
+          const { bashGlobalVariablesSymbols } = this.getSymbolsFromBashTree({ bashTree, uri })
           this.uriToAnalyzedDocument[uri] = {
             version: textDocument.version,
             document: textDocument,
             globalDeclarations: getGlobalDeclarations({ bitBakeTree: parsedTree, uri }),
             variableExpansionSymbols,
+            bashGlobalVariablesSymbols,
             pythonDatastoreVariableSymbols,
             includeFileUris: [],
             bitBakeTree: parsedTree,

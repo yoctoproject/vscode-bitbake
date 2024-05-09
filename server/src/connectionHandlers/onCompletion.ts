@@ -189,7 +189,7 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
 }
 
 function getBashCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
-  if (analyzer.isBashVariableExpansion(documentUri, wordPosition.line, wordPosition.character)) {
+  if (analyzer.isBashVariableName(documentUri, wordPosition.line, wordPosition.character)) {
     const symbolCompletionItems = getSymbolCompletionItems(word)
     return mergeArraysDistinctly(
       (completionItem) => completionItem.label,
