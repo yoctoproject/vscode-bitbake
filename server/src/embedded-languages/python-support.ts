@@ -23,7 +23,7 @@ export const imports = [
 
 export const generatePythonEmbeddedLanguageDoc = (analyzedDocument: AnalyzedDocument): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(analyzedDocument.document, 'python')
-  TreeSitterUtils.forEach(analyzedDocument.tree.rootNode, (node) => {
+  TreeSitterUtils.forEach(analyzedDocument.bitBakeTree.rootNode, (node) => {
     switch (node.type) {
       case 'python_function_definition':
         handlePythonFunctionDefinition(node, embeddedLanguageDoc)

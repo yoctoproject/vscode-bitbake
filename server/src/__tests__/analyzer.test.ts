@@ -404,13 +404,13 @@ describe('getVariableExpansionSymbols', () => {
       uri
     })
 
-    const tree = analyzer.getAnalyzedDocument(uri)?.tree
+    const bitBakeTree = analyzer.getAnalyzedDocument(uri)?.bitBakeTree
 
-    if (tree === undefined) {
+    if (bitBakeTree === undefined) {
       fail('Tree is undefined')
     }
 
-    const symbols = analyzer.getSymbolsFromTree({ tree, uri }).variableExpansionSymbols
+    const symbols = analyzer.getSymbolsFromBitBakeTree({ bitBakeTree, uri }).variableExpansionSymbols
 
     expect(symbols).toEqual(
       expect.arrayContaining([
