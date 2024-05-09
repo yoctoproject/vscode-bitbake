@@ -29,6 +29,7 @@ export const bashHeader = [
 export const generateBashEmbeddedLanguageDoc = (
   textDocument: TextDocument,
   bitBakeTree: Parser.Tree,
+  shouldKeepExactPositions: boolean, // Indicates the positions in the generated document should map exactly with the original document
   pokyFolder?: string
 ): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'bash')
@@ -43,9 +44,11 @@ export const generateBashEmbeddedLanguageDoc = (
         return false
     }
   })
-  insertBashHeader(embeddedLanguageDoc)
-  if (pokyFolder !== undefined) {
-    insertBashTools(embeddedLanguageDoc, pokyFolder)
+  if (!shouldKeepExactPositions) {
+    insertBashHeader(embeddedLanguageDoc)
+    if (pokyFolder !== undefined) {
+      insertBashTools(embeddedLanguageDoc, pokyFolder)
+    }
   }
   return embeddedLanguageDoc
 }
