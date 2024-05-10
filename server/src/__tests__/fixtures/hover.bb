@@ -49,6 +49,7 @@ VAR = "${@d.getVar("DESCRIPTION")}"
 
 do_foo() {
     "${DESCRIPTION} DESCRIPTION"
+    $DESCRIPTION
 }
 
 d.getVar("DESCRIPTION")

@@ -433,7 +433,7 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 53,
+        line: 54,
         character: 10
       }
     })
@@ -522,6 +522,31 @@ describe('on hover', () => {
     })
 
     expect(shouldNotShow1).toBe(null)
+  })
+
+  it('shows definition on hovering simple variable expansion inside bash region', async () => {
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow1 = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 51,
+        character: 9
+      }
+    })
+
+    expect(shouldShow1).toEqual({
+      contents: {
+        kind: 'markdown',
+        value: '**DESCRIPTION**\n___\n   A long description for the recipe.\n\n'
+      }
+    })
   })
 
   it('should show comments above the global declarations', async () => {
