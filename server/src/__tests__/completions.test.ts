@@ -1035,7 +1035,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 31,
+        line: 27,
         character: 8
       }
     })
@@ -1062,7 +1062,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 31,
+        line: 27,
         character: 11
       }
     })
@@ -1173,7 +1173,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 26,
+        line: 30,
         character: 12
       }
     })

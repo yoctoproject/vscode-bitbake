@@ -24,12 +24,12 @@ D
 python() {
 }
 
-DESCRIPTION:
-def dummy() {
-}
-
 do_foo() {
     "${D} D"
+}
+
+DESCRIPTION:
+def dummy() {
 }
 
 # Show completion at the last line https://github.com/amaanq/tree-sitter-bitbake/issues/9
