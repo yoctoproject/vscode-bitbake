@@ -26,6 +26,7 @@ python() {
 
 do_foo() {
     "${D} D"
+    $D
 }
 
 DESCRIPTION:
