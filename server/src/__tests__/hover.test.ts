@@ -433,7 +433,7 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 49,
+        line: 53,
         character: 10
       }
     })
@@ -499,7 +499,7 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 52,
+        line: 50,
         character: 9
       }
     })
@@ -509,7 +509,7 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 52,
+        line: 50,
         character: 21
       }
     })
