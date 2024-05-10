@@ -413,7 +413,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 35,
+        line: 36,
         character: 13
       }
     })
@@ -1071,6 +1071,43 @@ describe('On Completion', () => {
     ).toBeUndefined()
   })
 
+  it('provides proper completion items on simple variable expansion in bash', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    bitBakeDocScanner.parseBitbakeVariablesFile()
+    bitBakeDocScanner.parseYoctoVariablesFile()
+
+    const resultInVariableExpansion = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 28,
+        character: 6
+      }
+    })
+
+    expect(resultInVariableExpansion).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'DESCRIPTION',
+          labelDetails: {
+            description: 'Source: Yocto'
+          },
+          documentation: {
+            value: '```man\nDESCRIPTION (bitbake-language-server)\n\n\n```\n```bitbake\n\n```\n---\n   The package description used by package managers. If not set,\n   `DESCRIPTION` takes the value of the `SUMMARY`\n   variable.\n\n\n[Reference](https://docs.yoctoproject.org/ref-manual/variables.html#term-DESCRIPTION)',
+            kind: 'markdown'
+          },
+          insertText: undefined,
+          insertTextFormat: 1
+        })
+      ])
+    )
+  })
+
   it('provides common directories completion items where it is appropriate', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
@@ -1173,7 +1210,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 30,
+        line: 31,
         character: 12
       }
     })
