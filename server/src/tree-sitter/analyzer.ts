@@ -246,7 +246,7 @@ export default class Analyzer {
    * Find the full word at the given point.
    */
   public wordAtPoint (uri: string, line: number, column: number): string | null {
-    const node = this.nodeAtPoint(uri, line, column)
+    const node = this.bitBakeNodeAtPoint(uri, line, column)
 
     if (node === null || node.childCount > 0 || node.text.trim() === '') {
       return null
@@ -279,7 +279,7 @@ export default class Analyzer {
   public getDirectiveStatementKeywordByNodeType (
     params: TextDocumentPositionParams
   ): DirectiveStatementKeyword | undefined {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -311,7 +311,7 @@ export default class Analyzer {
   public getDirectivePathForPosition (
     params: TextDocumentPositionParams
   ): string | undefined {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -327,7 +327,7 @@ export default class Analyzer {
   public isIdentifier (
     params: TextDocumentPositionParams
   ): boolean {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -338,7 +338,7 @@ export default class Analyzer {
   public isFunctionIdentifier (
     params: TextDocumentPositionParams
   ): boolean {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -356,7 +356,7 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
     if (n?.type === 'string_content') {
       return true
     }
@@ -373,7 +373,7 @@ export default class Analyzer {
     column: number,
     variableNames?: string[]
   ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
     if (n?.type !== 'string_content') {
       return false
     }
@@ -395,7 +395,7 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
     // Current tree-sitter (as of @1.0.1) only treats 'append', 'prepend' and 'remove' as a node with "override" type. Other words following ":" will yield a node with "identifier" type whose parent node is of type "override"
     // However, in some cases, its parent node is not of type override but its grandparent is.
     // Some ugly checks were added (as of tree-sitter @1.1.0) due to: https://github.com/amaanq/tree-sitter-bitbake/issues/9
@@ -415,7 +415,7 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
     // The bug appears on identifiers, and also on the colon of overrides
     if (n?.type !== 'identifier' && n?.type !== ':') {
       return false
@@ -441,7 +441,7 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    let n = this.nodeAtPoint(uri, line, column)
+    let n = this.bitBakeNodeAtPoint(uri, line, column)
     if (this.isBuggyIdentifier(uri, line, column)) {
       return false
     }
@@ -461,7 +461,7 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    let n = this.nodeAtPoint(uri, line, column)
+    let n = this.bitBakeNodeAtPoint(uri, line, column)
     if (this.isBuggyIdentifier(uri, line, column)) {
       return false
     }
@@ -485,7 +485,7 @@ export default class Analyzer {
     // However, when the user hover on the variable, the quotes are not part of the variable
     includeOpeningQuote: boolean = false
   ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
     if (!this.isInsidePythonRegion(uri, line, column)) {
       return false
     }
@@ -548,8 +548,8 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    const n = this.nodeAtPoint(uri, line, column)
-    // since @1.0.2 the tree-sitter gives empty variable expansion (e.g. `VAR = "${}""`) the type "variable_expansion". But the node type returned from nodeAtPoint() at the position between "${" and "}" is of type "${" which is the result from descendantForPosition() (It returns the smallest node containing the given postion). In this case, the parent node has type "variable_expansion". Hence, we have n?.parent?.type === 'variable_expansion' below. The second expression after the || will be true if it encounters non-empty variable expansion syntax. e.g. `VAR = "${A}". Note that inline python with ${@} has type "inline_python"
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
+    // since @1.0.2 the tree-sitter gives empty variable expansion (e.g. `VAR = "${}""`) the type "variable_expansion". But the node type returned from bitBakeNodeAtPoint() at the position between "${" and "}" is of type "${" which is the result from descendantForPosition() (It returns the smallest node containing the given postion). In this case, the parent node has type "variable_expansion". Hence, we have n?.parent?.type === 'variable_expansion' below. The second expression after the || will be true if it encounters non-empty variable expansion syntax. e.g. `VAR = "${A}". Note that inline python with ${@} has type "inline_python"
     return n?.parent?.type === 'variable_expansion' || (n?.type === 'identifier' && n?.parent?.type === 'variable_expansion')
   }
 
@@ -567,7 +567,7 @@ export default class Analyzer {
   public isIdentifierOfVariableAssignment (
     params: TextDocumentPositionParams
   ): boolean {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -578,7 +578,7 @@ export default class Analyzer {
   public isVariableFlag (
     params: TextDocumentPositionParams
   ): boolean {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -590,7 +590,7 @@ export default class Analyzer {
   public rangeForWordAtPoint (
     params: TextDocumentPositionParams
   ): Range | undefined {
-    const n = this.nodeAtPoint(
+    const n = this.bitBakeNodeAtPoint(
       params.textDocument.uri,
       params.position.line,
       params.position.character
@@ -633,7 +633,7 @@ export default class Analyzer {
     line: number,
     column: number
   ): string | undefined {
-    const n = this.nodeAtPoint(uri, line, column)
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
 
     const parentNodeType = n?.parent?.type
     if (parentNodeType !== undefined) {
@@ -658,6 +658,20 @@ export default class Analyzer {
   private nodeAtPoint (
     uri: string,
     line: number,
+    column: number,
+    tree: Parser.Tree
+  ): Parser.SyntaxNode | null {
+    if (tree.rootNode === null) {
+      // Check for lacking rootNode (due to failed parse?)
+      return null
+    }
+
+    return tree.rootNode.descendantForPosition({ row: line, column })
+  }
+
+  private bitBakeNodeAtPoint (
+    uri: string,
+    line: number,
     column: number
   ): Parser.SyntaxNode | null {
     const bitBakeTree = this.uriToAnalyzedDocument[uri]?.bitBakeTree
@@ -666,12 +680,21 @@ export default class Analyzer {
       return null
     }
 
-    if (bitBakeTree.rootNode === null) {
-      // Check for lacking rootNode (due to failed parse?)
+    return this.nodeAtPoint(uri, line, column, bitBakeTree)
+  }
+
+  private bashNodeAtPoint (
+    uri: string,
+    line: number,
+    column: number
+  ): Parser.SyntaxNode | null {
+    const bashTree = this.uriToAnalyzedDocument[uri]?.bashTree
+
+    if (bashTree === undefined) {
       return null
     }
 
-    return bitBakeTree.rootNode.descendantForPosition({ row: line, column })
+    return this.nodeAtPoint(uri, line, column, bashTree)
   }
 
   // Return the uris in the diretive statements for unlimited depth
@@ -818,7 +841,7 @@ export default class Analyzer {
   public getSymbolsInStringContent (uri: string, line: number, character: number): SymbolInformation[] {
     const allSymbolsAtPosition: SymbolInformation[] = []
     const wholeWordRegex = /(?<![-.:])(--(enable|disable)-)?\b(?<name>[a-zA-Z0-9][a-zA-Z0-9-+.]*[a-zA-Z0-9])\b(?![-.:])/g
-    const n = this.nodeAtPoint(uri, line, character)
+    const n = this.bitBakeNodeAtPoint(uri, line, character)
     if (n?.type === 'string_content') {
       this.processSymbolsInStringContent(n, wholeWordRegex, (start, end, match) => {
         const symbolName = match.groups?.name
