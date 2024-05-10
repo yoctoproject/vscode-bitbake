@@ -47,8 +47,8 @@ def test ():
 
 VAR = "${@d.getVar("DESCRIPTION")}"
 
-d.getVar("DESCRIPTION")
-
 do_foo() {
     "${DESCRIPTION} DESCRIPTION"
 }
+
+d.getVar("DESCRIPTION")
