@@ -310,13 +310,18 @@ export default class Analyzer {
    * Find the full word at the given point.
    */
   public wordAtPoint (uri: string, line: number, column: number): string | null {
-    const node = this.bitBakeNodeAtPoint(uri, line, column)
+    const bashNode = this.bashNodeAtPoint(uri, line, column)
+    if (bashNode?.type === 'variable_name') {
+      return bashNode.text
+    }
 
-    if (node === null || node.childCount > 0 || node.text.trim() === '') {
+    const bitBakeNode = this.bitBakeNodeAtPoint(uri, line, column)
+
+    if (bitBakeNode === null || bitBakeNode.childCount > 0 || bitBakeNode.text.trim() === '') {
       return null
     }
 
-    return node.text.trim()
+    return bitBakeNode.text.trim()
   }
 
   public wordAtPointFromTextPosition (
