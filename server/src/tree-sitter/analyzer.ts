@@ -201,7 +201,7 @@ export default class Analyzer {
       const followChildren = !(isNonEmptyVariableExpansion || isPythonDatastoreVariable)
 
       if (isNonEmptyVariableExpansion) {
-        const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isVariableExpansion: true })
+        const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isBitBakeVariableExpansion: true })
         symbol !== null && variableExpansionSymbols.push(symbol)
       }
 
@@ -607,11 +607,15 @@ export default class Analyzer {
    * DESCRIPTION = "Name: ${NAME}"
    * ```
    */
-  public isVariableExpansion (
+  public isBitBakeVariableExpansion (
     uri: string,
     line: number,
     column: number
   ): boolean {
+    if (this.isInsideBashRegion(uri, line, column)) {
+      // Bash variable expansions are handled with isBashVariableName
+      return false
+    }
     const n = this.bitBakeNodeAtPoint(uri, line, column)
     // since @1.0.2 the tree-sitter gives empty variable expansion (e.g. `VAR = "${}""`) the type "variable_expansion". But the node type returned from bitBakeNodeAtPoint() at the position between "${" and "}" is of type "${" which is the result from descendantForPosition() (It returns the smallest node containing the given postion). In this case, the parent node has type "variable_expansion". Hence, we have n?.parent?.type === 'variable_expansion' below. The second expression after the || will be true if it encounters non-empty variable expansion syntax. e.g. `VAR = "${A}". Note that inline python with ${@} has type "inline_python"
     return n?.parent?.type === 'variable_expansion' || (n?.type === 'identifier' && n?.parent?.type === 'variable_expansion')

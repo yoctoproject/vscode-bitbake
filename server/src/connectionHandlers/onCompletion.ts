@@ -173,9 +173,9 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
     return getCompletionItemForDirectiveStatementKeyword(directiveStatementKeyword)
   }
 
-  const isVariableExpansion = analyzer.isVariableExpansion(documentUri, wordPosition.line, wordPosition.character)
-  const commonDirectoriesCompletionItems = isVariableExpansion ? allCommonDirectoriesCompletionItems : []
-  const reservedKeywordCompletionItems = !isVariableExpansion ? allReserverdKeywordCompletionItems : []
+  const isBitBakeVariableExpansion = analyzer.isBitBakeVariableExpansion(documentUri, wordPosition.line, wordPosition.character)
+  const commonDirectoriesCompletionItems = isBitBakeVariableExpansion ? allCommonDirectoriesCompletionItems : []
+  const reservedKeywordCompletionItems = !isBitBakeVariableExpansion ? allReserverdKeywordCompletionItems : []
 
   return mergeArraysDistinctly(
     (completionItem) => completionItem.label,
