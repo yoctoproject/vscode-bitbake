@@ -80,16 +80,16 @@ export function nodeToSymbolInformation ({
   node,
   uri,
   getFinalValue,
-  isVariableExpansion = false
+  isBitBakeVariableExpansion = false
 }: {
   node: Parser.SyntaxNode
   uri: string
   getFinalValue?: boolean
-  isVariableExpansion?: boolean
+  isBitBakeVariableExpansion?: boolean
 }): BitbakeSymbolInformation | null {
   let namedNode = node.firstNamedChild
 
-  if (isVariableExpansion) {
+  if (isBitBakeVariableExpansion) {
     namedNode = node
   }
 
