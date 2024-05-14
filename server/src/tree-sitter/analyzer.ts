@@ -231,7 +231,7 @@ export default class Analyzer {
             ...SymbolInformation.create(
               // The node text includes the leading and trailing single quotes, so we need to remove them.
               // The range is adjusted for the same reason.
-              actualVariableNode.text.replace(/'/g, ''),
+              actualVariableNode.text.replace(/'|"/g, ''),
               SymbolKind.Variable,
               Range.create(Position.create(range.start.line, range.start.character + 1), Position.create(range.end.line, range.end.character - 1)),
               uri
