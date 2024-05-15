@@ -3,6 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { onRenameRequestHandler, onPrepareRenameHandler } from '../connectionHandlers/onRename'
 import { analyzer } from '../tree-sitter/analyzer'
 import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
@@ -21,11 +22,11 @@ describe('onRenameRequestHandler', () => {
   it('should not prompt rename if it is not a symbol', () => {
     analyzer.analyze({
       uri: DUMMY_URI,
-      document: FIXTURE_DOCUMENT.HOVER
+      document: FIXTURE_DOCUMENT.RENAME
     })
 
     const renameParams = {
-      position: { line: 1, character: 17 },
+      position: { line: 2, character: 1 },
       newName: 'newName',
       textDocument: { uri: DUMMY_URI }
     }
@@ -36,13 +37,14 @@ describe('onRenameRequestHandler', () => {
   })
 
   it('should return expect edits', () => {
+    bitBakeDocScanner.parsePythonDatastoreFunction()
     analyzer.analyze({
       uri: DUMMY_URI,
-      document: FIXTURE_DOCUMENT.HOVER
+      document: FIXTURE_DOCUMENT.RENAME
     })
 
     const renameParams = {
-      position: { line: 2, character: 1 },
+      position: { line: 0, character: 1 },
       newName: 'newName',
       textDocument: { uri: DUMMY_URI }
     }
@@ -52,24 +54,104 @@ describe('onRenameRequestHandler', () => {
     expect(result).toEqual(
       expect.objectContaining({
         changes: {
-          [DUMMY_URI]: expect.arrayContaining([
+          [DUMMY_URI]: [
             {
               range: {
-                start: { line: 2, character: 0 },
-                end: { line: 2, character: 5 }
+                start: {
+                  line: 0,
+                  character: 0
+                },
+                end: {
+                  line: 0,
+                  character: 3
+                }
               },
               newText: 'newName'
             },
             {
               range: {
-                start: { line: 3, character: 0 },
-                end: { line: 3, character: 5 }
+                start: {
+                  line: 1,
+                  character: 7
+                },
+                end: {
+                  line: 1,
+                  character: 10
+                }
+              },
+              newText: 'newName'
+            },
+            {
+              range: {
+                start: {
+                  line: 8,
+                  character: 4
+                },
+                end: {
+                  line: 8,
+                  character: 7
+                }
+              },
+              newText: 'newName'
+            },
+            {
+              range: {
+                start: {
+                  line: 8,
+                  character: 10
+                },
+                end: {
+                  line: 8,
+                  character: 13
+                }
+              },
+              newText: 'newName'
+            },
+            {
+              range: {
+                start: {
+                  line: 8,
+                  character: 16
+                },
+                end: {
+                  line: 8,
+                  character: 19
+                }
+              },
+              newText: 'newName'
+            },
+            {
+              range: {
+                start: {
+                  line: 4,
+                  character: 14
+                },
+                end: {
+                  line: 4,
+                  character: 17
+                }
+              },
+              newText: 'newName'
+            },
+            {
+              range: {
+                start: {
+                  line: 7,
+                  character: 18
+                },
+                end: {
+                  line: 7,
+                  character: 21
+                }
               },
               newText: 'newName'
             }
-          ])
+          ]
         }
       })
     )
+
+    // Make sure there is not additional changes
+    expect(result?.changes?.[DUMMY_URI]?.length).toBe(7)
   })
 })
