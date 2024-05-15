@@ -6,7 +6,7 @@
 import { onReferenceHandler } from '../connectionHandlers/onReference'
 import type * as LSP from 'vscode-languageserver/node'
 import { analyzer } from '../tree-sitter/analyzer'
-import { generateParser } from '../tree-sitter/parser'
+import { generateBitBakeParser } from '../tree-sitter/parser'
 import { DUMMY_URI, FIXTURE_DOCUMENT, FIXTURE_URI } from './fixtures/fixtures'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path = require('path')
@@ -14,8 +14,8 @@ import path = require('path')
 describe('onReferenceHandler', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
+      const bitBakeParser = await generateBitBakeParser()
+      analyzer.initialize(bitBakeParser)
     }
     analyzer.resetAnalyzedDocuments()
   })
