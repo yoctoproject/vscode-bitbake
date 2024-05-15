@@ -7,7 +7,7 @@ import { randomUUID } from 'crypto'
 
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from '../embedded-languages/general-support'
 import { analyzer } from '../tree-sitter/analyzer'
-import { generateParser } from '../tree-sitter/parser'
+import { generateBitBakeParser } from '../tree-sitter/parser'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { imports } from '../embedded-languages/python-support'
@@ -16,8 +16,8 @@ import { bashHeader } from '../embedded-languages/bash-support'
 describe('Create basic embedded bash documents', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
+      const bitBakeParser = await generateBitBakeParser()
+      analyzer.initialize(bitBakeParser)
     }
     analyzer.resetAnalyzedDocuments()
   })
@@ -53,8 +53,8 @@ describe('Create basic embedded bash documents', () => {
 describe('Create various basic embedded python documents', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
+      const bitBakeParser = await generateBitBakeParser()
+      analyzer.initialize(bitBakeParser)
     }
     analyzer.resetAnalyzedDocuments()
   })
@@ -94,8 +94,8 @@ describe('Create various basic embedded python documents', () => {
 describe('Create Python embedded language content with inline Python', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
+      const bitBakeParser = await generateBitBakeParser()
+      analyzer.initialize(bitBakeParser)
     }
     analyzer.resetAnalyzedDocuments()
   })
@@ -146,8 +146,8 @@ describe('Create Python embedded language content with inline Python', () => {
 describe('Finds proper embedded language type', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
+      const bitBakeParser = await generateBitBakeParser()
+      analyzer.initialize(bitBakeParser)
     }
     analyzer.resetAnalyzedDocuments()
   })

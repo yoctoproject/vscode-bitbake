@@ -5,7 +5,7 @@
 
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { analyzer } from '../tree-sitter/analyzer'
-import { generateParser } from '../tree-sitter/parser'
+import { generateBitBakeParser } from '../tree-sitter/parser'
 import { FIXTURE_DOCUMENT, DUMMY_URI } from './fixtures/fixtures'
 import { onHoverHandler } from '../connectionHandlers/onHover'
 import path from 'path'
@@ -15,8 +15,8 @@ import { extractRecipeName } from '../lib/src/utils/files'
 describe('on hover', () => {
   beforeAll(async () => {
     if (!analyzer.hasParser()) {
-      const parser = await generateParser()
-      analyzer.initialize(parser)
+      const bitBakeParser = await generateBitBakeParser()
+      analyzer.initialize(bitBakeParser)
     }
     analyzer.resetAnalyzedDocuments()
   })

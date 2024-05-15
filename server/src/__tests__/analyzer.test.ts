@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { generateParser } from '../tree-sitter/parser'
+import { generateBitBakeParser } from '../tree-sitter/parser'
 import Analyzer from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
@@ -13,9 +13,9 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 
 async function getAnalyzer (): Promise<Analyzer> {
-  const parser = await generateParser()
+  const bitBakeParser = await generateBitBakeParser()
   const analyzer = new Analyzer()
-  analyzer.initialize(parser)
+  analyzer.initialize(bitBakeParser)
   return analyzer
 }
 
@@ -165,10 +165,10 @@ describe('getDirectiveFileUris', () => {
       extraInfo: 'layer: core'
     }]
 
-    const parser = await generateParser()
+    const bitBakeParser = await generateBitBakeParser()
     const analyzer = await getAnalyzer()
 
-    const parsedTree = parser.parse(FIXTURE_DOCUMENT.DIRECTIVE.getText())
+    const parsedTree = bitBakeParser.parse(FIXTURE_DOCUMENT.DIRECTIVE.getText())
     const fileUris = analyzer.getDirectiveFileUris(parsedTree)
 
     expect(fileUris).toEqual(
