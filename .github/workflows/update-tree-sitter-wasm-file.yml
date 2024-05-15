@@ -4,9 +4,11 @@
 name: Update Tree Sitter WASM File
 
 on:
-  workflow_dispatch:
-  schedule:
-    - cron: '0 12 * * 2'
+  workflow_call:
+    inputs:
+      tree-sitter-name:
+        required: true
+        type: string
 
 jobs:
   build:
@@ -44,26 +46,26 @@ jobs:
       run: npm install
 
     - name: Update tree-sitter wasm
-      run: bash scripts/update-tree-sitter-wasm.sh
+      run: bash scripts/update-${{ inputs.tree-sitter-name }}-wasm.sh
 
     - name: Verify file changes
       uses: tj-actions/verify-changed-files@v17
       id: verify-changed-files
       with:
         # The script generates a new wasm file and replaces the existing one. Git will treat it as a different file even it is generated with the same commit and CLI  
-        # Hence, we only compare the parser.info. It should be enough to tell the difference
+        # Hence, we only compare the .info file. It should be enough to tell the difference
         files: |
-            server/parser.info
+            server/${{ inputs.tree-sitter-name }}.info
 
     - name: Create pull request
       if: steps.verify-changed-files.outputs.files_changed == 'true'
       uses: peter-evans/create-pull-request@v5
       with:
         add-paths: |
-          server/parser.info
-          server/tree-sitter-bitbake.wasm
-        title: Auto update tree-sitter-bitbake wasm file
-        commit-message: Auto update tree-sitter-bitbake wasm file and parser info
-        branch: update-tree-sitter-wasm-file
+          server/${{ inputs.tree-sitter-name }}.info
+          server/${{ inputs.tree-sitter-name }}.wasm
+        title: Auto update ${{ inputs.tree-sitter-name }} wasm file
+        commit-message: Auto update ${{ inputs.tree-sitter-name }} wasm file and parser info
+        branch: update-${{ inputs.tree-sitter-name }}-wasm-file
         base: ${{ env.BASE_BRANCH }}
         token: ${{ secrets.GITHUB_TOKEN }}
