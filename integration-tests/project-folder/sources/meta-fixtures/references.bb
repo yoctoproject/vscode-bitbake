@@ -1,11 +1,12 @@
+FOO="FOO"
+BAR="${FOO}"
 python() {
-    foo = ''
-    print(foo)
+    FOO = 'FOO'
+    d.getVar("FOO")
+    print(FOO)
 }
-
-foo = ''
-
-do_foo() {
-    foo=''
-    echo "${foo}"
+FOO() {
+    "${@d.getVar('FOO')}"
+    FOO="$FOO ${FOO} FOO"
+    FOO
 }
