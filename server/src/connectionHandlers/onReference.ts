@@ -6,7 +6,6 @@
 import * as LSP from 'vscode-languageserver/node'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { analyzer } from '../tree-sitter/analyzer'
-import { getAllDefinitionSymbolsForSymbolAtPoint } from './onDefinition'
 
 export function onReferenceHandler (referenceParams: LSP.ReferenceParams): LSP.Location[] | null {
   const { textDocument: { uri }, position, context: { includeDeclaration } } = referenceParams
@@ -29,12 +28,11 @@ export function onReferenceHandler (referenceParams: LSP.ReferenceParams): LSP.L
     const symbolAtPoint = analyzer.findExactSymbolAtPoint(uri, position, word)
     if (symbolAtPoint?.kind === LSP.SymbolKind.Variable || symbolAtPoint?.kind === LSP.SymbolKind.Function) {
       const allReferenceSymbols = [
-        ...getAllDefinitionSymbolsForSymbolAtPoint(uri, word, symbolAtPoint),
-        ...analyzer.getVariableExpansionSymbols(uri)
+        ...analyzer.getAllSymbols(uri)
       ]
 
       analyzer.getIncludeUrisForUri(uri).forEach((includeUri) => {
-        allReferenceSymbols.push(...analyzer.getVariableExpansionSymbols(includeUri))
+        allReferenceSymbols.push(...analyzer.getAllSymbols(includeUri))
       })
 
       allReferenceSymbols.filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind).forEach((symbol) => {

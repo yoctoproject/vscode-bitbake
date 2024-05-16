@@ -11,14 +11,17 @@ import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils/emb
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 
 export const middlewareProvideReferences: ReferencesMiddleware['provideReferences'] = async (document, position, options, token, next) => {
-  const nextResult = await next(document, position, options, token) ?? []
+  const nextResult = await next(document, position, options, token)
+  if (Array.isArray(nextResult)) {
+    return nextResult
+  }
   const embeddedLanguageType = await requestsManager.getEmbeddedLanguageTypeOnPosition(document.uri.toString(), position)
   if (embeddedLanguageType === undefined || embeddedLanguageType === null) {
-    return nextResult
+    return
   }
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
-    return nextResult
+    return
   }
   const embeddedLanguageTextDocument = await workspace.openTextDocument(embeddedLanguageDocInfos.uri)
   const adjustedPosition = getEmbeddedLanguageDocPosition(
@@ -38,7 +41,6 @@ export const middlewareProvideReferences: ReferencesMiddleware['provideReference
   const result = mergeArraysDistinctly(
     // There can't be two different references with the same "start" position
     (location) => `${location.uri.toString()}${location.range.start.line}${location.range.start.character}`,
-    nextResult,
     forwardedResults
   )
 
