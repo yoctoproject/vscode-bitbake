@@ -209,8 +209,14 @@ disposables.push(
     await analyzeDocument(event)
 
     if (analyzer.getRecipeLocalFiles(event.document.uri) === undefined) {
-      const recipeLocalFiles = await connection.sendRequest<RequestResult['getRecipeLocalFiles']>(RequestMethod.getRecipeLocalFiles, { uri: event.document.uri.replace('file://', '') })
-      analyzer.setRecipeLocalFiles(event.document.uri, recipeLocalFiles)
+      try {
+        const recipeLocalFiles = await connection.sendRequest<RequestResult['getRecipeLocalFiles']>(RequestMethod.getRecipeLocalFiles, { uri: event.document.uri.replace('file://', '') })
+        analyzer.setRecipeLocalFiles(event.document.uri, recipeLocalFiles)
+      } catch (error) {
+        // When using the language server without the client, custom requests are not supported
+        // The CoC.nvim client will disable the server if an exception is thrown
+        logger.error(`Error while getting recipe local files: ${error as any}`)
+      }
     }
   })
 )
