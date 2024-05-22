@@ -306,6 +306,10 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]?.bitBakeTree
   }
 
+  public getParsedBashTreeForUri (uri: string): Tree | undefined {
+    return this.uriToAnalyzedDocument[uri]?.bashTree
+  }
+
   /**
    * Find the full word at the given point.
    */

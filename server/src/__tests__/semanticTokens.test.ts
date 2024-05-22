@@ -31,7 +31,7 @@ describe('Semantic tokens', () => {
     const result = getParsedTokens(DUMMY_URI)
 
     expect(result).toEqual(
-      expect.arrayContaining([
+      [
         {
           line: 0,
           startCharacter: 0,
@@ -40,11 +40,18 @@ describe('Semantic tokens', () => {
           tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
         },
         {
+          length: 5,
           line: 2,
-          startCharacter: 29,
-          length: 3,
-          tokenType: TOKEN_LEGEND.types.variable,
-          tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
+          startCharacter: 0,
+          tokenModifiers: ['declaration'],
+          tokenType: 'variable'
+        },
+        {
+          length: 6,
+          line: 2,
+          startCharacter: 6,
+          tokenModifiers: [],
+          tokenType: 'keyword'
         },
         {
           line: 2,
@@ -54,6 +61,13 @@ describe('Semantic tokens', () => {
           tokenModifiers: [TOKEN_LEGEND.modifiers.readonly]
         },
         {
+          line: 2,
+          startCharacter: 29,
+          length: 3,
+          tokenType: TOKEN_LEGEND.types.variable,
+          tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
+        },
+        {
           line: 4,
           startCharacter: 0,
           length: 8,
@@ -61,20 +75,48 @@ describe('Semantic tokens', () => {
           tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
         },
         {
-          line: 8,
+          line: 5,
+          startCharacter: 4,
+          length: 3,
+          tokenType: TOKEN_LEGEND.types.variable,
+          tokenModifiers: []
+        },
+        {
+          line: 5,
+          startCharacter: 10,
+          length: 3,
+          tokenType: TOKEN_LEGEND.types.variable,
+          tokenModifiers: []
+        },
+        {
+          line: 5,
+          startCharacter: 16,
+          length: 3,
+          tokenType: TOKEN_LEGEND.types.variable,
+          tokenModifiers: []
+        },
+        {
+          line: 6,
+          startCharacter: 4,
+          length: 8,
+          tokenType: TOKEN_LEGEND.types.function,
+          tokenModifiers: []
+        },
+        {
+          line: 9,
           startCharacter: 7,
           length: 5,
           tokenType: TOKEN_LEGEND.types.function,
           tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
         },
         {
-          line: 12,
+          line: 13,
           startCharacter: 4,
           length: 6,
           tokenType: TOKEN_LEGEND.types.function,
           tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
         }
-      ])
+      ]
     )
   })
 })
