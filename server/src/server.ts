@@ -5,7 +5,6 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
-import * as LSP from 'vscode-languageserver/node'
 import {
   type Connection,
   type InitializeResult,
@@ -36,6 +35,7 @@ import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { onReferenceHandler } from './connectionHandlers/onReference'
 import { type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
 import { onPrepareRenameHandler, onRenameRequestHandler } from './connectionHandlers/onRename'
+import { onCodeLensHandler, onCodeLensResolveHandler } from './connectionHandlers/onCodeLens'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 export const connection: Connection = createConnection(ProposedFeatures.all)
@@ -161,36 +161,11 @@ disposables.push(
     analyzer.clearRecipeLocalFiles()
   }),
 
-  connection.onCodeLens(async (params): Promise<LSP.CodeLens[]> => {
-    const codeLenses: LSP.CodeLens[] = []
-    const uri = params.textDocument.uri
+  connection.onCodeLens(
+    async (params) => await onCodeLensHandler(params, enableCodeLensReferencesOnFunctions)
+  ),
 
-    if (!enableCodeLensReferencesOnFunctions) {
-      return []
-    }
-
-    const allSymbols = analyzer.getGlobalDeclarationSymbolsForUri(uri)
-    allSymbols.forEach((symbol) => {
-      if (symbol.kind === LSP.SymbolKind.Function) {
-        const codeLens = LSP.CodeLens.create(symbol.location.range)
-
-        codeLens.command = {
-          title: 'Show References',
-          command: 'bitbake.codeLens.showReferences',
-          arguments: [uri, symbol.location.range.start]
-        }
-
-        codeLens.data = { uri, position: symbol.location.range.start }
-
-        codeLenses.push(codeLens)
-      }
-    })
-    return codeLenses
-  }),
-
-  connection.onCodeLensResolve((codeLens): LSP.CodeLens => {
-    return codeLens
-  }),
+  connection.onCodeLensResolve(onCodeLensResolveHandler),
 
   connection.onRequest(
     RequestMethod.EmbeddedLanguageTypeOnPosition,
