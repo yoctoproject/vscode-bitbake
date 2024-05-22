@@ -21,5 +21,9 @@
     "[shellscript]": {
         "files.eol": "\n",
         "files.trimTrailingWhitespace": false
+    },
+    "files.associations": {
+        "*.conf": "bitbake",
+        "*.inc": "bitbake"
     }
 }
