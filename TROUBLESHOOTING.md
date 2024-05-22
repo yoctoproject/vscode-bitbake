@@ -16,6 +16,11 @@ We haven't found a way to prevent these tabs from opening, but we try to close t
 
 If this problem gets too annoying, consider activating the `bitbake.disableEmbeddedLanguagesFiles` setting.
 
+# files.trimTrailingWhitespace does not work on Python and Shell files
+When the extension is activated, `files.trimTrailingWhiteSpace` is deactivated for Python and Shell documents because this option interferes with the handling of Python and Shell code in BitBake documents.
+
+In the background, some Python and Shell documents are made in order to handle Python and Shell languages in BitBake files. These documents contain a lot of trailing whitespaces. If `files.trimTrailingWhiteSpace` is activated, it will trim the whitespaces into these files, making it hard to map the positions between the generated files and the original BitBake file.
+
 ### BrokenPipeError on BitBake commands
 
 If you are using a `bitbake.commandWrapper` that relies on docker containers, you may encounter the following errors:
