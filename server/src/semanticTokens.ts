@@ -79,7 +79,45 @@ function encodeTokenModifiers (strTokenModifiers: string[]): number {
   return result
 }
 
-export function getParsedTokens (uri: string): ParsedToken[] {
+export function getBashParsedTokens (uri: string): ParsedToken[] {
+  const resultTokens: ParsedToken[] = []
+  const Tree = analyzer.getParsedBashTreeForUri(uri)
+  if (Tree === undefined) {
+    logger.warn(`[getSemanticTokens] Syntax tree not found for ${uri}`)
+    return []
+  }
+
+  TreeSitterUtils.forEach(Tree.rootNode, (node: SyntaxNode) => {
+    const nodeRange = {
+      line: node.startPosition.row,
+      startCharacter: node.startPosition.column,
+      length: Math.max(node.endPosition.column - node.startPosition.column, 0)
+    }
+
+    if (node.type === 'variable_name') {
+      resultTokens.push({
+        ...nodeRange,
+        tokenType: TOKEN_LEGEND.types.variable,
+        tokenModifiers: []
+      })
+    }
+
+    if (node.type === 'command_name') {
+      resultTokens.push({
+        ...nodeRange,
+        tokenType: TOKEN_LEGEND.types.function,
+        tokenModifiers: []
+      })
+    }
+
+    // Traverse every node
+    return true
+  })
+
+  return resultTokens
+}
+
+export function getBitBakeParsedTokens (uri: string): ParsedToken[] {
   const resultTokens: ParsedToken[] = []
   const Tree = analyzer.getParsedBitBakeTreeForUri(uri)
   if (Tree === undefined) {
@@ -94,7 +132,11 @@ export function getParsedTokens (uri: string): ParsedToken[] {
       length: Math.max(node.endPosition.column - node.startPosition.column, 0)
     }
 
-    if (TreeSitterUtils.isVariableReference(node)) {
+    if (
+      TreeSitterUtils.isVariableReference(node) &&
+      // bash variable expansions are handled by getBashParsedTokens
+      !analyzer.isInsideBashRegion(uri, node.startPosition.row, node.startPosition.column)
+    ) {
       resultTokens.push({
         ...nodeRange,
         tokenType: TOKEN_LEGEND.types.variable,
@@ -132,6 +174,19 @@ export function getParsedTokens (uri: string): ParsedToken[] {
   })
 
   return resultTokens
+}
+
+export function getParsedTokens (uri: string): ParsedToken[] {
+  return [
+    ...getBitBakeParsedTokens(uri),
+    ...getBashParsedTokens(uri)
+  ].sort((a, b) => {
+    // The tokens are encoded relative to each other. It breaks when they are not in order.
+    if (a.line === b.line) {
+      return a.startCharacter - b.startCharacter
+    }
+    return a.line - b.line
+  })
 }
 
 export function getSemanticTokens (uri: string): SemanticTokens {

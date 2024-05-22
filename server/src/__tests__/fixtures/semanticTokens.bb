@@ -3,7 +3,8 @@ FOO = 'FOO'
 MYVAR:append:myoverride = '${FOO}'
 
 do_build () {
-    echo 'do build'
+    FOO="$FOO ${FOO} FOO"
+    do_stuff
 }
 
 python hello(){
