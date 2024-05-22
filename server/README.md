@@ -44,7 +44,10 @@ For vim:
       "args": ["--stdio"],
       "filetypes": [
         "bitbake"
-      ]
+      ],
+      "settings": {
+        "bitbake.loggingLevel": "none"
+      }
     }
   }
 }
