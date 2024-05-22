@@ -92,18 +92,6 @@ function updatePythonPath (): void {
   }
 }
 
-async function disableInteferingSettings (): Promise<void> {
-  const config = vscode.workspace.getConfiguration()
-  for (const languageKey of ['[python]', '[shellscript]']) {
-    const languageConfig = config.get<Record<string, unknown>>(languageKey) ?? {}
-    // 'files.trimTrailingWhitespace' modifies the embedded languages documents and breaks the mapping of the positions
-    languageConfig['files.trimTrailingWhitespace'] = false
-    if (canModifyConfig()) {
-      await config.update(languageKey, languageConfig, vscode.ConfigurationTarget.Workspace)
-    }
-  }
-}
-
 async function installExtensions (extensionId: string): Promise<void> {
   await vscode.window.showInformationMessage(`The extension ${extensionId} is required for yocto-project.yocto-bitbake to work properly. Do you want to install it?`, 'Install', 'Show extension page', 'Cancel')
     .then((item) => {
@@ -148,7 +136,6 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
   updatePythonPath()
-  await disableInteferingSettings()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context, bitBakeProjectScanner)
