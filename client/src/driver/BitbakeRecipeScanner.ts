@@ -16,7 +16,7 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
   private _languageClient: LanguageClient | undefined
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
-  readonly serverRecipeScanComplete = new vscode.EventEmitter<vscode.Uri>()
+  readonly serverRecipeScanComplete = new vscode.EventEmitter<vscode.TaskDefinition>()
 
   dispose (): void {
     this.serverRecipeScanComplete.dispose()
@@ -54,8 +54,8 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
     await runBitbakeTask(scanRecipeEnvTask, taskProvider)
     // Wait for the task and server side to have done the processing
     await new Promise<void>((resolve) => {
-      const disposable = this.serverRecipeScanComplete.event((uri) => {
-        if (uri === scanRecipeEnvTask.definition.uri) {
+      const disposable = this.serverRecipeScanComplete.event((definition) => {
+        if (definition === scanRecipeEnvTask.definition) {
           disposable.dispose()
           resolve()
         }
@@ -75,12 +75,10 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
           if (this._languageClient === undefined) {
             logger.error('[onDidEndTask] Language client not set, unable to forward recipe environment to the server')
           } else {
-            if (scanResults !== '' && uri !== undefined && chosenRecipe !== undefined) {
-              logger.debug('[onDidEndTask] Sending recipe environment to the server')
-              const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
-              await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
-              this.serverRecipeScanComplete.fire(uri)
-            }
+            logger.debug('[onDidEndTask] Sending recipe environment to the server')
+            const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
+            await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
+            this.serverRecipeScanComplete.fire(e.execution.task.definition)
           }
         }
 
