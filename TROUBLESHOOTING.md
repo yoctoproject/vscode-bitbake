@@ -54,7 +54,7 @@ bitbake commands running in the background:
 
 ### Parsing terminal reports an error but the parsing was successful
 
-Prior to poky Scarthgap, a random bug may occur when parsing Yocto receipes through our BitBake commands, or
+Prior to poky Scarthgap, a random bug may occur when parsing Yocto recipes through our BitBake commands, or
 saving a file (Ctrl+S). This is due to VSCode sometimes saving files in the background while the parsing is
 taking place in combination to a problematic handling of the progressbar in poky.
 
