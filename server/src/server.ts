@@ -54,7 +54,7 @@ let currentActiveTextDocument: TextDocument = TextDocument.create(
 
 disposables.push(
   connection.onInitialize(async (params: InitializeParams): Promise<InitializeResult> => {
-    logger.level = 'error'
+    logger.level = 'none'
     logger.info('[onInitialize] Initializing connection')
 
     workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
