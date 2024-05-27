@@ -46,7 +46,7 @@ describe('analyze', () => {
       document: FIXTURE_DOCUMENT.DECLARATION
     })
 
-    const globalDeclarations = analyzer.getGlobalDeclarationSymbols(DUMMY_URI)
+    const globalDeclarations = analyzer.getGlobalDeclarationSymbolsForUri(DUMMY_URI)
 
     expect(globalDeclarations).toEqual(
       expect.arrayContaining([
@@ -261,7 +261,7 @@ describe('sourceIncludeFiles', () => {
     analyzer.extractIncludeFileUris(uri)
 
     const symbols = analyzer.getIncludeUrisForUri(uri).map((includeUri) => {
-      return analyzer.getGlobalDeclarationSymbols(includeUri)
+      return analyzer.getGlobalDeclarationSymbolsForUri(includeUri)
     }).flat()
 
     expect(symbols).toEqual(
@@ -334,7 +334,7 @@ describe('declarations', () => {
       uri
     })
 
-    const symbols = analyzer.getGlobalDeclarationSymbols(uri)
+    const symbols = analyzer.getGlobalDeclarationSymbolsForUri(uri)
 
     let occurances = 0
     symbols.forEach((symbol) => {

@@ -162,10 +162,10 @@ export function getAllDefinitionSymbolsForSymbolAtPoint (uri: string, word: stri
     return []
   }
   const allDeclarationSymbols = [
-    ...analyzer.getGlobalDeclarationSymbols(uri)
+    ...analyzer.getGlobalDeclarationSymbolsForUri(uri)
   ]
   analyzer.getIncludeUrisForUri(uri)?.forEach((includeFileUri) => {
-    allDeclarationSymbols.push(...analyzer.getGlobalDeclarationSymbols(includeFileUri))
+    allDeclarationSymbols.push(...analyzer.getGlobalDeclarationSymbolsForUri(includeFileUri))
   })
 
   return allDeclarationSymbols.filter(symbol => symbol.name === word && symbol.kind === symbolAtPoint?.kind)

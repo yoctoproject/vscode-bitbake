@@ -206,6 +206,11 @@
 				"type": "boolean",
 				"default": false,
 				"description": "Turn on this setting to stop this extension from modifying the VS Code configuration of the workspace. Note that this will also disable some features related to embedded Python and Shell code."
+			},
+			"bitbake.enableCodeLensReferencesOnFunctions": {
+				"type": "boolean",
+				"default": false,
+				"description": "Enable or disable the CodeLens references for functions in BitBake files."
 			}
 		  }
 		},

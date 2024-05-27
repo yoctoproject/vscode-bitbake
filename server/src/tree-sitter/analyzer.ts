@@ -90,7 +90,7 @@ export default class Analyzer {
 
   public getAllSymbols (uri: string): BitbakeSymbolInformation[] {
     return [
-      ...this.getGlobalDeclarationSymbols(uri),
+      ...this.getGlobalDeclarationSymbolsForUri(uri),
       ...this.getVariableExpansionSymbols(uri),
       ...this.getPythonDatastoreVariableSymbols(uri)
     ]
@@ -185,7 +185,7 @@ export default class Analyzer {
     return { variableExpansionSymbols, pythonDatastoreVariableSymbols }
   }
 
-  public getGlobalDeclarationSymbols (uri: string): BitbakeSymbolInformation[] {
+  public getGlobalDeclarationSymbolsForUri (uri: string): BitbakeSymbolInformation[] {
     const analyzedDocument = this.uriToAnalyzedDocument[uri]
     if (analyzedDocument !== undefined) {
       const { globalDeclarations } = analyzedDocument

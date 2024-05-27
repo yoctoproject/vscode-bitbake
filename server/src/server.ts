@@ -35,6 +35,7 @@ import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { onReferenceHandler } from './connectionHandlers/onReference'
 import { type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
 import { onPrepareRenameHandler, onRenameRequestHandler } from './connectionHandlers/onRename'
+import { onCodeLensHandler, onCodeLensResolveHandler } from './connectionHandlers/onCodeLens'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 export const connection: Connection = createConnection(ProposedFeatures.all)
@@ -42,7 +43,7 @@ setDefinitionsConnection(connection)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let workspaceFolder: string | undefined
 let pokyFolder: string | undefined
-
+let enableCodeLensReferencesOnFunctions: boolean = false
 const disposables: Disposable[] = []
 
 let currentActiveTextDocument: TextDocument = TextDocument.create(
@@ -111,6 +112,9 @@ disposables.push(
         },
         renameProvider: {
           prepareProvider: true
+        },
+        codeLensProvider: {
+          resolveProvider: true
         }
       }
     }
@@ -118,6 +122,7 @@ disposables.push(
 
   connection.onDidChangeConfiguration((change) => {
     logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
+    enableCodeLensReferencesOnFunctions = change.settings.bitbake?.enableCodeLensReferencesOnFunctions ?? enableCodeLensReferencesOnFunctions
     const bitbakeFolder = expandSettingPath(change.settings.bitbake?.pathToBitbakeFolder, { workspaceFolder })
     if (bitbakeFolder !== undefined) {
       pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
@@ -155,6 +160,12 @@ disposables.push(
     logger.debug(`[onDidRenameFiles] ${JSON.stringify(event)}`)
     analyzer.clearRecipeLocalFiles()
   }),
+
+  connection.onCodeLens(
+    async (params) => await onCodeLensHandler(params, enableCodeLensReferencesOnFunctions)
+  ),
+
+  connection.onCodeLensResolve(onCodeLensResolveHandler),
 
   connection.onRequest(
     RequestMethod.EmbeddedLanguageTypeOnPosition,
