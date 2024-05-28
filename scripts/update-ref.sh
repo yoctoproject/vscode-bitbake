@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -ex
 
 # Update the fetch-poky.sh script
 FILE="scripts/fetch-poky.sh"
