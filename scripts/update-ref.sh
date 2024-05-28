@@ -77,5 +77,13 @@ echo "" >> ../$FILE
 cd ..
 rm -rf yocto-docs
 
+git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/vscode.git
+cd vscode
+git fetch --tags
+TMP_TAG=$(git tag --sort=-v:refname | grep -E '^[0-9.]+$' | head -n 1)
+sed -e "s/vscodeVersion = '.*'/vscodeVersion = '$TMP_TAG'/" -i ../integration-tests/src/runTest.ts
+cd ..
+rm -rf vscode
+
 cat $TMP_FILE >> $FILE
 rm $TMP_FILE
