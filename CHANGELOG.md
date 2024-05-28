@@ -1,3 +1,15 @@
+# 2.5.0 - 2024.05.28
+
+ - Add Yocto variables renaming across a recipe file
+ - Add code suggestions for SRC_URI local files
+ - Add code suggestions for recipe names in variables (DEPENDS, RDEPENDS, etc)
+ - Add an option to prevent modification of `.vscode/settings.json`
+ - Add a command to start the taskexp GUI for a recipe
+ - Minor bug fixes
+ - Validate support for the latest Yocto Scarthgap LTS
+ - Remove deprecated shouldDeepExamine setting
+ - Refactor client/server packaging to remove deprecated dependencies
+
 # 2.4.0 - 2024.03.08
 
  - Publish on open-vsx/Codium open source alternative
