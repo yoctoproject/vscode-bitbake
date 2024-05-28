@@ -9,6 +9,7 @@ import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
 import { mockVscodeEvents } from '../../utils/vscodeMock'
 import { addLayer, removeLayer } from '../../utils/bitbake'
+import { logger } from '../../../lib/src/utils/OutputLogger'
 
 let bitBakeProjectScanner: BitBakeProjectScanner
 
@@ -16,6 +17,8 @@ const pathToBitbakeFolder = path.join(__dirname, '../../../../../integration-tes
 const pathToBuildFolder = path.join(__dirname, '../../../../../integration-tests/project-folder/build')
 const pathToEnvScript = path.join(__dirname, '../../../../../integration-tests/project-folder/sources/poky/oe-init-build-env')
 const workspaceFolder = path.join(__dirname, '../../../../../integration-tests/project-folder')
+
+logger.level = 'debug'
 
 describe('BitBakeProjectScanner', () => {
   beforeAll((DoneCallback) => {
