@@ -160,7 +160,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
         this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + event.exitCode + endOfLine)
         if (!this.isTaskTerminal()) {
           this.changeNameEmitter.fire('✖ ' + terminalName)
-          this.parentTerminal?.terminal.show()
+          this.parentTerminal?.terminal?.show()
         }
       } else {
         this.output(emphasisedAsterisk + ' Bitbake process exited successfully' + endOfLine)
