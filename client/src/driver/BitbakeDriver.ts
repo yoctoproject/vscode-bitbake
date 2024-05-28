@@ -64,11 +64,16 @@ export class BitbakeDriver {
       this.onBitbakeProcessChange.emit('spawn', command)
       listener.dispose()
     })
-    child.onExit(() => {
-      this.bitbakeProcess = undefined
-      this.bitbakeProcessCommand = undefined
-      this.onBitbakeProcessChange.emit('close')
-    })
+    const disposables = [
+      child.onData((data) => {
+        logger.debug(data.toString())
+      }),
+      child.onExit(() => {
+        this.bitbakeProcess = undefined
+        this.bitbakeProcessCommand = undefined
+        this.onBitbakeProcessChange.emit('close')
+        disposables.forEach(disposable => { disposable.dispose() })
+      })]
     return child
   }
 
