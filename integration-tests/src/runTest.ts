@@ -14,7 +14,7 @@ import { pythonVersion, bashVersion } from './utils/version'
 
 async function main (): Promise<void> {
   try {
-    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.84.2')
+    const vscodeExecutablePath = await downloadAndUnzipVSCode('1.89.1')
     const [cliPath, ...args] = resolveCliArgsFromVSCodeExecutablePath(vscodeExecutablePath)
 
     cp.spawnSync(
