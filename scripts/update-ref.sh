@@ -59,7 +59,7 @@ echo "" >> $FILE
 git clone --depth 1 --filter=blob:none --sparse https://github.com/openembedded/bitbake.git
 cd bitbake
 git fetch --tags
-TMP_TAG=$(git tag | tail -n 1)
+TMP_TAG=$(git tag --sort=-v:refname | head -n 1)
 LASTEST_RELEASE=$(git show $TMP_TAG | grep commit | sed "s/^commit //")
 echo "# Tag: $TMP_TAG" >> ../$FILE
 echo "BITBAKE_DOCS_COMMIT=$LASTEST_RELEASE" >> ../$FILE
@@ -69,7 +69,7 @@ rm -rf bitbake
 git clone --depth 1 --filter=blob:none --sparse https://git.yoctoproject.org/yocto-docs
 cd yocto-docs
 git fetch --tags
-TMP_TAG=$(git tag | tail -n 1)
+TMP_TAG=$(git tag --sort=-v:refname | head -n 1)
 LASTEST_RELEASE=$(git show $TMP_TAG | grep commit | sed "s/^commit //")
 echo "# Tag: $TMP_TAG" >> ../$FILE
 echo "YOCTO_DOCS_COMMIT=$LASTEST_RELEASE" >> ../$FILE
