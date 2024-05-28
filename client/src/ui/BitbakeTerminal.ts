@@ -142,7 +142,6 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
 
     processResolved.onData((data) => {
       this.output(data.toString())
-      logger.debug(data.toString())
       if (this.isTaskTerminal()) {
         this.outputDataString += data.toString()
       }
