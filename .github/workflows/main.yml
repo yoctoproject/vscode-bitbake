@@ -37,6 +37,12 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
+    # Inspired by https://stackoverflow.com/a/72981982
+    - name: Configure Git autor for Yocto do_patch
+      run: |
+        git config --global user.name "${GITHUB_ACTOR}"
+        git config --global user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
     - name: Clean install
       run: npm run clean
 
