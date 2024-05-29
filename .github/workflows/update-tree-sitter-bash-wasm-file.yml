@@ -2,11 +2,12 @@ name: Update Tree Sitter Bash WASM File
 
 on:
   workflow_dispatch:
+  pull_request:
   schedule:
     - cron: '0 12 * * 2'
 
 jobs:
   update-tree-sitter-wasm:
-    uses: ./.github/workflows/update-tree-sitter-wasm.yml
+    uses: ./.github/workflows/update-tree-sitter-wasm-file.yml
     with:
       tree-sitter-name: 'tree-sitter-bash'
