@@ -33,9 +33,12 @@ jobs:
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
-
-    - name: Clean install
-      run: npm run clean
+      with:
+        cache: 'npm'
+        cache-dependency-path: |
+          package-lock.json
+          server/package-lock.json
+          client/package-lock.json
 
     - name: Install Dependencies
       run: npm install
