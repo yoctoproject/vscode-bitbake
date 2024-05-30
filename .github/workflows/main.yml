@@ -23,10 +23,7 @@ jobs:
     env:
       DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
       SHELL: /usr/bin/bash
-
-    strategy:
-      matrix:
-        node-version: [20]
+      node-version: 20
 
     steps:
     - name: Checkout Repository
@@ -34,9 +31,6 @@ jobs:
 
     - name: Setup Node.js
       uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-
     # Inspired by https://stackoverflow.com/a/72981982
     - name: Configure Git autor for Yocto do_patch
       run: |
@@ -96,8 +90,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
       - run: npm run clean
       - run: npm install && npm run fetch:docs
       - run: cd server && npm pack
@@ -117,7 +109,6 @@ jobs:
       # Setup .npmrc file to publish to npm
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
           registry-url: 'https://registry.npmjs.org'
       - uses: actions/download-artifact@v4
       - name: Publish to npm
