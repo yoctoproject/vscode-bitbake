@@ -50,7 +50,17 @@ jobs:
     - name: Install apt dependencies
       run: sudo apt install chrpath diffstat
 
-    - name: Fetch Dependencies
+    - name: Cache fetch Poky & Docs
+      id: cache-poky
+      uses: actions/cache@v4
+      with:
+        path: |
+          server/resources/docs
+          resources/poky
+        key: cache-${{ hashFiles('scripts/fetch-poky.sh', 'scripts/fetch-docs.sh') }}
+
+    - name: Fetch Poky & Docs
+      if: steps.cache-poky.outputs.cache-hit != 'true'
       run: npm run fetch
 
     - name: Run Linter
@@ -58,6 +68,14 @@ jobs:
 
     - name: Build Project
       run: npm run compile
+
+    - name: Cache VSCode installation
+      uses: actions/cache@v4
+      with:
+        path: |
+          .vscode-test/vscode-*
+          .vscode-test/extensions
+        key: cache-${{ hashFiles('integration-tests/src/runTest.ts') }}
 
     - name: Test Project
       run: npm run test

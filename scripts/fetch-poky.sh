@@ -10,4 +10,3 @@ cd resources/poky
 git clone https://github.com/yoctoproject/poky.git .
 git fetch origin
 git checkout $COMMIT
-
