@@ -18,9 +18,8 @@ export const imports = [
   'd = bb.data_smart.DataSmart()',
   'e = bb.event.Event()',
   'e.data = d',
-  'import os',
-  ''
-].join('\n')
+  'import os'
+]
 
 export const generatePythonEmbeddedLanguageDoc = (
   textDocument: TextDocument,
@@ -42,8 +41,21 @@ export const generatePythonEmbeddedLanguageDoc = (
         return true
     }
   })
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, imports)
+  insertHeader(embeddedLanguageDoc)
   return embeddedLanguageDoc
+}
+
+export const getPythonHeader = (originalUri: string): string => {
+  const headers = [
+    `# Original BitBake document: ${originalUri}`,
+    ...imports,
+    ''
+  ].join('\n')
+  return headers
+}
+
+const insertHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, getPythonHeader(embeddedLanguageDoc.originalUri))
 }
 
 const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
