@@ -6,7 +6,7 @@ on:
     - cron: '0 12 * * 2'
 
 jobs:
-  update-tree-sitter-wasm:
+  update-tree-sitter-bitbake-wasm:
     uses: ./.github/workflows/update-tree-sitter-wasm-file.yml
     with:
       tree-sitter-name: 'tree-sitter-bitbake'
