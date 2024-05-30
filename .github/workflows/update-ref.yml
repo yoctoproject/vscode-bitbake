@@ -21,11 +21,7 @@ jobs:
       FILE_PATHS: |
         integration-tests/src/utils/version.ts
         scripts/fetch-docs.sh
-        scripts/fetch-poky.sh
-
-    strategy:
-      matrix:
-        node-version: [20]
+      node-version: 20
 
     steps:
     - name: Checkout Repository
@@ -34,9 +30,7 @@ jobs:
         ref: ${{ env.BASE_BRANCH }}
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
 
     - name: Update required extension version
       run: bash scripts/update-ref.sh
