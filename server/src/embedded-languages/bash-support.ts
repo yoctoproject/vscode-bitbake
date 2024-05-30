@@ -20,12 +20,6 @@ const shellcheckDisables = [
   '# shellcheck disable=SC2317'
 ]
 
-export const bashHeader = [
-  shebang,
-  ...shellcheckDisables,
-  ''
-].join('\n')
-
 export const generateBashEmbeddedLanguageDoc = (
   textDocument: TextDocument,
   bitBakeTree: Parser.Tree,
@@ -53,8 +47,17 @@ export const generateBashEmbeddedLanguageDoc = (
   return embeddedLanguageDoc
 }
 
+export const getBashHeader = (originalUri: string): string => {
+  return [
+    shebang,
+    `# ${originalUri}`,
+    ...shellcheckDisables,
+    ''
+  ].join('\n')
+}
+
 const insertBashHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashHeader)
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, getBashHeader(embeddedLanguageDoc.originalUri))
 }
 
 const insertBashTools = (embeddedLanguageDoc: EmbeddedLanguageDoc, pokyFolder: string): void => {
