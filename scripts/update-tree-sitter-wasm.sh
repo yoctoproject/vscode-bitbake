@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # Inspired by bash-language-server under MIT license
 # Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/scripts/upgrade-tree-sitter.sh
