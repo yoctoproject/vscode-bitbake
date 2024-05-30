@@ -12,7 +12,7 @@ on:
       - '*'
 
 jobs:
-  build:
+  build-test-vscode:
 
     runs-on: ubuntu-latest
 
@@ -71,7 +71,7 @@ jobs:
   publish-vsce:
     runs-on: ubuntu-latest
     environment: VSCE
-    needs: build
+    needs: build-test-vscode
     if: success() && startsWith( github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v4
@@ -83,7 +83,7 @@ jobs:
   publish-open-vsx:
     runs-on: ubuntu-latest
     environment: OPEN-VSX
-    needs: build
+    needs: build-test-vscode
     if: success() && startsWith( github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v4
@@ -111,7 +111,7 @@ jobs:
   publish-npm:
     runs-on: ubuntu-latest
     environment: NPM
-    needs: [build, build-language-server-standalone]
+    needs: [build-test-vscode, build-language-server-standalone]
     if: success() && startsWith( github.ref, 'refs/tags/')
     steps:
       # Setup .npmrc file to publish to npm
