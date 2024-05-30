@@ -121,7 +121,7 @@ export async function onDefinitionHandler (textDocumentPositionParams: TextDocum
   return []
 }
 
-function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, directivePath: string): Location[] {
+export function getDefinitionForDirectives (directiveStatementKeyword: DirectiveStatementKeyword, directivePath: string): Location[] {
   let elementInfos: ElementInfo[] = []
   switch (directiveStatementKeyword) {
     case 'inherit':

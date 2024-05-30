@@ -141,7 +141,7 @@ describe('Create Python embedded language content with inline Python', () => {
       'without surrounding quotes',
       // eslint-disable-next-line no-template-curly-in-string
       'inherit ${@"test"}',
-      `${pythonHeader}          \n\n"test"\n`
+      `${pythonHeader}       \n\n   \n\n"test"\n`
     ],
     [
       'inside bash function',
@@ -151,6 +151,7 @@ describe('Create Python embedded language content with inline Python', () => {
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python', uri)
+    console.log('cossin embeddedContent', embeddedContent)
     expect(embeddedContent).toEqual(result)
   })
 })

@@ -58,6 +58,7 @@ export default class Analyzer {
   private bitBakeParser?: Parser
   private bashParser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
+  private readonly documentsToAnalyze = new Set<string>() // Dependencies (require, include, etc.) that need to be analyzed of documents that have been analyzed
   private readonly uriToLastScanResult: Record<string, LastScanResult | undefined> = {} // Store the results of the last scan for each recipe
   private uriToRecipeLocalFiles: Record<string, RequestResult['getRecipeLocalFiles']> = {}
 
@@ -108,6 +109,20 @@ export default class Analyzer {
       ...this.getBashGlobalVariablesSymbols(uri),
       ...this.getPythonDatastoreVariableSymbols(uri)
     ]
+  }
+
+  public pushDocumentToAnalyze (uri: string): void {
+    this.documentsToAnalyze.add(uri)
+  }
+
+  public popDocumentToAnalyse (): string | undefined {
+    // this.documentsToAnalyze.next().keys().value loses typing. Hence the pointless loop.
+    // https://stackoverflow.com/a/74544236/15048038
+    // eslint-disable-next-line no-unreachable-loop
+    for (const uri of this.documentsToAnalyze) {
+      this.documentsToAnalyze.delete(uri)
+      return uri
+    }
   }
 
   public removeLastScanResultForRecipe (recipe: string): void {
@@ -1098,7 +1113,7 @@ export default class Analyzer {
       result.push(lines[i])
     }
 
-    return result.map((line) => path.parse(line.slice(1).trim()))
+    return result.map((line) => path.parse(line.slice(1).trim().replace(/ includes:$/, '')))
   }
 
   /**

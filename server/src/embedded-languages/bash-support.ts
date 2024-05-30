@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as TreeSitterUtils from '../tree-sitter/utils'
-import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
+import { getImportedRessourcesInfos, initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 import type Parser from 'web-tree-sitter'
 import { type EmbeddedLanguageDoc } from '../lib/src/embedded-languages'
 import { type SyntaxNode } from 'web-tree-sitter'
@@ -33,6 +33,12 @@ export const generateBashEmbeddedLanguageDoc = (
         return true
       case 'function_definition':
         handleFunctionDefinitionNode(node, embeddedLanguageDoc)
+        return false
+      case 'include_directive':
+      case 'inherit_directive':
+      case 'inherit_defer_directive':
+      case 'require_directive':
+        handleIncludeOrRequireNode(node, embeddedLanguageDoc)
         return false
       default:
         return false
@@ -114,4 +120,16 @@ const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: E
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Replace it by spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
+}
+
+const handleIncludeOrRequireNode = (includeOrRequireNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  const directiveStatementKeyword = includeOrRequireNode.children[0]?.text
+  const includePathNode = includeOrRequireNode.children[1]
+  const includePath = includePathNode?.text
+  const importedResourcesInfos = getImportedRessourcesInfos(directiveStatementKeyword, includePath, embeddedLanguageDoc.originalUri, 'bash')
+  const imports = importedResourcesInfos.map(
+    ({ embeddedLanguageDocFilename, originalUri }) => `. ./${embeddedLanguageDocFilename.replace('file//', '')} # ${originalUri}`
+  )
+  const importsText = '\n' + imports.join('\n') + '\n'
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, includeOrRequireNode.endIndex, includeOrRequireNode.endIndex, importsText)
 }

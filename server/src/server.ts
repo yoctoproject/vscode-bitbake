@@ -15,7 +15,6 @@ import {
   ProposedFeatures,
   TextDocumentSyncKind,
   type InitializeParams,
-  type TextDocumentChangeEvent,
   SemanticTokensRequest
 } from 'vscode-languageserver/node'
 import { bitBakeDocScanner } from './BitBakeDocScanner'
@@ -35,6 +34,7 @@ import { expandSettingPath } from './lib/src/BitbakeSettings'
 import { onReferenceHandler } from './connectionHandlers/onReference'
 import { type BitbakeScanResult } from './lib/src/types/BitbakeScanResult'
 import { onPrepareRenameHandler, onRenameRequestHandler } from './connectionHandlers/onRename'
+import { loadTextDocument } from './utils/textDocument'
 
 // Create a connection for the server. The connection uses Node's IPC as a transport
 export const connection: Connection = createConnection(ProposedFeatures.all)
@@ -173,9 +173,10 @@ disposables.push(
     return analyzer.getLinksInStringContent(params.documentUri)
   }),
 
-  connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
+  connection.onRequest(RequestMethod.ProcessRecipeScanResults, async (param: RequestParams['ProcessRecipeScanResults']) => {
     logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
     analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
+    await analyzeDocumentWithItsDependencies(currentActiveTextDocument, true)
   }),
 
   connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
@@ -197,17 +198,19 @@ disposables.push(
     bitBakeProjectScannerClient.setScanResults(scanResults)
 
     logger.debug('Analyzing the current document again...')
-    analyzer.analyze({ document: currentActiveTextDocument, uri: currentActiveTextDocument.uri })
+    void analyzeDocumentWithItsDependencies(currentActiveTextDocument, true)
   }),
 
   connection.onShutdown(() => {
     disposables.forEach((disposable) => { disposable.dispose() })
   }),
 
-  documents.onDidOpen(analyzeDocument),
+  documents.onDidOpen(async (event) => {
+    await analyzeDocumentWithItsDependencies(event.document)
+  }),
 
   documents.onDidChangeContent(async (event) => {
-    await analyzeDocument(event)
+    await analyzeDocumentWithItsDependencies(event.document)
 
     if (analyzer.getRecipeLocalFiles(event.document.uri) === undefined) {
       try {
@@ -226,16 +229,29 @@ connection.listen()
 
 documents.listen(connection)
 
-async function analyzeDocument (event: TextDocumentChangeEvent<TextDocument>): Promise<void> {
-  const textDocument = event.document
+async function analyzeDocument (textDocument: TextDocument, shouldForce: boolean): Promise<void> {
   const previousVersion = analyzer.getAnalyzedDocument(textDocument.uri)?.version ?? -1
-  if (textDocument.getText().length > 0 && previousVersion < textDocument.version) {
+  if (shouldForce || (textDocument.getText().length > 0 && previousVersion < textDocument.version)) {
     const diagnostics = analyzer.analyze({ document: textDocument, uri: textDocument.uri })
-    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document, pokyFolder)
+    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(textDocument, pokyFolder)
     if (embeddedLanguageDocs !== undefined) {
       void connection.sendNotification(NotificationMethod.EmbeddedLanguageDocs, embeddedLanguageDocs)
     }
     void connection.sendDiagnostics({ uri: textDocument.uri, diagnostics })
+  }
+}
+
+async function analyzeDocumentWithItsDependencies (textDocument: TextDocument, shouldForce: boolean = false): Promise<void> {
+  let uri: string | undefined
+  await analyzeDocument(textDocument, shouldForce)
+  while ((uri = analyzer.popDocumentToAnalyse()) !== undefined) {
+    const includedDocument = await loadTextDocument(uri)
+    if (includedDocument !== undefined) {
+      // We don't force analyzation on dependencies.
+      // If the document has been modified, then it already has been analyzed and it has a non-dummy version number.
+      // If a scan occured while it was the active document, then it already has been forced.
+      await analyzeDocument(includedDocument, false)
+    }
   }
 
   currentActiveTextDocument = textDocument

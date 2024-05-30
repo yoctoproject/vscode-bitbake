@@ -8,7 +8,7 @@ import { type SyntaxNode } from 'web-tree-sitter'
 
 import * as TreeSitterUtils from '../tree-sitter/utils'
 
-import { insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc } from './utils'
+import { insertTextIntoEmbeddedLanguageDoc, initEmbeddedLanguageDoc, getImportedRessourcesInfos } from './utils'
 import { type TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageDoc } from '../lib/src/embedded-languages'
 
@@ -36,6 +36,12 @@ export const generatePythonEmbeddedLanguageDoc = (
         return false
       case 'inline_python':
         handleInlinePythonNode(node, embeddedLanguageDoc)
+        return false
+      case 'include_directive':
+      case 'inherit_directive':
+      case 'inherit_defer_directive':
+      case 'require_directive':
+        handleIncludeOrRequireNode(node, embeddedLanguageDoc)
         return false
       default:
         return true
@@ -141,4 +147,22 @@ const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: E
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Replace it by space
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
+}
+
+const handleIncludeOrRequireNode = (includeOrRequireNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  const directiveStatementKeywordNode = includeOrRequireNode.children[0]
+  const directiveStatementKeyword = directiveStatementKeywordNode?.text
+  const includePathNode = includeOrRequireNode.children[1]
+  const includePath = includePathNode?.text
+  const importedResourcesInfos = getImportedRessourcesInfos(directiveStatementKeyword, includePath, embeddedLanguageDoc.originalUri, 'python')
+  const imports = importedResourcesInfos?.map(({ embeddedLanguageDocFilename, originalUri }) => {
+    const module = embeddedLanguageDocFilename.substring(0, embeddedLanguageDocFilename.lastIndexOf('.'))
+    return `from ${module} import * # ${originalUri}`
+  })
+  const importsText = '\n' + imports.join('\n') + '\n'
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, directiveStatementKeywordNode.endIndex, directiveStatementKeywordNode.endIndex, importsText)
+
+  if (includePathNode.type === 'inline_python') {
+    handleInlinePythonNode(includePathNode, embeddedLanguageDoc)
+  }
 }

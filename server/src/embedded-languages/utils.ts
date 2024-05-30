@@ -5,7 +5,11 @@
 
 import { type TextDocument } from 'vscode-languageserver-textdocument'
 
-import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
+import { getEmbeddedLanguageDocFilename, type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
+import { checkIsDirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
+import { analyzer } from '../tree-sitter/analyzer'
+import { extractRecipeName } from '../lib/src/utils/files'
+import { getDefinitionForDirectives } from '../connectionHandlers/onDefinition'
 
 const replaceTextForSpaces = (text: string): string => {
   return text.replace(/[^\r\n]+/g, (match) => ' '.repeat(match.length))
@@ -48,4 +52,34 @@ export const insertTextIntoEmbeddedLanguageDoc = (embeddedLanguageDoc: EmbeddedL
   if (diff !== 0) {
     addCharacterOffset(embeddedLanguageDoc.characterIndexes, end, diff)
   }
+}
+
+export interface ImportedResourceInfos {
+  embeddedLanguageDocFilename: string
+  originalUri: string
+}
+
+export const getImportedRessourcesInfos = (
+  directiveStatementKeyword: string | undefined,
+  includePath: string | undefined,
+  uri: string,
+  languageType: EmbeddedLanguageType
+): ImportedResourceInfos[] => {
+  if (!checkIsDirectiveStatementKeyword(directiveStatementKeyword) || includePath === undefined) {
+    return []
+  }
+  const lastScanResult = analyzer.getLastScanResult(extractRecipeName(uri))
+  let resolvedDirectivePath = includePath
+  if (lastScanResult !== undefined) {
+    resolvedDirectivePath = analyzer.resolveSymbol(includePath, lastScanResult.symbols)
+  }
+  const definitions = getDefinitionForDirectives(directiveStatementKeyword, resolvedDirectivePath)
+  const modules: ImportedResourceInfos[] = []
+  definitions.forEach((definition) => {
+    const originalUri = definition.uri
+    const embeddedLanguageDocFilename = getEmbeddedLanguageDocFilename(originalUri, languageType)
+    modules.push({ embeddedLanguageDocFilename, originalUri })
+    analyzer.pushDocumentToAnalyze(originalUri)
+  })
+  return modules
 }

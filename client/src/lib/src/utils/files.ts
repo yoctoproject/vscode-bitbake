@@ -3,7 +3,9 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
+import fs from 'fs'
 import path from 'path'
+import { logger } from './OutputLogger'
 
 export const bitbakeFileExtensions = ['.bb', '.bbappend', '.bbclass', '.conf', '.inc']
 
@@ -27,4 +29,17 @@ function extractRecipeFileName (filePath: string): string {
   const stringRegex = '(' + bitbakeFileExtensions.map(ext => `\\${ext}`).join('|') + ')$'
   const fileName = FileName.replace(new RegExp(stringRegex, 'g'), '')
   return fileName
+}
+
+export async function loadFileContent (filePath: string): Promise<string | undefined> {
+  return await new Promise((resolve) => {
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err !== null) {
+        logger.info(`[loadFileContent]: Failed to load ${filePath}`)
+        resolve(undefined)
+      } else {
+        resolve(data)
+      }
+    })
+  })
 }
