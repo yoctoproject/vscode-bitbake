@@ -29,9 +29,6 @@ jobs:
       with:
         ref: ${{ env.BASE_BRANCH }}
 
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-
     - name: Update required extension version
       run: bash scripts/update-ref.sh
 
