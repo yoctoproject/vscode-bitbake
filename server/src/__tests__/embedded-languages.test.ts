@@ -10,10 +10,13 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
-import { imports } from '../embedded-languages/python-support'
-import { bashHeader } from '../embedded-languages/bash-support'
+import { getPythonHeader } from '../embedded-languages/python-support'
+import { getBashHeader } from '../embedded-languages/bash-support'
 
 describe('Create basic embedded bash documents', () => {
+  const uri = randomUUID()
+  const bashHeader = getBashHeader(uri)
+
   beforeAll(async () => {
     if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
@@ -46,12 +49,15 @@ describe('Create basic embedded bash documents', () => {
       `${bashHeader}         foo(){\nBAR=""\n}`
     ]
   ])('%s', async (description, input, result) => {
-    const embeddedContent = await createEmbeddedContent(input, 'bash')
+    const embeddedContent = await createEmbeddedContent(input, 'bash', uri)
     expect(embeddedContent).toEqual(result)
   })
 })
 
 describe('Create various basic embedded python documents', () => {
+  const uri = randomUUID()
+  const pythonHeader = getPythonHeader(uri)
+
   beforeAll(async () => {
     if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
@@ -65,35 +71,38 @@ describe('Create various basic embedded python documents', () => {
     [
       'anonymous',
       'python(){\n  pass\n}',
-      `${imports}def _ ():\n  pass\n `
+      `${pythonHeader}def _ ():\n  pass\n `
     ],
     [
       'named with python keyword',
       'python foo (){\n  pass\n}',
-      `${imports}def foo ():\n  pass\n `
+      `${pythonHeader}def foo ():\n  pass\n `
     ],
     [
       'empty',
       'python(){\n}',
-      `${imports}def _ ():\n  pass\n `
+      `${pythonHeader}def _ ():\n  pass\n `
     ],
     [
       'with def keyword',
       'def foo():\n  pass',
-      `${imports}def foo():\n  pass`
+      `${pythonHeader}def foo():\n  pass`
     ],
     [
       'with fakeroot',
       'fakeroot python(){\n  pass\n}',
-      `${imports}def _ ():\n  pass\n `
+      `${pythonHeader}def _ ():\n  pass\n `
     ]
   ])('%s', async (description, input, result) => {
-    const embeddedContent = await createEmbeddedContent(input, 'python')
+    const embeddedContent = await createEmbeddedContent(input, 'python', uri)
     expect(embeddedContent).toEqual(result)
   })
 })
 
 describe('Create Python embedded language content with inline Python', () => {
+  const uri = randomUUID()
+  const pythonHeader = getPythonHeader(uri)
+
   beforeAll(async () => {
     if (!analyzer.hasParsers()) {
       const bitBakeParser = await generateBitBakeParser()
@@ -108,40 +117,40 @@ describe('Create Python embedded language content with inline Python', () => {
       'basic',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}\'',
-      `${imports}         \n\n"BAR"\n `
+      `${pythonHeader}         \n\n"BAR"\n `
     ],
     [
       'with spacing',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@  "BAR"  }\'',
-      `${imports}         \n  \n"BAR"  \n `
+      `${pythonHeader}         \n  \n"BAR"  \n `
     ],
     [
       'multiline',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}\' \\\n1 \\\n2"',
-      `${imports}         \n\n"BAR"\n   \n   \n  `
+      `${pythonHeader}         \n\n"BAR"\n   \n   \n  `
     ],
     [
       'with two embedded python regions',
       // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}${@"BAR"}\'',
-      `${imports}         \n\n"BAR"\n  \n\n"BAR"\n `
+      `${pythonHeader}         \n\n"BAR"\n  \n\n"BAR"\n `
     ],
     [
       'without surrounding quotes',
       // eslint-disable-next-line no-template-curly-in-string
       'inherit ${@"test"}',
-      `${imports}          \n\n"test"\n`
+      `${pythonHeader}          \n\n"test"\n`
     ],
     [
       'inside bash function',
       // eslint-disable-next-line no-template-curly-in-string
       'foo(){\n${@FOO}\n}',
-      `${imports}      \n  \n\nFOO\n\n `
+      `${pythonHeader}      \n  \n\nFOO\n\n `
     ]
   ])('%s', async (description, input, result) => {
-    const embeddedContent = await createEmbeddedContent(input, 'python')
+    const embeddedContent = await createEmbeddedContent(input, 'python', uri)
     expect(embeddedContent).toEqual(result)
   })
 })
@@ -203,8 +212,11 @@ describe('Finds proper embedded language type', () => {
   })
 })
 
-const createEmbeddedContent = async (content: string, language: EmbeddedLanguageType): Promise<string | undefined> => {
-  const uri = randomUUID()
+const createEmbeddedContent = async (
+  content: string,
+  language: EmbeddedLanguageType,
+  uri: string
+): Promise<string | undefined> => {
   const document = TextDocument.create(uri, 'bitbake', 1, content)
   analyzer.analyze({ document, uri })
   const embeddedLanguageDocs = generateEmbeddedLanguageDocs(document)

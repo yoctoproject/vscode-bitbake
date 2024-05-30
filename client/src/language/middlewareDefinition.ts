@@ -136,8 +136,8 @@ const redirectDefinition = async <DefinitionType extends Location | LocationLink
   return redirectedResult.map((redirectedDefinition) => convertToSameDefinitionType(initialDefinition, redirectedDefinition))
 }
 
-export const dRange = new Range(2, 0, 2, 1) // Where `d` is located in the embedded language document
-export const dataSmartPosition = new Position(2, 19) // Where `DataSmart` (data_smart.DataSmart()) is reachable in the embedded language document
+export const dRange = new Range(3, 0, 3, 1) // Where `d` is located in the embedded language document
+export const dataSmartPosition = new Position(3, 19) // Where `DataSmart` (data_smart.DataSmart()) is reachable in the embedded language document
 
 // Handle `d` in `d.getVar('')`
 const getDefinitionOfD = async <DefinitionType extends Location | LocationLink>(
@@ -146,8 +146,8 @@ const getDefinitionOfD = async <DefinitionType extends Location | LocationLink>(
   return await redirectDefinition(definition, dRange, dataSmartPosition)
 }
 
-export const eRange = new Range(3, 0, 3, 1) // Where `e` is located in the embedded language document
-export const eventPosition = new Position(3, 14) // Where `Event` (event.Event()) is reachable in the embedded language document
+export const eRange = new Range(4, 0, 4, 1) // Where `e` is located in the embedded language document
+export const eventPosition = new Position(4, 14) // Where `Event` (event.Event()) is reachable in the embedded language document
 
 // Handle `e` in `e.data.getVar('')`
 const getDefinitionOfE = async <DefinitionType extends Location | LocationLink>(
