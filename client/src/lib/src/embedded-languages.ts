@@ -22,5 +22,6 @@ const fileExtensionsMap = {
 export const getEmbeddedLanguageDocFilename = (uri: string, languageType: EmbeddedLanguageType): string => {
   const hashedName = hashString(uri)
   const fileExtension = fileExtensionsMap[languageType]
-  return hashedName + fileExtension
+  // always start with 'bb' to ensure the name never starts with a number, which would be invalid for a python module
+  return 'bb' + hashedName + fileExtension
 }
