@@ -24,15 +24,6 @@ suite('Bitbake Commands Test Suite', () => {
     disposables = []
   })
 
-  suiteTeardown(async function (this: Mocha.Context) {
-    this.timeout(10000)
-
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const workspaceURI: vscode.Uri = vscode.workspace.workspaceFolders![0].uri
-    const buildFolder = vscode.Uri.joinPath(workspaceURI, 'build')
-    await vscode.workspace.fs.delete(buildFolder, { recursive: true })
-  })
-
   test('Bitbake can run a task', async () => {
     await vscode.commands.executeCommand('bitbake.run-task', 'base-files', 'unpack')
     await assertWillComeTrue(async () => {
@@ -74,8 +65,14 @@ suite('Bitbake Commands Test Suite', () => {
   test('Bitbake can create a devtool modify workspace', async () => {
     await vscode.commands.executeCommand('bitbake.devtool-modify', 'base-files')
     await assertWillComeTrue(async () => {
-      const files = await vscode.workspace.findFiles('build/workspace/sources/base-files/fstab')
+      const files = await vscode.workspace.findFiles('build/workspace/appends/base-files_*.bbappend')
       return files.length === 1
+    })
+
+    await vscode.commands.executeCommand('bitbake.devtool-reset', 'base-files')
+    await assertWillComeTrue(async () => {
+      const files = await vscode.workspace.findFiles('build/workspace/appends/base-files_*.bbappend')
+      return files.length === 0
     })
   }).timeout(BITBAKE_TIMEOUT)
 })
