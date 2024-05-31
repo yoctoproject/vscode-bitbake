@@ -23,7 +23,11 @@
         "files.trimTrailingWhitespace": false
     },
     "files.associations": {
+        "*.txt": "diff",
         "*.conf": "bitbake",
         "*.inc": "bitbake"
-    }
+    },
+    "bitbake.buildConfigurations": [],
+    "bitbake.commandWrapper": "",
+    "bitbake.workingDirectory": "${workspaceFolder}"
 }
