@@ -54,7 +54,7 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     try {
       await client.sendNotification('workspace/didChangeConfiguration', { settings })
     } catch (error) {
-      logger.error(`Failed to send settings to language server: ${error}`)
+      logger.error('Failed to send settings to language server: ' + String(error))
     }
   }
 
@@ -186,7 +186,7 @@ export async function getScanResult<
     logger.debug(`[getScanResult] (${methodName}): ${JSON.stringify(params)}, ${JSON.stringify(value)}`)
     return value ?? undefined
   } catch (error) {
-    logger.error(`Failed to get scan result: ${error}`)
+    logger.error(`Failed to get scan result: ${String(error)}`)
   }
 }
 
