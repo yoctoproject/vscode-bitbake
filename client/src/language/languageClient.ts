@@ -50,7 +50,11 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
 
   const sendSettings = async (): Promise<void> => {
     const settings = workspace.getConfiguration()
-    await client.sendNotification('workspace/didChangeConfiguration', { settings })
+    try {
+      await client.sendNotification('workspace/didChangeConfiguration', { settings })
+    } catch (error) {
+      logger.error(`Failed to send settings to language server: ${error}`)
+    }
   }
 
   workspace.onDidChangeConfiguration(sendSettings)
@@ -161,22 +165,26 @@ export async function getScanResult<
   params: ParamsType,
   canTriggerScan: boolean = false
 ): Promise<ReturnType | undefined> {
-  let value: ReturnType = await client.sendRequest(methodName, params)
-  if ((value === undefined || value === null) && canTriggerScan) {
-    // We may not have scanned the recipe yet. Let's try again.
-    const progressOptions: vscode.ProgressOptions = {
-      location: vscode.ProgressLocation.Notification,
-      title: `Recipe ${params.recipe} has not been scanned yet. Scanning now...`,
-      cancellable: false
+  try {
+    let value: ReturnType = await client.sendRequest(methodName, params)
+    if ((value === undefined || value === null) && canTriggerScan) {
+      // We may not have scanned the recipe yet. Let's try again.
+      const progressOptions: vscode.ProgressOptions = {
+        location: vscode.ProgressLocation.Notification,
+        title: `Recipe ${params.recipe} has not been scanned yet. Scanning now...`,
+        cancellable: false
+      }
+      await vscode.window.withProgress(progressOptions, async (progress) => {
+        await vscode.commands.executeCommand('bitbake.scan-recipe-env', params.recipe)
+        progress.report({ increment: 100 })
+      })
+      value = await client.sendRequest(methodName, params)
     }
-    await vscode.window.withProgress(progressOptions, async (progress) => {
-      await vscode.commands.executeCommand('bitbake.scan-recipe-env', params.recipe)
-      progress.report({ increment: 100 })
-    })
-    value = await client.sendRequest(methodName, params)
+    logger.debug(`[getScanResult] (${methodName}): ${JSON.stringify(params)}, ${JSON.stringify(value)}`)
+    return value ?? undefined
+  } catch (error) {
+    logger.error(`Failed to get scan result: ${error}`)
   }
-  logger.debug(`[getScanResult] (${methodName}): ${JSON.stringify(params)}, ${JSON.stringify(value)}`)
-  return value ?? undefined
 }
 
 export async function getVariableValue (
