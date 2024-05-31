@@ -6,20 +6,13 @@
 import path from 'path'
 import fs from 'fs'
 
-// This is similar to the integration-tests addLayer() but doesn't use the VSCode API
-export function addLayer (layer: string, buildFolder: string): void {
-  const bblayersConf = path.resolve(buildFolder, 'conf/bblayers.conf')
-  const bblayersConfContent = fs.readFileSync(bblayersConf)
-  let fileContent = bblayersConfContent.toString()
-  fileContent += `\nBBLAYERS+="${layer}"\n`
-  fs.writeFileSync(bblayersConf, fileContent)
+/// Copy a recipe into poky
+export async function importRecipe (recipePath: string, pokyPath: string): Promise<void> {
+  const pokyDestinationPath = path.resolve(pokyPath, 'meta/recipes-core/base-files', path.basename(recipePath))
+  await fs.promises.copyFile(recipePath, pokyDestinationPath)
 }
 
-// This is similar to the integration-tests removeLayer() but doesn't use the VSCode API
-export function removeLayer (layer: string, buildFolder: string): void {
-  const bblayersConf = path.resolve(buildFolder, 'conf/bblayers.conf')
-  const bblayersConfContent = fs.readFileSync(bblayersConf)
-  let fileContent = bblayersConfContent.toString()
-  fileContent = fileContent.replace(`\nBBLAYERS+="${layer}"`, '')
-  fs.writeFileSync(bblayersConf, fileContent)
+export async function removeRecipe (recipePath: string, pokyPath: string): Promise<void> {
+  const pokyDestinationPath = path.resolve(pokyPath, 'meta/recipes-core/base-files', path.basename(recipePath))
+  await fs.promises.unlink(pokyDestinationPath)
 }

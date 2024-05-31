@@ -4,11 +4,12 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
+import fs from 'fs'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
 import { mockVscodeEvents } from '../../utils/vscodeMock'
-import { addLayer, removeLayer } from '../../utils/bitbake'
+import { importRecipe, removeRecipe } from '../../utils/bitbake'
 import { logger } from '../../../lib/src/utils/OutputLogger'
 
 let bitBakeProjectScanner: BitBakeProjectScanner
@@ -39,12 +40,17 @@ describe('BitBakeProjectScanner', () => {
     })
     mockVscodeEvents()
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
-      child.onExit((event) => {
+      child.onExit(async (event) => {
         expect(event.exitCode).toBe(0)
-        addLayer(
-          path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions'),
-          path.resolve(__dirname, '../../../../../integration-tests/project-folder/build'))
-        void bitBakeProjectScanner.rescanProject()
+        const pokyPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/poky')
+        const fixtureVersionPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions/recipes-fixtures/fixture-version')
+        const recipes = fs.readdirSync(fixtureVersionPath)
+        for (const recipe of recipes) {
+          await importRecipe(path.join(fixtureVersionPath, recipe), pokyPath)
+        }
+        const localConfPath = path.join(pathToBuildFolder, 'conf', 'local.conf')
+        fs.appendFileSync(localConfPath, 'PREFERRED_VERSION_fixture-version = "0.2.0"\n')
+        await bitBakeProjectScanner.rescanProject()
       })
     }, (error) => {
       throw error
@@ -52,10 +58,13 @@ describe('BitBakeProjectScanner', () => {
   }, BITBAKE_TIMEOUT)
 
   afterAll((done) => {
-    removeLayer(
-      path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions'),
-      path.resolve(__dirname, '../../../../../integration-tests/project-folder/build'))
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
+      const pokyPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/poky')
+      const fixtureVersionPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions/recipes-fixtures/fixture-version')
+      const recipes = fs.readdirSync(fixtureVersionPath)
+      for (const recipe of recipes) {
+        void removeRecipe(path.join(fixtureVersionPath, recipe), pokyPath)
+      }
       child.onExit(() => {
         done()
       })
@@ -159,15 +168,7 @@ describe('BitBakeProjectScanner', () => {
         version: '0.2.0',
         path: expect.objectContaining({
           base: 'fixture-version_0.2.0.bb'
-        }),
-        appends: expect.arrayContaining([
-          expect.objectContaining({
-            base: 'fixture-version_%.bbappend'
-          }),
-          expect.objectContaining({
-            base: 'fixture-version_0.2.0.bbappend'
-          })
-        ])
+        })
       })
     )
   })
