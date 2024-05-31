@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 
 import path from 'path'
 import { BITBAKE_TIMEOUT, addLayer, excludeRecipes, resetExcludedRecipes, awaitBitbakeParsingResult, resetLayer } from '../utils/bitbake'
-import { assertWorkspaceWillBeOpen, delay } from '../utils/async'
+import { assertWillComeTrue, assertWorkspaceWillBeOpen } from '../utils/async'
 
 suite('Bitbake Parsing Test Suite', () => {
   let workspaceURI: vscode.Uri
@@ -33,9 +33,6 @@ suite('Bitbake Parsing Test Suite', () => {
   test('Bitbake can succesfully parse poky', async () => {
     await vscode.commands.executeCommand('bitbake.parse-recipes')
     await awaitBitbakeParsingResult()
-
-    // Wait for the diagnostics to be updated.
-    await delay(500)
 
     const diagnostics = vscode.languages.getDiagnostics()
     assert.strictEqual(diagnostics.length, 0)
@@ -65,18 +62,25 @@ suite('Bitbake Parsing Test Suite', () => {
 
     await resetExcludedRecipes(workspacePath)
 
-    // Wait for the diagnostics to be updated. Another method would be to use
-    // the onDidChangeDiagnostics event, but it is not useful with the other test
-    // that checks for no diagnostics.
-    await delay(500)
+    await assertWillComeTrue(async () => {
+      const diagnostics = vscode.languages.getDiagnostics()
+      // Only 1 file has problem(s)
+      if (diagnostics.length !== 1) {
+        return false
+      }
+      // Only 1 problem on the file
+      if (diagnostics[0][1].length !== 1) {
+        return false
+      }
 
-    const diagnostics = vscode.languages.getDiagnostics()
-    // Only 1 file has problem(s)
-    assert.strictEqual(diagnostics.length, 1)
-    // Only 1 problem on the file
-    assert.strictEqual(diagnostics[0][1].length, 1)
+      if (!diagnostics[0][0].path.includes('recipes-error/error/unparsed-line.bb')) {
+        return false
+      }
+      if (!diagnostics[0][1][0].message.includes('unparsed line: \'undefinedvariable\'')) {
+        return false
+      }
 
-    assert.ok(diagnostics[0][0].path.includes('recipes-error/error/unparsed-line.bb'))
-    assert.ok(diagnostics[0][1][0].message.includes('unparsed line: \'undefinedvariable\''))
+      return true
+    })
   }).timeout(BITBAKE_TIMEOUT)
 })
