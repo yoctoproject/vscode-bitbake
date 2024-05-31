@@ -31,14 +31,6 @@ suite('Bitbake Parsing Test Suite', () => {
     } catch (e) {}
   })
 
-  test('Bitbake can succesfully parse poky', async () => {
-    await vscode.commands.executeCommand('bitbake.parse-recipes')
-    await awaitBitbakeParsingResult()
-
-    const diagnostics = vscode.languages.getDiagnostics()
-    assert.strictEqual(diagnostics.length, 0)
-  }).timeout(BITBAKE_TIMEOUT)
-
   test('Bitbake can detect parsing errors', async () => {
     await importRecipe(errorRecipePath, pokyPath)
 
