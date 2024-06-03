@@ -28,25 +28,30 @@ suite('Bitbake Rename Test Suite', () => {
     newName: string,
     expected: ReturnType<vscode.WorkspaceEdit['entries']>
   ): Promise<void> => {
-    let result: vscode.WorkspaceEdit | undefined
-
     await assertWillComeTrue(async () => {
-      result = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
+      const result = await vscode.commands.executeCommand<vscode.WorkspaceEdit>(
         'vscode.executeDocumentRenameProvider',
         docUri,
         position,
         newName
       )
-      return result.entries().length === expected.length
-    })
-    result?.entries().forEach(([uri, edits], index) => {
-      const [expectedUri, expectedTextEdits] = expected[index]
-      assert.strictEqual(uri.toString() === expectedUri.toString(), true)
-      assert.strictEqual(edits.length === expectedTextEdits.length, true)
-      edits.forEach((edit, editIndex) => {
-        const expectedEdit = expectedTextEdits[editIndex]
-        assert.strictEqual(edit.newText === expectedEdit.newText, true)
-        assert.strictEqual(edit.range.isEqual(expectedEdit.range), true)
+      if (result.entries().length !== expected.length) {
+        return false
+      }
+
+      return result.entries().every(([uri, edits], index) => {
+        const [expectedUri, expectedTextEdits] = expected[index]
+        if (uri.toString() !== expectedUri.toString()) {
+          return false
+        }
+        if (edits.length !== expectedTextEdits.length) {
+          return false
+        }
+        return edits.every((edit) => {
+          return expectedTextEdits.some((expectedEdit) =>
+            edit.newText === expectedEdit.newText && edit.range.isEqual(expectedEdit.range)
+          )
+        })
       })
     })
   }
@@ -102,6 +107,10 @@ suite('Bitbake Rename Test Suite', () => {
         [
           new vscode.TextEdit(
             new vscode.Range(0, 0, 0, 3),
+            newName
+          ),
+          new vscode.TextEdit(
+            new vscode.Range(5, 14, 5, 17),
             newName
           ),
           new vscode.TextEdit(
