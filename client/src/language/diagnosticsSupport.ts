@@ -14,6 +14,8 @@ import { extractRecipeName } from '../lib/src/utils/files'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
+const supportedSources = ['Pylance', 'shellcheck']
+
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
   python: vscode.languages.createDiagnosticCollection('bitbake-python')
@@ -57,6 +59,9 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
   const variableValues = await requestsManager.getAllVariableValues(recipe)
 
   await Promise.all(dirtyDiagnostics.map(async (diagnostic) => {
+    if (!checkHasSupportedSource(diagnostic)) {
+      return
+    }
     if (await checkIsIgnoredShellcheckSc2154(diagnostic, variableValues)) {
       return
     }
@@ -103,6 +108,12 @@ const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefi
     return 'bash'
   }
   return undefined
+}
+
+const checkHasSupportedSource = (diagnostic: vscode.Diagnostic): boolean => {
+  return supportedSources.some(
+    (supportedSource) => diagnostic.source !== undefined && diagnostic.source.includes(supportedSource)
+  )
 }
 
 const checkIsIgnoredShellcheckSc2154 = async (
