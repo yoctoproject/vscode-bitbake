@@ -67,7 +67,7 @@ function configureBitBakeFileAssociation (): void {
   }
 }
 
-function updatePythonPath (): void {
+function updatePythonPath (additionalPaths: string[] = []): void {
   // Deliberately load the workspace configuration here instead of using
   // bitbakeDriver.bitbakeSettings, because the latter contains resolved
   // (absolute) paths, which is not very portable for settings.json. We want
@@ -81,7 +81,7 @@ function updatePythonPath (): void {
   for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
     let extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
     if (!Object.isExtensible(extraPaths)) extraPaths = []
-    for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib]) {
+    for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib, ...additionalPaths]) {
       if (!extraPaths.includes(pathToAdd)) {
         extraPaths.push(pathToAdd)
       }
@@ -135,10 +135,16 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
-  updatePythonPath()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context, bitBakeProjectScanner)
+  const additionalPythonPaths: string[] = []
+  if (embeddedLanguageDocsManager.embeddedLanguageDocsFolder !== undefined) {
+    additionalPythonPaths.push(embeddedLanguageDocsManager.embeddedLanguageDocsFolder)
+  } else {
+    logger.error('Embedded language docs folder is not set')
+  }
+  updatePythonPath(additionalPythonPaths)
   bitBakeProjectScanner.setClient(client)
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
