@@ -326,7 +326,7 @@ export default class Analyzer {
    */
   public wordAtPoint (uri: string, line: number, column: number): string | null {
     const bashNode = this.bashNodeAtPoint(uri, line, column)
-    if (bashNode?.type === 'variable_name') {
+    if (bashNode?.type === 'variable_name' || bashNode?.type === 'word') {
       return bashNode.text
     }
 
