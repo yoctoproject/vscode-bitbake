@@ -237,8 +237,9 @@ export default class Analyzer {
     TreeSitterUtils.forEach(bashTree.rootNode, (node) => {
       const isFunctionDefinition = node.type === 'function_definition'
       const isVariableName = node.type === 'variable_name'
+      const isCommandName = node.type === 'command_name' // Note, in tree-sitter-bash terminology, a command is just a function when being called.
 
-      if (isFunctionDefinition || isVariableName) {
+      if (isFunctionDefinition || isVariableName || isCommandName) {
         // Popping scopes that are no longer valid
         for (const parentScopeLocalSymbols of Array(...scopeLocalSymbolsStack).reverse()) {
           if (parentScopeLocalSymbols.scope.endIndex > node.startIndex) {
@@ -249,6 +250,15 @@ export default class Analyzer {
       }
 
       if (isFunctionDefinition) {
+        const functionName = node.firstChild?.text
+        const parentScopeLocalSymbols = scopeLocalSymbolsStack.at(-1)
+        if (functionName === undefined) {
+          logger.error('[getSymbolsFromBashTree] Function name is undefined')
+        } else if (parentScopeLocalSymbols === undefined) {
+          // Pass. This is a global function.
+        } else {
+          parentScopeLocalSymbols.symbols.add(functionName)
+        }
         scopeLocalSymbolsStack.push({ symbols: new Set<string>(), scope: node })
       }
 
@@ -256,22 +266,23 @@ export default class Analyzer {
         const isLocalVariableDeclaration = node.previousSibling?.type === 'local' || node.parent?.previousSibling?.type === 'local'
         if (isLocalVariableDeclaration) {
           scopeLocalSymbolsStack.at(-1)?.symbols.add(node.text)
-        } else {
-          // Note local variable declarations are a special case of local variables that have already been handled
-          const isLocalVariable = scopeLocalSymbolsStack.some((scopeLocalSymbols) => scopeLocalSymbols.symbols.has(node.text))
-          if (!isLocalVariable) {
-            const symbol: BitbakeSymbolInformation = {
-              ...SymbolInformation.create(
-                node.text,
-                SymbolKind.Variable,
-                TreeSitterUtils.range(node),
-                uri
-              ),
-              commentsAbove: [],
-              overrides: []
-            }
-            bashGlobalSymbols.push(symbol)
+        }
+      }
+
+      if (isVariableName || isCommandName) {
+        const isLocalVariable = scopeLocalSymbolsStack.some((scopeLocalSymbols) => scopeLocalSymbols.symbols.has(node.text))
+        if (!isLocalVariable) {
+          const symbol: BitbakeSymbolInformation = {
+            ...SymbolInformation.create(
+              node.text,
+              isVariableName ? SymbolKind.Variable : SymbolKind.Function,
+              TreeSitterUtils.range(node),
+              uri
+            ),
+            commentsAbove: [],
+            overrides: []
           }
+          bashGlobalSymbols.push(symbol)
         }
       }
       return true
