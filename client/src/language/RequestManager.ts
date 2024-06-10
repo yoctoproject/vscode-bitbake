@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { type Position } from 'vscode'
+import { type TextDocument, type Definition, type Position } from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 
 import { RequestMethod, type RequestParams, type RequestResult } from '../lib/src/types/requests'
@@ -27,6 +27,21 @@ export class RequestManager {
       return
     }
     return await getAllVariableValues(this.client, recipe, false)
+  }
+
+  getDefinition = async (textDocument: TextDocument, position: Position): Promise<Definition[]> => {
+    if (this.client === undefined) {
+      return []
+    }
+    return await this.client.sendRequest(
+      'textDocument/definition',
+      {
+        textDocument: {
+          uri: textDocument.uri.toString()
+        },
+        position
+      }
+    )
   }
 }
 

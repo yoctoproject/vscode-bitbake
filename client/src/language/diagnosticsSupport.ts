@@ -62,9 +62,6 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (!checkHasSupportedSource(diagnostic)) {
       return
     }
-    if (await checkIsIgnoredShellcheckSc2154(diagnostic, variableValues)) {
-      return
-    }
     if (diagnostic.range === undefined) {
       cleanDiagnostics.push(diagnostic)
     }
@@ -75,6 +72,12 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
       diagnostic.range
     )
     if (adjustedRange === undefined) {
+      return
+    }
+    if (await checkIsIgnoredPylanceUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
+      return
+    }
+    if (await checkIsIgnoredShellcheckSc2154(diagnostic, variableValues)) {
       return
     }
     const adjustedDiagnostic = {
@@ -114,6 +117,22 @@ const checkHasSupportedSource = (diagnostic: vscode.Diagnostic): boolean => {
   return supportedSources.some(
     (supportedSource) => diagnostic.source !== undefined && diagnostic.source.includes(supportedSource)
   )
+}
+
+const checkIsIgnoredPylanceUndefinedVariable = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (diagnostic.source?.includes('Pylance') !== true) {
+    return false
+  }
+  if (typeof diagnostic.code !== 'object' || diagnostic.code?.value !== 'reportUndefinedVariable') {
+    return false
+  }
+
+  const definition = await requestsManager.getDefinition(originalTextDocument, adjustedRange.end)
+  return definition.length > 0
 }
 
 const checkIsIgnoredShellcheckSc2154 = async (
