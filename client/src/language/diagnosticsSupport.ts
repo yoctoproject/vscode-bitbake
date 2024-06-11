@@ -68,21 +68,21 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (diagnostic.range === undefined) {
       cleanDiagnostics.push(diagnostic)
     }
-    const newRange = getOriginalDocRange(
+    const adjustedRange = getOriginalDocRange(
       originalTextDocument,
       embeddedLanguageDoc,
       embeddedLanguageDocInfos.characterIndexes,
       diagnostic.range
     )
-    if (newRange === undefined) {
+    if (adjustedRange === undefined) {
       return
     }
-    const newDiagnostic = {
+    const adjustedDiagnostic = {
       ...diagnostic,
-      range: newRange,
+      range: adjustedRange,
       source: `${diagnostic.source}, ${diagnosticCollection.name}`
     }
-    cleanDiagnostics.push(newDiagnostic)
+    cleanDiagnostics.push(adjustedDiagnostic)
   }))
   diagnosticCollection.set(originalTextDocument.uri, cleanDiagnostics)
 }

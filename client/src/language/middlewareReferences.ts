@@ -64,17 +64,17 @@ const processReferences = (
     }
     reference.uri = originalTextDocument.uri
 
-    const newRange = getOriginalDocRange(
+    const adjustedRange = getOriginalDocRange(
       originalTextDocument,
       embeddedLanguageTextDocument,
       embeddedLanguageDocInfos.characterIndexes,
       reference.range
     )
 
-    if (newRange === undefined) {
+    if (adjustedRange === undefined) {
       return
     }
-    reference.range = newRange
+    reference.range = adjustedRange
     result.push(reference)
   })
 
