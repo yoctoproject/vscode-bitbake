@@ -10,7 +10,6 @@ import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { requestsManager } from '../language/RequestManager'
 import path from 'path'
-import { extractRecipeName } from '../lib/src/utils/files'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
@@ -55,9 +54,6 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
   const cleanDiagnostics: vscode.Diagnostic[] = []
   const diagnosticCollection = diagnosticCollections[embeddedLanguageType]
 
-  const recipe = extractRecipeName(originalUri.fsPath)
-  const variableValues = await requestsManager.getAllVariableValues(recipe)
-
   await Promise.all(dirtyDiagnostics.map(async (diagnostic) => {
     if (!checkHasSupportedSource(diagnostic)) {
       return
@@ -77,7 +73,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (await checkIsIgnoredPylanceUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
-    if (await checkIsIgnoredShellcheckSc2154(diagnostic, variableValues)) {
+    if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
     const adjustedDiagnostic = {
@@ -137,22 +133,39 @@ const checkIsIgnoredPylanceUndefinedVariable = async (
 
 const checkIsIgnoredShellcheckSc2154 = async (
   diagnostic: vscode.Diagnostic,
-  variablevalues: Array<{ name: string, value: string }> | undefined
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
 ): Promise<boolean> => {
   if (diagnostic.source?.includes('shellcheck') !== true && diagnostic.code !== 'SC2154') {
     return false
   }
+
+  const position = (() => {
+    // In variable expansions, the range includes the curly brace at its end and potentially whitespaces.
+    // We get position of the last alphanumeric character in the range.
+    const textOnRange = originalTextDocument.getText(adjustedRange)
+    const match = textOnRange.match(/\w+/)
+    if (match?.index === undefined) {
+      logger.error('[checkIsIgnoredShellcheckSc2154] Could not find a word on the range')
+      return adjustedRange.end // This should not happen
+    }
+    if (match.index === 0) {
+      return adjustedRange.end // The range does not include braces
+    }
+    const actualVariable = match[0]
+    const actualEndOfVariable = adjustedRange.start.character + match.index + actualVariable.length
+    return new vscode.Position(adjustedRange.end.line, actualEndOfVariable)
+  })()
+
+  const definition = await requestsManager.getDefinition(originalTextDocument, position)
+  if (definition.length > 0) {
+    return true
+  }
+
+  // Maybe the scan has not be done yet.
+  // In that case, as a fallback, we check if the variable exists in static list of common directories.
   const message = diagnostic.message
   const match = message.match(/^(?<variableName>\w+) is referenced but not assigned\.$/)
   const variableName = match?.groups?.variableName
-  if (variableName === undefined) {
-    return false
-  }
-
-  if (variablevalues === undefined) {
-    // We use a static list of common directories as fallback when the scan is not done
-    return commonDirectoriesVariables.has(variableName)
-  }
-
-  return variablevalues.some((variable) => variable.name === variableName)
+  return commonDirectoriesVariables.has(variableName as string)
 }
