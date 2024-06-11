@@ -93,11 +93,11 @@ const ajustDefinitionRange = (
   characterIndexes: number[]
 ): boolean => {
   if (definition instanceof Location) {
-    const newRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.range)
-    if (newRange === undefined) {
+    const adjustedRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.range)
+    if (adjustedRange === undefined) {
       return false
     }
-    definition.range = newRange
+    definition.range = adjustedRange
   } else {
     const newTargetRange = getOriginalDocRange(originalTextDocument, embeddedLanguageTextDocument, characterIndexes, definition.targetRange)
     if (newTargetRange === undefined) {
