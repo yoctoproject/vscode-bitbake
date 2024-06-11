@@ -136,7 +136,10 @@ const checkIsIgnoredShellcheckSc2154 = async (
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
-  if (diagnostic.source?.includes('shellcheck') !== true && diagnostic.code !== 'SC2154') {
+  if (diagnostic.source?.includes('shellcheck') !== true) {
+    return false
+  }
+  if (typeof diagnostic.code !== 'object' || diagnostic.code?.value !== 'SC2154') {
     return false
   }
 
