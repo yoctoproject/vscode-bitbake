@@ -63,16 +63,17 @@ suite('Bitbake Rename Test Suite', () => {
     let result: { range: vscode.Range, placeholder: string } | undefined
 
     await assertWillComeTrue(async () => {
-      result = await vscode.commands.executeCommand<{ range: vscode.Range, placeholder: string } | undefined>(
-        'vscode.prepareRename',
-        docUri,
-        position
-      )
-      return result !== undefined
+      try {
+        result = await vscode.commands.executeCommand<{ range: vscode.Range, placeholder: string } | undefined>(
+          'vscode.prepareRename',
+          docUri,
+          position
+        )
+      } catch (error) {
+        // pass
+      }
+      return result !== undefined && result.range.isEqual(expected.range) && result.placeholder === expected.placeholder
     })
-
-    assert.strictEqual(result?.range.isEqual(expected.range), true)
-    assert.strictEqual(result?.placeholder === expected.placeholder, true)
   }
 
   const testInvalidRename = async (
@@ -86,6 +87,8 @@ suite('Bitbake Rename Test Suite', () => {
       )
     } catch (error) {
       if (error instanceof Error) {
+        // This test is not completely reliable.
+        // It might succeed just because it has been called before the embedded language document finished to be generated.
         assert.strictEqual(error.message === "The element can't be renamed.", true)
         return
       }
