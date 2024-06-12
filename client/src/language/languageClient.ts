@@ -6,7 +6,6 @@
 import * as path from 'path'
 
 import {
-  workspace,
   type ExtensionContext,
   window,
   languages,
@@ -49,22 +48,14 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     debug: { module: serverModule, transport: TransportKind.ipc, options: debugOptions }
   }
 
-  const sendSettings = async (): Promise<void> => {
-    const settings = workspace.getConfiguration()
-    try {
-      await client.sendNotification('workspace/didChangeConfiguration', { settings })
-    } catch (error) {
-      logger.error('Failed to send settings to language server: ' + String(error))
-    }
-  }
-
-  workspace.onDidChangeConfiguration(sendSettings)
-
   // Options to control the language client
   const clientOptions: LanguageClientOptions = {
     // Register the server for bitbake documents
-    // TODO: check new documentSelector
     documentSelector: [{ scheme: 'file', language: 'bitbake' }],
+    // TODO: Use the new pull-model for configuration settings
+    synchronize: {
+      configurationSection: 'bitbake'
+    },
     middleware: {
       provideCompletionItem: middlewareProvideCompletion,
       provideDefinition: middlewareProvideDefinition,
@@ -146,7 +137,6 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
 
   // Start the client and launch the server
   await client.start()
-  await sendSettings()
 
   return client
 }
