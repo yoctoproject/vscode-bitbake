@@ -197,11 +197,3 @@ export async function getVariableValue (
 ): Promise<string | undefined> {
   return await getScanResult(client, RequestMethod.getVar, { variable, recipe }, canTriggerScan)
 }
-
-export async function getAllVariableValues (
-  client: LanguageClient,
-  recipe: string,
-  canTriggerScan: boolean = false
-): Promise<Array<{ name: string, value: string }> | undefined> {
-  return await getScanResult(client, RequestMethod.getAllVar, { recipe }, canTriggerScan)
-}
