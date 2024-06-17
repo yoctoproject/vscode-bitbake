@@ -76,6 +76,8 @@ suite('Bitbake Rename Test Suite', () => {
     })
   }
 
+  // This test is not reliable on embedded language regions.
+  // It might succeed (can't be renamed) just because it has been called before the embedded language document finished to be generated.
   const testInvalidRename = async (
     position: vscode.Position
   ): Promise<void> => {
@@ -87,8 +89,6 @@ suite('Bitbake Rename Test Suite', () => {
       )
     } catch (error) {
       if (error instanceof Error) {
-        // This test is not completely reliable.
-        // It might succeed just because it has been called before the embedded language document finished to be generated.
         assert.strictEqual(error.message === "The element can't be renamed.", true)
         return
       }
