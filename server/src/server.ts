@@ -183,11 +183,6 @@ disposables.push(
     return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
   }),
 
-  connection.onRequest(RequestMethod.getAllVar, async (params: RequestParams['getAllVar']) => {
-    const scanResult = analyzer.getLastScanResult(params.recipe)
-    return scanResult?.symbols.map(symbolInfo => ({ name: symbolInfo.name, value: symbolInfo.finalValue }))
-  }),
-
   connection.onNotification(NotificationMethod.RemoveScanResult, (param: NotificationParams['RemoveScanResult']) => {
     logger.debug(`[onNotification] <${NotificationMethod.RemoveScanResult}> recipe: ${param.recipeName}`)
     analyzer.removeLastScanResultForRecipe(param.recipeName)

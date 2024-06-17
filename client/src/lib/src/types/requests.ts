@@ -11,7 +11,6 @@ export enum RequestType {
   getLinksInDocument = 'getLinksInDocument',
   ProcessRecipeScanResults = 'ProcessRecipeScanResults',
   GetVar = 'getVar',
-  GetAllVar = 'getAllVar',
   GetRecipeLocalFiles = 'getRecipeLocalFiles'
 }
 
@@ -20,7 +19,6 @@ export const RequestMethod: Record<RequestType, string> = {
   [RequestType.getLinksInDocument]: 'bitbake/getLinksInDocument',
   [RequestType.ProcessRecipeScanResults]: 'bitbake/ProcessRecipeScanResults',
   [RequestType.GetVar]: 'bitbake/getVar',
-  [RequestType.GetAllVar]: 'bitbake/getAllVar',
   [RequestType.GetRecipeLocalFiles]: 'bitbake/getRecipeLocalFiles'
 }
 
@@ -29,7 +27,6 @@ export interface RequestParams {
   [RequestType.getLinksInDocument]: { documentUri: string }
   [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any, chosenRecipe: string }
   [RequestType.GetVar]: { variable: string, recipe: string }
-  [RequestType.GetAllVar]: { recipe: string }
   [RequestType.GetRecipeLocalFiles]: { uri: string }
 }
 
