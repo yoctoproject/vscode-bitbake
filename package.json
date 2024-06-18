@@ -869,7 +869,8 @@
 		}
 	  },
 	"scripts": {
-		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
+		"build:wasm": "bash ./scripts/build-tree-sitter-wasm.sh",
+		"postinstall": "npm run build:wasm && cd server && npm install && cd ../client && npm install && cd ..",
 		"fetch": "npm run fetch:poky && npm run fetch:docs",
 		"fetch:docs": "sh scripts/fetch-docs.sh",
 		"fetch:poky": "sh scripts/fetch-poky.sh",
@@ -877,7 +878,7 @@
 		"watch": "tsc -b -w && npm run postcompile",
 		"vscode:prepublish": "cd server && npm install --omit=dev && cd ../client && npm install --omit=dev && cd ..",
 		"package": "vsce package",
-		"clean:server": "rm -fr ./server/node_modules ./server/out ./server/resources server/tsconfig.tsbuildinfo server/.vscode-test server/*.tgz",
+		"clean:server": "rm -fr ./server/node_modules ./server/out ./server/resources server/tsconfig.tsbuildinfo server/.vscode-test server/*.tgz ./server/tree-sitter-bash.wasm ./server/tree-sitter-bitbake.wasm",
 		"clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test",
 		"clean:lib": "rm -fr ./lib/node_modules",
 		"clean": "npm run clean:lib && npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out integration-tests/project-folder/build* .vscode-test .eslintcache resources coverage ./out *.vsix",
@@ -919,3 +920,4 @@
 		"baseImageUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/"
 	}
 }
+
