@@ -18,7 +18,7 @@ update-tree-sitter-wasm() {
     tarball_url="https://github.com/$owner_repo/tarball/$commit_hash"
     tree_sitter_cli_version=$(sed -n '2p' "$info_file" | cut -d '"' -f 2)
     npm install -D "tree-sitter-cli@$tree_sitter_cli_version" "$tarball_url"
-    npx tree-sitter build-wasm "node_modules/$name"
+    npx tree-sitter build --wasm "node_modules/$name"
     npm uninstall tree-sitter-cli "$name"
 }
 
