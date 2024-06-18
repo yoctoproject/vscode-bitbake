@@ -17,3 +17,5 @@ coverage/
 resources/
 integration-tests/project-folder/build*
 **/*.vsix
+
+*.wasm
