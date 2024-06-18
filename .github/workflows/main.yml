@@ -37,6 +37,8 @@ jobs:
           package-lock.json
           server/package-lock.json
           client/package-lock.json
+          server/tree-sitter-bash.info
+          server/tree-sitter-bitbake.info
 
     - name: Install Node.js dependencies
       run: npm install
