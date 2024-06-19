@@ -630,6 +630,26 @@ export default class Analyzer {
     return false
   }
 
+  public isInsideInlinePythonRegion (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    let n = this.bitBakeNodeAtPoint(uri, line, column)
+    if (this.isBuggyIdentifier(uri, line, column)) {
+      return false
+    }
+
+    while (n !== null) {
+      if (TreeSitterUtils.isInlinePython(n)) {
+        return true
+      }
+      n = n.parent
+    }
+
+    return false
+  }
+
   public isPythonDatastoreVariable (
     uri: string,
     line: number,

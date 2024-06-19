@@ -83,6 +83,9 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
       return
     }
+    if (await checkIsIgnoredInlinePythonDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+      return
+    }
     if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
@@ -141,6 +144,26 @@ const checkIsAlwaysIgnoredDiagnostic = async (
     return true
   }
   return false
+}
+
+const checkIsIgnoredInlinePythonDiagnostic = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') && // Too many blank lines
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E501') && // Line too long
+    !hasSourceWithCode(diagnostic, 'Pylint', 'W0104:pointless-statement') &&
+    !hasSourceWithCode(diagnostic, 'Pylint', 'W0106:expression-not-assigned')
+  ) {
+    return false
+  }
+
+  return await requestsManager.getIsPositionOnInlinePython(
+    originalTextDocument.uri.toString(),
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  ) === true
 }
 
 const checkIsIgnoredPythonUndefinedVariableDiagnostic = async (
