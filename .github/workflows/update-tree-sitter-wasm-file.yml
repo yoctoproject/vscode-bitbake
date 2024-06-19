@@ -4,16 +4,18 @@
 name: Update Tree Sitter WASM File
 
 on:
-  workflow_call:
-    inputs:
-      tree-sitter-name:
-        required: true
-        type: string
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 2'
 
 jobs:
   update-tree-sitter-wasm:
 
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        tree-sitter-name: ['tree-sitter-bitbake', 'tree-sitter-bash']
 
     defaults:
       run:
@@ -27,7 +29,7 @@ jobs:
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ env.BASE_BRANCH }}
 
@@ -44,26 +46,26 @@ jobs:
       run: npm install
 
     - name: Update tree-sitter wasm
-      run: bash scripts/update-${{ inputs.tree-sitter-name }}-wasm.sh
+      run: bash scripts/update-${{ matrix.tree-sitter-name }}-wasm.sh
 
     - name: Verify file changes
-      uses: tj-actions/verify-changed-files@v17
+      uses: tj-actions/verify-changed-files@v20
       id: verify-changed-files
       with:
         # The script generates a new wasm file and replaces the existing one. Git will treat it as a different file even it is generated with the same commit and CLI
         # Hence, we only compare the .info file. It should be enough to tell the difference
         files: |
-            server/${{ inputs.tree-sitter-name }}.info
+            server/${{ matrix.tree-sitter-name }}.info
 
     - name: Create pull request
       if: steps.verify-changed-files.outputs.files_changed == 'true'
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v6
       with:
         add-paths: |
-          server/${{ inputs.tree-sitter-name }}.info
-          server/${{ inputs.tree-sitter-name }}.wasm
-        title: Auto update ${{ inputs.tree-sitter-name }} wasm file
-        commit-message: Auto update ${{ inputs.tree-sitter-name }} wasm file and parser info
-        branch: update-${{ inputs.tree-sitter-name }}-wasm-file
+          server/${{ matrix.tree-sitter-name }}.info
+          server/${{ matrix.tree-sitter-name }}.wasm
+        title: Auto update ${{ matrix.tree-sitter-name }} wasm file
+        commit-message: Auto update ${{ matrix.tree-sitter-name }} wasm file and parser info
+        branch: update-${{ matrix.tree-sitter-name }}-wasm-file
         base: ${{ env.BASE_BRANCH }}
         token: ${{ secrets.GITHUB_TOKEN }}
