@@ -78,7 +78,7 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
         insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ':')
         break
       case '}':
-        insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, ' ')
+        insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, child.startIndex, child.endIndex, '')
         break
       case 'block':
         handleBlockNode(child, embeddedLanguageDoc)
