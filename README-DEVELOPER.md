@@ -82,9 +82,11 @@ These tests allow running the BitBake extension in a live VSCode environment.
 See [the individual integration tests README](integration-tests/README.md).
 
 ## Tree-sitter
-This extension uses tree-sitter to parse the documents. The `.wasm` file used for creating the parser is generated from latest release at [here](https://github.com/amaanq/tree-sitter-bitbake).
+This extension uses [tree-sitter-bitbake](https://github.com/tree-sitter-grammars/tree-sitter-bitbake) and [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) to parse the documents. When installing the project's dependencies with `npm install`, these tools are automatically built into WASM files. The versions of tree-sitter-bitbake and tree-sitter-bash are documented in [server/tree-sitter-bitbake.info](server/tree-sitter-bitbake.info) and [server/tree-sitter-bash.info](server/tree-sitter-bash.info) respectively, along with the version of the tree-sitter-cli that has been used.
 
-For more information about the tree-sitter and its CLI, Check out the offical [site](https://tree-sitter.github.io/tree-sitter/) and [npm page](https://www.npmjs.com/package/tree-sitter-cli)
+To update the .info files to the latest versions of tree-sitter-bitbake and tree-sitter-bash, it is recommended to use the scripts [scripts/update-tree-sitter-bitbake-wasm.sh](scripts/update-tree-sitter-bitbake-wasm.sh) and [scripts/update-tree-sitter-bash-wasm.sh](scripts/update-tree-sitter-bash-wasm.sh). After updating the .info files, it is required to use [scripts/build-tree-sitter-wasm.sh](scripts/build-tree-sitter-wasm.sh) in order to rebuild the WASM files.
+
+For more information about the tree-sitter and its CLI, Check out the official [site](https://tree-sitter.github.io/tree-sitter/) and [npm page](https://www.npmjs.com/package/tree-sitter-cli)
 
 ## Publishing
 
