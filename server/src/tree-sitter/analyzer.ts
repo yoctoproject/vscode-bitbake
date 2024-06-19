@@ -650,6 +650,26 @@ export default class Analyzer {
     return false
   }
 
+  public isAnonymousPythonFunctionFirstLine (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    let n = this.bitBakeNodeAtPoint(uri, line, column)
+    if (this.isBuggyIdentifier(uri, line, column)) {
+      return false
+    }
+
+    while (n !== null) {
+      if (n.type === 'anonymous_python_function') {
+        break
+      }
+      n = n.parent
+    }
+
+    return n?.startPosition.row === line
+  }
+
   public isPythonDatastoreVariable (
     uri: string,
     line: number,
