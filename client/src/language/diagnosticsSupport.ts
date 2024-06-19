@@ -86,6 +86,9 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (await checkIsIgnoredInlinePythonDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
+    if (await checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+      return
+    }
     if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
@@ -161,6 +164,26 @@ const checkIsIgnoredInlinePythonDiagnostic = async (
   }
 
   return await requestsManager.getIsPositionOnInlinePython(
+    originalTextDocument.uri.toString(),
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  ) === true
+}
+
+const checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E203') && // whitespace before ':'
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E211') && // whitespace before '('
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E302') && // expected 2 blank lines, found 1
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') // too many blank lines
+  ) {
+    return false
+  }
+
+  return await requestsManager.getIsPositionOnAnonymousPythonFunctionFirstLine(
     originalTextDocument.uri.toString(),
     new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
   ) === true

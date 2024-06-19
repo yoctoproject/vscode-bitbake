@@ -164,6 +164,12 @@ disposables.push(
     }
   ),
   connection.onRequest(
+    RequestMethod.IsPositionOnAnonymousPythonFunctionFirstLine,
+    async ({ uriString, position }: RequestParams['IsPositionOnAnonymousPythonFunctionFirstLine']): RequestResult['IsPositionOnAnonymousPythonFunctionFirstLine'] => {
+      return analyzer.isAnonymousPythonFunctionFirstLine(uriString, position.line, position.character)
+    }
+  ),
+  connection.onRequest(
     RequestMethod.IsPositionOnInlinePython,
     async ({ uriString, position }: RequestParams['IsPositionOnInlinePython']): RequestResult['IsPositionOnInlinePython'] => {
       return analyzer.isInsideInlinePythonRegion(uriString, position.line, position.character)
