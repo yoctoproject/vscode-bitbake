@@ -80,7 +80,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
       return
     }
 
-    if (await checkIsIgnoredPylanceUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
+    if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
     if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
@@ -125,16 +125,23 @@ const checkHasSupportedSource = (diagnostic: vscode.Diagnostic): boolean => {
   )
 }
 
-const checkIsIgnoredPylanceUndefinedVariable = async (
+const checkIsIgnoredPythonUndefinedVariableDiagnostic = async (
   diagnostic: vscode.Diagnostic,
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
-  if (!hasSourceWithCode(diagnostic, 'Pylance', 'reportUndefinedVariable')) {
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'F821') &&
+    !hasSourceWithCode(diagnostic, 'Pylance', 'reportUndefinedVariable') &&
+    !hasSourceWithCode(diagnostic, 'Pylint', 'E0602:undefined-variable')
+  ) {
     return false
   }
 
-  const definition = await requestsManager.getDefinition(originalTextDocument, adjustedRange.end)
+  const definition = await requestsManager.getDefinition(
+    originalTextDocument,
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  )
   return definition.length > 0
 }
 
