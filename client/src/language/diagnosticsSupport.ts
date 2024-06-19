@@ -130,10 +130,7 @@ const checkIsIgnoredPylanceUndefinedVariable = async (
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
-  if (diagnostic.source?.includes('Pylance') !== true) {
-    return false
-  }
-  if (typeof diagnostic.code !== 'object' || diagnostic.code?.value !== 'reportUndefinedVariable') {
+  if (!hasSourceWithCode(diagnostic, 'Pylance', 'reportUndefinedVariable')) {
     return false
   }
 
@@ -146,10 +143,7 @@ const checkIsIgnoredShellcheckSc2154 = async (
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
-  if (diagnostic.source?.includes('shellcheck') !== true) {
-    return false
-  }
-  if (typeof diagnostic.code !== 'object' || diagnostic.code?.value !== 'SC2154') {
+  if (!hasSourceWithCode(diagnostic, 'shellcheck', 'SC2154')) {
     return false
   }
 
@@ -181,4 +175,17 @@ const checkIsIgnoredShellcheckSc2154 = async (
   const match = message.match(/^(?<variableName>\w+) is referenced but not assigned\.$/)
   const variableName = match?.groups?.variableName
   return commonDirectoriesVariables.has(variableName as string)
+}
+
+const hasSourceWithCode = (diagnostic: vscode.Diagnostic, source: string, code: string): boolean => {
+  if (diagnostic.source?.includes(source) !== true) {
+    return false
+  }
+  if (diagnostic.code === code) {
+    return true
+  }
+  if (typeof diagnostic.code === 'object' && diagnostic.code?.value === code) {
+    return true
+  }
+  return false
 }
