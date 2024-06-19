@@ -80,6 +80,9 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
       return
     }
 
+    if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
+      return
+    }
     if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
@@ -123,6 +126,21 @@ const checkHasSupportedSource = (diagnostic: vscode.Diagnostic): boolean => {
   return supportedSources.some(
     (supportedSource) => diagnostic.source !== undefined && diagnostic.source.includes(supportedSource)
   )
+}
+
+const checkIsAlwaysIgnoredDiagnostic = async (
+  diagnostic: vscode.Diagnostic
+): Promise<boolean> => {
+  if (
+    hasSourceWithCode(diagnostic, 'Flake8', 'W391') || // blank line at end of file
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0114:missing-module-docstring') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0116:missing-function-docstring') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0305:trailing-newlines') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0415:import-outside-toplevel')
+  ) {
+    return true
+  }
+  return false
 }
 
 const checkIsIgnoredPythonUndefinedVariableDiagnostic = async (
