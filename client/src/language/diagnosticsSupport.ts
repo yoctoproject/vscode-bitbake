@@ -13,7 +13,7 @@ import path from 'path'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
-const supportedSources = ['Pylance', 'shellcheck']
+const supportedSources = ['Flake8', 'Pylance', 'Pylint', 'shellcheck']
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -70,6 +70,16 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (adjustedRange === undefined) {
       return
     }
+
+    const embeddedLanguageTypeOnPosition = await requestsManager.getEmbeddedLanguageTypeOnPosition(
+      originalTextDocument.uri.toString(),
+      adjustedRange.end
+    )
+    if (embeddedLanguageType !== embeddedLanguageTypeOnPosition) {
+      // Diagnostics that are not on a region of the same embedded language are not relevant.
+      return
+    }
+
     if (await checkIsIgnoredPylanceUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
