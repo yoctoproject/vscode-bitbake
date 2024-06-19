@@ -42,6 +42,14 @@ export class RequestManager {
     return await this.client?.sendRequest(RequestMethod.IsPositionOnAnonymousPythonFunctionFirstLine, params)
   }
 
+  getIsPositionOnPythonFunctionDefinitionFirstLine = async (
+    uriString: string,
+    position: Position
+  ): RequestResult['IsPositionOnPythonFunctionDefinitionFirstLine'] => {
+    const params: RequestParams['IsPositionOnPythonFunctionDefinitionFirstLine'] = { uriString, position }
+    return await this.client?.sendRequest(RequestMethod.IsPositionOnPythonFunctionDefinitionFirstLine, params)
+  }
+
   getIsPositionOnInlinePython = async (
     uriString: string,
     position: Position
