@@ -163,6 +163,12 @@ disposables.push(
       return getEmbeddedLanguageTypeOnPosition(uriString, position)
     }
   ),
+  connection.onRequest(
+    RequestMethod.IsPositionOnInlinePython,
+    async ({ uriString, position }: RequestParams['IsPositionOnInlinePython']): RequestResult['IsPositionOnInlinePython'] => {
+      return analyzer.isInsideInlinePythonRegion(uriString, position.line, position.character)
+    }
+  ),
   // Reference: https://github.com/microsoft/vscode-languageserver-node/blob/ed3cd0f78c1495913bda7318ace2be7f968008af/protocol/src/common/protocol.semanticTokens.ts#L61
   connection.onRequest(SemanticTokensRequest.method, ({ textDocument }) => {
     logger.debug(`[OnRequest] <${SemanticTokensRequest.method}> Document uri: ${textDocument.uri}`)
