@@ -33,6 +33,14 @@ export class RequestManager {
       }
     )
   }
+
+  getIsPositionOnInlinePython = async (
+    uriString: string,
+    position: Position
+  ): RequestResult['IsPositionOnInlinePython'] => {
+    const params: RequestParams['IsPositionOnInlinePython'] = { uriString, position }
+    return await this.client?.sendRequest(RequestMethod.IsPositionOnInlinePython, params)
+  }
 }
 
 export const requestsManager = new RequestManager()
