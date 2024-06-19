@@ -170,6 +170,12 @@ disposables.push(
     }
   ),
   connection.onRequest(
+    RequestMethod.IsPositionOnPythonFunctionDefinitionFirstLine,
+    async ({ uriString, position }: RequestParams['IsPositionOnPythonFunctionDefinitionFirstLine']): RequestResult['IsPositionOnPythonFunctionDefinitionFirstLine'] => {
+      return analyzer.isPythonFunctionDefinitionFirstLine(uriString, position.line, position.character)
+    }
+  ),
+  connection.onRequest(
     RequestMethod.IsPositionOnInlinePython,
     async ({ uriString, position }: RequestParams['IsPositionOnInlinePython']): RequestResult['IsPositionOnInlinePython'] => {
       return analyzer.isInsideInlinePythonRegion(uriString, position.line, position.character)
