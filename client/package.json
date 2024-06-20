@@ -27,7 +27,7 @@
   "dependencies": {
     "find": "^0.3.0",
     "node-pty": "^1.0.0",
-    "vscode-languageclient": "^8.1.0"
+    "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
     "@types/find": "^0.2.2",
