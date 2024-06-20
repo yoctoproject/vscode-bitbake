@@ -32,7 +32,7 @@
   "devDependencies": {
     "@types/find": "^0.2.2",
     "@types/node": "^20.14.6",
-    "@types/vscode": "^1.75.1"
+    "@types/vscode": "^1.90.0"
   },
   "workspaces": [
     "src/lib"
