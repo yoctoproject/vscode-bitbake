@@ -80,22 +80,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
       return
     }
 
-    if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
-      return
-    }
-    if (await checkIsIgnoredInlinePythonDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
-      return
-    }
-    if (await checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
-      return
-    }
-    if (await checkIsIgnoredOnPythonFunctionDefinitionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
-      return
-    }
-    if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
-      return
-    }
-    if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
+    if (await checkIsIgnoredDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
     const adjustedDiagnostic = {
@@ -129,6 +114,32 @@ const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefi
     return 'bash'
   }
   return undefined
+}
+
+const checkIsIgnoredDiagnostic = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
+    return true
+  }
+  if (await checkIsIgnoredInlinePythonDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredOnPythonFunctionDefinitionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  return false
 }
 
 const checkHasSupportedSource = (diagnostic: vscode.Diagnostic): boolean => {
