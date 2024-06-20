@@ -58,9 +58,6 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (!checkHasSupportedSource(diagnostic)) {
       return
     }
-    if (diagnostic.range === undefined) {
-      cleanDiagnostics.push(diagnostic)
-    }
     const adjustedRange = getOriginalDocRange(
       originalTextDocument,
       embeddedLanguageDoc,
