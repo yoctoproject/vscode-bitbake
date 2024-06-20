@@ -82,6 +82,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     }
     const adjustedDiagnostic = {
       ...diagnostic,
+      message: fixDiagnosticMessagePythonImport(diagnostic),
       range: adjustedRange,
       source: `${diagnostic.source}, ${diagnosticCollection.name}`
     }
@@ -275,6 +276,33 @@ const checkIsIgnoredShellcheckSc2154 = async (
   const match = message.match(/^(?<variableName>\w+) is referenced but not assigned\.$/)
   const variableName = match?.groups?.variableName
   return commonDirectoriesVariables.has(variableName as string)
+}
+
+const fixDiagnosticMessagePythonImport = (
+  diagnostic: vscode.Diagnostic
+): string => {
+  // Some imports are made automatically by BitBake. Reimporting them produces a warning with irrelevant line number.
+  const fix = (regex: RegExp): string => {
+    const magicLineNumber = 7 // In the embedded language document, the imports are from that line or before.
+    const newText = ' (imported by BitBake)'
+    const match = diagnostic.message.match(regex)
+    const lineNumber = Number(match?.groups?.lineNumber)
+    const textToRemoveLength = match?.groups?.textToRemove?.length
+    if (lineNumber !== undefined && lineNumber <= magicLineNumber && textToRemoveLength !== undefined) {
+      return diagnostic.message.slice(0, diagnostic.message.length - textToRemoveLength) + newText
+    }
+    return diagnostic.message
+  }
+  if (hasSourceWithCode(diagnostic, 'Flake8', 'F811')) {
+    return fix(/redefinition of unused '(?:\w+)'(?<textToRemove> from line (?<lineNumber>\d+))/)
+  }
+  if (hasSourceWithCode(diagnostic, 'Pylint', 'W0404:reimported')) {
+    return fix(/Reimport '(?:\w+)'(?<textToRemove> \(imported line (?<lineNumber>\d+)\))/)
+  }
+  if (hasSourceWithCode(diagnostic, 'Pylint', 'W0621:redefined-outer-name')) {
+    return fix(/Redefining name '(?:\w+)'(?<textToRemove> from outer scope \(line (?<lineNumber>\d+)\))/)
+  }
+  return diagnostic.message
 }
 
 const hasSourceWithCode = (diagnostic: vscode.Diagnostic, source: string, code: string): boolean => {
