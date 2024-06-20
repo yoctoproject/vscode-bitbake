@@ -187,6 +187,12 @@ const checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine = async (
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
   if (
+    diagnostic.source?.includes('Pylance') === true &&
+    (diagnostic as any).hasDiagnosticCode === false && // This weird diagnostic has not code but such a property
+    diagnostic.message === '"__anonymous" is not accessed') {
+    return true
+  }
+  if (
     !hasSourceWithCode(diagnostic, 'Flake8', 'E203') && // whitespace before ':'
     !hasSourceWithCode(diagnostic, 'Flake8', 'E211') && // whitespace before '('
     !hasSourceWithCode(diagnostic, 'Flake8', 'E302') && // expected 2 blank lines, found 1
