@@ -9,8 +9,9 @@ import { type DefinitionMiddleware } from 'vscode-languageclient'
 import { requestsManager } from './RequestManager'
 import { getEmbeddedLanguageDocPosition, getOriginalDocRange } from './utils/embeddedLanguagesUtils'
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
-import { changeDefinitionUri, checkIsDefinitionRangeEqual, checkIsDefinitionUriEqual, convertToSameDefinitionType, getDefinitionUri } from './utils/definitions'
+import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
+import { changeDefinitionUri, checkIsDefinitionRangeEqual, convertToSameDefinitionType, getDefinitionUri } from './utils/definitions'
+import { type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 
 export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinition'] = async (document, position, token, next) => {
   logger.debug(`[middlewareProvideDefinition] ${document.uri.toString()}, line ${position.line}, character ${position.character}`)
@@ -44,9 +45,9 @@ export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinitio
   // This check's purpose is only to please TypeScript.
   // We'd rather have a pointless check than losing the type assurance provided by TypeScript.
   if (checkIsArrayLocation(tempResult)) {
-    return await processDefinitions(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
+    return await processDefinitions(tempResult, embeddedLanguageType)
   } else {
-    return await processDefinitions(tempResult, document, embeddedLanguageTextDocument, embeddedLanguageDocInfos)
+    return await processDefinitions(tempResult, embeddedLanguageType)
   }
 }
 
@@ -56,14 +57,23 @@ const checkIsArrayLocation = (array: Location[] | LocationLink[]): array is Loca
 
 const processDefinitions = async <DefinitionType extends Location | LocationLink>(
   definitions: DefinitionType[],
-  originalTextDocument: TextDocument,
-  embeddedLanguageTextDocument: TextDocument,
-  embeddedLanguageDocInfos: EmbeddedLanguageDocInfos
+  embeddedLanguageType: EmbeddedLanguageType
 ): Promise<DefinitionType[]> => {
   const result: DefinitionType[] = []
   await Promise.all(definitions.map(async (definition) => {
-    if (!checkIsDefinitionUriEqual(definition, embeddedLanguageDocInfos.uri)) {
+    const definitionUri = getDefinitionUri(definition)
+    if (!definitionUri.fsPath.includes(embeddedLanguageDocsManager.embeddedLanguageDocsFolder as string)) {
       result.push(definition) // only definitions located on the embedded language documents need ajustments
+      return
+    }
+    const originalUri = embeddedLanguageDocsManager.getOriginalUri(definitionUri)
+    if (originalUri === undefined) {
+      return
+    }
+    const originalTextDocument = await workspace.openTextDocument(originalUri)
+    const embeddedLanguageTextDocument = await workspace.openTextDocument(definitionUri)
+    const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(originalUri, embeddedLanguageType)
+    if (embeddedLanguageDocInfos === undefined) {
       return
     }
     if (embeddedLanguageDocInfos.language === 'python') {

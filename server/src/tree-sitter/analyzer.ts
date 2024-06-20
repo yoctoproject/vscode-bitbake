@@ -22,7 +22,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type BitbakeSymbolInformation, getGlobalDeclarations, type GlobalDeclarations, nodeToSymbolInformation } from './declarations'
 import { type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
-import { DIRECTIVE_STATEMENT_KEYWORDS, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
+import { checkIsDirectiveStatementKeyword, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { logger } from '../lib/src/utils/OutputLogger'
 import fs from 'fs'
 import path, { type ParsedPath } from 'path'
@@ -59,6 +59,7 @@ export default class Analyzer {
   private bitBakeParser?: Parser
   private bashParser?: Parser
   private uriToAnalyzedDocument: Record<string, AnalyzedDocument | undefined> = {}
+  private readonly documentsToAnalyze = new Set<string>() // Dependencies (require, include, etc.) that need to be analyzed of documents that have been analyzed
   private readonly uriToLastScanResult: Record<string, LastScanResult | undefined> = {} // Store the results of the last scan for each recipe
   private uriToRecipeLocalFiles: Record<string, RequestResult['getRecipeLocalFiles']> = {}
 
@@ -114,6 +115,20 @@ export default class Analyzer {
       ...this.getPythonDatastoreVariableSymbols(uri),
       ...this.getPythonGlobalFunctionCallsSymbols(uri)
     ]
+  }
+
+  public pushDocumentToAnalyze (uri: string): void {
+    this.documentsToAnalyze.add(uri)
+  }
+
+  public popDocumentToAnalyse (): string | undefined {
+    // this.documentsToAnalyze.next().keys().value loses typing. Hence the pointless loop.
+    // https://stackoverflow.com/a/74544236/15048038
+    // eslint-disable-next-line no-unreachable-loop
+    for (const uri of this.documentsToAnalyze) {
+      this.documentsToAnalyze.delete(uri)
+      return uri
+    }
   }
 
   public removeLastScanResultForRecipe (recipe: string): void {
@@ -765,8 +780,8 @@ export default class Analyzer {
     const lineTillCurrentPosition = currentLine.substring(0, position.character)
     const words = lineTillCurrentPosition.split(' ')
 
-    if (DIRECTIVE_STATEMENT_KEYWORDS.includes(words[0])) {
-      return words[0] as DirectiveStatementKeyword
+    if (checkIsDirectiveStatementKeyword(words[0])) {
+      return words[0]
     }
 
     return undefined
@@ -1172,7 +1187,7 @@ export default class Analyzer {
       result.push(lines[i])
     }
 
-    return result.map((line) => path.parse(line.slice(1).trim()))
+    return result.map((line) => path.parse(line.slice(1).trim().replace(/ includes:$/, '')))
   }
 
   /**

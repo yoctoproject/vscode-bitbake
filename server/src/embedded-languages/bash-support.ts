@@ -4,9 +4,9 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as TreeSitterUtils from '../tree-sitter/utils'
-import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
-import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
+import { getImportedRessourcesInfos, initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 import type Parser from 'web-tree-sitter'
+import { type EmbeddedLanguageDoc } from '../lib/src/embedded-languages'
 import { type SyntaxNode } from 'web-tree-sitter'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type TextDocument } from 'vscode-languageserver-textdocument'
@@ -19,12 +19,6 @@ const shellcheckDisables = [
   // "Command appears to be unreachable." This happens because we remove the overiddes and functions end up having the same names.
   '# shellcheck disable=SC2317'
 ]
-
-export const bashHeader = [
-  shebang,
-  ...shellcheckDisables,
-  ''
-].join('\n')
 
 export const generateBashEmbeddedLanguageDoc = (
   textDocument: TextDocument,
@@ -40,6 +34,12 @@ export const generateBashEmbeddedLanguageDoc = (
       case 'function_definition':
         handleFunctionDefinitionNode(node, embeddedLanguageDoc)
         return false
+      case 'include_directive':
+      case 'inherit_directive':
+      case 'inherit_defer_directive':
+      case 'require_directive':
+        handleIncludeOrRequireNode(node, embeddedLanguageDoc)
+        return false
       default:
         return false
     }
@@ -53,8 +53,17 @@ export const generateBashEmbeddedLanguageDoc = (
   return embeddedLanguageDoc
 }
 
+export const getBashHeader = (originalUri: string): string => {
+  return [
+    shebang,
+    `# ${originalUri}`,
+    ...shellcheckDisables,
+    ''
+  ].join('\n')
+}
+
 const insertBashHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
-  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashHeader)
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, getBashHeader(embeddedLanguageDoc.originalUri))
 }
 
 const insertBashTools = (embeddedLanguageDoc: EmbeddedLanguageDoc, pokyFolder: string): void => {
@@ -111,4 +120,16 @@ const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: E
 const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Replace it by spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
+}
+
+const handleIncludeOrRequireNode = (includeOrRequireNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+  const directiveStatementKeyword = includeOrRequireNode.children[0]?.text
+  const includePathNode = includeOrRequireNode.children[1]
+  const includePath = includePathNode?.text
+  const importedResourcesInfos = getImportedRessourcesInfos(directiveStatementKeyword, includePath, embeddedLanguageDoc.originalUri, 'bash')
+  const imports = importedResourcesInfos.map(
+    ({ embeddedLanguageDocFilename, originalUri }) => `. ./${embeddedLanguageDocFilename.replace('file//', '')} # ${originalUri}`
+  )
+  const importsText = '\n' + imports.join('\n') + '\n'
+  insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, includeOrRequireNode.endIndex, includeOrRequireNode.endIndex, importsText)
 }

@@ -7,7 +7,7 @@ import { type HoverParams, type Hover, type MarkupKind } from 'vscode-languagese
 import { analyzer } from '../tree-sitter/analyzer'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { logger } from '../lib/src/utils/OutputLogger'
-import { DIRECTIVE_STATEMENT_KEYWORDS } from '../lib/src/types/directiveKeywords'
+import { checkIsDirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import path from 'path'
 import type { BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { extractRecipeName } from '../lib/src/utils/files'
@@ -88,7 +88,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 
   // Keywords
   const keyword = analyzer.getKeywordForPosition(textDocument.uri, position.line, position.character)
-  if (keyword !== undefined && DIRECTIVE_STATEMENT_KEYWORDS.includes(word)) {
+  if (keyword !== undefined && checkIsDirectiveStatementKeyword(word)) {
     const keywordInfo = bitBakeDocScanner.keywordInfo.find(item => item.name === word)
     if (keywordInfo !== undefined) {
       hoverValue = `**${keywordInfo.name}**\n___\n${keywordInfo.definition}`

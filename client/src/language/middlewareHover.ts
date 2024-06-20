@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type HoverMiddleware } from 'vscode-languageclient'
-import { type Hover, commands, workspace, MarkdownString, type TextDocument, Position } from 'vscode'
+import { type Hover, commands, workspace, MarkdownString, type TextDocument, Position, Uri } from 'vscode'
 
 import { getEmbeddedLanguageDocPosition, getOriginalDocPosition } from './utils/embeddedLanguagesUtils'
 import { type EmbeddedLanguageDocInfos, embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
@@ -68,13 +68,29 @@ const fixBashIdeIssue = (hover: Hover, embeddedLanguageDocInfos: EmbeddedLanguag
 // This makes the path relative to the document the user is looking at instead.
 const fixBashIdeRelativePath = (content: MarkdownString, embeddedLanguageDocInfos: EmbeddedLanguageDocInfos, document: TextDocument): void => {
   // ex: Function: **bbwarn** - *defined in ../../../../../../../../../poky/meta/classes-global/logging.bbclass*
-  const match = content.value.match(/^Function: \*\*\b\w+\b\*\* - \*defined in (?<path>.*\.bbclass)\*/)
+  const match = content.value.match(/^Function: \*\*\b\w+\b\*\* - \*defined in (?<path>.*)\*/)
   const wrongRelativePath = match?.groups?.path
   if (wrongRelativePath === undefined) {
     return
   }
-  const absolutePath = path.resolve(path.dirname(embeddedLanguageDocInfos.uri.fsPath), wrongRelativePath)
+
+  const tentativeAbsolutePath = path.resolve(path.dirname(embeddedLanguageDocInfos.uri.fsPath), wrongRelativePath)
+
+  const absolutePath = (() => {
+    // Lets suppose this is the path for an embedded language document.
+    const originalUri = embeddedLanguageDocsManager.getOriginalUri(Uri.parse(tentativeAbsolutePath))
+    if (originalUri !== undefined) {
+      // tentativeAbsolutePath was the path to an embedded language document.
+      // Using the path of its original document instead.
+      return originalUri.fsPath
+    } else {
+      // This was the right path.
+      return tentativeAbsolutePath
+    }
+  })()
+
   const fixedRelativePath = path.relative(path.dirname(document.uri.fsPath), absolutePath)
+
   content.value = content.value.replace(wrongRelativePath, fixedRelativePath)
 }
 

@@ -9,7 +9,7 @@ import { embeddedLanguageDocsManager } from './EmbeddedLanguageDocsManager'
 import { getEmbeddedLanguageDocRange, getOriginalDocPosition } from './utils/embeddedLanguagesUtils'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type Range } from 'vscode-languageclient'
-import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 import { getIndentationOnLine } from './utils/textDocumentUtils'
 
 export class BitbakeCodeActionProvider implements vscode.CodeActionProvider {

@@ -8,7 +8,7 @@ import { type Position } from 'vscode-languageserver'
 
 import { generateBashEmbeddedLanguageDoc } from './bash-support'
 import { generatePythonEmbeddedLanguageDoc } from './python-support'
-import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
+import { type EmbeddedLanguageDoc, type EmbeddedLanguageType } from '../lib/src/embedded-languages'
 import { analyzer } from '../tree-sitter/analyzer'
 
 export const generateEmbeddedLanguageDocs = (textDocument: TextDocument, pokyFolder?: string): EmbeddedLanguageDoc[] | undefined => {
