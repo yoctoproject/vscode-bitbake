@@ -122,16 +122,16 @@ const checkIsIgnoredDiagnostic = async (
   if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
     return true
   }
-  if (await checkIsIgnoredInlinePythonDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+  if (await checkIsIgnoredDiagnosticOnInlinePython(diagnostic, originalTextDocument, adjustedRange)) {
     return true
   }
-  if (await checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+  if (await checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine(diagnostic, originalTextDocument, adjustedRange)) {
     return true
   }
-  if (await checkIsIgnoredOnPythonFunctionDefinitionFirstLineDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+  if (await checkIsIgnoredDiagnosticOnPythonFunctionDefinitionFirstLine(diagnostic, originalTextDocument, adjustedRange)) {
     return true
   }
-  if (await checkIsIgnoredPythonUndefinedVariableDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
+  if (await checkIsIgnoredDiagnosticOnPythonUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
     return true
   }
   if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
@@ -161,7 +161,7 @@ const checkIsAlwaysIgnoredDiagnostic = async (
   return false
 }
 
-const checkIsIgnoredInlinePythonDiagnostic = async (
+const checkIsIgnoredDiagnosticOnInlinePython = async (
   diagnostic: vscode.Diagnostic,
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
@@ -181,7 +181,7 @@ const checkIsIgnoredInlinePythonDiagnostic = async (
   ) === true
 }
 
-const checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic = async (
+const checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine = async (
   diagnostic: vscode.Diagnostic,
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
@@ -201,7 +201,7 @@ const checkIsIgnoredOnAnonymousFunctionFirstLineDiagnostic = async (
   ) === true
 }
 
-const checkIsIgnoredOnPythonFunctionDefinitionFirstLineDiagnostic = async (
+const checkIsIgnoredDiagnosticOnPythonFunctionDefinitionFirstLine = async (
   diagnostic: vscode.Diagnostic,
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
@@ -219,7 +219,7 @@ const checkIsIgnoredOnPythonFunctionDefinitionFirstLineDiagnostic = async (
   ) === true
 }
 
-const checkIsIgnoredPythonUndefinedVariableDiagnostic = async (
+const checkIsIgnoredDiagnosticOnPythonUndefinedVariable = async (
   diagnostic: vscode.Diagnostic,
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
