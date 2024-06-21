@@ -15,40 +15,48 @@ For more information regarding the Extension Marketplace, please see the [offici
 
 ## Manual installation
 
-Manual installation takes place in two steps. The code must be installed via `npm` and subsequently built within Visual Studio Code. Before performing these steps, please ensure you have cloned this repository.
+Once compiled, the extension can either be launched in VS Code's debug mode or built into a VSIX file and installed.
 
-### Commands
+### Compile
 
-To install the dependencies:
+1. Install the dependencies:
 ``` sh
 npm install
-npm run build:wasm
+npm run build:wasm # Download and build Wasm dependencies
+npm run fetch:docs # Download Yocto's doc. Required for hints on hover
 ```
-To compile the typescript files:
+2. Compile the Typescript files:
 ``` sh
 npm run compile
 ```
-To clean up the project (This deletes node_modules):
+
+### Debug
+Press `F5` or navigate to the debug section on the left of the VS Code and select the client or server to to launch the debug client.
+
+### Install
+1. Build the VSIX file:
+``` sh
+npm run package
+```
+2. Install the VSIX file. See [VS Code's documentation](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix).
+
+### Clean up
+This deletes the Wasm files, the Yocto's doc, Poky, node_modules, and the compiled files:
 ``` sh
 npm run clean
 ```
-For more commands, refer to the `script` section in the root `package.json`.
-
-## Debugging
-Press `F5` or navigate to the debug section on the left of the VS Code and select the client or server to to launch the debug client.
 
 ## Testing
 
-BitBake and Yocto docs are required for some features to work. They need to be fetched before testing and development:
-``` sh
-npm run fetch:docs
-```
-Similar for the command that fetches poky, it needs to be run before running the integration tests:
+To run all the tests:
+1. See [compilation](#compile) steps.
+2. Fetch Poky (required for the integration tests):
 ``` sh
 npm run fetch:poky
 ```
-A wrapper npm script allows running several kinds of tests. To run all tests, use:
+2. Run all the tests:
 ``` sh
+# Note the integration tests require 'npm run compile' to be executed every time the Typescript files are modified.
 npm test
 ```
 All the tests mentionned are run in our GitHub CI.
