@@ -25,7 +25,7 @@ import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { extractRecipeName } from '../lib/src/utils/files'
-import { licenseCompletionItems } from '../completions/spdx-licenses'
+import { getSpdxLicenseCompletionResolve, licenseCompletionItems, spdxLicenseDescription } from '../completions/spdx-licenses'
 
 let documentUri = ''
 
@@ -462,7 +462,11 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   return completionItems
 }
 
-export function onCompletionResolveHandler (item: CompletionItem): CompletionItem {
+export async function onCompletionResolveHandler (item: CompletionItem): Promise<CompletionItem> {
   logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
+  // For reason, item.labelDetails disappears once the item is here.
+  if (item.data?.source === spdxLicenseDescription) {
+    return await getSpdxLicenseCompletionResolve(item)
+  }
   return item
 }
