@@ -22,6 +22,7 @@ Manual installation takes place in two steps. The code must be installed via `np
 To install the dependencies:
 ``` sh
 npm install
+npm run build:wasm
 ```
 To compile the typescript files:
 ``` sh
@@ -82,11 +83,11 @@ These tests allow running the BitBake extension in a live VSCode environment.
 See [the individual integration tests README](integration-tests/README.md).
 
 ## Tree-sitter
-This extension uses [tree-sitter-bitbake](https://github.com/tree-sitter-grammars/tree-sitter-bitbake) and [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) to parse the documents. When installing the project's dependencies with `npm install`, these tools are automatically built into WASM files. The versions of tree-sitter-bitbake and tree-sitter-bash are documented in [server/tree-sitter-bitbake.info](server/tree-sitter-bitbake.info) and [server/tree-sitter-bash.info](server/tree-sitter-bash.info) respectively, along with the version of the tree-sitter-cli that has been used.
+This extension uses [tree-sitter-bitbake](https://github.com/tree-sitter-grammars/tree-sitter-bitbake) and [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) to parse the BitBake documents. They are installed with `npm run build:wasm`. The versions of tree-sitter-bitbake and tree-sitter-bash are documented in [server/tree-sitter-bitbake.info](server/tree-sitter-bitbake.info) and [server/tree-sitter-bash.info](server/tree-sitter-bash.info) respectively, along with the versions of the tree-sitter-cli that have to be used.
 
-To update the .info files to the latest versions of tree-sitter-bitbake and tree-sitter-bash, it is recommended to use the scripts [scripts/update-tree-sitter-bitbake-wasm.sh](scripts/update-tree-sitter-bitbake-wasm.sh) and [scripts/update-tree-sitter-bash-wasm.sh](scripts/update-tree-sitter-bash-wasm.sh). The GitHub workflow [update-tree-sitter-wasm-file.yml](.github/workflows/update-tree-sitter-wasm-file.yml) is already responsible for doing it automatically.
+To update the .info files with the latest versions of tree-sitter-bitbake and tree-sitter-bash, it is recommended to use the scripts [scripts/update-tree-sitter-bitbake-wasm.sh](scripts/update-tree-sitter-bitbake-wasm.sh) and [scripts/update-tree-sitter-bash-wasm.sh](scripts/update-tree-sitter-bash-wasm.sh). The GitHub workflow [update-tree-sitter-wasm-file.yml](.github/workflows/update-tree-sitter-wasm-file.yml) is already responsible for doing it automatically.
 
-After updating the .info files, it is required to use [scripts/build-tree-sitter-wasm.sh](scripts/build-tree-sitter-wasm.sh) in order to rebuild the WASM files.
+After updating the .info files, it is required to call `npm run build:wasm` in order to rebuild the Wasm files.
 
 For more information about the tree-sitter and its CLI, Check out the official [site](https://tree-sitter.github.io/tree-sitter/) and [npm page](https://www.npmjs.com/package/tree-sitter-cli)
 
