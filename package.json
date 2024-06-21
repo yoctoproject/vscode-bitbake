@@ -870,9 +870,10 @@
 	  },
 	"scripts": {
 		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
-		"fetch": "npm run fetch:poky && npm run fetch:docs",
+		"fetch": "npm run fetch:poky && npm run fetch:docs && npm run fetch:spdx-licenses",
 		"fetch:docs": "sh scripts/fetch-docs.sh",
 		"fetch:poky": "sh scripts/fetch-poky.sh",
+		"fetch:spdx-licenses": "sh scripts/fetch-spdx-licenses.sh",
 		"compile": "tsc -b",
 		"watch": "tsc -b -w && npm run postcompile",
 		"vscode:prepublish": "cd server && npm install --omit=dev && cd ../client && npm install --omit=dev && cd ..",
