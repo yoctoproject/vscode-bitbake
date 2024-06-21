@@ -25,6 +25,7 @@ import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { licenseCompletionItems } from '../completions/spdx-licenses'
 
 let documentUri = ''
 
@@ -94,6 +95,12 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
         ...fileUriCompletionItems,
         ...dirCompletionItems
       ]
+    }
+
+    const variablesAllowedForLicenseCompletion = ['LICENSE']
+    const isVariableAllowedForLicenseCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForLicenseCompletion)
+    if (isVariableAllowedForLicenseCompletion && recipeLocalFiles !== undefined) {
+      return licenseCompletionItems
     }
 
     return []
