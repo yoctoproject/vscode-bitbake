@@ -8,7 +8,6 @@ import path from 'path'
 import {
   type Connection,
   type InitializeResult,
-  type CompletionItem,
   type Disposable,
   createConnection,
   TextDocuments,
@@ -23,7 +22,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
 import { generateBashParser, generateBitBakeParser } from './tree-sitter/parser'
 import { logger } from './lib/src/utils/OutputLogger'
-import { onCompletionHandler } from './connectionHandlers/onCompletion'
+import { onCompletionHandler, onCompletionResolveHandler } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler, setDefinitionsConnection } from './connectionHandlers/onDefinition'
 import { onHoverHandler } from './connectionHandlers/onHover'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from './embedded-languages/general-support'
@@ -127,10 +126,7 @@ disposables.push(
 
   connection.onCompletion(onCompletionHandler),
 
-  connection.onCompletionResolve((item: CompletionItem): CompletionItem => {
-    logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
-    return item
-  }),
+  connection.onCompletionResolve(onCompletionResolveHandler),
 
   connection.onDefinition(onDefinitionHandler),
 
