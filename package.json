@@ -870,7 +870,7 @@
 	  },
 	"scripts": {
 		"build:wasm": "bash ./scripts/build-tree-sitter-wasm.sh",
-		"postinstall": "npm run build:wasm && cd server && npm install && cd ../client && npm install && cd ..",
+		"postinstall": "cd server && npm install && cd ../client && npm install && cd ..",
 		"fetch": "npm run fetch:poky && npm run fetch:docs",
 		"fetch:docs": "sh scripts/fetch-docs.sh",
 		"fetch:poky": "sh scripts/fetch-poky.sh",
@@ -889,8 +889,8 @@
 		"test:watch": "jest --watchAll",
 		"test:grammar": "vscode-tmgrammar-test ./client/test/grammars/test-cases/*.bb",
 		"snap-grammar": "vscode-tmgrammar-snap ./client/test/grammars/snaps/*.bb -u",
-		"dev:vsix": "npm run clean && npm install && npm run fetch:docs && npm run compile && npm run package",
-		"dev:npm": "npm run clean && npm install && npm run fetch:docs && cd server && npm pack"
+		"dev:vsix": "npm run clean && npm install && npm run build:wasm && npm run fetch:docs && npm run compile && npm run package",
+		"dev:npm": "npm run clean && npm install && npm run build:wasm && npm run fetch:docs && cd server && npm pack"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",

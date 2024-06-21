@@ -37,8 +37,6 @@ jobs:
           package-lock.json
           server/package-lock.json
           client/package-lock.json
-          server/tree-sitter-bash.info
-          server/tree-sitter-bitbake.info
 
     - name: Install Node.js dependencies
       run: npm install
@@ -64,6 +62,19 @@ jobs:
     - name: Fetch Poky & Docs
       if: steps.cache-poky.outputs.cache-hit != 'true'
       run: npm run fetch
+
+    - name: Cache build Wasm files
+      id: cache-wasm
+      uses: actions/cache@v4
+      with:
+        path: |
+          server/tree-sitter-bash.wasm
+          server/tree-sitter-bitbake.wasm
+        key: cache-${{ hashFiles('server/tree-sitter-bash.info', 'server/tree-sitter-bitbake.info') }}
+
+    - name: Build Wasm files
+      if: steps.cache-wasm.outputs.cache-hit != 'true'
+      run: npm run build:wasm
 
     - name: Run Linter
       run: npm run lint
