@@ -461,3 +461,8 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
   })
   return completionItems
 }
+
+export function onCompletionResolveHandler (item: CompletionItem): CompletionItem {
+  logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
+  return item
+}
