@@ -5,7 +5,7 @@
 
 import path from 'path'
 import fs from 'fs'
-import { type CompletionItem, CompletionItemKind } from 'vscode-languageserver/node'
+import { type CompletionItem, CompletionItemKind, type Range } from 'vscode-languageserver/node'
 import { type CompletionItemData } from './completion-item-data'
 import { logger } from '../lib/src/utils/OutputLogger'
 
@@ -54,21 +54,27 @@ const spdxLicensesFileContent = fs.readFileSync(spdxLicensesPath, 'utf8')
 export const spdxLicensesCollection = JSON.parse(spdxLicensesFileContent) as SpdxLicenseCollection
 export const spdxLicenses = spdxLicensesCollection.licenses
 
-export const licenseCompletionItems: CompletionItem[] = spdxLicenses.map((license) => (
-  {
-    label: license.licenseId,
-    kind: CompletionItemKind.Value,
-    deprecated: license.isDeprecatedLicenseId === true,
-    labelDetails: {
-      description: spdxLicenseDescription
-    },
-    documentation: 'Loading...',
-    data: {
-      source: spdxLicenseDescription,
-      payload: license
-    } satisfies CompletionItemData
-  }
-))
+export const getLicenseCompletionItems = (rangeOfText: Range): CompletionItem[] => {
+  return spdxLicenses.map((license) => (
+    {
+      label: license.licenseId,
+      kind: CompletionItemKind.Value,
+      deprecated: license.isDeprecatedLicenseId === true,
+      labelDetails: {
+        description: spdxLicenseDescription
+      },
+      documentation: 'Loading...',
+      textEdit: {
+        range: rangeOfText,
+        newText: license.licenseId
+      },
+      data: {
+        source: spdxLicenseDescription,
+        payload: license
+      } satisfies CompletionItemData
+    }
+  ))
+}
 
 export const getSpdxLicenseCompletionResolve = async (item: CompletionItem): Promise<CompletionItem> => {
   try {
