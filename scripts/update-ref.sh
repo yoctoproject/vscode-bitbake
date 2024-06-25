@@ -87,3 +87,24 @@ rm -rf vscode
 
 cat $TMP_FILE >> $FILE
 rm $TMP_FILE
+
+# Update the fetch-spdx-licenses.sh script
+FILE="scripts/fetch-spdx-licenses.sh"
+TMP_FILE="tmp.txt"
+tail -n +5 $FILE > $TMP_FILE
+
+echo "#!/bin/bash" > $FILE
+echo "" >> $FILE
+
+git clone --depth 1 --filter=blob:none --sparse https://github.com/spdx/license-list-data.git
+cd license-list-data
+git fetch --tags
+TMP_TAG=$(git tag --sort=-v:refname | head -n 1)
+LATEST_RELEASE=$(git show $TMP_TAG | grep commit -m 1 | sed "s/^commit //")
+echo "# Tag: $TMP_TAG" >> ../$FILE
+echo "SPDX_LICENSES_COMMIT=$LATEST_RELEASE" >> ../$FILE
+cd ..
+rm -rf license-list-data
+
+cat $TMP_FILE >> $FILE
+rm $TMP_FILE
