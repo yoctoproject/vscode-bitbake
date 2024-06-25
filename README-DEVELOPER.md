@@ -22,7 +22,7 @@ Once compiled, the extension can either be launched in VS Code's debug mode or b
 1. Install the dependencies:
 ``` sh
 npm install
-npm run build:wasm # Download and build Wasm dependencies
+npm run fetch:wasm # Download and build Wasm dependencies
 npm run fetch:docs # Download Yocto's doc. Required for hints on hover
 ```
 2. Compile the Typescript files:
@@ -91,11 +91,11 @@ These tests allow running the BitBake extension in a live VSCode environment.
 See [the individual integration tests README](integration-tests/README.md).
 
 ## Tree-sitter
-This extension uses [tree-sitter-bitbake](https://github.com/tree-sitter-grammars/tree-sitter-bitbake) and [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) to parse the BitBake documents. They are installed with `npm run build:wasm`. The versions of tree-sitter-bitbake and tree-sitter-bash are documented in [server/tree-sitter-bitbake.info](server/tree-sitter-bitbake.info) and [server/tree-sitter-bash.info](server/tree-sitter-bash.info) respectively, along with the versions of the tree-sitter-cli that have to be used.
+This extension uses [tree-sitter-bitbake](https://github.com/tree-sitter-grammars/tree-sitter-bitbake) and [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) to parse the BitBake documents. They are installed with `npm run fetch:wasm`. The versions of tree-sitter-bitbake and tree-sitter-bash are documented in [server/tree-sitter-bitbake.info](server/tree-sitter-bitbake.info) and [server/tree-sitter-bash.info](server/tree-sitter-bash.info) respectively, along with the versions of the tree-sitter-cli that have to be used.
 
 To update the .info files with the latest versions of tree-sitter-bitbake and tree-sitter-bash, it is recommended to use the scripts [scripts/update-tree-sitter-bitbake-wasm.sh](scripts/update-tree-sitter-bitbake-wasm.sh) and [scripts/update-tree-sitter-bash-wasm.sh](scripts/update-tree-sitter-bash-wasm.sh). The GitHub workflow [update-tree-sitter-wasm-file.yml](.github/workflows/update-tree-sitter-wasm-file.yml) is already responsible for doing it automatically.
 
-After updating the .info files, it is required to call `npm run build:wasm` in order to rebuild the Wasm files.
+After updating the .info files, it is required to call `npm run fetch:wasm` in order to rebuild the Wasm files.
 
 For more information about the tree-sitter and its CLI, Check out the official [site](https://tree-sitter.github.io/tree-sitter/) and [npm page](https://www.npmjs.com/package/tree-sitter-cli)
 
