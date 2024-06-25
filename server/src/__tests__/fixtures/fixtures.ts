@@ -33,6 +33,7 @@ export const FIXTURE_URI = {
   EMBEDDED: `file://${path.join(FIXTURE_FOLDER, 'embedded.bb')}`,
   SEMANTIC_TOKENS: `file://${path.join(FIXTURE_FOLDER, 'semanticTokens.bb')}`,
   DIRECTIVE: `file://${path.join(FIXTURE_FOLDER, 'directive.bb')}`,
+  RENAME: `file://${path.join(FIXTURE_FOLDER, 'rename.bb')}`,
   BAZ_BBCLASS: `file://${path.join(FIXTURE_FOLDER, 'bbclass', 'baz.bbclass')}`,
   BAR_INC: `file://${path.join(FIXTURE_FOLDER, 'inc', 'bar.inc')}`,
   FOO_INC: `file://${path.join(FIXTURE_FOLDER, 'inc', 'foo.inc')}`,
