@@ -61,7 +61,7 @@ jobs:
 
     - name: Fetch Poky & Docs
       if: steps.cache-poky.outputs.cache-hit != 'true'
-      run: npm run fetch
+      run: npm run fetch:poky && npm run fetch:docs
 
     - name: Cache build Wasm files
       id: cache-wasm
@@ -72,9 +72,9 @@ jobs:
           server/tree-sitter-bitbake.wasm
         key: cache-${{ hashFiles('server/tree-sitter-bash.info', 'server/tree-sitter-bitbake.info') }}
 
-    - name: Build Wasm files
+    - name: Fetch Wasm files
       if: steps.cache-wasm.outputs.cache-hit != 'true'
-      run: npm run build:wasm
+      run: npm run fetch:wasm
 
     - name: Run Linter
       run: npm run lint
