@@ -50,18 +50,19 @@ jobs:
     - name: Install apt dependencies
       run: sudo apt install chrpath diffstat
 
-    - name: Cache fetch Poky & Docs
-      id: cache-poky
+    - name: Cache fetch
+      id: cache-fetch
       uses: actions/cache@v4
       with:
         path: |
           server/resources/docs
+          server/resources/spdx-licenses.json
           resources/poky
-        key: cache-${{ hashFiles('scripts/fetch-poky.sh', 'scripts/fetch-docs.sh') }}
+        key: cache-${{ hashFiles('scripts/fetch-poky.sh', 'scripts/fetch-docs.sh', 'scripts/fetch-spdx-licenses.sh') }}
 
-    - name: Fetch Poky & Docs
-      if: steps.cache-poky.outputs.cache-hit != 'true'
-      run: npm run fetch:poky && npm run fetch:docs
+    - name: Fetch
+      if: steps.cache-fetch.outputs.cache-hit != 'true'
+      run: npm run fetch:poky && npm run fetch:docs && npm run fetch:spdx-licenses
 
     - name: Cache build Wasm files
       id: cache-wasm
