@@ -29,6 +29,8 @@ do_foo() {
     $D
 }
 
+LICENSE = "GPL-2.with-bisn-e"
+
 DESCRIPTION:
 def dummy() {
 }
