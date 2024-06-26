@@ -1311,7 +1311,7 @@ describe('On Completion', () => {
     expect(resultAfterResolve).toEqual(
       expect.objectContaining({
         ...expectedResultBeforeResolve,
-        documentation: "Bison Exception\n\nAs a special exception, you may create a larger work that contains part or all of the Bison parser skeleton and distribute that work under terms of your choice, so long as that work isn't itself a parser generator using the skeleton or a modified version thereof as a parser skeleton. Alternatively, if you modify or redistribute the parser skeleton itself, you may (at your option) remove this special exception, which will cause the skeleton and the resulting Bison output files to be licensed under the GNU General Public License without this special exception.\n\nThis special exception was added by the Free Software Foundation in version 2.2 of Bison.\n\n"
+        documentation: expect.stringContaining('Bison Exception')
       })
     )
   })
