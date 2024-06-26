@@ -59,7 +59,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 }
 
 function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): CompletionItem[] {
-  if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
+  if (analyzer.isString(documentUri, wordPosition.line, wordPosition.character)) {
     const variablesAllowedForRecipeCompletion = ['RDEPENDS', 'IMAGE_INSTALL', 'DEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RCONFLICTS', 'RREPLACES', 'CORE_IMAGE_EXTRA_INSTALL', 'PACKAGE_INSTALL', 'PACKAGE_INSTALL_ATTEMPTONLY']
     const isVariableAllowedForRecipeCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForRecipeCompletion)
 
@@ -224,7 +224,7 @@ function getPythonCompletionItems (documentUri: string, word: string | null, wor
       allCommonDirectoriesCompletionItems
     )
   }
-  if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
+  if (analyzer.isString(documentUri, wordPosition.line, wordPosition.character)) {
     return []
   }
   return getYoctoTaskSnippets()
