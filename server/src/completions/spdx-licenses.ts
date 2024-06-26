@@ -8,6 +8,7 @@ import fs from 'fs'
 import { type CompletionItem, CompletionItemKind, type Range } from 'vscode-languageserver/node'
 import { type CompletionItemData } from './completion-item-data'
 import { logger } from '../lib/src/utils/OutputLogger'
+import NodeCache from 'node-cache'
 
 export interface SpdxLicenseCollection {
   licenseListVersion: string
@@ -76,15 +77,23 @@ export const getLicenseCompletionItems = (rangeOfText: Range): CompletionItem[] 
   ))
 }
 
+const cache = new NodeCache()
+
 export const getSpdxLicenseCompletionResolve = async (item: CompletionItem): Promise<CompletionItem> => {
   try {
     const license = item.data.payload as SpdxLicense
+    const cachedItem = cache.get<CompletionItem>(license.detailsUrl)
+    if (cachedItem !== undefined) {
+      return cachedItem
+    }
     const detailsResponse = await fetch(license.detailsUrl)
     const spdxLicenseDetails = await detailsResponse.json() as SpdxLicenseDetails
-    return {
+    const resolvedItem = {
       ...item,
       documentation: spdxLicenseDetails.licenseText
     }
+    cache.set(license.detailsUrl, resolvedItem)
+    return resolvedItem
   } catch (error: any) {
     logger.error(`[getSpdxLicenseCompletionResolve] error: ${error}`)
     return item
