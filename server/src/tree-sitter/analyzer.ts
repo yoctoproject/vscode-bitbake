@@ -493,6 +493,18 @@ export default class Analyzer {
     return false
   }
 
+  public isString (
+    uri: string,
+    line: number,
+    column: number
+  ): boolean {
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
+    if (n?.type === 'string_content' || n?.parent?.type === 'string') {
+      return true
+    }
+    return false
+  }
+
   public isStringContent (
     uri: string,
     line: number,
@@ -516,7 +528,7 @@ export default class Analyzer {
     variableNames?: string[]
   ): boolean {
     const n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (n?.type !== 'string_content') {
+    if (n?.type !== 'string_content' && n?.parent?.type !== 'string') {
       return false
     }
     if (n?.parent?.parent?.parent?.type !== 'variable_assignment') {

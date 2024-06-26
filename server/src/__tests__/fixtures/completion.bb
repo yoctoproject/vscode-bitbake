@@ -30,6 +30,7 @@ do_foo() {
 }
 
 LICENSE = "GPL-2.with-bisn-e"
+LICENSE = ""
 
 DESCRIPTION:
 def dummy() {
