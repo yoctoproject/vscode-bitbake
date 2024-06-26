@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { onCompletionHandler } from '../connectionHandlers/onCompletion'
+import { onCompletionHandler, onCompletionResolveHandler } from '../connectionHandlers/onCompletion'
 import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
@@ -413,7 +413,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 36,
+        line: 38,
         character: 13
       }
     })
@@ -1210,7 +1210,7 @@ describe('On Completion', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 31,
+        line: 33,
         character: 12
       }
     })
@@ -1257,6 +1257,62 @@ describe('On Completion', () => {
           label: 'BAZ_SCAN'
         })
       ])
+    )
+  })
+
+  it('Provide proper completion items on LICENSE variable', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const resultBeforeResolve = onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 31,
+        character: 17
+      }
+    })
+
+    const licenseTested = 'GPL-2.0-with-bison-exception'
+
+    const expectedResultBeforeResolve = {
+      label: licenseTested,
+      kind: 12,
+      deprecated: true,
+      labelDetails: {
+        description: 'Source: SPDX License List'
+      },
+      documentation: 'Loading...',
+      textEdit: {
+        range: {
+          start: { line: 31, character: 11 },
+          end: { line: 31, character: 28 }
+        },
+        newText: licenseTested
+      }
+    }
+
+    expect(resultBeforeResolve).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining(expectedResultBeforeResolve)
+      ])
+    )
+
+    const completionItem = resultBeforeResolve.find((item) => item.label === licenseTested)
+
+    if (completionItem === undefined) {
+      throw new Error('completionItem is undefined')
+    }
+
+    const resultAfterResolve = await onCompletionResolveHandler(completionItem)
+    expect(resultAfterResolve).toEqual(
+      expect.objectContaining({
+        ...expectedResultBeforeResolve,
+        documentation: "Bison Exception\n\nAs a special exception, you may create a larger work that contains part or all of the Bison parser skeleton and distribute that work under terms of your choice, so long as that work isn't itself a parser generator using the skeleton or a modified version thereof as a parser skeleton. Alternatively, if you modify or redistribute the parser skeleton itself, you may (at your option) remove this special exception, which will cause the skeleton and the resulting Bison output files to be licensed under the GNU General Public License without this special exception.\n\nThis special exception was added by the Free Software Foundation in version 2.2 of Bison.\n\n"
+      })
     )
   })
 })
