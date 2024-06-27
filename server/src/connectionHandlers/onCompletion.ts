@@ -9,7 +9,7 @@
  */
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind, type Position } from 'vscode-languageserver/node'
+import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind, type Position, type Range } from 'vscode-languageserver/node'
 import { symbolKindToCompletionKind } from '../utils/lsp'
 import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
@@ -25,6 +25,9 @@ import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { getSpdxLicenseCompletionResolve, getLicenseCompletionItems, spdxLicenseDescription } from '../completions/spdx-licenses'
+import { getLine } from '../utils/textDocument'
+import { type TextDocument } from 'vscode-languageserver-textdocument'
 
 let documentUri = ''
 
@@ -56,7 +59,7 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
 }
 
 function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): CompletionItem[] {
-  if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
+  if (analyzer.isString(documentUri, wordPosition.line, wordPosition.character)) {
     const variablesAllowedForRecipeCompletion = ['RDEPENDS', 'IMAGE_INSTALL', 'DEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RCONFLICTS', 'RREPLACES', 'CORE_IMAGE_EXTRA_INSTALL', 'PACKAGE_INSTALL', 'PACKAGE_INSTALL_ATTEMPTONLY']
     const isVariableAllowedForRecipeCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForRecipeCompletion)
 
@@ -94,6 +97,16 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
         ...fileUriCompletionItems,
         ...dirCompletionItems
       ]
+    }
+
+    const variablesAllowedForLicenseCompletion = ['LICENSE']
+    const isVariableAllowedForLicenseCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForLicenseCompletion)
+    if (isVariableAllowedForLicenseCompletion && recipeLocalFiles !== undefined && word !== null) {
+      const textDocument = analyzer.getAnalyzedDocument(documentUri)?.document
+      if (textDocument !== undefined) {
+        const rangeOfText = getRangeOfTextToReplace(textDocument, textDocumentPositionParams.position)
+        return getLicenseCompletionItems(rangeOfText)
+      }
     }
 
     return []
@@ -211,7 +224,7 @@ function getPythonCompletionItems (documentUri: string, word: string | null, wor
       allCommonDirectoriesCompletionItems
     )
   }
-  if (analyzer.isStringContent(documentUri, wordPosition.line, wordPosition.character)) {
+  if (analyzer.isString(documentUri, wordPosition.line, wordPosition.character)) {
     return []
   }
   return getYoctoTaskSnippets()
@@ -453,4 +466,41 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
     return false
   })
   return completionItems
+}
+
+export const getRangeOfTextToReplace = (document: TextDocument, position: Position): Range => {
+  const boundRegex = /\s|'|"/
+  const line = getLine(document, position.line)
+
+  const baseIndex = position.character
+
+  let startIndex = baseIndex
+  while (startIndex > 0 && !boundRegex.test(line[startIndex - 1])) {
+    startIndex--
+  }
+
+  let endIndex = baseIndex
+  while (endIndex < line.length && !boundRegex.test(line[endIndex])) {
+    endIndex++
+  }
+
+  return {
+    start: {
+      line: position.line,
+      character: startIndex
+    },
+    end: {
+      line: position.line,
+      character: endIndex
+    }
+  }
+}
+
+export async function onCompletionResolveHandler (item: CompletionItem): Promise<CompletionItem> {
+  logger.debug(`[onCompletionResolve]: ${JSON.stringify(item)}`)
+  // For reason, item.labelDetails disappears once the item is here.
+  if (item.data?.source === spdxLicenseDescription) {
+    return await getSpdxLicenseCompletionResolve(item)
+  }
+  return item
 }
