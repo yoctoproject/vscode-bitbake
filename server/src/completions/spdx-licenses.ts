@@ -49,13 +49,38 @@ export interface SpdxLicenseDetails {
 }
 
 export const spdxLicenseDescription = 'Source: SPDX License List'
+const cache = new NodeCache()
 
-const spdxLicensesPath = path.join(__dirname, '../../resources/spdx-licenses.json')
-const spdxLicensesFileContent = fs.readFileSync(spdxLicensesPath, 'utf8')
-export const spdxLicensesCollection = JSON.parse(spdxLicensesFileContent) as SpdxLicenseCollection
-export const spdxLicenses = spdxLicensesCollection.licenses
+const loadSpdxLicenses = async (): Promise<SpdxLicense[]> => {
+  logger.debug('[loadSpdxLicenses] Load SPDX licenses')
+  return await new Promise<SpdxLicense[]>((resolve) => {
+    const spdxLicensesPath = path.join(__dirname, '../../resources/spdx-licenses.json')
+    fs.readFile(spdxLicensesPath, (error, data) => {
+      if (error !== null) {
+        logger.error(`[loadSpdxLicenses] error: ${JSON.stringify(error)}`)
+        resolve([])
+      }
+      const spdxLicensesCollection = JSON.parse(data.toString()) as SpdxLicenseCollection
+      resolve(spdxLicensesCollection.licenses)
+    })
+  })
+}
 
-export const getLicenseCompletionItems = (rangeOfText: Range): CompletionItem[] => {
+const getSpdxLicenses = async (): Promise<SpdxLicense[]> => {
+  logger.debug('[getSpdxLicenses] Get SPDX licenses')
+  const cacheKey = 'spdxLicenses'
+  // node-cache will eventually release the memory, compared to a simple global variable.
+  const cachedSpdxLicenses = cache.get<SpdxLicense[]>(cacheKey)
+  if (cachedSpdxLicenses !== undefined) {
+    return cachedSpdxLicenses
+  }
+  const spdxLicenses = await loadSpdxLicenses()
+  cache.set(cacheKey, spdxLicenses)
+  return spdxLicenses
+}
+
+export const getLicenseCompletionItems = async (rangeOfText: Range): Promise<CompletionItem[]> => {
+  const spdxLicenses = await getSpdxLicenses()
   return spdxLicenses.map((license) => (
     {
       label: license.licenseId,
@@ -76,8 +101,6 @@ export const getLicenseCompletionItems = (rangeOfText: Range): CompletionItem[] 
     }
   ))
 }
-
-const cache = new NodeCache()
 
 export const getSpdxLicenseCompletionResolve = async (item: CompletionItem): Promise<CompletionItem> => {
   try {
