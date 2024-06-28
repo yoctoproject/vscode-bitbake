@@ -38,7 +38,7 @@ describe('On Completion', () => {
 
   it('expects reserved variables, keywords and snippets in completion item lists', async () => {
     // nothing is analyzed yet, and docs are not scanned. Only the static and fallback completion items are provided
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -73,7 +73,7 @@ describe('On Completion', () => {
     bitBakeDocScanner.parseYoctoVariablesFile()
     bitBakeDocScanner.parseYoctoTaskFile()
 
-    const resultAfterDocScan = onCompletionHandler({
+    const resultAfterDocScan = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -185,7 +185,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -221,7 +221,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -262,7 +262,7 @@ describe('On Completion', () => {
 
     analyzer.setRecipeLocalFiles(DUMMY_URI, recipeLocalFiles)
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -305,7 +305,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -331,7 +331,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result1 = onCompletionHandler({
+    const result1 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -341,7 +341,7 @@ describe('On Completion', () => {
       }
     })
     // Empty ${}
-    const result2 = onCompletionHandler({
+    const result2 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -377,7 +377,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -388,7 +388,7 @@ describe('On Completion', () => {
     })
 
     // In the middle of typing operator/override syntax
-    const result2 = onCompletionHandler({
+    const result2 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -398,7 +398,7 @@ describe('On Completion', () => {
       }
     })
     // MYVAR:append: = '123' when the cursor is at the end of second colon
-    const result3 = onCompletionHandler({
+    const result3 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -408,7 +408,7 @@ describe('On Completion', () => {
       }
     })
     // Show completion at the last line of the document https://github.com/amaanq/tree-sitter-bitbake/issues/9
-    const result4 = onCompletionHandler({
+    const result4 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -463,7 +463,7 @@ describe('On Completion', () => {
 
     bitBakeProjectScannerClient.bitbakeScanResult._overrides = ['class-target']
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -491,7 +491,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -510,7 +510,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -531,7 +531,7 @@ describe('On Completion', () => {
 
     bitBakeDocScanner.parseVariableFlagFile()
 
-    const resultAfterDocScan = onCompletionHandler({
+    const resultAfterDocScan = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -566,7 +566,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result1 = onCompletionHandler({
+    const result1 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -576,7 +576,7 @@ describe('On Completion', () => {
       }
     })
 
-    const result2 = onCompletionHandler({
+    const result2 = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -666,7 +666,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const resultForInclude = onCompletionHandler({
+    const resultForInclude = await onCompletionHandler({
       textDocument: {
         uri: documentUri
       },
@@ -676,7 +676,7 @@ describe('On Completion', () => {
       }
     })
 
-    const resultForRequire = onCompletionHandler({
+    const resultForRequire = await onCompletionHandler({
       textDocument: {
         uri: documentUri
       },
@@ -686,7 +686,7 @@ describe('On Completion', () => {
       }
     })
 
-    const resultForInherit = onCompletionHandler({
+    const resultForInherit = await onCompletionHandler({
       textDocument: {
         uri: documentUri
       },
@@ -696,7 +696,7 @@ describe('On Completion', () => {
       }
     })
 
-    const resultForInheritDefer = onCompletionHandler({
+    const resultForInheritDefer = await onCompletionHandler({
       textDocument: {
         uri: documentUri
       },
@@ -805,7 +805,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.DIRECTIVE
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: FIXTURE_URI.DIRECTIVE
       },
@@ -846,7 +846,7 @@ describe('On Completion', () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     bitBakeDocScanner.parseYoctoVariablesFile()
 
-    const result2 = onCompletionHandler({
+    const result2 = await onCompletionHandler({
       textDocument: {
         uri: FIXTURE_URI.DIRECTIVE
       },
@@ -903,7 +903,7 @@ describe('On Completion', () => {
     bitBakeDocScanner.parsePythonDatastoreFunction()
 
     // Completion items on string_start node
-    const resultOnStringStart = onCompletionHandler({
+    const resultOnStringStart = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -962,7 +962,7 @@ describe('On Completion', () => {
     ).toBeUndefined()
 
     // Completion items on string_content node
-    const resultOnStringContent = onCompletionHandler({
+    const resultOnStringContent = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1030,7 +1030,7 @@ describe('On Completion', () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     bitBakeDocScanner.parseYoctoVariablesFile()
 
-    const resultInVariableExpansion = onCompletionHandler({
+    const resultInVariableExpansion = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1057,7 +1057,7 @@ describe('On Completion', () => {
       ])
     )
 
-    const resultNotInVariableExpansion = onCompletionHandler({
+    const resultNotInVariableExpansion = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1080,7 +1080,7 @@ describe('On Completion', () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     bitBakeDocScanner.parseYoctoVariablesFile()
 
-    const resultInVariableExpansion = onCompletionHandler({
+    const resultInVariableExpansion = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1119,7 +1119,7 @@ describe('On Completion', () => {
     bitBakeDocScanner.parseYoctoTaskFile()
     bitBakeDocScanner.parsePythonDatastoreFunction()
 
-    const resultOnVariableExpansion = onCompletionHandler({
+    const resultOnVariableExpansion = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1136,7 +1136,7 @@ describe('On Completion', () => {
     expect(pnCompletionItems.length).toBe(1) // not duplicated with common directories
     expect(pnCompletionItems[0].labelDetails?.description).toBe('Source: Yocto') // Not overridden by common directories
 
-    const resultOnPythonDatastoreVariable = onCompletionHandler({
+    const resultOnPythonDatastoreVariable = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1149,7 +1149,7 @@ describe('On Completion', () => {
       resultOnPythonDatastoreVariable.find((item) => item.label === 'DEBIAN_MIRROR')
     ).toBeDefined()
 
-    const resultOnVariableAssignation = onCompletionHandler({
+    const resultOnVariableAssignation = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1171,7 +1171,7 @@ describe('On Completion', () => {
 
     bitBakeDocScanner.parseYoctoVariablesFile()
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1205,7 +1205,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1235,7 +1235,7 @@ describe('On Completion', () => {
 
     analyzer.processRecipeScanResults(scanResults, extractRecipeName(DUMMY_URI))
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1266,7 +1266,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const resultBeforeResolve = onCompletionHandler({
+    const resultBeforeResolve = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },
@@ -1322,7 +1322,7 @@ describe('On Completion', () => {
       document: FIXTURE_DOCUMENT.COMPLETION
     })
 
-    const result = onCompletionHandler({
+    const result = await onCompletionHandler({
       textDocument: {
         uri: DUMMY_URI
       },

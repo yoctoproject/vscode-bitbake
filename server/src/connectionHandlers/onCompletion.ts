@@ -31,7 +31,7 @@ import { type TextDocument } from 'vscode-languageserver-textdocument'
 
 let documentUri = ''
 
-export function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): CompletionItem[] {
+export async function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): Promise<CompletionItem[]> {
   const wordPosition = {
     line: textDocumentPositionParams.position.line,
     // Go one character back to get completion on the current word.
@@ -55,10 +55,10 @@ export function onCompletionHandler (textDocumentPositionParams: TextDocumentPos
     return getPythonCompletionItems(documentUri, word, wordPosition)
   }
 
-  return getBitBakeCompletionItems(textDocumentPositionParams, word, wordPosition)
+  return await getBitBakeCompletionItems(textDocumentPositionParams, word, wordPosition)
 }
 
-function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): CompletionItem[] {
+async function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): Promise<CompletionItem[]> {
   if (analyzer.isString(documentUri, wordPosition.line, wordPosition.character)) {
     const variablesAllowedForRecipeCompletion = ['RDEPENDS', 'IMAGE_INSTALL', 'DEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RCONFLICTS', 'RREPLACES', 'CORE_IMAGE_EXTRA_INSTALL', 'PACKAGE_INSTALL', 'PACKAGE_INSTALL_ATTEMPTONLY']
     const isVariableAllowedForRecipeCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForRecipeCompletion)
@@ -105,7 +105,7 @@ function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPosi
       const textDocument = analyzer.getAnalyzedDocument(documentUri)?.document
       if (textDocument !== undefined) {
         const rangeOfText = getRangeOfTextToReplace(textDocument, textDocumentPositionParams.position)
-        return getLicenseCompletionItems(rangeOfText)
+        return await getLicenseCompletionItems(rangeOfText)
       }
     }
 
