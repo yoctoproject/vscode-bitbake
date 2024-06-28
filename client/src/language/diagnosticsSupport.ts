@@ -13,7 +13,7 @@ import path from 'path'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
-const supportedSources = ['Pylance', 'shellcheck']
+const supportedSources = ['Flake8', 'Pylance', 'Pylint', 'shellcheck']
 
 const diagnosticCollections = {
   bash: vscode.languages.createDiagnosticCollection('bitbake-bash'),
@@ -58,9 +58,6 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (!checkHasSupportedSource(diagnostic)) {
       return
     }
-    if (diagnostic.range === undefined) {
-      cleanDiagnostics.push(diagnostic)
-    }
     const adjustedRange = getOriginalDocRange(
       originalTextDocument,
       embeddedLanguageDoc,
@@ -70,14 +67,22 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
     if (adjustedRange === undefined) {
       return
     }
-    if (await checkIsIgnoredPylanceUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
+
+    const embeddedLanguageTypeOnPosition = await requestsManager.getEmbeddedLanguageTypeOnPosition(
+      originalTextDocument.uri.toString(),
+      adjustedRange.end
+    )
+    if (embeddedLanguageType !== embeddedLanguageTypeOnPosition) {
+      // Diagnostics that are not on a region of the same embedded language are not relevant.
       return
     }
-    if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
+
+    if (await checkIsIgnoredDiagnostic(diagnostic, originalTextDocument, adjustedRange)) {
       return
     }
     const adjustedDiagnostic = {
       ...diagnostic,
+      message: fixDiagnosticMessagePythonImport(diagnostic),
       range: adjustedRange,
       source: `${diagnostic.source}, ${diagnosticCollection.name}`
     }
@@ -109,25 +114,134 @@ const getEmbeddedLanguageType = (uri: vscode.Uri): EmbeddedLanguageType | undefi
   return undefined
 }
 
+const checkIsIgnoredDiagnostic = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
+    return true
+  }
+  if (await checkIsIgnoredDiagnosticOnInlinePython(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredDiagnosticOnPythonFunctionDefinitionFirstLine(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredDiagnosticOnPythonUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  if (await checkIsIgnoredShellcheckSc2154(diagnostic, originalTextDocument, adjustedRange)) {
+    return true
+  }
+  return false
+}
+
 const checkHasSupportedSource = (diagnostic: vscode.Diagnostic): boolean => {
   return supportedSources.some(
     (supportedSource) => diagnostic.source !== undefined && diagnostic.source.includes(supportedSource)
   )
 }
 
-const checkIsIgnoredPylanceUndefinedVariable = async (
+const checkIsAlwaysIgnoredDiagnostic = async (
+  diagnostic: vscode.Diagnostic
+): Promise<boolean> => {
+  if (
+    hasSourceWithCode(diagnostic, 'Flake8', 'W391') || // blank line at end of file
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0114:missing-module-docstring') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0116:missing-function-docstring') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0305:trailing-newlines') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0415:import-outside-toplevel')
+  ) {
+    return true
+  }
+  return false
+}
+
+const checkIsIgnoredDiagnosticOnInlinePython = async (
   diagnostic: vscode.Diagnostic,
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
-  if (diagnostic.source?.includes('Pylance') !== true) {
-    return false
-  }
-  if (typeof diagnostic.code !== 'object' || diagnostic.code?.value !== 'reportUndefinedVariable') {
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') && // Too many blank lines
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E501') && // Line too long
+    !hasSourceWithCode(diagnostic, 'Pylint', 'W0104:pointless-statement') &&
+    !hasSourceWithCode(diagnostic, 'Pylint', 'W0106:expression-not-assigned')
+  ) {
     return false
   }
 
-  const definition = await requestsManager.getDefinition(originalTextDocument, adjustedRange.end)
+  return await requestsManager.getIsPositionOnInlinePython(
+    originalTextDocument.uri.toString(),
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  ) === true
+}
+
+const checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (
+    diagnostic.source?.includes('Pylance') === true &&
+    (diagnostic as any).hasDiagnosticCode === false && // This weird diagnostic has not code but such a property
+    diagnostic.message === '"__anonymous" is not accessed') {
+    return true
+  }
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E203') && // whitespace before ':'
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E211') && // whitespace before '('
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E302') && // expected 2 blank lines, found 1
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') // too many blank lines
+  ) {
+    return false
+  }
+
+  return await requestsManager.getIsPositionOnAnonymousPythonFunctionFirstLine(
+    originalTextDocument.uri.toString(),
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  ) === true
+}
+
+const checkIsIgnoredDiagnosticOnPythonFunctionDefinitionFirstLine = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E302') && // expected 2 blank lines, found 1
+    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') // too many blank lines
+  ) {
+    return false
+  }
+
+  return await requestsManager.getIsPositionOnPythonFunctionDefinitionFirstLine(
+    originalTextDocument.uri.toString(),
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  ) === true
+}
+
+const checkIsIgnoredDiagnosticOnPythonUndefinedVariable = async (
+  diagnostic: vscode.Diagnostic,
+  originalTextDocument: vscode.TextDocument,
+  adjustedRange: vscode.Range
+): Promise<boolean> => {
+  if (
+    !hasSourceWithCode(diagnostic, 'Flake8', 'F821') &&
+    !hasSourceWithCode(diagnostic, 'Pylance', 'reportUndefinedVariable') &&
+    !hasSourceWithCode(diagnostic, 'Pylint', 'E0602:undefined-variable')
+  ) {
+    return false
+  }
+
+  const definition = await requestsManager.getDefinition(
+    originalTextDocument,
+    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
+  )
   return definition.length > 0
 }
 
@@ -136,10 +250,7 @@ const checkIsIgnoredShellcheckSc2154 = async (
   originalTextDocument: vscode.TextDocument,
   adjustedRange: vscode.Range
 ): Promise<boolean> => {
-  if (diagnostic.source?.includes('shellcheck') !== true) {
-    return false
-  }
-  if (typeof diagnostic.code !== 'object' || diagnostic.code?.value !== 'SC2154') {
+  if (!hasSourceWithCode(diagnostic, 'shellcheck', 'SC2154')) {
     return false
   }
 
@@ -171,4 +282,44 @@ const checkIsIgnoredShellcheckSc2154 = async (
   const match = message.match(/^(?<variableName>\w+) is referenced but not assigned\.$/)
   const variableName = match?.groups?.variableName
   return commonDirectoriesVariables.has(variableName as string)
+}
+
+const fixDiagnosticMessagePythonImport = (
+  diagnostic: vscode.Diagnostic
+): string => {
+  // Some imports are made automatically by BitBake. Reimporting them produces a warning with irrelevant line number.
+  const fix = (regex: RegExp): string => {
+    const magicLineNumber = 6 // In the embedded language document, the imports are from that line or before.
+    const newText = ' (imported by BitBake)'
+    const match = diagnostic.message.match(regex)
+    const lineNumber = Number(match?.groups?.lineNumber)
+    const textToRemoveLength = match?.groups?.textToRemove?.length
+    if (lineNumber !== undefined && lineNumber <= magicLineNumber && textToRemoveLength !== undefined) {
+      return diagnostic.message.slice(0, diagnostic.message.length - textToRemoveLength) + newText
+    }
+    return diagnostic.message
+  }
+  if (hasSourceWithCode(diagnostic, 'Flake8', 'F811')) {
+    return fix(/redefinition of unused '(?:\w+)'(?<textToRemove> from line (?<lineNumber>\d+))/)
+  }
+  if (hasSourceWithCode(diagnostic, 'Pylint', 'W0404:reimported')) {
+    return fix(/Reimport '(?:\w+)'(?<textToRemove> \(imported line (?<lineNumber>\d+)\))/)
+  }
+  if (hasSourceWithCode(diagnostic, 'Pylint', 'W0621:redefined-outer-name')) {
+    return fix(/Redefining name '(?:\w+)'(?<textToRemove> from outer scope \(line (?<lineNumber>\d+)\))/)
+  }
+  return diagnostic.message
+}
+
+const hasSourceWithCode = (diagnostic: vscode.Diagnostic, source: string, code: string): boolean => {
+  if (diagnostic.source?.includes(source) !== true) {
+    return false
+  }
+  if (diagnostic.code === code) {
+    return true
+  }
+  if (typeof diagnostic.code === 'object' && diagnostic.code?.value === code) {
+    return true
+  }
+  return false
 }

@@ -65,17 +65,17 @@ describe('Create various basic embedded python documents', () => {
     [
       'anonymous',
       'python(){\n  pass\n}',
-      `${imports}def _ ():\n  pass\n `
+      `${imports}def _ ():\n  pass\n`
     ],
     [
       'named with python keyword',
       'python foo (){\n  pass\n}',
-      `${imports}def foo ():\n  pass\n `
+      `${imports}def foo ():\n  pass\n`
     ],
     [
       'empty',
       'python(){\n}',
-      `${imports}def _ ():\n  pass\n `
+      `${imports}def _ ():\n  pass\n`
     ],
     [
       'with def keyword',
@@ -85,7 +85,7 @@ describe('Create various basic embedded python documents', () => {
     [
       'with fakeroot',
       'fakeroot python(){\n  pass\n}',
-      `${imports}def _ ():\n  pass\n `
+      `${imports}def _ ():\n  pass\n`
     ]
   ])('%s', async (description, input, result) => {
     const embeddedContent = await createEmbeddedContent(input, 'python')
