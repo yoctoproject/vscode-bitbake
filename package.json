@@ -894,7 +894,7 @@
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
-		"@types/jest": "^29.5.5",
+		"@types/jest": "^29.5.12",
 		"@types/mocha": "^10.0.1",
 		"@types/node": "^20.6.1",
 		"@types/vscode": "^1.75.1",
