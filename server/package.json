@@ -28,8 +28,6 @@
     "prepack": "cd .. && npm run compile"
   },
   "devDependencies": {
-    "@types/glob": "^8.1.0",
-    "@types/node": "^20.6.1",
     "@types/vscode": "^1.75.1"
   },
   "workspaces": [

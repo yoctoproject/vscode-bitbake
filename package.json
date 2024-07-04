@@ -896,7 +896,7 @@
 		"@types/glob": "^8.1.0",
 		"@types/jest": "^29.5.12",
 		"@types/mocha": "^10.0.1",
-		"@types/node": "^20.6.1",
+		"@types/node": "^20.14.9",
 		"@types/vscode": "^1.75.1",
 		"@vscode/test-electron": "^2.4.0",
 		"@vscode/vsce": "^2.3.5",
