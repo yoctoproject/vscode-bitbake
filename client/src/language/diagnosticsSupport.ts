@@ -13,6 +13,7 @@ import path from 'path'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 
+// Supported external sources (VS Code extensions) that might generate diagnostics if installed.
 const supportedSources = ['Flake8', 'Pylance', 'Pylint', 'shellcheck']
 
 const diagnosticCollections = {
