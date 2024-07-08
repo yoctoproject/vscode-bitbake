@@ -33,30 +33,6 @@ export class RequestManager {
       }
     )
   }
-
-  getIsPositionOnAnonymousPythonFunctionFirstLine = async (
-    uriString: string,
-    position: Position
-  ): RequestResult['IsPositionOnAnonymousPythonFunctionFirstLine'] => {
-    const params: RequestParams['IsPositionOnAnonymousPythonFunctionFirstLine'] = { uriString, position }
-    return await this.client?.sendRequest(RequestMethod.IsPositionOnAnonymousPythonFunctionFirstLine, params)
-  }
-
-  getIsPositionOnPythonFunctionDefinitionFirstLine = async (
-    uriString: string,
-    position: Position
-  ): RequestResult['IsPositionOnPythonFunctionDefinitionFirstLine'] => {
-    const params: RequestParams['IsPositionOnPythonFunctionDefinitionFirstLine'] = { uriString, position }
-    return await this.client?.sendRequest(RequestMethod.IsPositionOnPythonFunctionDefinitionFirstLine, params)
-  }
-
-  getIsPositionOnInlinePython = async (
-    uriString: string,
-    position: Position
-  ): RequestResult['IsPositionOnInlinePython'] => {
-    const params: RequestParams['IsPositionOnInlinePython'] = { uriString, position }
-    return await this.client?.sendRequest(RequestMethod.IsPositionOnInlinePython, params)
-  }
 }
 
 export const requestsManager = new RequestManager()
