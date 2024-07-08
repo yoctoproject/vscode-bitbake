@@ -247,12 +247,12 @@ const fixDiagnosticMessagePythonImport = (
 ): string => {
   // Some imports are made automatically by BitBake. Reimporting them produces a warning with irrelevant line number.
   const fix = (regex: RegExp): string => {
-    const magicLineNumber = 7 // In the embedded language document, the imports are from that line or before.
+    const embeddedLanguageDocImportLine = 7 // In the embedded language document, the imports are from that line or before.
     const newText = ' (imported by BitBake)'
     const match = diagnostic.message.match(regex)
     const lineNumber = Number(match?.groups?.lineNumber)
     const textToRemoveLength = match?.groups?.textToRemove?.length
-    if (lineNumber !== undefined && lineNumber <= magicLineNumber && textToRemoveLength !== undefined) {
+    if (lineNumber !== undefined && lineNumber <= embeddedLanguageDocImportLine && textToRemoveLength !== undefined) {
       return diagnostic.message.slice(0, diagnostic.message.length - textToRemoveLength) + newText
     }
     return diagnostic.message
