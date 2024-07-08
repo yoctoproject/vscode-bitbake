@@ -630,66 +630,6 @@ export default class Analyzer {
     return false
   }
 
-  public isInsideInlinePythonRegion (
-    uri: string,
-    line: number,
-    column: number
-  ): boolean {
-    let n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (this.isBuggyIdentifier(uri, line, column)) {
-      return false
-    }
-
-    while (n !== null) {
-      if (TreeSitterUtils.isInlinePython(n)) {
-        return true
-      }
-      n = n.parent
-    }
-
-    return false
-  }
-
-  public isAnonymousPythonFunctionFirstLine (
-    uri: string,
-    line: number,
-    column: number
-  ): boolean {
-    let n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (this.isBuggyIdentifier(uri, line, column)) {
-      return false
-    }
-
-    while (n !== null) {
-      if (n.type === 'anonymous_python_function') {
-        break
-      }
-      n = n.parent
-    }
-
-    return n?.startPosition.row === line
-  }
-
-  public isPythonFunctionDefinitionFirstLine (
-    uri: string,
-    line: number,
-    column: number
-  ): boolean {
-    let n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (this.isBuggyIdentifier(uri, line, column)) {
-      return false
-    }
-
-    while (n !== null) {
-      if (n.type === 'python_function_definition') {
-        break
-      }
-      n = n.parent
-    }
-
-    return n?.startPosition.row === line
-  }
-
   public isPythonDatastoreVariable (
     uri: string,
     line: number,

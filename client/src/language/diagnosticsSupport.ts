@@ -122,13 +122,7 @@ const checkIsIgnoredDiagnostic = async (
   if (await checkIsAlwaysIgnoredDiagnostic(diagnostic)) {
     return true
   }
-  if (await checkIsIgnoredDiagnosticOnInlinePython(diagnostic, originalTextDocument, adjustedRange)) {
-    return true
-  }
-  if (await checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine(diagnostic, originalTextDocument, adjustedRange)) {
-    return true
-  }
-  if (await checkIsIgnoredDiagnosticOnPythonFunctionDefinitionFirstLine(diagnostic, originalTextDocument, adjustedRange)) {
+  if (await checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine(diagnostic)) {
     return true
   }
   if (await checkIsIgnoredDiagnosticOnPythonUndefinedVariable(diagnostic, originalTextDocument, adjustedRange)) {
@@ -154,75 +148,38 @@ const checkIsAlwaysIgnoredDiagnostic = async (
     hasSourceWithCode(diagnostic, 'Pylint', 'C0114:missing-module-docstring') ||
     hasSourceWithCode(diagnostic, 'Pylint', 'C0116:missing-function-docstring') ||
     hasSourceWithCode(diagnostic, 'Pylint', 'C0305:trailing-newlines') ||
-    hasSourceWithCode(diagnostic, 'Pylint', 'C0415:import-outside-toplevel')
+    hasSourceWithCode(diagnostic, 'Pylint', 'C0415:import-outside-toplevel') ||
+
+    // From here, diagnostics we'd rather not always ignore, but which would require a call to the language server to check for their context.
+    // We're concerned making too many requests might cause performance issues.
+
+    // Should be ignored only on inline Python
+    hasSourceWithCode(diagnostic, 'Flake8', 'E501') || // Line too long
+    hasSourceWithCode(diagnostic, 'Pylint', 'W0104:pointless-statement') ||
+    hasSourceWithCode(diagnostic, 'Pylint', 'W0106:expression-not-assigned') ||
+    // Should be ignored only on first line of python anonymous function
+    hasSourceWithCode(diagnostic, 'Flake8', 'E203') || // whitespace before ':'
+    hasSourceWithCode(diagnostic, 'Flake8', 'E211') || // whitespace before '('
+    // Should be ignored only on first line of python anonymous function and first line of Python function
+    hasSourceWithCode(diagnostic, 'Flake8', 'E302') || // expected 2 blank lines, found 1
+    // Should be ignored only on inline Python, first line of anonymous python function, and first line of Python function
+    hasSourceWithCode(diagnostic, 'Flake8', 'E303') // too many blank lines
   ) {
     return true
   }
   return false
 }
 
-const checkIsIgnoredDiagnosticOnInlinePython = async (
-  diagnostic: vscode.Diagnostic,
-  originalTextDocument: vscode.TextDocument,
-  adjustedRange: vscode.Range
-): Promise<boolean> => {
-  if (
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') && // Too many blank lines
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E501') && // Line too long
-    !hasSourceWithCode(diagnostic, 'Pylint', 'W0104:pointless-statement') &&
-    !hasSourceWithCode(diagnostic, 'Pylint', 'W0106:expression-not-assigned')
-  ) {
-    return false
-  }
-
-  return await requestsManager.getIsPositionOnInlinePython(
-    originalTextDocument.uri.toString(),
-    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
-  ) === true
-}
-
 const checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine = async (
-  diagnostic: vscode.Diagnostic,
-  originalTextDocument: vscode.TextDocument,
-  adjustedRange: vscode.Range
+  diagnostic: vscode.Diagnostic
 ): Promise<boolean> => {
   if (
     diagnostic.source?.includes('Pylance') === true &&
-    (diagnostic as any).hasDiagnosticCode === false && // This weird diagnostic has not code but such a property
+    (diagnostic as any).hasDiagnosticCode === false && // This weird diagnostic has no code but such a property
     diagnostic.message === '"__anonymous" is not accessed') {
     return true
   }
-  if (
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E203') && // whitespace before ':'
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E211') && // whitespace before '('
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E302') && // expected 2 blank lines, found 1
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') // too many blank lines
-  ) {
-    return false
-  }
-
-  return await requestsManager.getIsPositionOnAnonymousPythonFunctionFirstLine(
-    originalTextDocument.uri.toString(),
-    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
-  ) === true
-}
-
-const checkIsIgnoredDiagnosticOnPythonFunctionDefinitionFirstLine = async (
-  diagnostic: vscode.Diagnostic,
-  originalTextDocument: vscode.TextDocument,
-  adjustedRange: vscode.Range
-): Promise<boolean> => {
-  if (
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E302') && // expected 2 blank lines, found 1
-    !hasSourceWithCode(diagnostic, 'Flake8', 'E303') // too many blank lines
-  ) {
-    return false
-  }
-
-  return await requestsManager.getIsPositionOnPythonFunctionDefinitionFirstLine(
-    originalTextDocument.uri.toString(),
-    new vscode.Position(adjustedRange.start.line, adjustedRange.start.character + 1)
-  ) === true
+  return false
 }
 
 const checkIsIgnoredDiagnosticOnPythonUndefinedVariable = async (
