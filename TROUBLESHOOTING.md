@@ -16,7 +16,7 @@ We haven't found a way to prevent these tabs from opening, but we try to close t
 
 If this problem gets too annoying, consider activating the `bitbake.disableEmbeddedLanguagesFiles` setting.
 
-# files.trimTrailingWhitespace does not work on Python and Shell files
+### files.trimTrailingWhitespace does not work on Python and Shell files
 When the extension is activated, `files.trimTrailingWhiteSpace` is deactivated for Python and Shell documents because this option interferes with the handling of Python and Shell code in BitBake documents.
 
 In the background, some Python and Shell documents are made in order to handle Python and Shell languages in BitBake files. These documents contain a lot of trailing whitespaces. If `files.trimTrailingWhiteSpace` is activated, it will trim the whitespaces into these files, making it hard to map the positions between the generated files and the original BitBake file.
@@ -68,6 +68,9 @@ commit to your poky repository:
 
  - https://git.yoctoproject.org/poky/commit/?id=fff242b5d21f9d856557ed9367fa43fa8b435be5
 
+### Settings are being ignored on Flake8 and Pylint
+Settings for Flake8 and Pylint do not work on BitBake files. In other words, they are not configurable. The reason for this issue is currently unknown.
+
 ## Trade-offs
 
 ### Trade-offs on Diagnostics
@@ -76,3 +79,19 @@ Some functionalities for [embedded Bash and Python code](https://code.visualstud
 The related issues:
 - [Problems from Unknown Files Appear in the Problems Tab](TROUBLESHOOTING.md#problems-from-unknown-files-appear-in-the-problems-tab)
 - [Tabs from Unknown Files Open and Close Quickly](TROUBLESHOOTING.md#tabs-from-unknown-files-open-and-close-quickly)
+
+### Trade-offs on linting
+Since Flake8 and Pylint are intended to be used on Python files, it is necessary to analyse the context in which the errors are generated to determine if they still apply to the BitBake file. Unfortunately, some errors require complex analysis and our experiments showed performance issues. For this reason, these errors are currently being completely ignored.
+
+The linting errors being completely ignored:
+
+Flake8:  
+- E501 (Line too long)
+- E203 (whitespace before ':')
+- E211 (whitespace before '(')
+- E302 (expected 2 blank lines, found 1)
+- E303 (too many blank lines)
+
+Pylint:  
+- W0104:pointless-statement
+- W0106:expression-not-assigned
