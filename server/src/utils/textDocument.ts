@@ -12,8 +12,8 @@ export const getLine = (document: TextDocument, lineNumber: number): string => {
       character: 0
     },
     end: {
-      line: lineNumber,
-      character: Number.POSITIVE_INFINITY
+      line: lineNumber + 1,
+      character: 0
     }
   }
   return document.getText(range)
