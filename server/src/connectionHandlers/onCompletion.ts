@@ -26,7 +26,6 @@ import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { extractRecipeName } from '../lib/src/utils/files'
 import { getSpdxLicenseCompletionResolve, getLicenseCompletionItems, spdxLicenseDescription } from '../completions/spdx-licenses'
-import { getRangeOfTextToReplace } from '../completions/utils'
 
 let documentUri = ''
 
@@ -103,8 +102,7 @@ async function getBitBakeCompletionItems (textDocumentPositionParams: TextDocume
     if (isVariableAllowedForLicenseCompletion && recipeLocalFiles !== undefined && word !== null) {
       const textDocument = analyzer.getAnalyzedDocument(documentUri)?.document
       if (textDocument !== undefined) {
-        const rangeOfText = getRangeOfTextToReplace(textDocument, textDocumentPositionParams.position)
-        return await getLicenseCompletionItems(rangeOfText)
+        return await getLicenseCompletionItems(textDocument, textDocumentPositionParams.position)
       }
     }
 

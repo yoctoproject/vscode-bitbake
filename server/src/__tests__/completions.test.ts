@@ -11,6 +11,7 @@ import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { licenseOperators } from '../completions/spdx-licenses'
 
 /**
  * The onCompletion handler doesn't allow other parameters, so we can't pass the analyzer and therefore the same
@@ -1313,6 +1314,41 @@ describe('On Completion', () => {
         ...expectedResultBeforeResolve,
         documentation: expect.stringContaining('Bison Exception')
       })
+    )
+  })
+
+  it('Provide proper completion items on LICENSE when operator is expected', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const resultWithoutOperators = await onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 31,
+        character: 11
+      }
+    })
+
+    expect(resultWithoutOperators).not.toEqual(
+      expect.arrayContaining(licenseOperators)
+    )
+
+    const resultWithOperators = await onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 31,
+        character: 29
+      }
+    })
+
+    expect(resultWithOperators).toEqual(
+      expect.arrayContaining(licenseOperators)
     )
   })
 

@@ -5,10 +5,13 @@
 
 import path from 'path'
 import fs from 'fs'
-import { type CompletionItem, CompletionItemKind, type Range } from 'vscode-languageserver/node'
+import { type CompletionItem, CompletionItemKind } from 'vscode-languageserver/node'
 import { type CompletionItemData } from './completion-item-data'
 import { logger } from '../lib/src/utils/OutputLogger'
 import NodeCache from 'node-cache'
+import { type Position, type TextDocument } from 'vscode-languageserver-textdocument'
+import { getPreviousCharactersOnLine } from '../utils/textDocument'
+import { getRangeOfTextToReplace } from './utils'
 
 export interface SpdxLicenseCollection {
   licenseListVersion: string
@@ -79,9 +82,34 @@ const getSpdxLicenses = async (): Promise<SpdxLicense[]> => {
   return spdxLicenses
 }
 
-export const getLicenseCompletionItems = async (rangeOfText: Range): Promise<CompletionItem[]> => {
+export const licenseOperators: CompletionItem[] = [
+  {
+    label: '&',
+    kind: CompletionItemKind.Operator,
+    insertText: '& '
+  },
+  {
+    label: '|',
+    kind: CompletionItemKind.Operator,
+    insertText: '| '
+  }
+]
+
+export const getLicenseCompletionItems = async (
+  textDocument: TextDocument,
+  position: Position
+): Promise<CompletionItem[]> => {
+  const previousCharacters = getPreviousCharactersOnLine(textDocument, position)
+  if (
+    previousCharacters.at(-1) === ' ' &&
+    !'&|'.includes(previousCharacters.at(-2) as string)
+  ) {
+    return licenseOperators
+  }
+
+  const rangeOfText = getRangeOfTextToReplace(textDocument, position)
   const spdxLicenses = await getSpdxLicenses()
-  return spdxLicenses.map((license) => (
+  return spdxLicenses.map<CompletionItem>((license) => (
     {
       label: license.licenseId,
       kind: CompletionItemKind.Value,
