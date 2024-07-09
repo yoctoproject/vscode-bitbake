@@ -244,12 +244,22 @@ Toaster users may start toaster through the **main context menu** -> **Bitbake**
 
 > Note: Toaster requires additional packages and ports. It may not be compatible with all commandWrapper settings. Read the Toaster manual to configure them to have all the required dependencies.
 
+### Linting
+Linting is not directly handled by this extension. Users are advised to install other extensions that have these features. (e.g. [oelint-adv](https://marketplace.visualstudio.com/items?itemName=kweihmann.oelint-vscode)).
+
+However, this extensions supports *optional* external VS Code extensions for Shell and Python linting. It does so by filtering and editing the linting errors produces by these extensions to ensure they are relevant to the BitBake context.
+
+The supported external extensions:
+- [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8) (Python)
+- [Pylint](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint) (Python)
+- [shellcheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck) (Shell)
+
+Please be aware of the [issues](./TROUBLESHOOTING.md#settings-are-being-ignored-on-flake8-and-pylint) and [trade-offs](./TROUBLESHOOTING.md#trade-offs-on-linting) related to linting.
+
 ## Troubleshooting
 See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
 
 ## Others
-This extension currently doesn't provide linting and formatting. Users are advised to install other extensions that have these features. (e.g. [oelint-adv](https://marketplace.visualstudio.com/items?itemName=kweihmann.oelint-vscode))
-
 This extension also doesn't support WKS files, you should find another extension such as [openembedded-kickstart](https://marketplace.visualstudio.com/items?itemName=wickscc.openembedded-kickstart)
 ## Contributing
 
