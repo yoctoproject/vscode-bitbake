@@ -433,7 +433,7 @@ describe('on hover', () => {
         uri: DUMMY_URI
       },
       position: {
-        line: 54,
+        line: 56,
         character: 10
       }
     })
@@ -730,6 +730,31 @@ describe('on hover', () => {
       expect.objectContaining({
         contents: expect.objectContaining({
           value: expect.stringContaining('**Final Value**\n___\n\t\'this is the final value for FINAL_VALUE with override containing variable expansion\'')
+        })
+      })
+    )
+  })
+
+  it('should show description of license on hover', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 54,
+        character: 43
+      }
+    })
+
+    expect(shouldShow).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('**GNU General Public License v2.0 w/Bison exception**\n___\n```Bison Exception')
         })
       })
     )

@@ -52,4 +52,6 @@ do_foo() {
     $DESCRIPTION
 }
 
+LICENSE = "GPL-2.0-only & GPL-2.0-with-bison-exception"
+
 d.getVar("DESCRIPTION")
