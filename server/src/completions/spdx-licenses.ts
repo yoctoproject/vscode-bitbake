@@ -7,8 +7,7 @@ import { type CompletionItem, CompletionItemKind } from 'vscode-languageserver/n
 import { type CompletionItemData } from './completion-item-data'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type Position, type TextDocument } from 'vscode-languageserver-textdocument'
-import { getPreviousCharactersOnLine } from '../utils/textDocument'
-import { getRangeOfTextToReplace } from './utils'
+import { getRangeOfTextToReplace, getPreviousCharactersOnLine } from '../utils/textDocument'
 import { getSpdxLicenseDetails, getSpdxLicenses, type SpdxLicense } from '../utils/spdx-licenses'
 
 export const spdxLicenseDescription = 'Source: SPDX License List'
