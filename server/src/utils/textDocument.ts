@@ -30,7 +30,7 @@ export const getPreviousCharactersOnLine = (document: TextDocument, position: Po
   return document.getText(range)
 }
 
-export const getRangeOfTextToReplace = (
+export const getRangeOfWord = (
   document: TextDocument,
   position: Position,
   boundRegex: RegExp = /\s|'|"/
