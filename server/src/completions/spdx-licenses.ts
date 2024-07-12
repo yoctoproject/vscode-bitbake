@@ -82,6 +82,19 @@ const getSpdxLicenses = async (): Promise<SpdxLicense[]> => {
   return spdxLicenses
 }
 
+const getSpdxLicenseDetails = async (license: SpdxLicense): Promise<SpdxLicenseDetails> => {
+  logger.debug('[getSpdxLicenseDetails] Get SPDX licenses details')
+  const cachedDetails = cache.get<SpdxLicenseDetails>(license.detailsUrl)
+  if (cachedDetails !== undefined) {
+    return cachedDetails
+  }
+  logger.debug('[getSpdxLicenseDetails] Fetch SPDX licenses details')
+  const detailsResponse = await fetch(license.detailsUrl)
+  const spdxLicenseDetails = await detailsResponse.json() as SpdxLicenseDetails
+  cache.set(license.detailsUrl, spdxLicenseDetails)
+  return spdxLicenseDetails
+}
+
 export const licenseOperators: CompletionItem[] = [
   {
     label: '&',
@@ -133,17 +146,11 @@ export const getLicenseCompletionItems = async (
 export const getSpdxLicenseCompletionResolve = async (item: CompletionItem): Promise<CompletionItem> => {
   try {
     const license = item.data.payload as SpdxLicense
-    const cachedItem = cache.get<CompletionItem>(license.detailsUrl)
-    if (cachedItem !== undefined) {
-      return cachedItem
-    }
-    const detailsResponse = await fetch(license.detailsUrl)
-    const spdxLicenseDetails = await detailsResponse.json() as SpdxLicenseDetails
+    const spdxLicenseDetails = await getSpdxLicenseDetails(license)
     const resolvedItem = {
       ...item,
       documentation: spdxLicenseDetails.licenseText
     }
-    cache.set(license.detailsUrl, resolvedItem)
     return resolvedItem
   } catch (error: any) {
     logger.error(`[getSpdxLicenseCompletionResolve] error: ${error}`)
