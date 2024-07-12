@@ -7,7 +7,7 @@ import { type CompletionItem, CompletionItemKind } from 'vscode-languageserver/n
 import { type CompletionItemData } from './completion-item-data'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type Position, type TextDocument } from 'vscode-languageserver-textdocument'
-import { getRangeOfTextToReplace, getPreviousCharactersOnLine } from '../utils/textDocument'
+import { getRangeOfWord, getPreviousCharactersOnLine } from '../utils/textDocument'
 import { getSpdxLicenseDetails, getSpdxLicenses, type SpdxLicense } from '../utils/spdx-licenses'
 
 export const spdxLicenseDescription = 'Source: SPDX License List'
@@ -37,7 +37,7 @@ export const getLicenseCompletionItems = async (
     return licenseOperators
   }
 
-  const rangeOfText = getRangeOfTextToReplace(textDocument, position)
+  const rangeOfText = getRangeOfWord(textDocument, position)
   const spdxLicenses = await getSpdxLicenses()
   return spdxLicenses.map<CompletionItem>((license) => (
     {
