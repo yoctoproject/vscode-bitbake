@@ -74,6 +74,12 @@ export const getSpdxLicenses = async (): Promise<SpdxLicense[]> => {
   return spdxLicenses
 }
 
+export const getSpdxLicense = async (licenseId: string): Promise<SpdxLicense | undefined> => {
+  logger.debug(`[getSpdxLicense] Get SPDX license for ${licenseId}`)
+  const spdxLicenses = await getSpdxLicenses()
+  return spdxLicenses.find((license) => license.licenseId === licenseId)
+}
+
 export const getSpdxLicenseDetails = async (license: SpdxLicense): Promise<SpdxLicenseDetails> => {
   logger.debug('[getSpdxLicenseDetails] Get SPDX licenses details')
   const cachedDetails = cache.get<SpdxLicenseDetails>(license.detailsUrl)
