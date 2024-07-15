@@ -113,10 +113,15 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
       const spdxLicense = await getSpdxLicense(licenseId)
       if (spdxLicense !== undefined) {
         const spdxLicenseDetails = await getSpdxLicenseDetails(spdxLicense)
+        const depractionMessage = spdxLicenseDetails.isDeprecatedLicenseId ? '(deprecated)' : ''
         return {
           contents: {
             kind: hoverKind,
-            value: `**${spdxLicenseDetails.name}**\n___\n\`\`\`${spdxLicenseDetails.licenseText}\`\`\``
+            value: [
+              `**${spdxLicenseDetails.name}** ${depractionMessage}`,
+              '___',
+              `\`\`\`${spdxLicenseDetails.licenseText}\`\`\``
+            ].join('\n')
           }
         } satisfies Hover
       }

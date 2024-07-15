@@ -754,7 +754,7 @@ describe('on hover', () => {
     expect(shouldShow).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining('**GNU General Public License v2.0 w/Bison exception**\n___\n```Bison Exception')
+          value: expect.stringContaining('**GNU General Public License v2.0 w/Bison exception** (deprecated)\n___\n```Bison Exception')
         })
       })
     )
