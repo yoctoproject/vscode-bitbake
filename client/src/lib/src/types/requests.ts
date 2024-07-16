@@ -10,6 +10,7 @@ export enum RequestType {
   EmbeddedLanguageTypeOnPosition = 'EmbeddedLanguageTypeOnPosition',
   getLinksInDocument = 'getLinksInDocument',
   ProcessRecipeScanResults = 'ProcessRecipeScanResults',
+  ProcessGlobalEnvScanResults = 'ProcessGlobalEnvScanResults',
   GetVar = 'getVar',
   GetRecipeLocalFiles = 'getRecipeLocalFiles'
 }
@@ -18,6 +19,7 @@ export const RequestMethod: Record<RequestType, string> = {
   [RequestType.EmbeddedLanguageTypeOnPosition]: 'bitbake/requestEmbeddedLanguageDocInfos',
   [RequestType.getLinksInDocument]: 'bitbake/getLinksInDocument',
   [RequestType.ProcessRecipeScanResults]: 'bitbake/ProcessRecipeScanResults',
+  [RequestType.ProcessGlobalEnvScanResults]: 'bitbake/ProcessGlobalEnvScanResults',
   [RequestType.GetVar]: 'bitbake/getVar',
   [RequestType.GetRecipeLocalFiles]: 'bitbake/getRecipeLocalFiles'
 }
@@ -26,6 +28,7 @@ export interface RequestParams {
   [RequestType.EmbeddedLanguageTypeOnPosition]: { uriString: string, position: Position }
   [RequestType.getLinksInDocument]: { documentUri: string }
   [RequestType.ProcessRecipeScanResults]: { scanResults: string, uri: any, chosenRecipe: string }
+  [RequestType.ProcessGlobalEnvScanResults]: { scanResults: string }
   [RequestType.GetVar]: { variable: string, recipe: string }
   [RequestType.GetRecipeLocalFiles]: { uri: string }
 }
