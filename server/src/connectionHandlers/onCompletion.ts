@@ -212,7 +212,8 @@ function getBashCompletionItems (documentUri: string, word: string | null, wordP
 }
 
 function getPythonCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
-  if (analyzer.isPythonDatastoreVariable(documentUri, wordPosition.line, wordPosition.character, true)) {
+  const bitbakeNode = analyzer.bitBakeNodeAtPoint(documentUri, wordPosition.line, wordPosition.character)
+  if (bitbakeNode !== null && analyzer.isPythonDatastoreVariable(documentUri, bitbakeNode, true)) {
     const symbolCompletionItems = getSymbolCompletionItems(word)
     return mergeArraysDistinctly(
       (completionItem) => completionItem.label,
