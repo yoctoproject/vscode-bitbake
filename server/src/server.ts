@@ -174,6 +174,11 @@ disposables.push(
     analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
   }),
 
+  connection.onRequest(RequestMethod.ProcessGlobalEnvScanResults, (param: RequestParams['ProcessGlobalEnvScanResults']) => {
+    logger.debug('[onNotification] <ProcessGlobalEnvScanResults>')
+    // TODO: Process global environment scan results
+  }),
+
   connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
     const scanResult = analyzer.getLastScanResult(params.recipe)
     return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
