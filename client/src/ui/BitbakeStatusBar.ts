@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 import { type BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 import { type BitbakeCustomExecution } from './BitbakeTaskProvider'
 import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
-import { BitbakeRecipeScanner } from '../driver/BitbakeRecipeScanner'
+import { BitbakeEnvScanner } from '../driver/BitbakeEnvScanner'
 
 export class BitbakeStatusBar {
   private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [], _confFiles: [] }
@@ -54,7 +54,7 @@ export class BitbakeStatusBar {
 
       if (taskName === 'Bitbake: Parse') {
         this.parsingInProgress = true
-      } else if (taskName === BitbakeRecipeScanner.recipeEnvScanTaskName) {
+      } else if (taskName === BitbakeEnvScanner.recipeEnvScanTaskName) {
         this.recipeScanInProgress = true
       }
 
@@ -70,7 +70,7 @@ export class BitbakeStatusBar {
 
       if (taskName === 'Bitbake: Parse') {
         this.parsingInProgress = false
-      } else if (taskName === BitbakeRecipeScanner.recipeEnvScanTaskName) {
+      } else if (taskName === BitbakeEnvScanner.recipeEnvScanTaskName) {
         this.recipeScanInProgress = false
       }
 

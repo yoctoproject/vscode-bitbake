@@ -19,7 +19,7 @@ import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import path from 'path'
-import bitbakeRecipeScanner from './driver/BitbakeRecipeScanner'
+import bitbakeEnvScanner from './driver/BitbakeEnvScanner'
 import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
@@ -143,11 +143,11 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 
-  context.subscriptions.push(bitbakeRecipeScanner)
-  bitbakeRecipeScanner.setLanguageClient(client)
-  bitbakeRecipeScanner.subscribeToTaskEnd(context, bitbakeTaskProvider)
+  context.subscriptions.push(bitbakeEnvScanner)
+  bitbakeEnvScanner.setLanguageClient(client)
+  bitbakeEnvScanner.subscribeToTaskEnd(context, bitbakeTaskProvider)
   context.subscriptions.push(
-    bitbakeRecipeScanner.envScanComplete.event(reviewDiagnostics)
+    bitbakeEnvScanner.envScanComplete.event(reviewDiagnostics)
   )
 
   clientNotificationManager.setMemento(context.workspaceState)
