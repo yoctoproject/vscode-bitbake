@@ -170,13 +170,13 @@ disposables.push(
   }),
 
   connection.onRequest(RequestMethod.ProcessRecipeScanResults, (param: RequestParams['ProcessRecipeScanResults']) => {
-    logger.debug(`[onNotification] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
+    logger.debug(`[onRequest] <ProcessRecipeScanResults> uri:  ${JSON.stringify(param.uri)} recipe: ${param.chosenRecipe}`)
     analyzer.processRecipeScanResults(param.scanResults, param.chosenRecipe)
   }),
 
   connection.onRequest(RequestMethod.ProcessGlobalEnvScanResults, (param: RequestParams['ProcessGlobalEnvScanResults']) => {
-    logger.debug('[onNotification] <ProcessGlobalEnvScanResults>')
-    // TODO: Process global environment scan results
+    logger.debug('[onRequest] <ProcessGlobalEnvScanResults>')
+    analyzer.processGlobalEnvScanResults(param.scanResults)
   }),
 
   connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
