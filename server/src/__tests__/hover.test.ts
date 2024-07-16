@@ -638,7 +638,7 @@ describe('on hover', () => {
     expect(shouldShow1).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining(` comment 1 for MYVAR in baz.bbclass\n\nSource: ${FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', '')} \`L: 4\``)
+          value: ` comment 1 for MYVAR in baz.bbclass\n\nSource: ${FIXTURE_DOCUMENT.BAZ_BBCLASS.uri.replace('file://', '')} \`L: 4\``
         })
       })
     )
@@ -647,7 +647,7 @@ describe('on hover', () => {
     expect(shouldShow2).toEqual(
       expect.objectContaining({
         contents: expect.objectContaining({
-          value: expect.stringContaining(` comment 1 for my_func\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 23\``)
+          value: ` comment 1 for my_func\n\nSource: ${DUMMY_URI_TRIMMED} \`L: 23\``
         })
       })
     )
