@@ -16,10 +16,10 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
   private _languageClient: LanguageClient | undefined
   private _pendingRecipeScanTasks: vscode.Task | null = null
 
-  readonly serverRecipeScanComplete = new vscode.EventEmitter<vscode.TaskDefinition>()
+  readonly envScanComplete = new vscode.EventEmitter<vscode.TaskDefinition>()
 
   dispose (): void {
-    this.serverRecipeScanComplete.dispose()
+    this.envScanComplete.dispose()
   }
 
   async scanGlobalEnv (taskProvider: BitbakeTaskProvider): Promise<void> {
@@ -62,7 +62,7 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
     await runBitbakeTask(scanEnvTask, taskProvider)
     // Wait for the task and server side to have done the processing
     await new Promise<void>((resolve) => {
-      const disposable = this.serverRecipeScanComplete.event((definition) => {
+      const disposable = this.envScanComplete.event((definition) => {
         if (definition === scanEnvTask.definition) {
           disposable.dispose()
           resolve()
@@ -73,28 +73,31 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
 
   subscribeToTaskEnd (context: vscode.ExtensionContext, taskProvider: BitbakeTaskProvider): void {
     context.subscriptions.push(vscode.tasks.onDidEndTask(async (e) => {
+      if (this._languageClient === undefined) {
+        logger.error('[onDidEndTask] Language client not set, unable to forward environment to the server')
+        return
+      }
+
+      const executionEngine = e.execution.task.execution as BitbakeCustomExecution
+      if (executionEngine === undefined) {
+        logger.error('[onDidEndTask] Execution engine not set, unable to forward environment to the server')
+        return
+      }
+
+      const scanResults = executionEngine.pty?.outputDataString ?? ''
       if (e.execution.task.name === BitbakeRecipeScanner.recipeEnvScanTaskName) {
         const uri = e.execution.task.definition.uri
         const chosenRecipe = e.execution.task.definition.recipes[0]
 
-        const executionEngine = e.execution.task.execution as BitbakeCustomExecution
-        if (executionEngine !== undefined) {
-          const scanResults = executionEngine.pty?.outputDataString ?? ''
-          if (this._languageClient === undefined) {
-            logger.error('[onDidEndTask] Language client not set, unable to forward recipe environment to the server')
-          } else {
-            logger.debug('[onDidEndTask] Sending recipe environment to the server')
-            const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
-            await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
-            this.serverRecipeScanComplete.fire(e.execution.task.definition)
-          }
-        }
+        logger.debug('[onDidEndTask] Sending recipe environment to the server')
+        const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
+        await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
       } else if (e.execution.task.name === BitbakeRecipeScanner.globalEnvScanTaskName) {
-        const executionEngine = e.execution.task.execution as BitbakeCustomExecution
-        const scanResults = executionEngine.pty?.outputDataString ?? ''
-        logger.debug(`[onDidEndTask] Sending global environment to the server, ${scanResults}`)
-        // TODO: Send the scan results to the server
+        logger.debug('[onDidEndTask] Sending global environment to the server')
+        const requestParam: RequestParams['ProcessGlobalEnvScanResults'] = { scanResults }
+        await this._languageClient.sendRequest(RequestMethod.ProcessGlobalEnvScanResults, requestParam)
       }
+      this.envScanComplete.fire(e.execution.task.definition)
 
       if (this._pendingRecipeScanTasks !== null) {
         logger.debug(`[onDidEndTask] Running the pending scan task. url: ${this._pendingRecipeScanTasks.definition.uri}`)
