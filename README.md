@@ -245,16 +245,16 @@ Toaster users may start toaster through the **main context menu** -> **Bitbake**
 > Note: Toaster requires additional packages and ports. It may not be compatible with all commandWrapper settings. Read the Toaster manual to configure them to have all the required dependencies.
 
 ### Linting
-Linting is not directly handled by this extension. Users are advised to install other extensions that have these features. (e.g. [oelint-adv](https://marketplace.visualstudio.com/items?itemName=kweihmann.oelint-vscode)).
+This extension provides linting based on BitBake parsing results and [Pylance](https://marketplace.visualstudio.com/items?itemName=ms-python.vscode-pylance). The BitBake parsing can be triggered with the command `BitBake: Scan recipe` (executed on save by default), `BitBake: Rescan project`, and several others.
 
-However, this extensions supports *optional* external VS Code extensions for Shell and Python linting. It does so by filtering and editing the linting errors produces by these extensions to ensure they are relevant to the BitBake context.
-
-The supported external extensions:
+Optionally, the following Python and Shell extensions are also supported:
 - [Flake8](https://marketplace.visualstudio.com/items?itemName=ms-python.flake8) (Python)
 - [Pylint](https://marketplace.visualstudio.com/items?itemName=ms-python.pylint) (Python)
 - [shellcheck](https://marketplace.visualstudio.com/items?itemName=timonwong.shellcheck) (Shell)
 
-Please be aware of the [issues](./TROUBLESHOOTING.md#settings-are-being-ignored-on-flake8-and-pylint) and [trade-offs](./TROUBLESHOOTING.md#trade-offs-on-linting) related to linting.
+Refer to the [troubleshooting guide](./TROUBLESHOOTING.md#trade-offs-on-linting) and the documentation for each extension if you encounter any issues.
+
+For advanced styling recommendations, we also suggest using the [oelint-adv extension](https://marketplace.visualstudio.com/items?itemName=kweihmann.oelint-vscode).
 
 ## Troubleshooting
 See the [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) file.
