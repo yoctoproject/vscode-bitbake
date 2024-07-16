@@ -210,7 +210,7 @@ export default class Analyzer {
       // Bash variable expansions are handled separately in getSymbolsFromBashTree
       const isInsideBashRegion = this.isInsideBashRegion(uri, node.startPosition.row, node.startPosition.column)
       const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion' && !isInsideBashRegion)
-      const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node.startPosition.row, node.startPosition.column)
+      const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node)
       const isPythonFunctionDefinition = node.type === 'python_function_definition'
       // Note this does not detect python functions that are not called. Not sure how it could be done.
       // This also ignores method calls, but on purpose.
@@ -632,15 +632,13 @@ export default class Analyzer {
 
   public isPythonDatastoreVariable (
     uri: string,
-    line: number,
-    column: number,
+    n: Parser.SyntaxNode,
     // Whether or not the opening quote should be considered as part of the variable
     // We want to be able to suggest completion items as the user open the quotes
     // However, when the user hover on the variable, the quotes are not part of the variable
     includeOpeningQuote: boolean = false
   ): boolean {
-    const n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (!this.isInsidePythonRegion(uri, line, column)) {
+    if (!this.isInsidePythonRegion(uri, n.startPosition.row, n.startPosition.column)) {
       return false
     }
 
@@ -828,7 +826,7 @@ export default class Analyzer {
     return tree.rootNode.descendantForPosition({ row: line, column })
   }
 
-  private bitBakeNodeAtPoint (
+  public bitBakeNodeAtPoint (
     uri: string,
     line: number,
     column: number
