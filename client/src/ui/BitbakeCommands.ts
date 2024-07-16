@@ -23,7 +23,7 @@ import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import * as child_process from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { bitbakeESDKMode, configureDevtoolSDKFallback, generateCPPProperties } from '../driver/BitbakeESDK'
-import bitbakeRecipeScanner from '../driver/BitbakeRecipeScanner'
+import bitbakeEnvScanner from '../driver/BitbakeEnvScanner'
 import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { finishProcessExecution } from '../utils/ProcessUtils'
@@ -166,7 +166,7 @@ async function scanEnvironmentCommand (taskProvider: BitbakeTaskProvider): Promi
     return
   }
 
-  await bitbakeRecipeScanner.scanGlobalEnv(taskProvider)
+  await bitbakeEnvScanner.scanGlobalEnv(taskProvider)
 }
 
 async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
@@ -190,7 +190,7 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
     return
   }
 
-  await bitbakeRecipeScanner.scanRecipeEnv(chosenRecipe, taskProvider, uri)
+  await bitbakeEnvScanner.scanRecipeEnv(chosenRecipe, taskProvider, uri)
 }
 
 async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient, uri?: any, task?: any): Promise<void> {

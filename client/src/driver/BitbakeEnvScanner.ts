@@ -10,11 +10,11 @@ import { runBitbakeTask } from '../ui/BitbakeCommands'
 import { type BitbakeCustomExecution, type BitbakeTaskProvider } from '../ui/BitbakeTaskProvider'
 import { RequestMethod, type RequestParams } from '../lib/src/types/requests'
 
-export class BitbakeRecipeScanner implements vscode.Disposable {
+export class BitbakeEnvScanner implements vscode.Disposable {
   static readonly recipeEnvScanTaskName = 'Bitbake: Scan recipe env'
   static readonly globalEnvScanTaskName = 'Bitbake: Scan global env'
   private _languageClient: LanguageClient | undefined
-  private _pendingRecipeScanTasks: vscode.Task | null = null
+  private _pendingTask: vscode.Task | null = null
 
   readonly envScanComplete = new vscode.EventEmitter<vscode.TaskDefinition>()
 
@@ -24,7 +24,7 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
 
   async scanGlobalEnv (taskProvider: BitbakeTaskProvider): Promise<void> {
     const taskDefinition: vscode.TaskDefinition = { type: 'bitbake', options: { env: true } }
-    await this.scan(taskProvider, BitbakeRecipeScanner.globalEnvScanTaskName, taskDefinition)
+    await this.scan(taskProvider, BitbakeEnvScanner.globalEnvScanTaskName, taskDefinition)
   }
 
   /**
@@ -32,16 +32,15 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
    * @param chosenRecipe The recipe to scan
    * @param taskProvider The task provider, see more in BitbakeTaskProvider
    * @param uri The URI of the chosen recipe
-   * @param triggeredByCommandPalette If the scan was triggered by the command palette
    * @returns
    */
   async scanRecipeEnv (chosenRecipe: string, taskProvider: BitbakeTaskProvider, uri: any): Promise<void> {
     if (chosenRecipe === '') {
-      logger.debug('[BitbakeRecipeScanner] No recipe chosen for scan')
+      logger.debug('[BitbakeEnvScanner] No recipe chosen for scan')
       return
     }
 
-    await this.scan(taskProvider, BitbakeRecipeScanner.recipeEnvScanTaskName, { type: 'bitbake', recipes: [chosenRecipe], uri, options: { parseOnly: true, env: true } })
+    await this.scan(taskProvider, BitbakeEnvScanner.recipeEnvScanTaskName, { type: 'bitbake', recipes: [chosenRecipe], uri, options: { parseOnly: true, env: true } })
   }
 
   private async scan (taskProvider: BitbakeTaskProvider, taskName: string, taskDefinition: vscode.TaskDefinition): Promise<void> {
@@ -53,9 +52,9 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
     )
 
     const runningTasks = vscode.tasks.taskExecutions
-    if (runningTasks.some((execution) => execution.task.name === BitbakeRecipeScanner.recipeEnvScanTaskName || execution.task.name === BitbakeRecipeScanner.globalEnvScanTaskName)) {
-      logger.debug('[BitbakeRecipeScanner] An environment scan is already running, adding this one to the pending tasks')
-      this._pendingRecipeScanTasks = scanEnvTask
+    if (runningTasks.some((execution) => execution.task.name === BitbakeEnvScanner.recipeEnvScanTaskName || execution.task.name === BitbakeEnvScanner.globalEnvScanTaskName)) {
+      logger.debug('[BitbakeEnvScanner] An environment scan is already running, adding this one to the pending tasks')
+      this._pendingTask = scanEnvTask
       return
     }
 
@@ -85,24 +84,24 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
       }
 
       const scanResults = executionEngine.pty?.outputDataString ?? ''
-      if (e.execution.task.name === BitbakeRecipeScanner.recipeEnvScanTaskName) {
+      if (e.execution.task.name === BitbakeEnvScanner.recipeEnvScanTaskName) {
         const uri = e.execution.task.definition.uri
         const chosenRecipe = e.execution.task.definition.recipes[0]
 
         logger.debug('[onDidEndTask] Sending recipe environment to the server')
         const requestParam: RequestParams['ProcessRecipeScanResults'] = { scanResults, uri, chosenRecipe }
         await this._languageClient.sendRequest(RequestMethod.ProcessRecipeScanResults, requestParam)
-      } else if (e.execution.task.name === BitbakeRecipeScanner.globalEnvScanTaskName) {
+      } else if (e.execution.task.name === BitbakeEnvScanner.globalEnvScanTaskName) {
         logger.debug('[onDidEndTask] Sending global environment to the server')
         const requestParam: RequestParams['ProcessGlobalEnvScanResults'] = { scanResults }
         await this._languageClient.sendRequest(RequestMethod.ProcessGlobalEnvScanResults, requestParam)
       }
       this.envScanComplete.fire(e.execution.task.definition)
 
-      if (this._pendingRecipeScanTasks !== null) {
-        logger.debug(`[onDidEndTask] Running the pending scan task. url: ${this._pendingRecipeScanTasks.definition.uri}`)
-        await runBitbakeTask(this._pendingRecipeScanTasks, taskProvider)
-        this._pendingRecipeScanTasks = null
+      if (this._pendingTask !== null) {
+        logger.debug(`[onDidEndTask] Running the pending scan task. url: ${this._pendingTask.definition.uri}`)
+        await runBitbakeTask(this._pendingTask, taskProvider)
+        this._pendingTask = null
       }
     }))
   }
@@ -112,5 +111,5 @@ export class BitbakeRecipeScanner implements vscode.Disposable {
   }
 }
 
-const bitbakeRecipeScanner = new BitbakeRecipeScanner()
-export default bitbakeRecipeScanner
+const bitbakeEnvScanner = new BitbakeEnvScanner()
+export default bitbakeEnvScanner
