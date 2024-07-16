@@ -239,20 +239,27 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       if (parseOnSave !== true) {
         return
       }
-      const exts = ['.bb', '.bbappend', '.inc']
+      const recipeExts = ['.bb', '.bbappend', '.inc']
+      const extsForGlobalEnvScan = ['.conf', '.bbclass']
       const { fsPath } = document.uri
 
-      if (exts.includes(path.extname(fsPath))) {
+      if (recipeExts.includes(path.extname(fsPath))) {
         const foundRecipe = bitBakeProjectScanner.scanResult._recipes.find((recipe) => recipe.name === extractRecipeName(fsPath))
         if (foundRecipe !== undefined) {
           logger.debug(`[onDidSave] Running 'bitbake -e' against the saved recipe: ${foundRecipe.name}`)
-          // Note that it pends only one scan at a time. See client/src/driver/BitbakeRecipeScanner.ts.
+          // Note that it pends only one scan at a time. See more details in the command implementation.
           // Saving more than 2 files at the same time could cause the server to miss some of the scans.
           await vscode.commands.executeCommand('bitbake.scan-recipe-env', document.uri)
           return
         }
       }
-      // saving other files or no recipe is resolved
+
+      if (extsForGlobalEnvScan.includes(path.extname(fsPath))) {
+        logger.debug('[onDidSave] Running \'bitbake -e\'')
+        await vscode.commands.executeCommand('bitbake.scan-global-env')
+        return
+      }
+
       await vscode.commands.executeCommand('bitbake.parse-recipes')
     })
   )
