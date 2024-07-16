@@ -54,7 +54,7 @@ export class BitbakeStatusBar {
 
       if (taskName === 'Bitbake: Parse') {
         this.parsingInProgress = true
-      } else if (taskName === BitbakeRecipeScanner.taskName) {
+      } else if (taskName === BitbakeRecipeScanner.recipeEnvScanTaskName) {
         this.recipeScanInProgress = true
       }
 
@@ -70,7 +70,7 @@ export class BitbakeStatusBar {
 
       if (taskName === 'Bitbake: Parse') {
         this.parsingInProgress = false
-      } else if (taskName === BitbakeRecipeScanner.taskName) {
+      } else if (taskName === BitbakeRecipeScanner.recipeEnvScanTaskName) {
         this.recipeScanInProgress = false
       }
 
