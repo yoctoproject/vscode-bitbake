@@ -71,12 +71,11 @@ export default class Analyzer {
     return this.uriToAnalyzedDocument[uri]
   }
 
+  /**
+  * Get the scan result for the current file. If a recipe provided, it will return the scan result of that recipe. Otherwise, it will return the global env scan result.
+  */
   public getLastScanResult (recipe: string): LastScanResult | undefined {
-    return this.uriToLastScanResult[recipe]
-  }
-
-  public getLastGlobalEnvScanResult (recipe: string): LastScanResult | undefined {
-    return this.lastGlobalEnvScanResult
+    return this.uriToLastScanResult[recipe] ?? this.lastGlobalEnvScanResult
   }
 
   public getRecipeLocalFiles (uri: string): RequestResult['getRecipeLocalFiles'] | undefined {
