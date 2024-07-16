@@ -39,6 +39,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.clean-recipe', async (uri) => { await cleanRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.scan-recipe-env', async (uri) => { await scanRecipeCommand(bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.scan-global-env', async (uri) => { await scanEnvironmentCommand(bitbakeTaskProvider) }),
     vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri, task) }),
     vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }),
@@ -151,6 +152,23 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakePr
   }
 }
 
+async function scanEnvironmentCommand (taskProvider: BitbakeTaskProvider): Promise<void> {
+  logger.debug('Executing command: scan-global-env')
+
+  if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+    logger.warn('bitbake settings are not sane, Abort scan')
+    return
+  }
+
+  bitbakeSanity = true
+
+  if (bitbakeESDKMode) {
+    return
+  }
+
+  await bitbakeRecipeScanner.scanGlobalEnv(taskProvider)
+}
+
 async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, uri?: any): Promise<void> {
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
 
@@ -172,7 +190,7 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
     return
   }
 
-  await bitbakeRecipeScanner.scan(chosenRecipe, taskProvider, uri)
+  await bitbakeRecipeScanner.scanRecipeEnv(chosenRecipe, taskProvider, uri)
 }
 
 async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, client: LanguageClient, uri?: any, task?: any): Promise<void> {
