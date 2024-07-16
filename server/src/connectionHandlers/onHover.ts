@@ -166,7 +166,7 @@ function getGlobalSymbolComments (uri: string, word: string, currentSymbolAtPoin
     if (symbolsForTheExt.length > 0) {
       // Only show comments from one of the symbols to not flood the hover definition with comments
       const symbol = symbolsForTheExt[0]
-      finalComments = `${symbol.commentsAbove.map((comment) => comment.slice(1)).join('\n')}` + `\n\nSource: ${symbol.location.uri.replace('file://', '')} \`L: ${symbol.location.range.start.line + 1}\`}`
+      finalComments = `${symbol.commentsAbove.map((comment) => comment.slice(1)).join('\n')}` + `\n\nSource: ${symbol.location.uri.replace('file://', '')} \`L: ${symbol.location.range.start.line + 1}\``
     }
   })
 
