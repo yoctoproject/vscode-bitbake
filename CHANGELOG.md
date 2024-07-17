@@ -1,3 +1,16 @@
+# 2.6.0 - 2024.06.19
+
+ - Support renaming of BitBake variables in Python and Shell functions
+ - Detect BitBake variables in Shell functions
+ - Use require/inherit context in Python and Shell functions
+ - Improve Shell syntax highlighting of BitBake variables and functions
+ - Add SPDX licenses suggestions & hovers
+ - Support Pylint and Flake8 extensions' diagnostics
+ - Bump all dependencies
+ - Setup automated dependency updates
+ - Setup CI caching
+ - Minor bug fixes
+
 # 2.5.0 - 2024.05.28
 
  - Add Yocto variables renaming across a recipe file
