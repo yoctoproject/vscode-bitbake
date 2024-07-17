@@ -20,7 +20,7 @@ import {
 import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type BitbakeSymbolInformation, getGlobalDeclarations, type GlobalDeclarations, nodeToSymbolInformation } from './declarations'
-import { type Tree } from 'web-tree-sitter'
+import { type SyntaxNode, type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
 import { DIRECTIVE_STATEMENT_KEYWORDS, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { logger } from '../lib/src/utils/OutputLogger'
@@ -565,17 +565,14 @@ export default class Analyzer {
   // See tree-sitter-bitbake issue: https://github.com/amaanq/tree-sitter-bitbake/issues/16
   // TODO: Remove this function when the issue is fixed
   public isBuggyIdentifier (
-    uri: string,
-    line: number,
-    column: number
+    node: SyntaxNode
   ): boolean {
-    const n = this.bitBakeNodeAtPoint(uri, line, column)
     // The bug appears on identifiers, and also on the colon of overrides
-    if (n?.type !== 'identifier' && n?.type !== ':') {
+    if (node.type !== 'identifier' && node.type !== ':') {
       return false
     }
-    const currentLine = n.startPosition.row
-    const parent = n.parent
+    const currentLine = node.startPosition.row
+    const parent = node.parent
 
     // The bug occurs when tree-sitter-bitbake mistakens the identifier as part of the name of a function
     // The name of a function is on the same line as a function_definition node
@@ -583,7 +580,7 @@ export default class Analyzer {
       return false
     }
 
-    const nextSibling = n.nextSibling
+    const nextSibling = node.nextSibling
     // If the identifier is the name of a function, then the next sibling should be '(' or an override.
     // In any case, it should be on the same line as the identifier.
     // If it is not, then we have our buggy identifier.
@@ -596,7 +593,7 @@ export default class Analyzer {
     column: number
   ): boolean {
     let n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (this.isBuggyIdentifier(uri, line, column)) {
+    if (n !== null && this.isBuggyIdentifier(n)) {
       return false
     }
 
@@ -616,7 +613,7 @@ export default class Analyzer {
     column: number
   ): boolean {
     let n = this.bitBakeNodeAtPoint(uri, line, column)
-    if (this.isBuggyIdentifier(uri, line, column)) {
+    if (n !== null && this.isBuggyIdentifier(n)) {
       return false
     }
 
