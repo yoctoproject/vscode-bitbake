@@ -210,7 +210,7 @@ export default class Analyzer {
       // Bash variable expansions are handled separately in getSymbolsFromBashTree
       const isInsideBashRegion = this.isInsideBashRegion(node)
       const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion' && !isInsideBashRegion)
-      const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node)
+      const isPythonDatastoreVariable = this.isPythonDatastoreVariable(node)
       const isPythonFunctionDefinition = node.type === 'python_function_definition'
       // Note this does not detect python functions that are not called. Not sure how it could be done.
       // This also ignores method calls, but on purpose.
@@ -606,11 +606,9 @@ export default class Analyzer {
   }
 
   public isInsidePythonRegion (
-    uri: string,
-    line: number,
-    column: number
+    node: SyntaxNode
   ): boolean {
-    let n = this.bitBakeNodeAtPoint(uri, line, column)
+    let n: SyntaxNode | null = node
     if (n !== null && this.isBuggyIdentifier(n)) {
       return false
     }
@@ -626,18 +624,17 @@ export default class Analyzer {
   }
 
   public isPythonDatastoreVariable (
-    uri: string,
     n: Parser.SyntaxNode,
     // Whether or not the opening quote should be considered as part of the variable
     // We want to be able to suggest completion items as the user open the quotes
     // However, when the user hover on the variable, the quotes are not part of the variable
     includeOpeningQuote: boolean = false
   ): boolean {
-    if (!this.isInsidePythonRegion(uri, n.startPosition.row, n.startPosition.column)) {
+    if (!this.isInsidePythonRegion(n)) {
       return false
     }
 
-    if (n?.type !== 'string_content' && (includeOpeningQuote ? n?.type !== 'string_start' : true)) {
+    if (n.type !== 'string_content' && (includeOpeningQuote ? n.type !== 'string_start' : true)) {
       return false
     }
 
@@ -646,7 +643,7 @@ export default class Analyzer {
     // n.parent.text: 'FOO'
     // n.parent.parent.text: ('FOO')
     // n.parent.parent.parent.text: d.getVar('FOO')
-    const parentParentParent = n?.parent?.parent?.parent
+    const parentParentParent = n.parent?.parent?.parent
     if (parentParentParent?.type !== 'call') {
       return false
     }
@@ -660,7 +657,7 @@ export default class Analyzer {
     // n.text: FOO
     // n.parent.text: 'FOO'
     // n.parent.previousSibling.text: (
-    const isFirstParameter = n?.parent?.previousSibling?.text === '('
+    const isFirstParameter = n.parent?.previousSibling?.text === '('
     if (isFirstParameter) {
       const firstParameter = match?.groups?.params?.split(',')[0]?.trim()
       return firstParameter === n?.parent?.text
@@ -672,11 +669,11 @@ export default class Analyzer {
     // n.parent.previousSibling.text: ,
     // n.parent.previousSibling.previousSibling.text: 'FOO'
     // n.parent.previousSibling.previousSibling.previousSibling.text: (
-    const isSecondParameter = n?.parent?.previousSibling?.previousSibling?.previousSibling?.text === '('
+    const isSecondParameter = n.parent?.previousSibling?.previousSibling?.previousSibling?.text === '('
     // d.renameVar is the only function for which the second parameter could be a Yocto defined variable
     if (functionName === 'renameVar' && isSecondParameter) {
       const secondParameter = match?.groups?.params?.split(',')[1]?.trim()
-      return secondParameter === n?.parent?.text
+      return secondParameter === n.parent?.text
     }
 
     return false
