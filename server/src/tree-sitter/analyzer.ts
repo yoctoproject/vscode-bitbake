@@ -208,7 +208,7 @@ export default class Analyzer {
 
     TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
       // Bash variable expansions are handled separately in getSymbolsFromBashTree
-      const isInsideBashRegion = this.isInsideBashRegion(uri, node.startPosition.row, node.startPosition.column)
+      const isInsideBashRegion = this.isInsideBashRegion(node)
       const isNonEmptyVariableExpansion = (node.type === 'identifier' && node.parent?.type === 'variable_expansion' && !isInsideBashRegion)
       const isPythonDatastoreVariable = this.isPythonDatastoreVariable(uri, node)
       const isPythonFunctionDefinition = node.type === 'python_function_definition'
@@ -588,11 +588,9 @@ export default class Analyzer {
   }
 
   public isInsideBashRegion (
-    uri: string,
-    line: number,
-    column: number
+    node: SyntaxNode
   ): boolean {
-    let n = this.bitBakeNodeAtPoint(uri, line, column)
+    let n: SyntaxNode | null = node
     if (n !== null && this.isBuggyIdentifier(n)) {
       return false
     }
@@ -697,11 +695,11 @@ export default class Analyzer {
     line: number,
     column: number
   ): boolean {
-    if (this.isInsideBashRegion(uri, line, column)) {
+    const n = this.bitBakeNodeAtPoint(uri, line, column)
+    if (n !== null && this.isInsideBashRegion(n)) {
       // Bash variable expansions are handled with isBashVariableName
       return false
     }
-    const n = this.bitBakeNodeAtPoint(uri, line, column)
     // since @1.0.2 the tree-sitter gives empty variable expansion (e.g. `VAR = "${}""`) the type "variable_expansion". But the node type returned from bitBakeNodeAtPoint() at the position between "${" and "}" is of type "${" which is the result from descendantForPosition() (It returns the smallest node containing the given postion). In this case, the parent node has type "variable_expansion". Hence, we have n?.parent?.type === 'variable_expansion' below. The second expression after the || will be true if it encounters non-empty variable expansion syntax. e.g. `VAR = "${A}". Note that inline python with ${@} has type "inline_python"
     return n?.parent?.type === 'variable_expansion' || (n?.type === 'identifier' && n?.parent?.type === 'variable_expansion')
   }

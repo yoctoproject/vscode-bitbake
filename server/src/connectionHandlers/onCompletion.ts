@@ -45,7 +45,8 @@ export async function onCompletionHandler (textDocumentPositionParams: TextDocum
 
   logger.debug(`[onCompletion] current word: ${word}`)
 
-  if (analyzer.isInsideBashRegion(documentUri, wordPosition.line, wordPosition.character)) {
+  const bitBakeNode = analyzer.bitBakeNodeAtPoint(documentUri, wordPosition.line, wordPosition.character)
+  if (bitBakeNode !== null && analyzer.isInsideBashRegion(bitBakeNode)) {
     return getBashCompletionItems(documentUri, word, wordPosition)
   }
 

@@ -36,7 +36,8 @@ export const getEmbeddedLanguageTypeOnPosition = (uriString: string, position: P
   }
   // isInsidePythonRegion must be tested before isInsideBashRegion because inline_python could be inside a bash region
   // In that case, the position would be first inside a python region, then inside a bash region, but it would be Python code
-  if (analyzer.isInsideBashRegion(uriString, position.line, position.character)) {
+  const bitBakeNode = analyzer.bitBakeNodeAtPoint(uriString, position.line, position.character)
+  if (bitBakeNode !== null && analyzer.isInsideBashRegion(bitBakeNode)) {
     return 'bash'
   }
   return undefined
