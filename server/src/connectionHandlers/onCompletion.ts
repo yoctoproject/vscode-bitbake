@@ -50,7 +50,7 @@ export async function onCompletionHandler (textDocumentPositionParams: TextDocum
     return getBashCompletionItems(documentUri, word, wordPosition)
   }
 
-  if (analyzer.isInsidePythonRegion(documentUri, wordPosition.line, wordPosition.character)) {
+  if (bitBakeNode !== null && analyzer.isInsidePythonRegion(bitBakeNode)) {
     return getPythonCompletionItems(documentUri, word, wordPosition)
   }
 
@@ -214,7 +214,7 @@ function getBashCompletionItems (documentUri: string, word: string | null, wordP
 
 function getPythonCompletionItems (documentUri: string, word: string | null, wordPosition: Position): CompletionItem[] {
   const bitbakeNode = analyzer.bitBakeNodeAtPoint(documentUri, wordPosition.line, wordPosition.character)
-  if (bitbakeNode !== null && analyzer.isPythonDatastoreVariable(documentUri, bitbakeNode, true)) {
+  if (bitbakeNode !== null && analyzer.isPythonDatastoreVariable(bitbakeNode, true)) {
     const symbolCompletionItems = getSymbolCompletionItems(word)
     return mergeArraysDistinctly(
       (completionItem) => completionItem.label,

@@ -58,8 +58,8 @@ suite('Bitbake References Test Suite', () => {
       new vscode.Range(0, 0, 0, 3),
       new vscode.Range(1, 7, 1, 10),
       // For unknown reason, Python datastore variables fail in integration tests
-      // new vscode.Range(4, 14, 4, 17),
-      // new vscode.Range(8, 18, 8, 21),
+      new vscode.Range(4, 14, 4, 17),
+      new vscode.Range(8, 18, 8, 21),
       new vscode.Range(9, 4, 9, 7),
       new vscode.Range(9, 10, 9, 13),
       new vscode.Range(9, 16, 9, 19)

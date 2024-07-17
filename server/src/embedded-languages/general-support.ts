@@ -31,13 +31,17 @@ export const generateEmbeddedLanguageDocs = (textDocument: TextDocument, pokyFol
 }
 
 export const getEmbeddedLanguageTypeOnPosition = (uriString: string, position: Position): EmbeddedLanguageType | undefined => {
-  if (analyzer.isInsidePythonRegion(uriString, position.line, position.character)) {
+  const bitBakeNode = analyzer.bitBakeNodeAtPoint(uriString, position.line, position.character)
+  if (bitBakeNode === null) {
+    return undefined
+  }
+
+  if (analyzer.isInsidePythonRegion(bitBakeNode)) {
     return 'python'
   }
   // isInsidePythonRegion must be tested before isInsideBashRegion because inline_python could be inside a bash region
   // In that case, the position would be first inside a python region, then inside a bash region, but it would be Python code
-  const bitBakeNode = analyzer.bitBakeNodeAtPoint(uriString, position.line, position.character)
-  if (bitBakeNode !== null && analyzer.isInsideBashRegion(bitBakeNode)) {
+  if (analyzer.isInsideBashRegion(bitBakeNode)) {
     return 'bash'
   }
   return undefined
