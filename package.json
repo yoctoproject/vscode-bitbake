@@ -11,7 +11,7 @@
 		"Eugen Wiens"
 	],
 	"license": "MIT",
-	"version": "2.5.0",
+	"version": "2.6.0",
 	"publisher": "yocto-project",
 	"icon": "./client/images/icon.png",
 	"bugs": {
@@ -921,4 +921,3 @@
 		"baseImageUrl": "https://github.com/yoctoproject/vscode-bitbake/raw/HEAD/"
 	}
 }
-
