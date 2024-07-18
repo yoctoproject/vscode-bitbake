@@ -1141,7 +1141,7 @@ export default class Analyzer {
    */
   public processRecipeScanResults (scanResult: string, chosenRecipe: string): void {
     if (chosenRecipe === undefined) {
-      logger.error('[ProcessRecipeScanResults] The chosenRecipe is undefined, abort processing scan results')
+      logger.error(`[${this.processRecipeScanResults.name}] The chosenRecipe is undefined, abort processing scan results`)
       return
     }
 
@@ -1154,14 +1154,14 @@ export default class Analyzer {
 
   private processEnvScanResults (scanResult: string): LastScanResult | undefined {
     if (this.bitBakeParser === undefined) {
-      logger.debug('[ProcessRecipeScanResults] The analyzer is not initialized with a parser')
+      logger.debug(`[${this.processEnvScanResults.name}] The analyzer is not initialized with a parser`)
       return undefined
     }
 
     const lines = scanResult.split(/\r?\n/g)
     const index = lines.findIndex((line) => line.includes('INCLUDE HISTORY'))
     if (index === -1) {
-      logger.debug('[ProcessRecipeScanResults] Cannot find INCLUDE HISTORY in scan results, abort processing scan results')
+      logger.debug(`[${this.processEnvScanResults.name}] Cannot find INCLUDE HISTORY in scan results, abort processing scan results`)
       return undefined
     }
 
