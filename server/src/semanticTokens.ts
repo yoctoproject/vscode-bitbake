@@ -132,11 +132,7 @@ export function getBitBakeParsedTokens (uri: string): ParsedToken[] {
       length: Math.max(node.endPosition.column - node.startPosition.column, 0)
     }
 
-    if (
-      TreeSitterUtils.isVariableReference(node) &&
-      // bash variable expansions are handled by getBashParsedTokens
-      !analyzer.isInsideBashRegion(node)
-    ) {
+    if (TreeSitterUtils.isVariableReference(node)) {
       resultTokens.push({
         ...nodeRange,
         tokenType: TOKEN_LEGEND.types.variable,
