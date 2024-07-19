@@ -45,6 +45,27 @@ echo "export const pythonVersion = '$(git tag --sort=-v:refname | head -n 1 | se
 cd ..
 rm -rf vscode-python
 
+git clone --depth 1 --filter=blob:none --sparse https://github.com/vscode-shellcheck/vscode-shellcheck
+cd vscode-shellcheck
+git fetch --tags
+echo "export const shellcheckVersion = '$(git tag --sort=-v:refname | head -n 1 | sed "s/^v//")'" >> ../$TMP
+cd ..
+rm -rf vscode-shellcheck
+
+git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/vscode-flake8
+cd vscode-flake8
+git fetch --tags
+echo "export const flake8Version = '$(git tag --sort=-v:refname | head -n 1 | sed "s/^v//")'" >> ../$TMP
+cd ..
+rm -rf vscode-flake8
+
+git clone --depth 1 --filter=blob:none --sparse https://github.com/microsoft/vscode-pylint
+cd vscode-pylint
+git fetch --tags
+echo "export const pylintVersion = '$(git tag --sort=-v:refname | head -n 1 | sed "s/^v//")'" >> ../$TMP
+cd ..
+rm -rf vscode-pylint
+
 cp $TMP $DEST
 rm $TMP
 
