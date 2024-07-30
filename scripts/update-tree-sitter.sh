@@ -5,7 +5,7 @@
 
 set -euox pipefail
 
-update-tree-sitter-wasm() {
+update-tree-sitter() {
     local repo_name=$1
     local repo_owner=$2
     local info_file="$repo_name.info"
