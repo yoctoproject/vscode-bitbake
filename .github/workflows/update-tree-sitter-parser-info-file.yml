@@ -1,7 +1,7 @@
 # Inspired by bash-language-server under MIT license
 # Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/.github/workflows/upgrade-tree-sitter.yml
 
-name: Update Tree Sitter WASM File
+name: Update Tree Sitter Parser Info File
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
     - cron: '0 12 * * 2'
 
 jobs:
-  update-tree-sitter-wasm:
+  update-tree-sitter-parser-info-file:
 
     runs-on: ubuntu-latest
 
@@ -45,15 +45,13 @@ jobs:
     - name: Install Dependencies
       run: npm install
 
-    - name: Update tree-sitter wasm
-      run: bash scripts/update-${{ matrix.tree-sitter-name }}-wasm.sh
+    - name: Update tree-sitter parser info file
+      run: bash scripts/update-${{ matrix.tree-sitter-name }}.sh
 
     - name: Verify file changes
       uses: tj-actions/verify-changed-files@v20
       id: verify-changed-files
       with:
-        # The script generates a new wasm file and replaces the existing one. Git will treat it as a different file even it is generated with the same commit and CLI
-        # Hence, we only compare the .info file. It should be enough to tell the difference
         files: |
             server/${{ matrix.tree-sitter-name }}.info
 
@@ -63,9 +61,8 @@ jobs:
       with:
         add-paths: |
           server/${{ matrix.tree-sitter-name }}.info
-          server/${{ matrix.tree-sitter-name }}.wasm
-        title: Auto update ${{ matrix.tree-sitter-name }} wasm file
-        commit-message: Auto update ${{ matrix.tree-sitter-name }} wasm file and parser info
-        branch: update-${{ matrix.tree-sitter-name }}-wasm-file
+        title: Auto update ${{ matrix.tree-sitter-name }} parser info file
+        commit-message: Auto update ${{ matrix.tree-sitter-name }} parser info
+        branch: update-${{ matrix.tree-sitter-name }}-parser-info-file
         base: ${{ env.BASE_BRANCH }}
         token: ${{ secrets.GITHUB_TOKEN }}

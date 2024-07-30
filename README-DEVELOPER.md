@@ -93,7 +93,7 @@ See [the individual integration tests README](integration-tests/README.md).
 ## Tree-sitter
 This extension uses [tree-sitter-bitbake](https://github.com/tree-sitter-grammars/tree-sitter-bitbake) and [tree-sitter-bash](https://github.com/tree-sitter/tree-sitter-bash) to parse the BitBake documents. They are installed with `npm run fetch:wasm`. The versions of tree-sitter-bitbake and tree-sitter-bash are documented in [server/tree-sitter-bitbake.info](server/tree-sitter-bitbake.info) and [server/tree-sitter-bash.info](server/tree-sitter-bash.info) respectively, along with the versions of the tree-sitter-cli that have to be used.
 
-To update the .info files with the latest versions of tree-sitter-bitbake and tree-sitter-bash, it is recommended to use the scripts [scripts/update-tree-sitter-bitbake-wasm.sh](scripts/update-tree-sitter-bitbake-wasm.sh) and [scripts/update-tree-sitter-bash-wasm.sh](scripts/update-tree-sitter-bash-wasm.sh). The GitHub workflow [update-tree-sitter-wasm-file.yml](.github/workflows/update-tree-sitter-wasm-file.yml) is already responsible for doing it automatically.
+To update the .info files with the latest versions of tree-sitter-bitbake and tree-sitter-bash, it is recommended to use the scripts [scripts/update-tree-sitter-bitbake.sh](scripts/update-tree-sitter-bitbake.sh) and [scripts/update-tree-sitter-bash.sh](scripts/update-tree-sitter-bash.sh). The GitHub workflow [update-tree-sitter-parser-info-file.yml](.github/workflows/update-tree-sitter-parser-info-file.yml) is already responsible for doing it automatically.
 
 After updating the .info files, it is required to call `npm run fetch:wasm` in order to rebuild the Wasm files.
 
