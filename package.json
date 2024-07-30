@@ -890,8 +890,8 @@
 		"test:watch": "jest --watchAll",
 		"test:grammar": "vscode-tmgrammar-test ./client/test/grammars/test-cases/*.bb",
 		"snap-grammar": "vscode-tmgrammar-snap ./client/test/grammars/snaps/*.bb -u",
-		"dev:vsix": "npm run clean && npm install && npm run fetch:wasm && npm run fetch:docs && npm run compile && npm run package",
-		"dev:npm": "npm run clean && npm install && npm run fetch:wasm && npm run fetch:docs && cd server && npm pack"
+		"dev:vsix": "npm run clean && npm install && npm run fetch:wasm && npm run fetch:docs && npm run fetch:spdx-licenses && npm run compile && npm run package",
+		"dev:npm": "npm run clean && npm install && npm run fetch:wasm && npm run fetch:docs && npm run fetch:spdx-licenses && cd server && npm pack"
 	},
 	"devDependencies": {
 		"@types/glob": "^8.1.0",
