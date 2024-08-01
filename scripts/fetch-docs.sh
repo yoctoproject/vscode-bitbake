@@ -1,8 +1,9 @@
 #!/bin/bash
 
-# Tag: yocto-5.0.1
-BITBAKE_DOCS_COMMIT=8f90d10f9efc9a32e13f6bd031992aece79fe7cc
-# Tag: yocto-5.0.1
+# Tag: yocto-5.0.2
+BITBAKE_DOCS_COMMIT=8714a02e13477a9d97858b3642e05f28247454b5
+    (cherry picked from commit c56bd9a9280378bc64c6a7fe6d7b70847e0b9e6d)
+# Tag: yocto-5.0.2
 YOCTO_DOCS_COMMIT=875dfe69e93bf8fee3b8c07818a6ac059f228a13
 
 BITBAKE_DOCS_LIST="bitbake-user-manual-metadata.rst bitbake-user-manual-ref-variables.rst"
