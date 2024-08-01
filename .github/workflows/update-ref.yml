@@ -1,7 +1,7 @@
 name: Update references for commits, tags, etc
 
 on:
-  workflow_dispatch:
+  workflow_dispatch: 
   schedule:
     - cron: '0 0 1 * *' # Run on the first day of every month
 
@@ -20,12 +20,15 @@ jobs:
       BASE_BRANCH: staging
       FILE_PATHS: |
         integration-tests/src/utils/version.ts
+        scripts/fetch-poky.sh
         scripts/fetch-docs.sh
+        integration-tests/src/runTest.ts
+        scripts/fetch-spdx-licenses.sh
       node-version: 20
 
     steps:
     - name: Checkout Repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         ref: ${{ env.BASE_BRANCH }}
 
@@ -33,16 +36,15 @@ jobs:
       run: bash scripts/update-ref.sh
 
     - name: Verify file changes
-      uses: tj-actions/verify-changed-files@v17
+      uses: tj-actions/verify-changed-files@v20
       id: verify-changed-files
       with:
         files: ${{ env.FILE_PATHS }}
 
     - name: Create pull request
       if: steps.verify-changed-files.outputs.files_changed == 'true'
-      uses: peter-evans/create-pull-request@v5
+      uses: peter-evans/create-pull-request@v6
       with:
-        add-paths: ${{ env.FILE_PATHS }}
         title: Auto update references for commits, tags, etc
         commit-message: Auto update references for commits, tags, etc
         branch: update-ref
