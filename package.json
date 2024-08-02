@@ -909,7 +909,7 @@
 		"@types/jest": "^29.5.12",
 		"@types/mocha": "^10.0.7",
 		"@types/node": "^20.14.9",
-		"@types/vscode": "^1.75.1",
+		"@types/vscode": "^1.92.0",
 		"@vscode/test-electron": "^2.4.0",
 		"@vscode/vsce": "^2.3.5",
 		"eslint": "^8.51.0",
