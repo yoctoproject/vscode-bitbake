@@ -393,7 +393,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
   private async scanDevtoolWorkspaces (): Promise<void> {
     this._bitbakeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
     const output = await this.executeBitBakeCommand('devtool status')
-    const regex = /^([^\s]+):\s([^\s]+)$/gm
+    const regex = /^([^\s]+):\s([^\s]+)(?:\s\([^\s]+\))?$/gm
     let match
     while ((match = regex.exec(output)) !== null) {
       this._bitbakeScanResult._workspaces.push({ name: match[1], path: match[2] })
