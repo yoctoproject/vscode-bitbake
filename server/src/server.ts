@@ -180,7 +180,7 @@ disposables.push(
   }),
 
   connection.onRequest(RequestMethod.getVar, async (params: RequestParams['getVar']) => {
-    const scanResult = analyzer.getLastScanResult(params.recipe)
+    const scanResult = analyzer.getRecipeLastScanResult(params.recipe)
     return scanResult?.symbols.find(symbolInfo => symbolInfo.name === params.variable)?.finalValue
   }),
 

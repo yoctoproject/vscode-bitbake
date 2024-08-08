@@ -31,6 +31,7 @@ import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { type RequestResult } from '../lib/src/types/requests'
 import { generateBashEmbeddedLanguageDoc } from '../embedded-languages/bash-support'
+import { extractRecipeName } from '../lib/src/utils/files'
 
 export interface AnalyzedDocument {
   version: number // TextDocument is mutable and its version updates as the document updates
@@ -72,10 +73,17 @@ export default class Analyzer {
   }
 
   /**
-  * Get the scan result for the current file. If a recipe provided, it will return the scan result of that recipe. Otherwise, it will return the global env scan result.
+  * Get the scan result for the current file if it is a recipe file or get the global scan result if it is a .conf or .bbclass file.
   */
-  public getLastScanResult (recipe: string): LastScanResult | undefined {
-    return this.uriToLastScanResult[recipe] ?? this.lastGlobalEnvScanResult
+  public getLastScanResult (uri: string): LastScanResult | undefined {
+    if (['.conf', '.bbclass'].includes(path.extname(uri))) return this.lastGlobalEnvScanResult
+    const recipe = extractRecipeName(uri)
+    if (this.uriToLastScanResult[recipe] !== undefined) return this.uriToLastScanResult[recipe]
+    return undefined
+  }
+
+  public getRecipeLastScanResult (recipe: string): LastScanResult | undefined {
+    return this.uriToLastScanResult[recipe]
   }
 
   public getRecipeLocalFiles (uri: string): RequestResult['getRecipeLocalFiles'] | undefined {
