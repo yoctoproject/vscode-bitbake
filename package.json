@@ -407,6 +407,11 @@
 			"description": "Run 'bitbake -e' on the chosen recipe to improve the language services such as hover definition"
 		  },
 		  {
+			"command": "bitbake.scan-global-env",
+			"title": "BitBake: Scan global environment",
+			"description": "Run 'bitbake -e' for the global environment to improve the language features such as hover definition on conf files"
+		  },
+		  {
 			"command": "bitbake.open-recipe-workdir",
 			"title": "BitBake: Open recipe's workdir",
 			"description": "Open a recipe's workdir in VSCode.",
@@ -584,7 +589,8 @@
 			},
 			{
 			  "command": "bitbake.scan-recipe-env",
-			  "group": "1@bitbake_dev@0"
+			  "group": "1@bitbake_dev@0",
+			  "when": "resourceExtname == .bb || resourceExtname == .bbappend || resourceExtname == .inc"
 			},
 			{
 			  "command": "bitbake.recipe-devshell",
@@ -605,6 +611,11 @@
 			{
 			  "command": "bitbake.examine-dependency-taskexp",
 			  "group": "1@bitbake_dev@5"
+			},
+			{
+				"command": "bitbake.scan-global-env",
+				"group": "1@bitbake_dev@6",
+				"when": "resourceExtname == .conf || resourceExtname == .bbclass"
 			},
 			{
 			  "command": "bitbake.devtool-modify",

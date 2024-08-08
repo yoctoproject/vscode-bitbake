@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 import { type BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 import { type BitbakeCustomExecution } from './BitbakeTaskProvider'
 import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
-import { BitbakeRecipeScanner } from '../driver/BitbakeRecipeScanner'
+import { BitbakeEnvScanner } from '../driver/BitbakeEnvScanner'
 
 export class BitbakeStatusBar {
   private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [], _confFiles: [] }
@@ -16,7 +16,7 @@ export class BitbakeStatusBar {
   readonly statusBarItem: vscode.StatusBarItem
   private scanInProgress = false
   private parsingInProgress = false
-  private recipeScanInProgress = false
+  private envScanInProgress = false
   private commandInProgress: string | undefined
   private scanExitCode = 0
 
@@ -54,8 +54,8 @@ export class BitbakeStatusBar {
 
       if (taskName === 'Bitbake: Parse') {
         this.parsingInProgress = true
-      } else if (taskName === BitbakeRecipeScanner.taskName) {
-        this.recipeScanInProgress = true
+      } else if (taskName === BitbakeEnvScanner.recipeEnvScanTaskName || taskName === BitbakeEnvScanner.globalEnvScanTaskName) {
+        this.envScanInProgress = true
       }
 
       this.updateStatusBar()
@@ -70,8 +70,8 @@ export class BitbakeStatusBar {
 
       if (taskName === 'Bitbake: Parse') {
         this.parsingInProgress = false
-      } else if (taskName === BitbakeRecipeScanner.taskName) {
-        this.recipeScanInProgress = false
+      } else if (taskName === BitbakeEnvScanner.recipeEnvScanTaskName || taskName === BitbakeEnvScanner.globalEnvScanTaskName) {
+        this.envScanInProgress = false
       }
 
       this.updateStatusBar()
@@ -79,7 +79,7 @@ export class BitbakeStatusBar {
   }
 
   updateStatusBar (): void {
-    if (this.scanInProgress || this.parsingInProgress || this.recipeScanInProgress) {
+    if (this.scanInProgress || this.parsingInProgress || this.envScanInProgress) {
       if (this.scanInProgress) {
         this.statusBarItem.text = '$(loading~spin) BitBake: Scanning...'
         this.statusBarItem.tooltip = 'BitBake: Scanning...'
