@@ -11,7 +11,6 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { type ParsedPath } from 'path'
 import { type ElementInfo } from '../lib/src/types/BitbakeScanResult'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
-import { extractRecipeName } from '../lib/src/utils/files'
 
 let connection: Connection | undefined
 
@@ -38,7 +37,7 @@ export async function onDefinitionHandler (textDocumentPositionParams: TextDocum
     return []
   }
 
-  const lastScanResult = analyzer.getLastScanResult(extractRecipeName(uri))
+  const lastScanResult = analyzer.getLastScanResult(uri)
 
   const definitions: Definition = []
 
