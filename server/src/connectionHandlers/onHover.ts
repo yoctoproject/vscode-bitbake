@@ -10,7 +10,6 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { DIRECTIVE_STATEMENT_KEYWORDS } from '../lib/src/types/directiveKeywords'
 import path from 'path'
 import type { BitbakeSymbolInformation } from '../tree-sitter/declarations'
-import { extractRecipeName } from '../lib/src/utils/files'
 import { getSpdxLicense, getSpdxLicenseDetails } from '../utils/spdx-licenses'
 import { getRangeOfWord } from '../utils/textDocument'
 
@@ -54,7 +53,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
       hoverValue = `**${found.name}**\n___\n${found.definition}`
     }
 
-    const lastScanResult = analyzer.getLastScanResult(extractRecipeName(textDocument.uri))
+    const lastScanResult = analyzer.getLastScanResult(textDocument.uri)
     if (lastScanResult !== undefined && exactSymbol !== undefined) {
       const resolvedSymbol = analyzer.resolveSymbol(exactSymbol, lastScanResult.symbols)
       const foundSymbol = analyzer.matchSymbol(resolvedSymbol, lastScanResult.symbols)

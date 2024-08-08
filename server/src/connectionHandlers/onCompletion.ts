@@ -24,7 +24,6 @@ import path from 'path'
 import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
-import { extractRecipeName } from '../lib/src/utils/files'
 import { getSpdxLicenseCompletionResolve, getLicenseCompletionItems, spdxLicenseDescription } from '../completions/spdx-licenses'
 
 let documentUri = ''
@@ -438,7 +437,7 @@ function convertExtraSymbolsToCompletionItems (uri: string): CompletionItem[] {
     })
 
   // Add supplement variables and function completions from the scan results (bitbake -e)
-  const lastScanResult = analyzer.getLastScanResult(extractRecipeName(documentUri))
+  const lastScanResult = analyzer.getLastScanResult(documentUri)
   if (lastScanResult !== undefined) {
     const scanResultCompletionItems = lastScanResult.symbols.filter((symbol) => !completionItems.some((item) => item.label === symbol.name)).map((symbol) => {
       const completionItem: CompletionItem = {
