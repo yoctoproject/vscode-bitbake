@@ -40,12 +40,12 @@ describe('Devtool eSDK Mode Test Suite', () => {
     const bitbakeDriver = new BitbakeDriver()
     const bitbakeSettings: BitbakeSettings = {
       pathToBitbakeFolder: __dirname,
-      workingDirectory: '/path/to/workspace',
+      workingDirectory: __dirname,
       commandWrapper: '',
       pathToEnvScript: 'fakeEnvScript',
       pathToBuildFolder: 'nonexistent'
     }
-    bitbakeDriver.loadSettings(bitbakeSettings, '/path/to/workspace')
+    bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
     const bitbakeTerminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => undefined as any)
     const bitbakeExecutionSpy = jest.spyOn(ProcessUtils, 'finishProcessExecution')
     clientNotificationManager.showBitbakeSettingsError = jest.fn()
