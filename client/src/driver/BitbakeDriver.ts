@@ -125,6 +125,12 @@ export class BitbakeDriver {
       return false
     }
 
+    if ((this.bitbakeSettings.workingDirectory != null) && !fs.existsSync(this.bitbakeSettings.workingDirectory)) {
+      // If it is not defined, then we will use the workspace folder which is always valid
+      clientNotificationManager.showBitbakeSettingsError('Working directory does not exist.')
+      return false
+    }
+
     // We could test for devtool and bitbake to know if we are in an eSDK or not
     const command = 'which devtool bitbake || true'
     const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
