@@ -255,7 +255,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       }
 
       if (extsForGlobalEnvScan.includes(path.extname(fsPath))) {
-        logger.debug('[onDidSave] Running \'bitbake -e\'')
+        logger.debug('[onDidSave] Running global environment scan')
         await vscode.commands.executeCommand('bitbake.scan-global-env')
         return
       }

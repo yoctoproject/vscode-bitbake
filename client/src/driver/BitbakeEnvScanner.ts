@@ -23,7 +23,7 @@ export class BitbakeEnvScanner implements vscode.Disposable {
   }
 
   async scanGlobalEnv (taskProvider: BitbakeTaskProvider): Promise<void> {
-    const taskDefinition: vscode.TaskDefinition = { type: 'bitbake', options: { env: true } }
+    const taskDefinition: vscode.TaskDefinition = { type: 'bitbake', options: { parseOnly: true, env: true } }
     await this.scan(taskProvider, BitbakeEnvScanner.globalEnvScanTaskName, taskDefinition)
   }
 
