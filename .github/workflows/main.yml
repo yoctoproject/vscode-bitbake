@@ -140,6 +140,8 @@ jobs:
             client/package-lock.json
       - run: npm install
       - run: npm run fetch:docs
+      - run: npm run fetch:wasm
+      - run: npm run fetch:spdx-licenses
       - run: cd server && npm pack
       - name: Archive server package
         uses: actions/upload-artifact@v4
