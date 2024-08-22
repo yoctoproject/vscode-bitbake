@@ -593,6 +593,11 @@
 			  "when": "resourceExtname == .bb || resourceExtname == .bbappend || resourceExtname == .inc"
 			},
 			{
+			  "command": "bitbake.scan-global-env",
+			  "group": "1@bitbake_dev@0",
+			  "when": "resourceExtname == .conf || resourceExtname == .bbclass"
+			},
+			{
 			  "command": "bitbake.recipe-devshell",
 			  "group": "1@bitbake_dev@1"
 			},
@@ -611,11 +616,6 @@
 			{
 			  "command": "bitbake.examine-dependency-taskexp",
 			  "group": "1@bitbake_dev@5"
-			},
-			{
-				"command": "bitbake.scan-global-env",
-				"group": "1@bitbake_dev@6",
-				"when": "resourceExtname == .conf || resourceExtname == .bbclass"
 			},
 			{
 			  "command": "bitbake.devtool-modify",
