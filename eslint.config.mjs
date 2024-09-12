@@ -19,6 +19,7 @@ export default [
       "**/out",
       "**/poky",
       "**/.vscode-test",
+      "integration-tests/project-folder",
       "__mocks__/vscode.ts",
       "**/jest.config.js",
       "**/eslint.config.mjs",
