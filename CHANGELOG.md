@@ -1,3 +1,15 @@
+# 2.7.0 - 2024.09.13
+
+ - Add bitbake environment scan for global variables
+ - Add skipped recipes to the tree view with skip reason
+ - Add support for latest Yocto devtool status output
+ - Add sanity check for the working directory
+ - Fix a bug where buildConfigurations specific settings were not applied
+ - Update task_deps parser for latest Yocto output
+ - Bump dependencies
+ - Fix NPM publishing
+ - Auto-update SPDX references
+
 # 2.6.0 - 2024.06.19
 
  - Support renaming of BitBake variables in Python and Shell functions
