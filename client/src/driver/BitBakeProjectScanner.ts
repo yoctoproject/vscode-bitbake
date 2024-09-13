@@ -407,25 +407,35 @@ You should adjust your docker volumes to use the same URIs as those present on y
     const output = await this.executeBitBakeCommand('bitbake-layers show-recipes -f')
     const lines = output.split(/\r?\n/g)
     // Example output (indentation or skipped means not used):
+    // We don't want to report the indented recipes, which are superseeded
+    // However skipped recipes are still in context, even though not buildable.
+    // Their skipped reason is already captured in ElementInfo.skipped
     /* === Available recipes: ===
      * /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta/recipes-core/busybox/busybox_1.36.2.bb
      *   /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta/recipes-core/busybox/busybox_1.36.1.bb
      *   /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta/recipes-core/busybox/busybox_1.36.3.bb
      * /home/deribaucourt/Workspace/yocto-vscode/yocto/yocto-build/sources/poky/meta-selftest/recipes-test/images/wic-image-minimal.bb (skipped: ...)
     */
-    const regex = /^([\w/._-]+\.bb)$/
-    const matches = lines.filter((line) => regex.test(line))
-    if (matches === null) { return }
+    const regex = /^(?<filename>[\w/._-]+\.bb)(?:\s+\(skipped[^\r\n]*\))?$/
+    const filenames = []
+    for (const line of lines) {
+      const match = line.match(regex)
+      const filename = match?.groups?.filename
+      if (filename !== null && filename !== undefined) {
+        filenames.push(filename)
+      }
+    }
+    if (filenames.length === 0) { return }
 
     // Sort by decreasing length to avoid partial matches
-    matches.sort((a, b) => b.length - a.length)
+    filenames.sort((a, b) => b.length - a.length)
     this._bitbakeScanResult._recipes.sort((a, b) => b.name.length - a.name.length)
-    await this.assignRecipesPaths(matches, this._bitbakeScanResult._recipes, (a: string, b: string) => a === b)
+    await this.assignRecipesPaths(filenames, this._bitbakeScanResult._recipes, (a: string, b: string) => a === b)
 
     // Some recipes change their PN like gcc-source -> gcc-source-13.2
     // We allow the recipe to be found by just including part of the name
     const recipesWithoutPaths = this._bitbakeScanResult._recipes.filter((recipe) => recipe.path === undefined)
-    await this.assignRecipesPaths(matches, recipesWithoutPaths, (a: string, b: string) => a.includes(b))
+    await this.assignRecipesPaths(filenames, recipesWithoutPaths, (a: string, b: string) => a.includes(b))
   }
 
   private async assignRecipesPaths (filePaths: string[], recipesArray: ElementInfo[], nameMatchFunc: (a: string, b: string) => boolean): Promise<void> {
