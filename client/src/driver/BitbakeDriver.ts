@@ -40,7 +40,7 @@ export class BitbakeDriver {
     })
   }
 
-  private getBuildConfig (property: keyof BitbakeBuildConfigSettings): any {
+  getBuildConfig (property: keyof BitbakeBuildConfigSettings): any {
     return getBuildSetting(this.bitbakeSettings, this.activeBuildConfiguration, property)
   }
 
@@ -129,7 +129,7 @@ export class BitbakeDriver {
       return false
     }
 
-    if ((this.bitbakeSettings.workingDirectory != null) && !fs.existsSync(this.bitbakeSettings.workingDirectory)) {
+    if ((this.getBuildConfig('workingDirectory') != null) && !fs.existsSync(this.getBuildConfig('workingDirectory'))) {
       // If it is not defined, then we will use the workspace folder which is always valid
       clientNotificationManager.showBitbakeSettingsError('Working directory does not exist.')
       return false

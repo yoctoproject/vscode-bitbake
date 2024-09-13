@@ -238,7 +238,7 @@ export class BitBakeProjectScanner {
     }
     if (this.containerMountPoint === undefined && !hostToContainer) {
       // Should only be called through scanAvailableLayers()
-      const hostWorkdir = this.bitbakeDriver?.bitbakeSettings.workingDirectory
+      const hostWorkdir = this.bitbakeDriver?.getBuildConfig('workingDirectory')
       if (hostWorkdir === undefined) {
         throw new Error('hostWorkdir is undefined')
       }
