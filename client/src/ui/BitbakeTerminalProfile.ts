@@ -21,15 +21,15 @@ export class BitbakeTerminalProfileProvider implements vscode.TerminalProfilePro
     // However it's also expected an interactive terminal can stay open on the side.
     // We can't use BitbakeTerminal either because VSCode won't allow it to be interactive.
     const command = this.bitbakeDriver.composeInteractiveCommand()
-    const { shell, script } = this.bitbakeDriver.prepareCommand(command)
-    logger.info(`Spawning Bitbake terminal with ${shell} -c ${script}`)
+    const { shell, shellEnv, script, workingDirectory } = this.bitbakeDriver.prepareCommand(command)
+    logger.info(`Spawning Bitbake terminal in ${workingDirectory} with ${shell} -c "${script}"`)
     return {
       options: {
         name: script,
         shellPath: shell,
         shellArgs: ['-c', script],
-        env: { ...process.env, ...this.bitbakeDriver.bitbakeSettings.shellEnv },
-        cwd: this.bitbakeDriver.bitbakeSettings.workingDirectory,
+        env: shellEnv,
+        cwd: workingDirectory,
         iconPath: vscode.Uri.file(path.resolve(__dirname, '../../images/yocto-view-icon.svg'))
       } satisfies vscode.TerminalOptions
     }
