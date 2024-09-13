@@ -451,7 +451,7 @@ async function checkIdeSdkAvailable (bitbakeDriver: BitbakeDriver): Promise<bool
 }
 
 function checkIdeSdkConfiguration (bitbakeDriver: BitbakeDriver): boolean {
-  const sdkImage = bitbakeDriver.bitbakeSettings.sdkImage
+  const sdkImage = bitbakeDriver.getBuildConfig('sdkImage')
   return sdkImage !== undefined && sdkImage !== ''
 }
 
@@ -620,7 +620,7 @@ async function devtoolDeployCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   const bitbakeDriver = bitBakeProjectScanner.bitbakeDriver
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-deploy: ${chosenRecipe}`)
-    const sshTarget = bitbakeDriver.bitbakeSettings.sshTarget
+    const sshTarget = bitbakeDriver.getBuildConfig('sshTarget')
     if (sshTarget === undefined || sshTarget === '') {
       clientNotificationManager.showSDKConfigurationError()
       return
