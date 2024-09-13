@@ -332,15 +332,18 @@ You should adjust your docker volumes to use the same URIs as those present on y
      * Example:
      * zstd:
         meta                 1.5.5
+       virt-viewer:
+        meta-virtualization  11.0 (skipped: one of 'wayland x11' needs to be in DISTRO_FEATURES)
 
        The ones that are followed by (skipped) are not included.
      */
-    const recipeRegex = /(?<name>.+):\r?\n((?:\s+(?<layer>\S+)\s+(?<version>\S+)(?:\s+\(skipped\))?\r?\n)+)/g
+    const recipeRegex = /(?<name>.+):\r?\n((?:\s+(?<layer>\S+)\s+(?<version>\S+)(?<skipped>\s+\(skipped[^\r\n]*\))?\r?\n)+)/g
 
     for (const match of outputRecipeSection.matchAll(recipeRegex)) {
       const name = match.groups?.name
       const layerName = match.groups?.layer
       const version = match.groups?.version
+      const skipped = match.groups?.skipped
 
       if (name === undefined) {
         logger.error('[scanForRecipes] recipeName is undefined')
@@ -370,7 +373,8 @@ You should adjust your docker volumes to use the same URIs as those present on y
         name,
         extraInfo,
         layerInfo,
-        version
+        version,
+        skipped
       }
 
       this._bitbakeScanResult._recipes.push(element)
