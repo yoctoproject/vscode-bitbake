@@ -48,7 +48,8 @@ describe('BitbakeDriver Recipes View', () => {
               ext: '.bbappend',
               name: 'base-files'
             }
-          ]
+          ],
+          skipped: 'skipped: because reasons'
         }
       ],
       _includes: [],
@@ -66,6 +67,7 @@ describe('BitbakeDriver Recipes View', () => {
         expect(rootTreeItem?.length).toStrictEqual(2)
         const recipeItem = (rootTreeItem as BitbakeRecipeTreeItem[])[0]
         expect(recipeItem.label).toStrictEqual('base-files')
+        expect(recipeItem.description).toEqual('skipped: because reasons')
 
         const filesItems = await treeDataProvider.getChildren(recipeItem)
         expect(filesItems).toBeDefined()
@@ -75,7 +77,7 @@ describe('BitbakeDriver Recipes View', () => {
     mockVscodeEvents()
 
     const bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
-    bitbakeRecipesView.registerView(contextMock)
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, scanResult)
+    bitbakeRecipesView.registerView(contextMock)
   })
 })
