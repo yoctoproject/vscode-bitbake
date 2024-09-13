@@ -24,7 +24,7 @@ import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
-import { type BitbakeScanResult, scanContainsData } from './lib/src/types/BitbakeScanResult'
+import { type BitbakeScanResult, SCAN_RESULT_VERSION, scanContainsData } from './lib/src/types/BitbakeScanResult'
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
 import { NotificationMethod } from './lib/src/types/notifications'
@@ -274,7 +274,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     void context.workspaceState.update('bitbake.ScanResult', scanResult).then(() => {
       logger.debug('BitBake scan result saved to workspace state')
     })
-    void context.workspaceState.update('bitbake.ScanResultVersion', bitBakeProjectScanner.scanResultVersion).then(() => {
+    void context.workspaceState.update('bitbake.ScanResultVersion', SCAN_RESULT_VERSION).then(() => {
       logger.debug('BitBake scan result version saved to workspace state')
     })
   })
@@ -284,7 +284,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   const needToScan = lastBitbakeScanResult === undefined ||
     lastBitbakeScanResultVersion === undefined ||
-    lastBitbakeScanResultVersion !== bitBakeProjectScanner.scanResultVersion
+    lastBitbakeScanResultVersion !== SCAN_RESULT_VERSION
 
   if (needToScan) {
     logger.debug('No valid scan result found, scanning the project')

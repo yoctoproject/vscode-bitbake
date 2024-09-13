@@ -4,6 +4,11 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type ParsedPath } from 'path'
+
+// Make sure to increment this number when the structure of the scan data changes
+// This will invalidate previous scan data saved for the workspace
+export const SCAN_RESULT_VERSION: number = 2
+
 export interface LayerInfo {
   name: string
   path: string
