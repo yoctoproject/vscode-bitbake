@@ -140,7 +140,7 @@ export class BitBakeProjectScanner {
   }
 
   private async getContainerParentInodes (filepath: string): Promise<number[]> {
-    const stdout = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`)
+    const stdout = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`, 20000)
     const regex = /^\d+$/gm
     const matches = stdout.match(regex)
     return (matches != null) ? matches.map((match) => parseInt(match)) : [NaN]
@@ -484,12 +484,12 @@ You should adjust your docker volumes to use the same URIs as those present on y
     }
   }
 
-  private async executeBitBakeCommand (command: string): Promise<string> {
+  private async executeBitBakeCommand (command: string, timeout?: number): Promise<string> {
     if (this._bitbakeDriver === undefined) {
       throw new Error('Bitbake driver is not set')
     }
     const result = await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true),
-      async () => { await this.bitbakeDriver.killBitbake() })
+      async () => { await this.bitbakeDriver.killBitbake() }, timeout)
     if (result.status !== 0) {
       logger.error(`Failed to execute bitbake command: ${command}`)
       throw new Error(`Failed to execute bitbake command: ${command}\r\n${result.stderr.toString()}`)
