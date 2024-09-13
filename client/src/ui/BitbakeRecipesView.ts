@@ -132,8 +132,16 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   }
 
   private getBitbakeRecipes (): BitbakeRecipeTreeItem[] {
+    // Prepare a map for quick lookup. This avoids going through the list of recipes multiple times
+    const recipeInfoMap = new Map<string, ElementInfo>()
+    if ((this.bitbakeScanResults?._recipes) != null) {
+      this.bitbakeScanResults._recipes.forEach((recipe: ElementInfo) => {
+        recipeInfoMap.set(recipe.name, recipe)
+      })
+    }
+
     return this.bitbakeWorkspace.activeRecipes.map((recipe: string) => {
-      const recipeInfo = this.getRecipeInfo(recipe)
+      const recipeInfo = recipeInfoMap.get(recipe)
       return new BitbakeRecipeTreeItem(recipeInfo ?? recipe, vscode.TreeItemCollapsibleState.Collapsed)
     }).sort((a, b) => a.label.localeCompare(b.label))
   }
@@ -145,9 +153,5 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     item.contextValue = undefined
     item.tooltip = 'Add a recipe to the active workspace'
     return item
-  }
-
-  private getRecipeInfo (label: string): ElementInfo | undefined {
-    return this.bitbakeScanResults?._recipes.find((recipe: ElementInfo) => recipe.name === label)
   }
 }
