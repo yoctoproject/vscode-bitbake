@@ -20,6 +20,7 @@ export interface ElementInfo {
   appends?: PathInfo[]
   overlayes?: PathInfo[]
   version?: string
+  skipped?: string
 }
 
 export interface DevtoolWorkspaceInfo {
