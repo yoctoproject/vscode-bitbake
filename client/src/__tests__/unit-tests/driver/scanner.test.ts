@@ -103,6 +103,19 @@ describe('BitBakeProjectScanner', () => {
     )
   })
 
+  it('can detected skipped recipes', async () => {
+    const recipes = bitBakeProjectScanner.scanResult._recipes
+    // systemd is skipped in the poky distribution, because systemV is used instead
+    const systemdRecipe = recipes.find((recipe) => recipe.name === 'systemd')
+    expect(systemdRecipe).toEqual(
+      expect.objectContaining(
+        {
+          skipped: expect.stringContaining('skipped:')
+        }
+      )
+    )
+  })
+
   it('can get recipes appends', async () => {
     const recipes = bitBakeProjectScanner.scanResult._recipes
     const busyboxRecipe = recipes.find((recipe) => recipe.name === 'busybox')
