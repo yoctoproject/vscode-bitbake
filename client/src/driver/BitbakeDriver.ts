@@ -79,11 +79,15 @@ export class BitbakeDriver {
 
   prepareCommand (command: string): {
     shell: string
+    shellEnv: Record<string, string>
     script: string
+    workingDirectory: string | undefined
   } {
     const shell = process.env.SHELL ?? '/bin/sh'
+    const shellEnv = this.getBuildConfig('shellEnv')
     const script = this.composeBitbakeScript(command)
-    return { shell, script }
+    const workingDirectory = this.getBuildConfig('workingDirectory') ?? '.'
+    return { shell, shellEnv, script, workingDirectory }
   }
 
   composeBitbakeScript (command: string): string {
