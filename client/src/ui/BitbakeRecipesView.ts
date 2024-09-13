@@ -25,10 +25,20 @@ export class BitbakeRecipesView {
 }
 
 export class BitbakeRecipeTreeItem extends vscode.TreeItem {
-  constructor (public readonly label: string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+  // Explicit that label will be string to the TypeScript compiler
+  public readonly label: string
+
+  constructor (public readonly recipe: ElementInfo | string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+    const label = typeof recipe === 'string' ? recipe : recipe.name
     super(label, collapsibleState)
+    this.label = label
     this.contextValue = 'bitbakeRecipeCtx'
     this.iconPath = new vscode.ThemeIcon('library')
+    if (typeof recipe !== 'string' && recipe?.skipped !== undefined) {
+      this.tooltip = recipe.skipped
+      this.description = recipe.skipped
+      this.iconPath = new vscode.ThemeIcon('warning')
+    }
   }
 }
 
@@ -123,7 +133,8 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
 
   private getBitbakeRecipes (): BitbakeRecipeTreeItem[] {
     return this.bitbakeWorkspace.activeRecipes.map((recipe: string) => {
-      return new BitbakeRecipeTreeItem(recipe, vscode.TreeItemCollapsibleState.Collapsed)
+      const recipeInfo = this.getRecipeInfo(recipe)
+      return new BitbakeRecipeTreeItem(recipeInfo ?? recipe, vscode.TreeItemCollapsibleState.Collapsed)
     }).sort((a, b) => a.label.localeCompare(b.label))
   }
 
@@ -134,5 +145,9 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     item.contextValue = undefined
     item.tooltip = 'Add a recipe to the active workspace'
     return item
+  }
+
+  private getRecipeInfo (label: string): ElementInfo | undefined {
+    return this.bitbakeScanResults?._recipes.find((recipe: ElementInfo) => recipe.name === label)
   }
 }
