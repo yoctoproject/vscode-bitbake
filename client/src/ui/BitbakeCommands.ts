@@ -267,7 +267,10 @@ async function selectTask (client: LanguageClient, recipe: string): Promise<stri
   const taskDeps = await getVariableValue(client, '_task_deps', recipe)
   let chosenTask: string | undefined
   if (taskDeps !== undefined) {
-    const parsedTaskDeps = JSON.parse(taskDeps.replace(/'/g, '"'))
+    let sanitizedTaskDeps = taskDeps.replace(/'/g, '"')
+    // Remove expressions with special characters like \${create_spdx_source_deps(d)}
+    sanitizedTaskDeps = sanitizedTaskDeps.replace(/, "\\\${.*?}"/g, '')
+    const parsedTaskDeps = JSON.parse(sanitizedTaskDeps)
     /**
      * _task_deps="{'tasks': ['do_patch', ...], 'depends': {...}, ...}"
      */
