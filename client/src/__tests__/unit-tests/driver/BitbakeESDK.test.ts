@@ -7,7 +7,9 @@ import { copyBitbakeSettings, generateCPPProperties, generateTasksDefinitions } 
 import { type BitbakeSettings } from '../../../lib/src/BitbakeSettings'
 
 import * as JSONFile from '../../../utils/JSONFile'
-import * as LanguageClient from '../../../language/languageClient'
+import * as BitBakeLanguageClient from '../../../language/languageClient'
+import { LanguageClient } from 'vscode-languageclient/node'
+import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 
 describe('Bitbake ESDK Test Suite', () => {
   const workspace = {
@@ -102,11 +104,11 @@ describe('Bitbake ESDK Test Suite', () => {
     loadJsonMock.mockReturnValueOnce(originalConfig)
     const saveJsonMock = jest.spyOn(JSONFile, 'saveJsonFile').mockImplementation(() => {})
 
-    const bitBakeProjectScannerMock = { resolveContainerPath: jest.fn().mockImplementation((arg) => arg) } as any
-    const clientMock = jest.fn() as any
-    const getVariableValueMock = jest.spyOn(LanguageClient, 'getVariableValue')
+    const bitBakeProjectScannerMock = { resolveContainerPath: jest.fn().mockImplementation((arg) => arg) } as unknown as BitBakeProjectScanner
+    const clientMock = jest.fn() as unknown as LanguageClient
+    const getVariableValueMock = jest.spyOn(BitBakeLanguageClient, 'getVariableValue')
     getVariableValueMock.mockImplementation(
-      async (client, variable, recipe) => {
+      async (client, variable) => {
         if (variable === 'STAGING_BINDIR_TOOLCHAIN') {
           return '/opt'
         }
