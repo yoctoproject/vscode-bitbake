@@ -15,7 +15,7 @@ export class BitbakeTerminalProfileProvider implements vscode.TerminalProfilePro
     this.bitbakeDriver = bitbakeDriver
   }
 
-  provideTerminalProfile (token?: vscode.CancellationToken): vscode.ProviderResult<vscode.TerminalProfile> {
+  provideTerminalProfile (): vscode.ProviderResult<vscode.TerminalProfile> {
     // This does not take the lock of bitbakeDriver.bitbakeProcess
     // which means pipe errors if using docker containers in parallel to commands.
     // However it's also expected an interactive terminal can stay open on the side.
