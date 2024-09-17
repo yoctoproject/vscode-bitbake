@@ -36,7 +36,7 @@ suite('Bitbake References Test Suite', () => {
       )
       return referencesResult.length === referenceRanges.length
     }, 5000)
-    referencesResult.forEach((reference, index) => {
+    referencesResult.forEach((reference) => {
       assert.equal(reference.uri.fsPath.includes('workspaceStorage'), false)
       assert.equal(reference.uri.fsPath === docUri.fsPath, true)
       assert.equal(referenceRanges.some((range) => range.isEqual(reference.range)), true)
