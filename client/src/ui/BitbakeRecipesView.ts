@@ -5,7 +5,7 @@
 
 import * as vscode from 'vscode'
 import { BitbakeWorkspace } from './BitbakeWorkspace'
-import { type ElementInfo, type BitbakeScanResult, type PathInfo, scanContainsData, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
+import { type ElementInfo, type BitbakeScanResult, scanContainsData, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
 import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { bitbakeESDKMode } from '../driver/BitbakeESDK'
@@ -33,7 +33,7 @@ export class BitbakeRecipeTreeItem extends vscode.TreeItem {
 }
 
 class BitbakeFileTreeItem extends BitbakeRecipeTreeItem {
-  constructor (public readonly pathInfo: PathInfo, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+  constructor (public readonly pathInfo: path.ParsedPath, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     const resolvedPath = path.resolve(pathInfo.dir + '/' + pathInfo.base)
     super(pathInfo.base, collapsibleState)
     this.contextValue = 'bitbakeFileCtx'
@@ -95,10 +95,10 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
         if (recipe.path !== undefined) {
           fileItems.push(new BitbakeFileTreeItem(recipe.path, vscode.TreeItemCollapsibleState.None))
         }
-        recipe.appends?.forEach((append: PathInfo) => {
+        recipe.appends?.forEach((append: path.ParsedPath) => {
           fileItems.push(new BitbakeFileTreeItem(append, vscode.TreeItemCollapsibleState.None))
         })
-        recipe.overlayes?.forEach((append: PathInfo) => {
+        recipe.overlayes?.forEach((append: path.ParsedPath) => {
           fileItems.push(new BitbakeFileTreeItem(append, vscode.TreeItemCollapsibleState.None))
         })
       }

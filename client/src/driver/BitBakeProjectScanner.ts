@@ -15,7 +15,6 @@ import type {
   DevtoolWorkspaceInfo,
   ElementInfo,
   LayerInfo,
-  PathInfo
 } from '../lib/src/types/BitbakeScanResult'
 
 import { type BitbakeDriver } from './BitbakeDriver'
@@ -296,7 +295,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
       try {
         const files = find.fileSync(new RegExp(`.${pattern}$`), layer.path)
         for (const file of files) {
-          const pathObj: PathInfo = path.parse(file)
+          const pathObj: path.ParsedPath = path.parse(file)
 
           const element: ElementInfo = {
             name: pathObj.name,
@@ -471,7 +470,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
           for (const matchInner of match[0].matchAll(innerReg)) {
             if (recipe.appends === undefined) {
-              recipe.appends = new Array < PathInfo >()
+              recipe.appends = new Array < path.ParsedPath >()
             }
             if (bbappendVersionMatches(recipeVersion, recipe.version)) {
               const resolvedPath = await this.resolveContainerPath(matchInner[0])
