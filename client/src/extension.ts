@@ -50,7 +50,7 @@ function loadLoggerSettings (): void {
 
 function loadEmbeddedLanguageDocsManagerSettings (): void {
   const isDisabled = vscode.workspace.getConfiguration('bitbake').get('disableEmbeddedLanguagesFiles')
-  logger.info(`Disable embedded language features ${isDisabled as any}`)
+  logger.info(`Disable embedded language features ${isDisabled}`)
   if (typeof isDisabled === 'boolean') {
     embeddedLanguageDocsManager.isDisabled = isDisabled
   }
@@ -99,7 +99,7 @@ async function installExtensions (extensionId: string): Promise<void> {
           location: vscode.ProgressLocation.Notification,
           title: `Installing ${extensionId}...`,
           cancellable: false
-        }, async (progress, token) => {
+        }, async (progress) => {
           try {
             await vscode.commands.executeCommand('workbench.extensions.installExtension', extensionId).then(() => {
               progress.report({ message: `${extensionId} has been installed` })
