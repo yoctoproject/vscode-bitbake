@@ -20,13 +20,13 @@ export interface BitbakeSettings extends BitbakeBuildConfigSettings {
   buildConfigurations?: BitbakeBuildConfigSettings[]
 }
 
-export function loadBitbakeSettings (settings: any, workspaceFolder: string): BitbakeSettings {
+export function loadBitbakeSettings (settings: Record<string, unknown>, workspaceFolder: string): BitbakeSettings {
   // The default values are defined in package.json
   // Change the working directory to properly handle relative paths in the language client
   try {
     process.chdir(workspaceFolder)
-  } catch (err: any) {
-    console.error('chdir: $settings.{err}')
+  } catch (err) {
+    console.error(`chdir: $settings.${err}`)
   }
 
   const variables = {
@@ -35,24 +35,24 @@ export function loadBitbakeSettings (settings: any, workspaceFolder: string): Bi
   }
 
   const expandedSettings: BitbakeSettings = {
-    ...expandBuildConfig(settings, variables, workspaceFolder),
+    ...expandBuildConfig(settings, variables),
     pathToBitbakeFolder: expandSettingPath(settings.pathToBitbakeFolder, variables) ?? workspaceFolder,
-    buildConfigurations: expandBuildConfigsSettings(settings.buildConfigurations, variables, workspaceFolder)
+    buildConfigurations: expandBuildConfigsSettings(settings.buildConfigurations, variables)
   }
   expandedSettings.workingDirectory = expandedSettings.workingDirectory ?? workspaceFolder
 
   return expandedSettings
 }
 
-export function expandSettingPath (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
-  if (configurationPath === '' || configurationPath === undefined) {
+export function expandSettingPath (configurationPath: unknown, variables: NodeJS.Dict<string>): string | undefined {
+  if (typeof configurationPath !== 'string' || configurationPath === '' || configurationPath === undefined) {
     return undefined
   }
   return expandSettingString(configurationPath, variables) as string
 }
 
-function expandSettingString (configurationPath: string | undefined, variables: NodeJS.Dict<string>): string | undefined {
-  if (configurationPath === '' || configurationPath === undefined) {
+function expandSettingString (configurationPath: unknown, variables: NodeJS.Dict<string>): string | undefined {
+  if (typeof configurationPath !== 'string' || configurationPath === '' || configurationPath === undefined) {
     return undefined
   }
   return sanitizeForShell(substituteVariables(configurationPath, variables)) as string
@@ -67,7 +67,7 @@ function substituteVariables (configuration: string, variables: NodeJS.Dict<stri
   })
 }
 
-function expandStringDict (dict: NodeJS.Dict<string> | undefined, variables: NodeJS.Dict<string>): NodeJS.Dict<string> | undefined {
+function expandStringDict (dict: unknown, variables: NodeJS.Dict<string>): NodeJS.Dict<string> | undefined {
   return (dict != null) ? Object.fromEntries(Object.entries(dict).map(([key, value]) => [key, expandSettingString(value, variables) as string])) : undefined
 }
 
@@ -79,18 +79,18 @@ export function sanitizeForShell (command: string | undefined): string | undefin
   return command.replace(/[;`&|<>\\$(){}!#*?"']/g, '')
 }
 
-function toStringDict (dict: object | undefined): NodeJS.Dict<string> | undefined {
+function toStringDict (dict: unknown | undefined): NodeJS.Dict<string> | undefined {
   return dict as NodeJS.Dict<string> | undefined
 }
 
-function expandBuildConfigsSettings (buildConfigurations: any, variables: NodeJS.Dict<string>, workspaceFolder: string): BitbakeBuildConfigSettings[] | undefined {
-  if (buildConfigurations === undefined) {
+function expandBuildConfigsSettings (buildConfigurations: unknown, variables: NodeJS.Dict<string>): BitbakeBuildConfigSettings[] | undefined {
+  if (buildConfigurations === undefined || !Array.isArray(buildConfigurations)) {
     return undefined
   }
-  return buildConfigurations.map((settings: any) => expandBuildConfig(settings, variables, workspaceFolder))
+  return buildConfigurations.map((settings) => expandBuildConfig(settings, variables))
 }
 
-function expandBuildConfig (settings: any, variables: NodeJS.Dict<string>, workspaceFolder: string): BitbakeBuildConfigSettings {
+function expandBuildConfig (settings: Record<string, unknown>, variables: NodeJS.Dict<string>): BitbakeBuildConfigSettings {
   return {
     pathToBuildFolder: expandSettingPath(settings.pathToBuildFolder, variables),
     pathToEnvScript: expandSettingPath(settings.pathToEnvScript, variables),
@@ -103,7 +103,7 @@ function expandBuildConfig (settings: any, variables: NodeJS.Dict<string>, works
   }
 }
 
-export function getBuildSetting (settings: BitbakeSettings, buildConfiguration: string, property: keyof BitbakeBuildConfigSettings): any {
+export function getBuildSetting (settings: BitbakeSettings, buildConfiguration: string, property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | undefined {
   if (settings.buildConfigurations !== undefined) {
     const buildConfig = settings.buildConfigurations.find(config => config.name === buildConfiguration)
     if (buildConfig !== undefined) {
