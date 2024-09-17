@@ -34,7 +34,6 @@ const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
 let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
 const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 let bitbakeRecipesView: BitbakeRecipesView | undefined
 let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
 let terminalProvider: BitbakeTerminalProfileProvider | undefined

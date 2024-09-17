@@ -85,7 +85,6 @@ describe('On Completion', () => {
     })
     // Yocto tasks
     expect(resultAfterDocScan).toEqual(
-      /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
           documentation: {
@@ -161,7 +160,6 @@ describe('On Completion', () => {
 
     // Variables from Yocto docs but not in bitbake docs
     expect(resultAfterDocScan).toEqual(
-      /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
           documentation: {
@@ -939,7 +937,6 @@ describe('On Completion', () => {
 
     // string_start does not have task among the completion items
     expect(resultOnStringStart).not.toEqual(
-      /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
           documentation: {
@@ -998,7 +995,6 @@ describe('On Completion', () => {
 
     // string_content does not have task among the completion items
     expect(resultOnStringContent).not.toEqual(
-      /* eslint-disable no-template-curly-in-string */
       expect.arrayContaining([
         {
           documentation: {
