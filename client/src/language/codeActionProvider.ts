@@ -13,7 +13,7 @@ import { type EmbeddedLanguageType } from '../lib/src/types/embedded-languages'
 import { getIndentationOnLine } from './utils/textDocumentUtils'
 
 export class BitbakeCodeActionProvider implements vscode.CodeActionProvider {
-  async provideCodeActions (document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext, token: vscode.CancellationToken): Promise<vscode.CodeAction[]> {
+  async provideCodeActions (document: vscode.TextDocument, range: vscode.Range | vscode.Selection, context: vscode.CodeActionContext): Promise<vscode.CodeAction[]> {
     const diagnostics = context.diagnostics
     const actions = await Promise.all(
       diagnostics.map(async (diagnostic) => await buildActionFromDiagnostic(document, diagnostic))
