@@ -18,11 +18,11 @@ describe('Devtool Worskapces View', () => {
   })
 
   it('should list devtool workspaces', (done) => {
-    const contextMock: vscode.ExtensionContext = {
+    const contextMock = {
       subscriptions: {
         push: jest.fn()
       }
-    } as any
+    } as unknown as vscode.ExtensionContext
 
     const scanResult: BitbakeScanResult = {
       _recipes: [{
