@@ -73,6 +73,7 @@ export const middlewarePrepareRename: RenameMiddleware['prepareRename'] = async 
   let nextResult: Awaited<ReturnType<typeof next>> | undefined
   try {
     nextResult = await next(document, position, token)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (error) {
     // pass
   }
