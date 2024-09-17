@@ -10,7 +10,6 @@
 
 import { InsertTextFormat, type CompletionItem, CompletionItemKind, MarkupKind } from 'vscode-languageserver'
 
-/* eslint-disable no-template-curly-in-string */
 
 export function formatCompletionItems (completions: CompletionItem[], completionItemKind?: CompletionItemKind): CompletionItem[] {
   return completions.map((item) => {

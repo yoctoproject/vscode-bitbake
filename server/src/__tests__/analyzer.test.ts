@@ -67,7 +67,6 @@ describe('analyze', () => {
             uri: DUMMY_URI
           },
           name: 'BAR',
-          // eslint-disable-next-line no-template-curly-in-string
           overrides: ['o1', 'o2', '${PN}'],
           commentsAbove: []
         },
@@ -455,7 +454,6 @@ describe('resolveSymbol', () => {
       },
       kind: 13,
       commentsAbove: [],
-      // eslint-disable-next-line no-template-curly-in-string
       overrides: ['override1', 'override2', '${PN}', '${PN}-foo']
     }
 
@@ -464,7 +462,6 @@ describe('resolveSymbol', () => {
       overrides: []
     }
 
-    // eslint-disable-next-line no-template-curly-in-string
     const symbol3 = 'recipe_${PV}.bb'
 
     const lookUpSymbolList: BitbakeSymbolInformation[] = [

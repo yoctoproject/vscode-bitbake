@@ -65,7 +65,6 @@ describe('BitbakeDriver Tests', () => {
   })
 
   it('should produce a valid crops docker run script', () => {
-    /* eslint-disable no-template-curly-in-string */
     const driver = new BitbakeDriver()
     driver.loadSettings({
       commandWrapper: 'docker run --rm -it -v ${workspaceFolder}:/workdir crops/poky --workdir=/workdir /bin/bash -c',
@@ -111,7 +110,6 @@ describe('BitbakeDriver Tests', () => {
     })
 
     it('should compose bitbake command for scanning recipe environment', () => {
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       const bitbakeTaskDefinition = {
         recipes: ['recipe1'],
         options: {

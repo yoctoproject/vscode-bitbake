@@ -93,7 +93,6 @@ describe('Bitbake ESDK Test Suite', () => {
         {
           name: 'should not be overwritten',
           browse: {
-            // eslint-disable-next-line no-template-curly-in-string
             path: ['${workspaceFolder}/**']
           }
         }

@@ -131,7 +131,6 @@ async function getBitBakeCompletionItems (textDocumentPositionParams: TextDocume
       const bitbakeOverridesCompletionItems: CompletionItem[] = bitBakeProjectScannerClient.bitbakeScanResult._overrides.map((override, index) => {
         let label = override
         if (override === 'pn-defaultpkgname') {
-          // eslint-disable-next-line no-template-curly-in-string
           label = '${PN}'
         }
         return {
