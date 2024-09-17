@@ -31,12 +31,12 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
     this.bitbakeDriver = bitbakeDriver
   }
 
-  provideTasks (token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task[]> {
+  provideTasks (): vscode.ProviderResult<vscode.Task[]> {
     return []
   }
 
-  resolveTask (task: vscode.Task, token: vscode.CancellationToken): vscode.ProviderResult<vscode.Task> | undefined {
-    const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition as any
+  resolveTask (task: vscode.Task): vscode.ProviderResult<vscode.Task> | undefined {
+    const bitbakeTaskDefinition: BitbakeTaskDefinition = task.definition
 
     const canResolveTask = (bitbakeTaskDefinition.recipes?.[0] !== undefined ||
     bitbakeTaskDefinition.options?.parseOnly === true ||
@@ -52,7 +52,7 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
         task.scope ?? vscode.TaskScope.Workspace,
         task.name,
         task.source ?? 'bitbake',
-        new BitbakeCustomExecution(async (resolvedDefinition: vscode.TaskDefinition): Promise<vscode.Pseudoterminal> => {
+        new BitbakeCustomExecution(async (): Promise<vscode.Pseudoterminal> => {
           const pty = new BitbakePseudoTerminal(this.bitbakeDriver);
           (resolvedTask.execution as BitbakeCustomExecution).pty = pty
           void pty.runProcess(
