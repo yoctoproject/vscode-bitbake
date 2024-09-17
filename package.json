@@ -23,7 +23,7 @@
     "url": "https://github.com/yoctoproject/vscode-bitbake.git"
   },
   "engines": {
-    "vscode": "^1.75.0"
+    "vscode": "^1.92.0"
   },
   "categories": [
     "Programming Languages"
