@@ -69,6 +69,7 @@ suite('Bitbake Rename Test Suite', () => {
           docUri,
           position
         )
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         // pass
       }
