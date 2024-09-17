@@ -24,7 +24,7 @@ export const middlewareProvideDefinition: DefinitionMiddleware['provideDefinitio
     return
   }
   const embeddedLanguageDocInfos = embeddedLanguageDocsManager.getEmbeddedLanguageDocInfos(document.uri, embeddedLanguageType)
-  logger.debug(`[middlewareProvideDefinition] embeddedLanguageDoc ${embeddedLanguageDocInfos?.uri as any}`)
+  logger.debug(`[middlewareProvideDefinition] embeddedLanguageDoc ${embeddedLanguageDocInfos?.uri}`)
   if (embeddedLanguageDocInfos === undefined || embeddedLanguageDocInfos === null) {
     return
   }
