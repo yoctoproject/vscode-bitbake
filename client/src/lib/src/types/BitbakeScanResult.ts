@@ -15,15 +15,13 @@ export interface LayerInfo {
   priority: number
 }
 
-export interface PathInfo extends ParsedPath {}
-
 export interface ElementInfo {
   name: string
   extraInfo?: string
-  path?: PathInfo
+  path?: ParsedPath
   layerInfo?: LayerInfo
-  appends?: PathInfo[]
-  overlayes?: PathInfo[]
+  appends?: ParsedPath[]
+  overlayes?: ParsedPath[]
   version?: string
   skipped?: string
 }
@@ -51,6 +49,6 @@ export function scanContainsRecipes (scanResult: BitbakeScanResult): boolean {
   return scanResult._layers.length > 0 || scanResult._recipes.length > 0
 }
 
-export function pathInfoToString (pathInfo: PathInfo): string {
+export function pathInfoToString (pathInfo: ParsedPath): string {
   return `${pathInfo.dir}/${pathInfo.base}`
 }
