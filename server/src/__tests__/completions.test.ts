@@ -816,7 +816,9 @@ describe('On Completion', () => {
     // Show only one completion item for each symbol
     let occurances = 0
     result.forEach(item => {
-      item.label === 'DESCRIPTION' && occurances++
+      if (item.label === 'DESCRIPTION') {
+        occurances++
+      }
     })
 
     expect(occurances).toEqual(1)
