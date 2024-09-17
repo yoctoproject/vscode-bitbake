@@ -33,6 +33,7 @@ export function formatCompletionItems (completions: CompletionItem[], completion
       kind: item.kind ?? completionItemKind ?? CompletionItemKind.Snippet
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { data, ...filtered } = formatted
 
     return filtered
