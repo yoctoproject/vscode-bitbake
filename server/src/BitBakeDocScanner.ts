@@ -21,7 +21,6 @@ export interface VariableInfo extends DocInfo {
   validFiles?: RegExp[] // Files on which the variable is defined. If undefined, the variable is defined in all files.
   suffixType?: SuffixType
 }
-export interface VariableFlagInfo extends DocInfo {}
 
 type SuffixType = 'layer' | 'providedItem' | undefined
 type VariableInfosOverride = Partial<VariableInfo>
@@ -72,7 +71,7 @@ const KEYWORDS = [
 export class BitBakeDocScanner {
   private _bitbakeVariableInfo: VariableInfo[] = []
   private _yoctoVariableInfo: VariableInfo[] = []
-  private _variableFlagInfo: VariableFlagInfo[] = []
+  private _variableFlagInfo: DocInfo[] = []
   private _yoctoTaskInfo: DocInfo[] = []
   private _pythonDatastoreFunction: string[] = []
   private readonly _docPath: string = path.join(__dirname, '../resources/docs')
@@ -86,7 +85,7 @@ export class BitBakeDocScanner {
     return this._yoctoVariableInfo
   }
 
-  get variableFlagInfo (): VariableFlagInfo[] {
+  get variableFlagInfo (): DocInfo[] {
     return this._variableFlagInfo
   }
 
@@ -247,7 +246,7 @@ export class BitBakeDocScanner {
       return
     }
 
-    const variableFlagInfo: VariableFlagInfo[] = []
+    const variableFlagInfo: DocInfo[] = []
     for (const match of variableFlagSection[0].matchAll(variableFlagRegex)) {
       const name = match.groups?.name
       const description = match.groups?.description
