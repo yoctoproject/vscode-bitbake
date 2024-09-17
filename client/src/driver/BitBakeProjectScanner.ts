@@ -203,7 +203,7 @@ export class BitBakeProjectScanner {
     this._bitbakeScanResult._confFiles = this.searchFiles(this._confFileExtension)
   }
 
-  private async scanAvailableLayers (): Promise<void> {
+  public async scanAvailableLayers (): Promise<void> {
     this._bitbakeScanResult._layers = new Array < LayerInfo >()
     this.containerMountPoint = undefined
 
@@ -389,7 +389,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
     this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
-  private async scanDevtoolWorkspaces (): Promise<void> {
+  public async scanDevtoolWorkspaces (): Promise<void> {
     this._bitbakeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
     const output = await this.executeBitBakeCommand('devtool status')
     const regex = /^([^\s]+):\s([^\s]+)(?:\s\([^\s]+\))?$/gm
