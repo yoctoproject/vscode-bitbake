@@ -27,7 +27,10 @@ suite('Bitbake Parsing Test Suite', () => {
   suiteTeardown(async () => {
     try {
       await removeRecipe(errorRecipePath, pokyPath)
-    } catch (e) {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      // pass
+    }
   })
 
   test('Bitbake can detect parsing errors', async () => {
