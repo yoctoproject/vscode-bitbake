@@ -40,7 +40,7 @@ export class BitbakeDriver {
     })
   }
 
-  private getBuildConfig (property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | undefined {
+  getBuildConfig (property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | undefined {
     return getBuildSetting(this.bitbakeSettings, this.activeBuildConfiguration, property)
   }
 
@@ -80,14 +80,16 @@ export class BitbakeDriver {
 
   prepareCommand (command: string): {
     shell: string
-    shellEnv: Record<string, string>
+    shellEnv: NodeJS.Dict<string>
     script: string
     workingDirectory: string | undefined
   } {
     const shell = process.env.SHELL ?? '/bin/sh'
-    const shellEnv = this.getBuildConfig('shellEnv')
+    const tempShellEnv = this.getBuildConfig('shellEnv')
+    const shellEnv = typeof tempShellEnv === 'object' ? tempShellEnv : {}
     const script = this.composeBitbakeScript(command)
-    const workingDirectory = this.getBuildConfig('workingDirectory') ?? '.'
+    const tempWorkingDirectory = this.getBuildConfig('workingDirectory')
+    const workingDirectory = typeof tempWorkingDirectory === 'string' ? tempWorkingDirectory : '.'
     return { shell, shellEnv, script, workingDirectory }
   }
 
@@ -130,7 +132,8 @@ export class BitbakeDriver {
       return false
     }
 
-    if ((this.getBuildConfig('workingDirectory') != null) && !fs.existsSync(this.getBuildConfig('workingDirectory'))) {
+    const workingDirectory = this.getBuildConfig('workingDirectory')
+    if (typeof workingDirectory === 'string' && !fs.existsSync(workingDirectory)) {
       // If it is not defined, then we will use the workspace folder which is always valid
       clientNotificationManager.showBitbakeSettingsError('Working directory does not exist.')
       return false
