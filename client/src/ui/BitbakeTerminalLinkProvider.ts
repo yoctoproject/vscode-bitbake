@@ -14,7 +14,7 @@ export class BitbakeTerminalLinkProvider implements vscode.TerminalLinkProvider 
     this.bitBakeProjectScanner = bitBakeProjectScanner
   }
 
-  async provideTerminalLinks (context: vscode.TerminalLinkContext, token: vscode.CancellationToken): Promise<vscode.TerminalLink[]> {
+  async provideTerminalLinks (context: vscode.TerminalLinkContext): Promise<vscode.TerminalLink[]> {
     const links: vscode.TerminalLink[] = []
     // We only have additional links to provide if we need to resolve container paths
     if (!this.bitBakeProjectScanner.needsContainerPathsResolution()) { return links }
