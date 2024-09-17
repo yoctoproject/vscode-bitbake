@@ -898,6 +898,7 @@
   "devDependencies": {
     "@eslint/js": "^9.10.0",
     "@tony.ganchev/eslint-plugin-header": "^3.1.2",
+    "@types/find": "^0.2.4",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.12",
     "@types/mocha": "^10.0.7",
