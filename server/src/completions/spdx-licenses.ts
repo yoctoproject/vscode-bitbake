@@ -69,7 +69,7 @@ export const getSpdxLicenseCompletionResolve = async (item: CompletionItem): Pro
       documentation: spdxLicenseDetails.licenseText
     }
     return resolvedItem
-  } catch (error: any) {
+  } catch (error) {
     logger.error(`[getSpdxLicenseCompletionResolve] error: ${error}`)
     return item
   }
