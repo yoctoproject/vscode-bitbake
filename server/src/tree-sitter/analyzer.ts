@@ -176,7 +176,7 @@ export default class Analyzer {
       bashTree
     }
 
-    return this.executeAnalyzation(document, uri, bitBakeTree)
+    return this.executeAnalyzation()
   }
 
   private generateBitBakeTree (document: TextDocument): Parser.Tree | undefined {
@@ -203,7 +203,7 @@ export default class Analyzer {
     return this.bashParser.parse(bashContent)
   }
 
-  private executeAnalyzation (document: TextDocument, uri: string, bitBakeTree: Tree): Diagnostic[] {
+  private executeAnalyzation (): Diagnostic[] {
     const diagnostics: Diagnostic[] = []
 
     // It was used to provide diagnostics from bitBakeTree-sitter, but it is not yet reliable.
@@ -235,7 +235,9 @@ export default class Analyzer {
 
       if (isNonEmptyVariableExpansion) {
         const symbol = nodeToSymbolInformation({ node, uri, getFinalValue: false, isBitBakeVariableExpansion: true })
-        symbol !== null && variableExpansionSymbols.push(symbol)
+        if (symbol !== null) {
+          variableExpansionSymbols.push(symbol)
+        }
       }
 
       if (isPythonDatastoreVariable) {
@@ -1243,7 +1245,9 @@ export default class Analyzer {
       const variable = match.groups?.variable
       if (variable !== undefined) {
         const value = lookUpSymbolList.find((symbol) => symbol.name === variable)?.finalValue
-        value !== undefined && (resolvedSymbol = resolvedSymbol.replace(new RegExp('\\$\\{' + variable + '\\}', 'g'), value.endsWith('+git') ? value.replace('+git', '') : value)) // PV usually has +git appended to it
+        if (value !== undefined) {
+          resolvedSymbol = resolvedSymbol.replace(new RegExp('\\$\\{' + variable + '\\}', 'g'), value.endsWith('+git') ? value.replace('+git', '') : value) // PV usually has +git appended to it
+        }
       }
     }
 
