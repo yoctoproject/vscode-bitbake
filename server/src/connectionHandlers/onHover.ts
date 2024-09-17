@@ -99,7 +99,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 
   let comments: string | null = null
   if (exactSymbol !== undefined) {
-    comments = getGlobalSymbolComments(textDocument.uri, word, exactSymbol)
+    comments = getGlobalSymbolComments(textDocument.uri, word)
   }
 
   // License
@@ -148,7 +148,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   return null
 }
 
-function getGlobalSymbolComments (uri: string, word: string, currentSymbolAtPoint: BitbakeSymbolInformation): string | null {
+function getGlobalSymbolComments (uri: string, word: string): string | null {
   const localSymbolsWithComments = analyzer.getGlobalDeclarationSymbols(uri).filter((symbol) => symbol.name === word).filter((symbol) => symbol.commentsAbove.length > 0)
   const externalSymbolsWithComments: BitbakeSymbolInformation[] = []
 
