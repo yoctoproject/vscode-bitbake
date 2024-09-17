@@ -129,7 +129,6 @@ async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakePr
     logger.debug(`Command: build-recipe: ${chosenRecipe}`)
     await runBitbakeTerminal(
       bitBakeProjectScanner.bitbakeDriver,
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {
         recipes: [chosenRecipe]
       } as BitbakeTaskDefinition,
@@ -143,7 +142,6 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakePr
     logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
     await runBitbakeTerminal(
       bitBakeProjectScanner.bitbakeDriver,
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {
         recipes: [chosenRecipe],
         task: 'clean'
@@ -205,7 +203,6 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
     if (chosenTask !== undefined) {
       logger.debug(`Command: run-task: ${chosenRecipe}, ${chosenTask}`)
       await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
-      // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
         {
           recipes: [chosenRecipe],
           task: chosenTask
@@ -575,7 +572,6 @@ export async function examineDependenciesTaskexp (bitbakeWorkspace: BitbakeWorks
     logger.debug(`Command: examine-dependency-taskexp: ${chosenRecipe}`)
     isTaskexpStarted = true
     const process = await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
-    // eslint-disable-next-line @typescript-eslint/consistent-type-assertions
       {
         specialCommand: `bitbake -g ${chosenRecipe} -u taskexp`
       } as BitbakeTaskDefinition,

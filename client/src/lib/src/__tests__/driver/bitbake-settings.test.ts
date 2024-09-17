@@ -14,7 +14,6 @@ describe('BitbakeSettings Tests', () => {
     const settings = loadBitbakeSettings({
       pathToBitbakeFolder: '',
       pathToEnvScript: '',
-      // eslint-disable-next-line no-template-curly-in-string
       pathToBuildFolder: '${workspaceFolder}/build',
       workingDirectory: '',
       commandWrapper: ''
@@ -37,7 +36,6 @@ describe('BitbakeSettings Tests', () => {
     const settings = loadBitbakeSettings({
       pathToBitbakeFolder: '',
       pathToEnvScript: '',
-      // eslint-disable-next-line no-template-curly-in-string
       pathToBuildFolder: '${env:HOME}/build',
       workingDirectory: '',
       commandWrapper: ''
@@ -46,7 +44,6 @@ describe('BitbakeSettings Tests', () => {
   })
 
   it('should resolve environment variable inside shellEnv', () => {
-    /* eslint-disable no-template-curly-in-string */
     const settings = loadBitbakeSettings({
       pathToBitbakeFolder: '',
       pathToEnvScript: '',

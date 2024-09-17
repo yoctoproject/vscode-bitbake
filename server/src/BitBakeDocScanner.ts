@@ -220,7 +220,6 @@ export class BitBakeDocScanner {
           definition: taskDescription ?? '',
           insertText: [
             `${taskName}(){`,
-            /* eslint-disable no-template-curly-in-string */
             '\t${1:# Your code here}',
             '}'
           ].join('\n'),

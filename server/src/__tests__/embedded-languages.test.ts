@@ -39,7 +39,6 @@ describe('Create basic embedded bash documents', () => {
     ],
     [
       'with inline python',
-      // eslint-disable-next-line no-template-curly-in-string
       'foo(){\n${@FOO}\n}',
       `${bashHeader}foo(){\n\${?   }\n}`
     ],
@@ -115,37 +114,31 @@ describe('Create Python embedded language content with inline Python', () => {
   test.each([
     [
       'basic',
-      // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}\'',
       `${pythonHeader}         \n\n"BAR"\n `
     ],
     [
       'with spacing',
-      // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@  "BAR"  }\'',
       `${pythonHeader}         \n  \n"BAR"  \n `
     ],
     [
       'multiline',
-      // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}\' \\\n1 \\\n2"',
       `${pythonHeader}         \n\n"BAR"\n   \n   \n  `
     ],
     [
       'with two embedded python regions',
-      // eslint-disable-next-line no-template-curly-in-string
       'FOO = \'${@"BAR"}${@"BAR"}\'',
       `${pythonHeader}         \n\n"BAR"\n  \n\n"BAR"\n `
     ],
     [
       'without surrounding quotes',
-      // eslint-disable-next-line no-template-curly-in-string
       'inherit ${@"test"}',
       `${pythonHeader}          \n\n"test"\n`
     ],
     [
       'inside bash function',
-      // eslint-disable-next-line no-template-curly-in-string
       'foo(){\n${@FOO}\n}',
       `${pythonHeader}      \n  \n\nFOO\n\n `
     ]
@@ -192,14 +185,12 @@ describe('Finds proper embedded language type', () => {
     ],
     [
       'Inline Python',
-      // eslint-disable-next-line no-template-curly-in-string
       'FOO = "${@BAR}"',
       { line: 0, character: 11 },
       'python'
     ],
     [
       'Inline Python into Bash function',
-      // eslint-disable-next-line no-template-curly-in-string
       'foo(){\n  ${@BAR}\n}',
       { line: 1, character: 6 },
       'python'

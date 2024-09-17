@@ -41,7 +41,6 @@ export function mergeJsonArray (tasks: any, newTasks: any): any {
         Object.assign(task, newTask)
         for (const key in task) {
           if (!(key in newTask)) {
-            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
             delete task[key]
           }
         }

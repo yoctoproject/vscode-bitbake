@@ -18,7 +18,6 @@ suite('Bitbake Command Wrapper', () => {
   }
 
   suiteSetup(async function (this: Mocha.Context) {
-    /* eslint-disable no-template-curly-in-string */
     this.timeout(1.5 * BITBAKE_TIMEOUT) // Some additional time for pulling the Docker image
     await assertWorkspaceWillBeOpen()
     workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
