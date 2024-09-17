@@ -16,15 +16,20 @@ function importFromVSCode (id: string): NodeRequire {
    * Types still need to be imported normally at compile time
   */
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(`${vscode.env.appRoot}/node_modules.asar/${id}`)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     // ignore
   }
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require(`${vscode.env.appRoot}/node_modules/${id}`)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   } catch (err) {
     // ignore
   }
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   return require(id)
 }
 
