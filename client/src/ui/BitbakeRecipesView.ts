@@ -67,10 +67,10 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     this.bitbakeWorkspace = bitbakeWorkspace
     this.bitbakeProjectScanner = bitbakeProjectScanner
 
-    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_ADDED, (recipe: string) => {
+    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_ADDED, () => {
       this._onDidChangeTreeData.fire(undefined)
     })
-    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_DROPPED, (recipe: string) => {
+    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_DROPPED, () => {
       this._onDidChangeTreeData.fire(undefined)
     })
     bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResults: BitbakeScanResult) => {
