@@ -4,15 +4,16 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
-import { logger } from '../../utils/OutputLogger'
+import { logger, OutputChannel } from '../../utils/OutputLogger'
 
 jest.mock('vscode')
 
-const mockChannel = (): jest.Mocked<any> => {
+const mockChannel = (): jest.Mocked<OutputChannel> => {
   const mockOutputChannel = {
     appendLine: jest.fn(),
     show: jest.fn(),
-    clear: jest.fn()
+    clear: jest.fn(),
+    dispose: jest.fn()
   }
 
   vscode.window.createOutputChannel = jest.fn().mockImplementation(() => mockOutputChannel)
