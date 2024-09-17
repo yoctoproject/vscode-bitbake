@@ -8,7 +8,7 @@ import { BitbakeTerminalLinkProvider } from '../../../ui/BitbakeTerminalLinkProv
 import { type BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 
 describe('BitbakeTerminalLinkProvider', () => {
-  const bitBakeProjectScanner: BitBakeProjectScanner = jest.fn() as any
+  const bitBakeProjectScanner = jest.fn() as unknown as BitBakeProjectScanner
   const linkProvider: BitbakeTerminalLinkProvider = new BitbakeTerminalLinkProvider(bitBakeProjectScanner)
 
   function mockScanner (): void {
@@ -34,18 +34,16 @@ describe('BitbakeTerminalLinkProvider', () => {
   })
 
   it('should return an empty array if container paths resolution is not needed', async () => {
-    const context: vscode.TerminalLinkContext = { line: 'some line without absolute links ./abcd;(123)' } as any
-    const token: vscode.CancellationToken = undefined as any
+    const context = { line: 'some line without absolute links ./abcd;(123)' } as unknown as vscode.TerminalLinkContext
 
-    const result = await linkProvider.provideTerminalLinks(context, token)
+    const result = await linkProvider.provideTerminalLinks(context)
 
     expect(result).toEqual([])
   })
 
   it('should return an array of TerminalLinks for container paths', async () => {
-    const context: vscode.TerminalLinkContext = { line: 'some line "/path/to/file:123" with a link' } as any
-    const token: vscode.CancellationToken = undefined as any
-    const result = await linkProvider.provideTerminalLinks(context, token)
+    const context = { line: 'some line "/path/to/file:123" with a link' } as unknown as vscode.TerminalLinkContext
+    const result = await linkProvider.provideTerminalLinks(context)
     expect(result).toHaveLength(1)
     expect(result[0].startIndex).toBe(11)
     expect(result[0].length).toBe(13)
