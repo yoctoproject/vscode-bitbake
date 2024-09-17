@@ -212,7 +212,7 @@ disposables.push(
       } catch (error) {
         // When using the language server without the client, custom requests are not supported
         // The CoC.nvim client will disable the server if an exception is thrown
-        logger.error(`Error while getting recipe local files: ${error as any}`)
+        logger.error(`Error while getting recipe local files: ${error}`)
       }
     }
   })
