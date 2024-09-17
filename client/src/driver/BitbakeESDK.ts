@@ -76,11 +76,13 @@ export function generateTasksDefinitions (workspace: DevtoolWorkspaceInfo, bitba
       dependsOn: [`BitBake Build ${recipeName}`]
     })
   }
-  const tasks = vscodeTasks.tasks
-  if (tasks === undefined) {
-    vscodeTasks.tasks = newTasks
-  } else {
-    mergeJsonArray(tasks, newTasks)
+  if (typeof vscodeTasks === 'object' && vscodeTasks !== null && 'tasks' in vscodeTasks) {
+    const tasks = vscodeTasks.tasks
+    if (tasks === undefined || tasks === null) {
+      vscodeTasks.tasks = newTasks
+    } else if (Array.isArray(tasks)) {
+      mergeJsonArray(tasks, newTasks)
+    }
   }
   saveJsonFile(vscodeTasksPath, vscodeTasks)
   logger.info(`Generated ${vscodeTasksPath} for ${recipeName}`)
@@ -102,11 +104,14 @@ export async function generateCPPProperties (workspace: DevtoolWorkspaceInfo, bi
     compilerArgs: CXX?.split(/\s+/).slice(1).concat(CXXFLAGS?.split(/\s+/) ?? [])
   }
 
-  const configurations = vscodeCppProperties.configurations
-  if (configurations === undefined) {
-    vscodeCppProperties.configurations = [configuration]
-  } else {
-    mergeJsonArray(configurations, [configuration])
+  if (typeof vscodeCppProperties === 'object' && vscodeCppProperties !== null && 'configurations' in vscodeCppProperties) {
+      const configurations = vscodeCppProperties.configurations
+    if (configurations === undefined) {
+      vscodeCppProperties.configurations = [configuration]
+    } else if(Array.isArray(configurations)) {
+      mergeJsonArray(configurations, [configuration])
+    }
   }
+  
   saveJsonFile(vscodeCppPropertiesPath, vscodeCppProperties)
 }
