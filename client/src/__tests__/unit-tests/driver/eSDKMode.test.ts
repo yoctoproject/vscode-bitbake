@@ -5,11 +5,12 @@
 
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import { type BitbakeSettings } from '../../../lib/src/BitbakeSettings'
 import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from '../../../driver/BitbakeESDK'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
+import { SpawnSyncReturns } from 'child_process'
+import { IPty } from 'node-pty'
 
 // Yocto's eSDKs contain devtool but not bitbake. These tests ensure we can still provide devtool functionalities without bitbake.
 describe('Devtool eSDK Mode Test Suite', () => {
@@ -23,10 +24,10 @@ describe('Devtool eSDK Mode Test Suite', () => {
     const bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
     setBitbakeESDKMode(true)
 
-    const scanAvailableLayersSpy = jest.spyOn(bitBakeProjectScanner as any, 'scanAvailableLayers').mockImplementation(async () => {})
-    const scanForRecipesSpy = jest.spyOn(bitBakeProjectScanner as any, 'scanForRecipes').mockImplementation(async () => {})
-    const parseAllRecipesSpy = jest.spyOn(bitBakeProjectScanner as any, 'parseAllRecipes').mockImplementation(async () => {})
-    const scanDevtoolWorkspaces = jest.spyOn(bitBakeProjectScanner as any, 'scanDevtoolWorkspaces').mockImplementation(async () => {})
+    const scanAvailableLayersSpy = jest.spyOn(bitBakeProjectScanner, 'scanAvailableLayers').mockImplementation(async () => {})
+    const scanForRecipesSpy = jest.spyOn(bitBakeProjectScanner, 'scanForRecipes').mockImplementation(async () => {})
+    const parseAllRecipesSpy = jest.spyOn(bitBakeProjectScanner, 'parseAllRecipes').mockImplementation(async () => {})
+    const scanDevtoolWorkspaces = jest.spyOn(bitBakeProjectScanner, 'scanDevtoolWorkspaces').mockImplementation(async () => {})
 
     await bitBakeProjectScanner.rescanProject()
 
@@ -38,7 +39,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
 
   it('can detect eSDK mode', async () => {
     const bitbakeDriver = new BitbakeDriver()
-    const bitbakeSettings: BitbakeSettings = {
+    const bitbakeSettings: Record<string, unknown> = {
       pathToBitbakeFolder: __dirname,
       workingDirectory: __dirname,
       commandWrapper: '',
@@ -46,14 +47,14 @@ describe('Devtool eSDK Mode Test Suite', () => {
       pathToBuildFolder: 'nonexistent'
     }
     bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-    const bitbakeTerminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => undefined as any)
+    const bitbakeTerminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
     const bitbakeExecutionSpy = jest.spyOn(ProcessUtils, 'finishProcessExecution')
     clientNotificationManager.showBitbakeSettingsError = jest.fn()
 
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
       status: 1,
       stdout: '/tmp/devtool\r\nbitbake not found'
-    } as any))
+    } as unknown as Promise<SpawnSyncReturns<Buffer>>))
     let sane = await bitbakeDriver.checkBitbakeSettingsSanity()
     expect(sane).toStrictEqual(true)
     expect(bitbakeTerminalSpy).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('which'), expect.anything(), expect.anything())
@@ -62,7 +63,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
       status: 0,
       stdout: '/tmp/devtool\r\n/tmp/bitbake'
-    } as any))
+    } as unknown as Promise<SpawnSyncReturns<Buffer>>))
     sane = await bitbakeDriver.checkBitbakeSettingsSanity()
     expect(sane).toStrictEqual(true)
     expect(bitbakeESDKMode).toStrictEqual(false)
@@ -70,7 +71,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
       status: 1,
       stdout: 'error'
-    } as any))
+    }  as unknown as Promise<SpawnSyncReturns<Buffer>>))
     sane = await bitbakeDriver.checkBitbakeSettingsSanity()
     expect(sane).toStrictEqual(false)
   })
