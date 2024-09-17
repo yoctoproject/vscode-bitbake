@@ -34,7 +34,7 @@ export class BitbakeEnvScanner implements vscode.Disposable {
    * @param uri The URI of the chosen recipe
    * @returns
    */
-  async scanRecipeEnv (chosenRecipe: string, taskProvider: BitbakeTaskProvider, uri: any): Promise<void> {
+  async scanRecipeEnv (chosenRecipe: string, taskProvider: BitbakeTaskProvider, uri: unknown): Promise<void> {
     if (chosenRecipe === '') {
       logger.debug('[BitbakeEnvScanner] No recipe chosen for scan')
       return
