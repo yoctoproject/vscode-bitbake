@@ -24,7 +24,7 @@ export class BitbakeDriver {
   bitbakeProcessCommand: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
 
-  loadSettings (settings: any, workspaceFolder: string = '.'): void {
+  loadSettings (settings: Record<string, unknown>, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
     logger.debug('BitbakeDriver settings updated: ' + JSON.stringify(this.bitbakeSettings))
   }
@@ -40,7 +40,7 @@ export class BitbakeDriver {
     })
   }
 
-  getBuildConfig (property: keyof BitbakeBuildConfigSettings): any {
+  private getBuildConfig (property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | undefined {
     return getBuildSetting(this.bitbakeSettings, this.activeBuildConfiguration, property)
   }
 
@@ -48,14 +48,15 @@ export class BitbakeDriver {
   async spawnBitbakeProcess (command: string): Promise<IPty> {
     const { shell, script } = this.prepareCommand(command)
     const cwd = this.getBuildConfig('workingDirectory')
+    const shellEnv = this.getBuildConfig('shellEnv')
     await this.waitForBitbakeToFinish()
     logger.debug(`Executing Bitbake command with ${shell} in ${cwd}: ${script}`)
     const child = pty.spawn(
       shell,
       ['-c', script],
       {
-        cwd,
-        env: { ...process.env, ...this.getBuildConfig('shellEnv') }
+        cwd: typeof(cwd) === 'string' ? cwd : undefined,
+        env: { ...process.env, ...(typeof shellEnv === 'object' ? shellEnv : {}) }
       }
     )
     this.bitbakeProcess = child
