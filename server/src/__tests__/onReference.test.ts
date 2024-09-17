@@ -9,7 +9,7 @@ import { analyzer } from '../tree-sitter/analyzer'
 import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
 import { DUMMY_URI, FIXTURE_DOCUMENT, FIXTURE_URI } from './fixtures/fixtures'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
-import path = require('path')
+import path from 'path'
 
 describe('onReferenceHandler', () => {
   beforeAll(async () => {
