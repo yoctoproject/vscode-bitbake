@@ -97,7 +97,7 @@ export const updateDiagnostics = async (uri: vscode.Uri): Promise<void> => {
 export const reviewDiagnostics = async (): Promise<void> => {
   logger.debug('[reviewDiagnostics]')
   const allDiagnostics = vscode.languages.getDiagnostics()
-  await Promise.all(allDiagnostics.map(async ([uri, _diagnostics]): Promise<void> => {
+  await Promise.all(allDiagnostics.map(async ([uri]): Promise<void> => {
     // uri might be for an "original document", an "embedded language document", and even something else.
     // updateDiagnostics ignores the uris that are not for an "embedded language documents"
     await updateDiagnostics(uri)
@@ -176,7 +176,8 @@ const checkIsIgnoredDiagnosticOnAnonymousFunctionFirstLine = async (
 ): Promise<boolean> => {
   if (
     diagnostic.source?.includes('Pylance') === true &&
-    (diagnostic as any).hasDiagnosticCode === false && // This weird diagnostic has no code but such a property
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (diagnostic as any)?.hasDiagnosticCode === false && // This weird diagnostic has no code but such a property
     diagnostic.message === '"__anonymous" is not accessed') {
     return true
   }
