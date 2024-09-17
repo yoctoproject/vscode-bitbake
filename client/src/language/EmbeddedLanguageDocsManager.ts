@@ -168,7 +168,7 @@ export default class EmbeddedLanguageDocsManager {
       await workspace.fs.writeFile(uri, Buffer.from(embeddedLanguageDoc.content))
       await workspace.openTextDocument(uri)
     } catch (err) {
-      logger.error(`Failed to create embedded document: ${err as any}`)
+      logger.error(`Failed to create embedded document: ${err}`)
     }
     this.registerEmbeddedLanguageDocInfos(embeddedLanguageDoc, uri)
   }
