@@ -884,7 +884,7 @@
     "clean:server": "rm -fr ./server/node_modules ./server/out ./server/resources server/tsconfig.tsbuildinfo server/.vscode-test server/*.tgz ./server/tree-sitter-bash.wasm ./server/tree-sitter-bitbake.wasm",
     "clean:client": "rm -fr ./client/node_modules ./client/out client/tsconfig.tsbuildinfo client/.vscode-test",
     "clean:lib": "rm -fr ./lib/node_modules",
-    "clean": "npm run clean:lib && npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out integration-tests/project-folder/build* .vscode-test .eslintcache resources coverage ./out *.vsix",
+    "clean": "npm run clean:lib && npm run clean:server && npm run clean:client && rm -fr node_modules integration-tests/out integration-tests/project-folder/build* .vscode-test .eslintcache resources coverage ./out *.vsix tsconfig.tsbuildinfo",
     "lint": "eslint . --cache",
     "jest": "jest",
     "test": "npm run jest && npm run test:integration && npm run test:grammar",
