@@ -16,5 +16,6 @@ server/parser.info
 **/.gitignore
 **/.eslint*
 **/jest.config.js
+**/eslint.config.mjs
 **/*.vsix
 **/*.tgz
