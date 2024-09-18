@@ -1,4 +1,4 @@
-import header from "@tony.ganchev/eslint-plugin-header";
+import header from "eslint-plugin-header";
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
