@@ -30,8 +30,8 @@
     "vscode-languageclient": "^9.0.1"
   },
   "devDependencies": {
-    "@types/find": "^0.2.2",
-    "@types/vscode": "^1.92.0"
+    "@types/find": "^0.2.4",
+    "@types/vscode": "^1.93.0"
   },
   "workspaces": [
     "src/lib"

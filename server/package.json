@@ -22,14 +22,14 @@
   "dependencies": {
     "node-cache": "^5.1.2",
     "vscode-languageserver": "^9.0.1",
-    "vscode-languageserver-textdocument": "^1.0.8",
+    "vscode-languageserver-textdocument": "^1.0.12",
     "web-tree-sitter": "^0.23.0"
   },
   "scripts": {
     "prepack": "cd .. && npm run compile"
   },
   "devDependencies": {
-    "@types/vscode": "^1.92.0"
+    "@types/vscode": "^1.93.0"
   },
   "workspaces": [
     "../client/src/lib"
