@@ -103,6 +103,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   handleInput (data: string): void {
+    logger.warn('EDRT Received input:' + data)
     if (this.process === undefined) {
       this.closeEmitter.fire(0)
       if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
@@ -113,6 +114,8 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
           void this.bitbakeDriver.killBitbake()
         }
       }
+      process?.stdin.write(data)
+      if ((process?.send) != null) { process?.send(data) }
     }
   }
 
