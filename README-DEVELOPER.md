@@ -67,7 +67,11 @@ One can check coding style using
 ``` sh
 npm run lint
 ```
-Install the recommended extensions to automatically fix linting errors when possible.
+Install the recommended extensions to automatically fix linting errors through VSCode.
+You will also need to install the `eslint` dependencies globally:
+``` sh
+npm install -g eslint typescript-eslint
+```
 
 ### Unit tests
 
