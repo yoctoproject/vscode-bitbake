@@ -897,7 +897,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.10.0",
-    "@tony.ganchev/eslint-plugin-header": "^3.1.2",
+    "eslint-plugin-header": "github:tonyganchev/eslint-plugin-header#36161b3282e088ad2f19657ab0e377651b6886c2",
     "@types/find": "^0.2.4",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.12",
