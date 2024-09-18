@@ -29,7 +29,7 @@
     "prepack": "cd .. && npm run compile"
   },
   "devDependencies": {
-    "@types/vscode": "^1.93.0"
+    "@types/vscode": "^1.92.0"
   },
   "workspaces": [
     "../client/src/lib"
