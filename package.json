@@ -895,6 +895,10 @@
     "dev:vsix": "npm run clean && npm install && npm run fetch:wasm && npm run fetch:docs && npm run fetch:spdx-licenses && npm run compile && npm run package",
     "dev:npm": "npm run clean && npm install && npm run fetch:wasm && npm run fetch:docs && npm run fetch:spdx-licenses && cd server && npm pack"
   },
+  "//": "TODO Bump eslint-plugin-header when rules is compatible with eslint 9",
+  "//": "See https://github.com/Stuk/eslint-plugin-header/issues/57",
+  "//": "TODO Bump vsce when symlink regression has been fixed",
+  "//": "See https://github.com/microsoft/vscode-vsce/pull/1053",
   "devDependencies": {
     "@eslint/js": "^9.10.0",
     "eslint-plugin-header": "github:tonyganchev/eslint-plugin-header#36161b3282e088ad2f19657ab0e377651b6886c2",
