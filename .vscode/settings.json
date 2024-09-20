@@ -14,5 +14,6 @@
 		"source.fixAll.eslint": "explicit"
 	},
 	"jest.jestCommandLine": "node_modules/.bin/jest",
-    "jest.monitorLongRun": 300000
+	"jest.monitorLongRun": 300000,
+	"eslint.nodePath": "${workspaceFolder}/node_modules",
 }
