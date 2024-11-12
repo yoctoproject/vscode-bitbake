@@ -46,17 +46,15 @@ export class BitbakeDriver {
 
   /// Execute a command in the bitbake environment
   async spawnBitbakeProcess (command: string): Promise<IPty> {
-    const { shell, script } = this.prepareCommand(command)
-    const cwd = this.getBuildConfig('workingDirectory')
-    const shellEnv = this.getBuildConfig('shellEnv')
+    const { shell, shellEnv, script, workingDirectory } = this.prepareCommand(command)
     await this.waitForBitbakeToFinish()
-    logger.debug(`Executing Bitbake command with ${shell} in ${cwd}: ${script}`)
+    logger.debug(`Executing Bitbake command with ${shell} in ${workingDirectory}: ${script}`)
     const child = pty.spawn(
       shell,
       ['-c', script],
       {
-        cwd: typeof(cwd) === 'string' ? cwd : undefined,
-        env: { ...process.env, ...(typeof shellEnv === 'object' ? shellEnv : {}) }
+        cwd: workingDirectory,
+        env: shellEnv
       }
     )
     this.bitbakeProcess = child
@@ -86,7 +84,7 @@ export class BitbakeDriver {
   } {
     const shell = process.env.SHELL ?? '/bin/sh'
     const tempShellEnv = this.getBuildConfig('shellEnv')
-    const shellEnv = typeof tempShellEnv === 'object' ? tempShellEnv : {}
+    const shellEnv =  {...process.env, ...(typeof tempShellEnv === 'object' ? tempShellEnv : {}) }
     const script = this.composeBitbakeScript(command)
     const tempWorkingDirectory = this.getBuildConfig('workingDirectory')
     const workingDirectory = typeof tempWorkingDirectory === 'string' ? tempWorkingDirectory : '.'
