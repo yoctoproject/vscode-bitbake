@@ -29,6 +29,7 @@ export class BitbakeTerminalProfileProvider implements vscode.TerminalProfilePro
         shellPath: shell,
         shellArgs: ['-c', script],
         env: shellEnv,
+        strictEnv: true,
         cwd: workingDirectory,
         iconPath: vscode.Uri.file(path.resolve(__dirname, '../../images/yocto-view-icon.svg'))
       } satisfies vscode.TerminalOptions
