@@ -119,7 +119,7 @@
           "type": "string",
           "examples": [
             "docker run --rm -v ${workspaceFolder}:${workspaceFolder} crops/poky --workdir=${workspaceFolder} /bin/bash -c",
-            "kas shell -c",
+            "kas-container --ssh-agent shell -c",
             "cqfd run",
             "${workspaceFolder}/build.sh --"
           ],
