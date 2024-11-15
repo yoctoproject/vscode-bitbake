@@ -61,7 +61,7 @@
                     "include": "#python-keywords"
                 },
                 {
-                    "match": "\\b(python|def)\\b(\\(?)",
+                    "match": "(?<=^|^fakeroot +)\\b(python|def)\\b",
                     "captures": {
                         "1": {
                             "name": "storage.type.function.python.bb"

@@ -30,15 +30,15 @@
 >INHERIT += "autotools pkgconfig"
 #^^^^^^^ source.bb keyword.control.bb
 
->fakeroot python foo3() {}
-#^^^^^^^^ source.bb keyword.control.bb
-#         ^^^^^^ source.bb storage.type.function.python.bb
+fakeroot python foo3() {}
+#<-------- source.bb keyword.control.bb
+#        ^^^^^^ source.bb storage.type.function.python.bb
 
->python (){}
-#^^^^^^ source.bb storage.type.function.python.bb
+python (){}
+#<------ source.bb storage.type.function.python.bb
 
 >inherit_defer foo2
 #^^^^^^^^^^^^^ source.bb keyword.control.bb
 
->python(){}
-#^^^^^^ source.bb storage.type.function.python.bb
+python(){}
+#<------ source.bb storage.type.function.python.bb

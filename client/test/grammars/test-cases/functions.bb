@@ -25,8 +25,8 @@
 >    else:
 >        return "dependency"
  
->python () {
-#^^^^^^ source.bb storage.type.function.python.bb - entity.name.function.python.bb
+python () {
+#<------ source.bb storage.type.function.python.bb - entity.name.function.python.bb
 >    if d.getVar('SOMEVAR') == 'value':
 #         ^^^^^^ source.bb entity.name.function.python.bb
 >      d.setVar('ANOTHERVAR', 'value2')
