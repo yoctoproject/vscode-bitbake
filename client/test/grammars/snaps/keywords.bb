@@ -26,3 +26,10 @@ inherit_defer foo2
 
 python(){}
 
+test() {
+    test python
+}
+
+def test() {
+    python = "test"
+}

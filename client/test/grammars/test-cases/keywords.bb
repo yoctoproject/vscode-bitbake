@@ -42,3 +42,13 @@ python (){}
 
 python(){}
 #<------ source.bb storage.type.function.python.bb
+
+>test() {
+>    test python
+#         ^^^^^^ source.bb variable.other.names.bb
+>}
+
+>def test() {
+>    python = "test"
+#    ^^^^^^ source.bb variable.other.names.bb
+>}
