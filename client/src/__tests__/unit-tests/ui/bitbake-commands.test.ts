@@ -91,8 +91,8 @@ describe('Devtool ide-sdk command', () => {
 
   it('should properly detect devtool modify options', async () => {
     // Test addDevtoolDebugBuild
-    expect(addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings)).toBe(' --debug-build')
-    expect(addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: true} as BitbakeSettings)).toBe('')
-    expect(addDevtoolDebugBuild('', {_bitbakeVersion: '1.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings)).toBe('')
+    expect(await addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings, undefined as unknown as BitbakeDriver)).toBe(' --debug-build')
+    expect(await addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: true} as BitbakeSettings, undefined as unknown as BitbakeDriver)).toBe('')
+    expect(await addDevtoolDebugBuild('', {_bitbakeVersion: '1.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings, undefined as unknown as BitbakeDriver)).toBe('')
   })
 })

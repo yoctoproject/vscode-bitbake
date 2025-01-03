@@ -380,8 +380,8 @@ async function rescanProject (bitBakeProjectScanner: BitBakeProjectScanner): Pro
 }
 
 // Exported for testing
-export function addDevtoolDebugBuild(command: string, scanResult: BitbakeScanResult, settings: BitbakeSettings): string {
-  if (checkDevtoolDebugBuildAvailable(scanResult) && !settings.disableDevtoolDebugBuild) {
+export async function addDevtoolDebugBuild(command: string, scanResult: BitbakeScanResult, settings: BitbakeSettings, bitbakeDriver: BitbakeDriver): Promise<string> {
+  if (await checkDevtoolDebugBuildAvailable(scanResult, bitbakeDriver) && !settings.disableDevtoolDebugBuild) {
     command += ' --debug-build'
   }
   return command
@@ -392,7 +392,7 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-modify: ${chosenRecipe}`)
     let command = `devtool modify ${chosenRecipe}`
-    command = addDevtoolDebugBuild(command, bitBakeProjectScanner.scanResult, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings)
+    command = await addDevtoolDebugBuild(command, bitBakeProjectScanner.scanResult, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings, bitBakeProjectScanner.bitbakeDriver)
     const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
     process.onExit((event) => {
       if (event.exitCode === 0) {
@@ -442,7 +442,7 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       clientNotificationManager.showSDKConfigurationError()
       return
     }
-    if (!checkIdeSdkAvailable(bitBakeProjectScanner.scanResult)) {
+    if (!await checkIdeSdkAvailable(bitBakeProjectScanner.scanResult, bitBakeProjectScanner.bitbakeDriver)) {
       clientNotificationManager.showSDKUnavailableError(chosenRecipe)
       return
     }
@@ -453,14 +453,28 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   }
 }
 
-function checkIdeSdkAvailable (scanResult: BitbakeScanResult): boolean {
-  // devtool ide-sdk appeared in Yocto version Scarthgap
-  return bitbakeVersionAbove(scanResult, '2.8.0')
+async function checkIdeSdkAvailable (scanResult: BitbakeScanResult, bitbakeDriver: BitbakeDriver): Promise<boolean> {
+  if(!bitbakeESDKMode) {
+    // devtool ide-sdk appeared in Yocto version Scarthgap
+    return bitbakeVersionAbove(scanResult, '2.8.0')
+  } else {
+    const command = "devtool --help | grep 'ide-sdk'"
+    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool ide-sdk: check')
+    const res = await finishProcessExecution(process)
+    return res.status === 0
+  }
 }
 
-function checkDevtoolDebugBuildAvailable (scanResult: BitbakeScanResult): boolean {
-  // devtool debug-build appeared in Yocto version Walnascard
-  return bitbakeVersionAbove(scanResult, '2.12.0')
+async function checkDevtoolDebugBuildAvailable (scanResult: BitbakeScanResult, bitbakeDriver: BitbakeDriver): Promise<boolean> {
+  if(!bitbakeESDKMode) {
+    // devtool debug-build appeared in Yocto version Walnascard
+    return bitbakeVersionAbove(scanResult, '2.12.0')
+  } else {
+    const command = "devtool modify --help | grep '\\-\\-debug-build'"
+    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool debug-build: check')
+    const res = await finishProcessExecution(process)
+    return res.status === 0
+  }
 }
 
 function checkIdeSdkConfiguration (bitbakeDriver: BitbakeDriver): boolean {
