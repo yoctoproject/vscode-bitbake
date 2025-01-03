@@ -46,7 +46,7 @@ export class BitBakeProjectScanner {
   private readonly _confFileExtension: string = 'conf'
   onChange: EventEmitter = new EventEmitter()
 
-  private _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [] }
+  private _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [], _bitbakeVersion: '' }
   private readonly _bitbakeDriver: BitbakeDriver
   private _languageClient: LanguageClient | undefined
 

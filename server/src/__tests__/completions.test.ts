@@ -12,6 +12,7 @@ import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
 import { extractRecipeName } from '../lib/src/utils/files'
 import { licenseOperators } from '../completions/spdx-licenses'
+import { BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 
 /**
  * The onCompletion handler doesn't allow other parameters, so we can't pass the analyzer and therefore the same
@@ -795,9 +796,8 @@ describe('On Completion', () => {
       _layers: [],
       _overrides: [],
       _recipes: [],
-      _confFiles: [],
-      _workspaces: []
-    }
+      _confFiles: []
+    }  as unknown as BitbakeScanResult
 
     analyzer.analyze({
       uri: FIXTURE_URI.DIRECTIVE,

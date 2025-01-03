@@ -35,18 +35,13 @@ describe('Devtool Worskapces View', () => {
           name: 'dropbear'
         }
       }],
-      _includes: [],
-      _layers: [],
-      _classes: [],
-      _overrides: [],
-      _confFiles: [],
       _workspaces: [
         {
           name: 'dropbear',
           path: '/build/workspace/dropbear'
         }
-      ]
-    }
+      ],
+    } as BitbakeScanResult
 
     const bitBakeProjectScanner = new BitBakeProjectScanner(new BitbakeDriver())
 

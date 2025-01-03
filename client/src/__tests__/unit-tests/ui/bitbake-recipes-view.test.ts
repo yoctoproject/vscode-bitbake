@@ -56,9 +56,8 @@ describe('BitbakeDriver Recipes View', () => {
       _layers: [],
       _classes: [],
       _confFiles: [],
-      _overrides: [],
-      _workspaces: []
-    }
+      _overrides: []
+    }  as unknown as BitbakeScanResult
 
     vscode.window.registerTreeDataProvider = jest.fn().mockImplementation(
       async (viewId: string, treeDataProvider: vscode.TreeDataProvider<BitbakeRecipeTreeItem>): Promise<void> => {

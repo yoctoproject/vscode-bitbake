@@ -10,6 +10,7 @@ import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser
 import { DUMMY_URI, FIXTURE_DOCUMENT, FIXTURE_URI } from './fixtures/fixtures'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import path from 'path'
+import { BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 
 describe('onReferenceHandler', () => {
   beforeAll(async () => {
@@ -53,18 +54,14 @@ describe('onReferenceHandler', () => {
           extraInfo: 'layer: core'
         }
       ],
-      _layers: [],
-      _overrides: [],
-      _recipes: [],
       _confFiles: [
         {
           name: parsedBitbakeConfPath.name,
           path: parsedBitbakeConfPath,
           extraInfo: 'layer: core'
         }
-      ],
-      _workspaces: []
-    }
+      ]
+    } as BitbakeScanResult
 
     analyzer.analyze({
       uri: DUMMY_URI,

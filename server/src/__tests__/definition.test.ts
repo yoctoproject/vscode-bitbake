@@ -10,6 +10,7 @@ import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 
 describe('on definition', () => {
   beforeAll(async () => {
@@ -55,9 +56,6 @@ describe('on definition', () => {
           extraInfo: 'layer: core'
         }
       ],
-      _layers: [],
-      _overrides: [],
-      _recipes: [],
       _confFiles: [
         {
           name: parsedBitbakeConfPath.name,
@@ -65,8 +63,7 @@ describe('on definition', () => {
           extraInfo: 'layer: core'
         }
       ],
-      _workspaces: []
-    }
+    } as BitbakeScanResult
 
     analyzer.analyze({
       uri: FIXTURE_URI.DIRECTIVE,
@@ -201,9 +198,8 @@ describe('on definition', () => {
           path: parsedBarPath,
           extraInfo: 'layer: core'
         }
-      ],
-      _workspaces: []
-    }
+      ]
+    } as unknown as BitbakeScanResult
 
     analyzer.analyze({
       uri: DUMMY_URI,

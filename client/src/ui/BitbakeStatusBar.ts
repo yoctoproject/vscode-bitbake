@@ -11,7 +11,7 @@ import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { BitbakeEnvScanner } from '../driver/BitbakeEnvScanner'
 
 export class BitbakeStatusBar {
-  private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [], _confFiles: [] }
+  private bitbakeScanResults: BitbakeScanResult = { _layers: [], _classes: [], _includes: [], _recipes: [], _overrides: [], _workspaces: [], _confFiles: [], _bitbakeVersion: '' }
   private readonly bitbakeProjectScanner: BitBakeProjectScanner
   readonly statusBarItem: vscode.StatusBarItem
   private scanInProgress = false

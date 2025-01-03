@@ -11,6 +11,7 @@ import { onHoverHandler } from '../connectionHandlers/onHover'
 import path from 'path'
 import { bitBakeProjectScannerClient } from '../BitbakeProjectScannerClient'
 import { extractRecipeName } from '../lib/src/utils/files'
+import { BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
 
 describe('on hover', () => {
   beforeAll(async () => {
@@ -580,9 +581,8 @@ describe('on hover', () => {
       _layers: [],
       _overrides: [],
       _recipes: [],
-      _confFiles: [],
-      _workspaces: []
-    }
+      _confFiles: []
+    } as unknown as BitbakeScanResult
 
     analyzer.analyze({
       uri: DUMMY_URI,

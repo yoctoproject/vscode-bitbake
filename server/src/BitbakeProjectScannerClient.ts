@@ -15,7 +15,8 @@ export class BitBakeProjectScannerClient {
     _recipes: [],
     _overrides: [],
     _confFiles: [],
-    _workspaces: []
+    _workspaces: [],
+    _bitbakeVersion: ''
   }
 
   public setScanResults (scanResults: BitbakeScanResult): void {
