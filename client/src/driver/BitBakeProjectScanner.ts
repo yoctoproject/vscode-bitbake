@@ -67,12 +67,7 @@ export class BitBakeProjectScanner {
     scanIsPending: false
   }
 
-  get scanResult (): BitbakeScanResult {
-    return this._bitbakeScanResult
-  }
-
-  set scanResult (scanResult: BitbakeScanResult) {
-    this._bitbakeScanResult = scanResult
+  get activeScanResult (): BitbakeScanResult {
   }
 
   get bitbakeDriver (): BitbakeDriver {
@@ -87,7 +82,7 @@ export class BitBakeProjectScanner {
   async rescanDevtoolWorkspaces (): Promise<void> {
     logger.info('request rescanDevtoolWorkspaces')
     await this.scanDevtoolWorkspaces()
-    this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
+    this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this.activeScanResult)
   }
 
   async rescanProject (): Promise<void> {
@@ -116,10 +111,10 @@ export class BitBakeProjectScanner {
         this.printScanStatistic()
 
         void this._languageClient?.sendNotification(NotificationMethod.ScanComplete, this._bitbakeScanResult)
-        this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
+        this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this.activeScanResult)
       } catch (error) {
         logger.error(`scanning of project is aborted: ${error}`)
-        this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this._bitbakeScanResult)
+        this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this.activeScanResult)
       }
 
       this._scanStatus.scanIsRunning = false
@@ -178,25 +173,25 @@ export class BitBakeProjectScanner {
   private printScanStatistic (): void {
     logger.info('Scan results:')
     logger.info('******************************************************************')
-    logger.info(`Layer:     ${this._bitbakeScanResult._layers.length}`)
-    logger.info(`Recipes:   ${this._bitbakeScanResult._recipes.length}`)
-    logger.info(`Inc-Files: ${this._bitbakeScanResult._includes.length}`)
-    logger.info(`bbclass:   ${this._bitbakeScanResult._classes.length}`)
-    logger.info(`conf Files:   ${this._bitbakeScanResult._confFiles.length}`)
-    logger.info(`overrides:   ${this._bitbakeScanResult._overrides.length}`)
-    logger.info(`Devtool-workspaces:   ${this._bitbakeScanResult._workspaces.length}`)
+    logger.info(`Layer:     ${this.activeScanResult._layers.length}`)
+    logger.info(`Recipes:   ${this.activeScanResult._recipes.length}`)
+    logger.info(`Inc-Files: ${this.activeScanResult._includes.length}`)
+    logger.info(`bbclass:   ${this.activeScanResult._classes.length}`)
+    logger.info(`conf Files:   ${this.activeScanResult._confFiles.length}`)
+    logger.info(`overrides:   ${this.activeScanResult._overrides.length}`)
+    logger.info(`Devtool-workspaces:   ${this.activeScanResult._workspaces.length}`)
   }
 
   private scanForClasses (): void {
-    this._bitbakeScanResult._classes = this.searchFiles(this._classFileExtension)
+    this.activeScanResult._classes = this.searchFiles(this._classFileExtension)
   }
 
   private scanForIncludeFiles (): void {
-    this._bitbakeScanResult._includes = this.searchFiles(this._includeFileExtension)
+    this.activeScanResult._includes = this.searchFiles(this._includeFileExtension)
   }
 
   private scanForConfFiles (): void {
-    this._bitbakeScanResult._confFiles = this.searchFiles(this._confFileExtension)
+    this.activeScanResult._confFiles = this.searchFiles(this._confFileExtension)
   }
 
   private scanBitbakeVersion(): void {
@@ -215,7 +210,7 @@ export class BitBakeProjectScanner {
   }
 
   public async scanAvailableLayers (): Promise<void> {
-    this._bitbakeScanResult._layers = new Array < LayerInfo >()
+    this.activeScanResult._layers = new Array < LayerInfo >()
     this.containerMountPoint = undefined
 
     const output = await this.executeBitBakeCommand('bitbake-layers show-layers')
@@ -237,7 +232,7 @@ export class BitBakeProjectScanner {
       }
 
       if ((layerElement.name !== undefined) && (layerElement.path !== undefined) && (layerElement.priority !== undefined)) {
-        this._bitbakeScanResult._layers.push(layerElement as LayerInfo)
+        this.activeScanResult._layers.push(layerElement as LayerInfo)
       }
     }
   }
@@ -302,7 +297,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
   private searchFiles (pattern: string): ElementInfo[] {
     const elements: ElementInfo[] = new Array < ElementInfo >()
 
-    for (const layer of this._bitbakeScanResult._layers) {
+    for (const layer of this.activeScanResult._layers) {
       try {
         const files = find.fileSync(new RegExp(`.${pattern}$`), layer.path)
         for (const file of files) {
@@ -327,7 +322,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
   }
 
   async scanForRecipes (): Promise<void> {
-    this._bitbakeScanResult._recipes = new Array < ElementInfo >()
+    this.activeScanResult._recipes = new Array < ElementInfo >()
 
     const output = await this.executeBitBakeCommand('bitbake-layers show-recipes')
     const splittedOutput = output.split(/\r?\n/g)
@@ -380,7 +375,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
          Here 'meta' is used to refer to the layer instead of 'core'. So in such case we need to compare
          the basename of the path found in 'show-layers' with the layer name found in this function.
        */
-      const layerInfo = this._bitbakeScanResult._layers.find((layer) => {
+      const layerInfo = this.activeScanResult._layers.find((layer) => {
         return layer.name === layerName || path.parse(layer.path).name === layerName
       })
 
@@ -392,7 +387,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
         skipped
       }
 
-      this._bitbakeScanResult._recipes.push(element)
+      this.activeScanResult._recipes.push(element)
     }
 
     await this.scanForRecipesPath()
@@ -401,16 +396,16 @@ You should adjust your docker volumes to use the same URIs as those present on y
   async scanOverrides (): Promise<void> {
     const output = await this.executeBitBakeCommand('bitbake-getvar OVERRIDES')
     const outerReg = /\nOVERRIDES="(.*)"\r?\n/
-    this._bitbakeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
+    this.activeScanResult._overrides = output.match(outerReg)?.[1].split(':') ?? []
   }
 
   public async scanDevtoolWorkspaces (): Promise<void> {
-    this._bitbakeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
+    this.activeScanResult._workspaces = new Array < DevtoolWorkspaceInfo >()
     const output = await this.executeBitBakeCommand('devtool status')
     const regex = /^([^\s]+):\s([^\s]+)(?:\s\([^\s]+\))?$/gm
     let match
     while ((match = regex.exec(output)) !== null) {
-      this._bitbakeScanResult._workspaces.push({ name: match[1], path: match[2] })
+      this.activeScanResult._workspaces.push({ name: match[1], path: match[2] })
     }
   }
 
@@ -444,12 +439,12 @@ You should adjust your docker volumes to use the same URIs as those present on y
 
     // Sort by decreasing length to avoid partial matches
     filenames.sort((a, b) => b.length - a.length)
-    this._bitbakeScanResult._recipes.sort((a, b) => b.name.length - a.name.length)
-    await this.assignRecipesPaths(filenames, this._bitbakeScanResult._recipes, (a: string, b: string) => a === b)
+    this.activeScanResult._recipes.sort((a, b) => b.name.length - a.name.length)
+    await this.assignRecipesPaths(filenames, this.activeScanResult._recipes, (a: string, b: string) => a === b)
 
     // Some recipes change their PN like gcc-source -> gcc-source-13.2
     // We allow the recipe to be found by just including part of the name
-    const recipesWithoutPaths = this._bitbakeScanResult._recipes.filter((recipe) => recipe.path === undefined)
+    const recipesWithoutPaths = this.activeScanResult._recipes.filter((recipe) => recipe.path === undefined)
     await this.assignRecipesPaths(filenames, recipesWithoutPaths, (a: string, b: string) => a.includes(b))
   }
 
@@ -486,7 +481,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
         const recipeName: string = fullRecipeNameAsArray[0].split('.')[0]
         const recipeVersion: string | undefined = fullRecipeNameAsArray[1]?.split('.bb')[0]
 
-        const recipe: ElementInfo | undefined = this._bitbakeScanResult._recipes.find((obj: ElementInfo): boolean => {
+        const recipe: ElementInfo | undefined = this.activeScanResult._recipes.find((obj: ElementInfo): boolean => {
           return obj.name === recipeName
         })
 

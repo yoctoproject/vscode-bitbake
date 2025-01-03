@@ -186,7 +186,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       await clientNotificationManager.resetNeverShowAgain('bitbake/bitbakeSettingsError')
       logger.debug('Bitbake settings changed')
       updatePythonPath()
-      if (!scanContainsData(bitBakeProjectScanner.scanResult)) {
+      if (!scanContainsData(bitBakeProjectScanner.activeScanResult)) {
         void vscode.commands.executeCommand('bitbake.rescan-project')
       } else {
         void vscode.commands.executeCommand('bitbake.parse-recipes')
@@ -243,7 +243,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       const { fsPath } = document.uri
 
       if (recipeExts.includes(path.extname(fsPath))) {
-        const foundRecipe = bitBakeProjectScanner.scanResult._recipes.find((recipe) => recipe.name === extractRecipeName(fsPath))
+        const foundRecipe = bitBakeProjectScanner.activeScanResult._recipes.find((recipe) => recipe.name === extractRecipeName(fsPath))
         if (foundRecipe !== undefined) {
           logger.debug(`[onDidSave] Running 'bitbake -e' against the saved recipe: ${foundRecipe.name}`)
           // Note that it pends only one scan at a time. See more details in the command implementation.
