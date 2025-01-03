@@ -24,7 +24,7 @@ import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
-import { type BitbakeScanResult, SCAN_RESULT_VERSION, scanContainsData } from './lib/src/types/BitbakeScanResult'
+import { type BitbakeScanResult, scanContainsData } from './lib/src/types/BitbakeScanResult'
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
 import { NotificationMethod } from './lib/src/types/notifications'
@@ -134,6 +134,10 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   logger.debug('Loaded bitbake workspace settings: ' + JSON.stringify(vscode.workspace.getConfiguration('bitbake')))
   bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
   const bitBakeProjectScanner: BitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
+  await bitBakeProjectScanner.restoreCacheResult(context.workspaceState)
+  bitBakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, async () => {
+    bitBakeProjectScanner.saveCacheResult(context.workspaceState)
+  })
   updatePythonPath()
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
@@ -268,34 +272,12 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, terminalProvider, client)
   registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner, client)
 
-  logger.info('Congratulations, your extension "BitBake" is now active!')
-
-  // Update the scan result stored in the global state
-  bitBakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResult: BitbakeScanResult) => {
-    void context.workspaceState.update('bitbake.ScanResult', scanResult).then(() => {
-      logger.debug('BitBake scan result saved to workspace state')
-    })
-    void context.workspaceState.update('bitbake.ScanResultVersion', SCAN_RESULT_VERSION).then(() => {
-      logger.debug('BitBake scan result version saved to workspace state')
-    })
-  })
-
-  const lastBitbakeScanResult: BitbakeScanResult | undefined = context.workspaceState.get('bitbake.ScanResult')
-  const lastBitbakeScanResultVersion: number | undefined = context.workspaceState.get('bitbake.ScanResultVersion')
-
-  const needToScan = lastBitbakeScanResult === undefined ||
-    lastBitbakeScanResultVersion === undefined ||
-    lastBitbakeScanResultVersion !== SCAN_RESULT_VERSION
-
-  if (needToScan) {
-    logger.debug('No valid scan result found, scanning the project')
-    void vscode.commands.executeCommand('bitbake.rescan-project')
-  } else {
-    logger.debug('Loading previous scan result')
-    bitBakeProjectScanner.activeScanResult = lastBitbakeScanResult
+  // In case we restored a scan from the cache, tell all listeners about it
+  // FIXME it would be better if all UI participants directly read the cache at initialization than refreshing them here
+  if (scanContainsData(bitBakeProjectScanner.activeScanResult)) {
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
-    void client.sendNotification(NotificationMethod.ScanComplete, bitBakeProjectScanner.activeScanResult)
   }
+  logger.info('Congratulations, your extension "BitBake" is now active!')
 }
 
 export function deactivate (): Thenable<void> | undefined {
