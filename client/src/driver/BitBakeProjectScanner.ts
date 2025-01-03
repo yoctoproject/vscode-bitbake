@@ -18,7 +18,6 @@ import type {
 } from '../lib/src/types/BitbakeScanResult'
 
 import { type BitbakeDriver } from './BitbakeDriver'
-import { type LanguageClient } from 'vscode-languageclient/node'
 import fs from 'fs'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode } from './BitbakeESDK'
@@ -48,7 +47,6 @@ export class BitBakeProjectScanner {
 
   private _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [], _bitbakeVersion: '' }
   private readonly _bitbakeDriver: BitbakeDriver
-  private _languageClient: LanguageClient | undefined
 
   /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
   private containerMountPoint: string | undefined
@@ -56,10 +54,6 @@ export class BitBakeProjectScanner {
 
   constructor (bitbakeDriver: BitbakeDriver) {
     this._bitbakeDriver = bitbakeDriver
-  }
-
-  setClient (languageClient: LanguageClient): void {
-    this._languageClient = languageClient
   }
 
   private readonly _scanStatus: ScannStatus = {
@@ -110,7 +104,6 @@ export class BitBakeProjectScanner {
         logger.info('scan ready')
         this.printScanStatistic()
 
-        void this._languageClient?.sendNotification(NotificationMethod.ScanComplete, this._bitbakeScanResult)
         this.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, this.activeScanResult)
       } catch (error) {
         logger.error(`scanning of project is aborted: ${error}`)
