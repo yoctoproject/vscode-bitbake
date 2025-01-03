@@ -100,6 +100,7 @@ export class BitBakeProjectScanner {
 
       try {
         if (!bitbakeESDKMode) { // Has been set by sanity checking
+          this.scanBitbakeVersion()
           await this.scanAvailableLayers()
           this.scanForClasses()
           this.scanForIncludeFiles()
@@ -196,6 +197,21 @@ export class BitBakeProjectScanner {
 
   private scanForConfFiles (): void {
     this._bitbakeScanResult._confFiles = this.searchFiles(this._confFileExtension)
+  }
+
+  private scanBitbakeVersion(): void {
+    const bitbakeScriptPath = this.bitbakeDriver.bitbakeSettings.pathToBitbakeFolder + '/bin/bitbake'
+    const bitbakeScriptContent = fs.readFileSync(bitbakeScriptPath, 'utf8')
+
+    const versionRegex = /__version__ = "(\d+\.\d+\.\d+)"/
+    const match = bitbakeScriptContent.match(versionRegex)
+    if (match === null) {
+      logger.error('Failed to find bitbake version')
+      throw new Error('Failed to find bitbake version in ' + bitbakeScriptPath)
+    }
+    logger.info('Bitbake version: ' + match[1])
+
+    this._bitbakeScanResult._bitbakeVersion = match[1]
   }
 
   public async scanAvailableLayers (): Promise<void> {
