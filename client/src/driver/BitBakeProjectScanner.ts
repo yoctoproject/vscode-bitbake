@@ -10,11 +10,12 @@ import * as vscode from 'vscode'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 
-import type {
-  BitbakeScanResult,
-  DevtoolWorkspaceInfo,
-  ElementInfo,
-  LayerInfo,
+import {
+  SCAN_RESULT_VERSION,
+  type BitbakeScanResult,
+  type DevtoolWorkspaceInfo,
+  type ElementInfo,
+  type LayerInfo,
 } from '../lib/src/types/BitbakeScanResult'
 
 import { type BitbakeDriver } from './BitbakeDriver'
@@ -80,6 +81,28 @@ export class BitBakeProjectScanner {
 
   get bitbakeDriver (): BitbakeDriver {
     return this._bitbakeDriver
+  }
+
+  public saveCacheResult(memento: vscode.Memento): Thenable<void> {
+    const ret = memento.update('bitbake.ScanResults', this._bitbakeScanResults).then(() => {
+      logger.debug('BitBake scan result saved to workspace state')
+    })
+    void memento.update('bitbake.ScanResultVersion', SCAN_RESULT_VERSION).then(() => {
+      logger.debug('BitBake scan result version saved to workspace state')
+    })
+    return ret
+  }
+
+  public restoreCacheResult(memento: vscode.Memento) : void {
+    const scanResult = memento.get('bitbake.ScanResults') as { [key: string]: BitbakeScanResult }
+    const scanResultVersion = memento.get('bitbake.ScanResultVersion') as number
+    if (scanResult !== undefined && scanResultVersion === SCAN_RESULT_VERSION) {
+      this._bitbakeScanResults = scanResult
+      logger.debug('BitBake scan result restored from workspace state')
+      // No need to emit onChange, because this is called during the initialization, when nothing is listening
+    } else {
+      logger.debug('No valid BitBake scan result found in workspace state: ' + scanResultVersion + '!=' + SCAN_RESULT_VERSION)
+    }
   }
 
   public needsContainerPathsResolution (): boolean {
