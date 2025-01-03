@@ -305,7 +305,7 @@ async function selectRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectS
   }
   // No recipe is provided when calling the command through the command pallette
   if (chosenRecipe === undefined) {
-    const devtoolWorkspacesNames = bitBakeProjectScanner.scanResult._workspaces.map((workspace) => workspace.name)
+    const devtoolWorkspacesNames = bitBakeProjectScanner.activeScanResult._workspaces.map((workspace) => workspace.name)
     const quickPickItems = mergeArraysDistinctly(
       (name) => name,
       bitbakeWorkspace.activeRecipes,
@@ -330,7 +330,7 @@ async function addActiveRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProje
     return recipe
   }
 
-  const recipeNames = bitBakeProjectScanner.scanResult._recipes.map((recipe) => recipe.name)
+  const recipeNames = bitBakeProjectScanner.activeScanResult._recipes.map((recipe) => recipe.name)
   let chosenRecipe: string | undefined
   if (recipeNames.length !== 0) {
     chosenRecipe = await vscode.window.showQuickPick(recipeNames, { placeHolder: 'Select recipe to add' })
@@ -411,7 +411,7 @@ async function devtoolSDKFallbackCommand (bitbakeWorkspace: BitbakeWorkspace, bi
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-sdk-fallback: ${chosenRecipe}`)
-    const workspace = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)
+    const workspace = bitBakeProjectScanner.activeScanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)
     if (workspace === undefined) throw new Error('Devtool Workspace not found')
     const resolvedWorkspace: DevtoolWorkspaceInfo = {
       name: workspace.name,
@@ -483,7 +483,7 @@ function checkIdeSdkConfiguration (bitbakeDriver: BitbakeDriver): boolean {
 }
 
 async function pickLayer (extraOption: string, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LayerInfo | undefined> {
-  const layers = bitBakeProjectScanner.scanResult._layers
+  const layers = bitBakeProjectScanner.activeScanResult._layers
   const chosenLayer = await vscode.window.showQuickPick([...layers.map(layer => layer.name), extraOption], { placeHolder: 'Choose target BitBake layer' })
   if (chosenLayer === undefined) { return }
 
@@ -555,12 +555,12 @@ async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, 
   if (chosenRecipe === undefined) { return }
   if (bitBakeProjectScanner.bitbakeDriver === undefined) { throw new Error('bitbakeDriver is undefined') }
 
-  if (bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe) === undefined) {
+  if (bitBakeProjectScanner.activeScanResult._workspaces.find((workspace) => workspace.name === chosenRecipe) === undefined) {
     await devtoolModifyCommand(bitbakeWorkspace, bitBakeProjectScanner, chosenRecipe)
   }
 
   logger.debug(`Command: devtool-open-workspace: ${chosenRecipe}`)
-  let workspacePath = bitBakeProjectScanner.scanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)?.path
+  let workspacePath = bitBakeProjectScanner.activeScanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)?.path
   workspacePath = await bitBakeProjectScanner.resolveContainerPath(workspacePath)
   if (workspacePath === undefined) {
     logger.error('Devtool workspace not found')

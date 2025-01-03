@@ -79,7 +79,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get a list of layers', async () => {
-    const layers = bitBakeProjectScanner.scanResult._layers
+    const layers = bitBakeProjectScanner.activeScanResult._layers
     // poky provides the "core", "yocto" and "yoctobsp" layers
     expect(layers.length).toBeGreaterThan(2)
     expect(layers).toEqual(
@@ -94,7 +94,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get a list of recipes', async () => {
-    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const recipes = bitBakeProjectScanner.activeScanResult._recipes
     expect(recipes.length).toBeGreaterThan(100)
     expect(recipes).toEqual(
       expect.arrayContaining([
@@ -108,7 +108,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can detected skipped recipes', async () => {
-    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const recipes = bitBakeProjectScanner.activeScanResult._recipes
     // systemd is skipped in the poky distribution, because systemV is used instead
     const systemdRecipe = recipes.find((recipe) => recipe.name === 'systemd')
     expect(systemdRecipe).toEqual(
@@ -121,7 +121,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get recipes appends', async () => {
-    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const recipes = bitBakeProjectScanner.activeScanResult._recipes
     const busyboxRecipe = recipes.find((recipe) => recipe.name === 'busybox')
     expect(busyboxRecipe).toEqual(
       expect.objectContaining(
@@ -137,7 +137,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get recipes paths', async () => {
-    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const recipes = bitBakeProjectScanner.activeScanResult._recipes
     const busyboxRecipe = recipes.find((recipe) => recipe.name === 'busybox')
     expect(busyboxRecipe).toEqual(
       expect.objectContaining({
@@ -150,7 +150,7 @@ describe('BitBakeProjectScanner', () => {
 
   it('can get tricky recipes paths', async () => {
     // These recipes change their PN and require the recipesWithoutPaths code
-    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const recipes = bitBakeProjectScanner.activeScanResult._recipes
     const gccSourceRecipe = recipes.find((recipe) => recipe.name.includes('gcc-source-'))
     expect(gccSourceRecipe).toEqual(
       expect.objectContaining({
@@ -178,7 +178,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('respects PREFERRED_VERSION', async () => {
-    const recipes = bitBakeProjectScanner.scanResult._recipes
+    const recipes = bitBakeProjectScanner.activeScanResult._recipes
     const fixtureVersionRecipe = recipes.find((recipe) => recipe.name === 'fixture-version')
     expect(fixtureVersionRecipe).toEqual(
       expect.objectContaining({
@@ -191,7 +191,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get a list of classes', async () => {
-    const classes = bitBakeProjectScanner.scanResult._classes
+    const classes = bitBakeProjectScanner.activeScanResult._classes
     expect(classes.length).toBeGreaterThan(50)
     expect(classes).toEqual(
       expect.arrayContaining([
@@ -205,7 +205,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get a list of overrides', async () => {
-    const overrides = bitBakeProjectScanner.scanResult._overrides
+    const overrides = bitBakeProjectScanner.activeScanResult._overrides
     expect(overrides.length).toBeGreaterThan(5)
     expect(overrides).toEqual(
       expect.arrayContaining([
@@ -215,7 +215,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get a list of conf files', async () => {
-    const confFiles = bitBakeProjectScanner.scanResult._confFiles
+    const confFiles = bitBakeProjectScanner.activeScanResult._confFiles
     expect(confFiles.length).toBeGreaterThan(0)
     expect(confFiles).toEqual(
       expect.arrayContaining(
@@ -233,7 +233,7 @@ describe('BitBakeProjectScanner', () => {
   })
 
   it('can get a list of devtool workspaces', async () => {
-    const devtoolWorkspaces = bitBakeProjectScanner.scanResult._workspaces
+    const devtoolWorkspaces = bitBakeProjectScanner.activeScanResult._workspaces
     expect(devtoolWorkspaces.length).toBeGreaterThan(0)
     expect(devtoolWorkspaces).toEqual(
       expect.arrayContaining([
