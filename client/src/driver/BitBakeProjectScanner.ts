@@ -25,7 +25,7 @@ import { finishProcessExecution } from '../utils/ProcessUtils'
 import { extractRecipeName, extractRecipeVersion } from '../lib/src/utils/files'
 import { NotificationMethod } from '../lib/src/types/notifications'
 
-interface ScannStatus {
+interface ScanStatus {
   scanIsRunning: boolean
   scanIsPending: boolean
 }
@@ -56,7 +56,7 @@ export class BitBakeProjectScanner {
     this._bitbakeDriver = bitbakeDriver
   }
 
-  private readonly _scanStatus: ScannStatus = {
+  private _scanStatus: ScanStatus = {
     scanIsRunning: false,
     scanIsPending: false
   }
