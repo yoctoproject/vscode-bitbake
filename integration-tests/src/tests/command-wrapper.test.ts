@@ -56,7 +56,7 @@ suite('Bitbake Command Wrapper', () => {
   test('Bitbake can run a task inside a crops container', async () => {
     await vscode.commands.executeCommand('bitbake.run-task', 'base-files', 'unpack')
     await assertWillComeTrue(async () => {
-      const files = await vscode.workspace.findFiles('build-crops/tmp/work/*/base-files/*/issue')
+      const files = await vscode.workspace.findFiles('build-crops/tmp/work/*/base-files/*/sources/issue')
       return files.length === 1
     })
   }).timeout(BITBAKE_TIMEOUT)
