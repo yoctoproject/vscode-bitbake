@@ -215,7 +215,11 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   }))
   context.subscriptions.push(bitbakeConfigPicker.onActiveConfigChanged.event((config) => {
     bitbakeDriver.activeBuildConfiguration = config
-    // Re-scaning here would be very cumbersome, the user should do it manually if desired
+    if (!scanContainsData(bitBakeProjectScanner.activeScanResult)) {
+      void vscode.commands.executeCommand('bitbake.rescan-project')
+    } else {
+      bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
+    }
   }))
 
   context.subscriptions.push(
