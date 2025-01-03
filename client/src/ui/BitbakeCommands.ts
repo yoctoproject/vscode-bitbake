@@ -7,6 +7,7 @@
 
 import * as vscode from 'vscode'
 import fs from 'fs'
+import semver from 'semver';
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
@@ -18,7 +19,7 @@ import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTe
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
-import { type DevtoolWorkspaceInfo, type LayerInfo } from '../lib/src/types/BitbakeScanResult'
+import { BitbakeScanResult, type DevtoolWorkspaceInfo, type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
 import * as child_process from 'child_process'
 import { clientNotificationManager } from './ClientNotificationManager'
@@ -432,7 +433,7 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       clientNotificationManager.showSDKConfigurationError()
       return
     }
-    if (!await checkIdeSdkAvailable(bitbakeDriver)) {
+    if (!checkIdeSdkAvailable(bitBakeProjectScanner.scanResult)) {
       clientNotificationManager.showSDKUnavailableError(chosenRecipe)
       return
     }
@@ -443,11 +444,10 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   }
 }
 
-async function checkIdeSdkAvailable (bitbakeDriver: BitbakeDriver): Promise<boolean> {
-  const command = "devtool --help | grep 'ide-sdk'"
-  const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool ide-sdk: check')
-  const res = await finishProcessExecution(process)
-  return res.status === 0
+function checkIdeSdkAvailable (scanResult: BitbakeScanResult): boolean {
+  // devtool ide-sdk appeared in Yocto version Scarthgap
+  return bitbakeVersionAbove(scanResult, '2.8.0')
+}
 }
 
 function checkIdeSdkConfiguration (bitbakeDriver: BitbakeDriver): boolean {
@@ -650,4 +650,8 @@ async function devtoolCleanCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
 
 async function collapseActiveList (): Promise<void> {
   await vscode.commands.executeCommand('list.collapseAll')
+}
+
+function bitbakeVersionAbove (scanResult: BitbakeScanResult, version: string): boolean {
+  return semver.gt(scanResult._bitbakeVersion, version);
 }
