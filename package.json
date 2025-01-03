@@ -206,6 +206,11 @@
           "type": "boolean",
           "default": false,
           "description": "Turn on this setting to stop this extension from modifying the VS Code configuration of the workspace. Note that this will also disable some features related to embedded Python and Shell code."
+        },
+        "bitbake.disableDevtoolDebugBuild": {
+          "type": "boolean",
+          "default": false,
+          "description": "Turn off `--debug-build` for the `bitbake.devtool-modify` command."
         }
       }
     },
