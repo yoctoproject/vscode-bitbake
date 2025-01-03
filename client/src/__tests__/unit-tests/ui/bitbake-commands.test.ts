@@ -60,7 +60,7 @@ describe('Devtool ide-sdk command', () => {
       pathToBitbakeFolder: '',
       sdkImage: 'core-image-minimal'
     }
-    jest.spyOn(bitBakeProjectScanner, 'scanResult', 'get').mockReturnValue({'_bitbakeVersion': '1.0.0'} as BitbakeScanResult)
+    jest.spyOn(bitBakeProjectScanner, 'activeScanResult', 'get').mockReturnValue({'_bitbakeVersion': '1.0.0'} as BitbakeScanResult)
     const ideSDKCommand = mockExtensionContext(bitBakeProjectScanner)
 
     jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(undefined as unknown as Promise<IPty>)
@@ -78,7 +78,7 @@ describe('Devtool ide-sdk command', () => {
       sdkImage: 'core-image-minimal',
       sshTarget: 'root@192.168.0.3'
     }
-    jest.spyOn(bitBakeProjectScanner, 'scanResult', 'get').mockReturnValue({'_bitbakeVersion': '3.0.0'} as BitbakeScanResult)
+    jest.spyOn(bitBakeProjectScanner, 'activeScanResult', 'get').mockReturnValue({'_bitbakeVersion': '3.0.0'} as BitbakeScanResult)
     const ideSDKCommand = mockExtensionContext(bitBakeProjectScanner)
 
     const commandSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(undefined as unknown as Promise<IPty>)

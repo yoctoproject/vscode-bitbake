@@ -392,7 +392,7 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-modify: ${chosenRecipe}`)
     let command = `devtool modify ${chosenRecipe}`
-    command = await addDevtoolDebugBuild(command, bitBakeProjectScanner.scanResult, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings, bitBakeProjectScanner.bitbakeDriver)
+    command = await addDevtoolDebugBuild(command, bitBakeProjectScanner.activeScanResult, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings, bitBakeProjectScanner.bitbakeDriver)
     const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
     process.onExit((event) => {
       if (event.exitCode === 0) {
@@ -442,7 +442,7 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       clientNotificationManager.showSDKConfigurationError()
       return
     }
-    if (!await checkIdeSdkAvailable(bitBakeProjectScanner.scanResult, bitBakeProjectScanner.bitbakeDriver)) {
+    if (!await checkIdeSdkAvailable(bitBakeProjectScanner.activeScanResult, bitBakeProjectScanner.bitbakeDriver)) {
       clientNotificationManager.showSDKUnavailableError(chosenRecipe)
       return
     }
