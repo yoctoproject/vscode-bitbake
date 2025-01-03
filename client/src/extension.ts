@@ -138,7 +138,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   bitbakeTaskProvider = new BitbakeTaskProvider(bitbakeDriver)
   client = await activateLanguageServer(context, bitBakeProjectScanner)
-  bitBakeProjectScanner.setClient(client)
+  bitBakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResult: BitbakeScanResult) => {
+    void client.sendNotification(NotificationMethod.ScanComplete, scanResult)
+  })
 
   taskProvider = vscode.tasks.registerTaskProvider('bitbake', bitbakeTaskProvider)
 
