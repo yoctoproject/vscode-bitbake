@@ -42,6 +42,38 @@ export class OutputLogger {
     this.log(message, 'debug')
   }
 
+  public debug_ratelimit (message: string): void {
+    if (!this.shouldLog(this.level)) {
+      // OPTIM Skip the regex check if the log level is not high enough
+      return
+    }
+
+    if (OutputLogger.rateLimitPatterns.test(message)) {
+      const now = Date.now()
+      if (now - this.rateLimitStart < OutputLogger.rateLimit) {
+        this.rateLimitCount++
+        return
+      }
+      this.rateLimitStart = now
+      if (this.rateLimitCount > 0) {
+        this.debug(`Rate limited ${this.rateLimitCount} messages`)
+        this.rateLimitCount = 0
+      }
+    }
+
+    this.debug(message)
+  }
+
+  /* Catches messages like:
+   *   0: busybox-1.37.0-r0 do_fetch - 6s (pid 280)   7% |#########       | 28.7M/s
+   *   Parsing recipes:  10% |################                            | ETA:  0:00:19
+   *   No currently running tasks (0 of 3)   0% |                         |
+   */
+  private static readonly rateLimitPatterns = /% \|/
+  private static readonly rateLimit = 1000
+  private rateLimitStart = 0
+  private rateLimitCount = 0
+
   public warn (message: string): void {
     this.log(message, 'warning')
   }

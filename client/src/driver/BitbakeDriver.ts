@@ -65,7 +65,7 @@ export class BitbakeDriver {
     })
     const disposables = [
       child.onData((data) => {
-        logger.debug(data.toString())
+        logger.debug_ratelimit(data.toString())
       }),
       child.onExit(() => {
         this.bitbakeProcess = undefined
