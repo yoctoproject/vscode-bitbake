@@ -196,6 +196,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
         void vscode.commands.executeCommand('bitbake.rescan-project')
       } else {
         void vscode.commands.executeCommand('bitbake.parse-recipes')
+        bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
       }
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
