@@ -40,7 +40,7 @@ export class BitbakeDriver {
     })
   }
 
-  getBuildConfig (property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | undefined {
+  getBuildConfig (property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | boolean | undefined {
     return getBuildSetting(this.bitbakeSettings, this.activeBuildConfiguration, property)
   }
 

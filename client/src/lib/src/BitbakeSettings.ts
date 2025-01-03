@@ -12,6 +12,7 @@ export interface BitbakeBuildConfigSettings {
   sshTarget?: string
   sdkImage?: string
   name?: string
+  disableDevtoolDebugBuild?: boolean
 }
 
 /// Defines the context of a bitbake workspace with all information to call bitbake
@@ -103,7 +104,7 @@ function expandBuildConfig (settings: Record<string, unknown>, variables: NodeJS
   }
 }
 
-export function getBuildSetting (settings: BitbakeSettings, buildConfiguration: string, property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | undefined {
+export function getBuildSetting (settings: BitbakeSettings, buildConfiguration: string, property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | boolean | undefined {
   if (settings.buildConfigurations !== undefined) {
     const buildConfig = settings.buildConfigurations.find(config => config.name === buildConfiguration)
     if (buildConfig !== undefined) {
