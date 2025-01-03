@@ -8,13 +8,14 @@ import type childProcess from 'child_process'
 import { BitbakeWorkspace } from '../../../ui/BitbakeWorkspace'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import { registerDevtoolCommands } from '../../../ui/BitbakeCommands'
+import { addDevtoolDebugBuild, registerDevtoolCommands } from '../../../ui/BitbakeCommands'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
 import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { LanguageClient } from 'vscode-languageclient/node'
 import { IPty } from 'node-pty'
 import { BitbakeScanResult } from '../../../lib/src/types/BitbakeScanResult'
+import { BitbakeSettings } from '../../../lib/src/BitbakeSettings'
 
 jest.mock('vscode')
 
@@ -86,5 +87,12 @@ describe('Devtool ide-sdk command', () => {
     jest.spyOn(vscode.window, 'showInformationMessage').mockReturnValue({ then: jest.fn() } as unknown as Thenable<vscode.MessageItem | undefined>)
     await ideSDKCommand('busybox')
     expect(commandSpy).toHaveBeenCalledWith(expect.anything(), 'devtool ide-sdk -i code busybox core-image-minimal -t root@192.168.0.3', expect.anything())
+  })
+
+  it('should properly detect devtool modify options', async () => {
+    // Test addDevtoolDebugBuild
+    expect(addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings)).toBe(' --debug-build')
+    expect(addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: true} as BitbakeSettings)).toBe('')
+    expect(addDevtoolDebugBuild('', {_bitbakeVersion: '1.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings)).toBe('')
   })
 })
