@@ -23,7 +23,6 @@ import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode } from './BitbakeESDK'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { extractRecipeName, extractRecipeVersion } from '../lib/src/utils/files'
-import { NotificationMethod } from '../lib/src/types/notifications'
 
 interface ScanStatus {
   scanIsRunning: boolean
@@ -45,7 +44,8 @@ export class BitBakeProjectScanner {
   private readonly _confFileExtension: string = 'conf'
   onChange: EventEmitter = new EventEmitter()
 
-  private _bitbakeScanResult: BitbakeScanResult = { _classes: [], _includes: [], _layers: [], _overrides: [], _recipes: [], _workspaces: [], _confFiles: [], _bitbakeVersion: '' }
+  /// The scan results stored per activeBuildConfiguration
+  private _bitbakeScanResults: { [key: string]: BitbakeScanResult } = {}
   private readonly _bitbakeDriver: BitbakeDriver
 
   /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
@@ -62,6 +62,20 @@ export class BitBakeProjectScanner {
   }
 
   get activeScanResult (): BitbakeScanResult {
+    const activeBuildConfiguration = this._bitbakeDriver.activeBuildConfiguration
+    if (this._bitbakeScanResults[activeBuildConfiguration] === undefined) {
+      this._bitbakeScanResults[activeBuildConfiguration] = {
+        _classes: [],
+        _includes: [],
+        _layers: [],
+        _overrides: [],
+        _recipes: [],
+        _workspaces: [],
+        _confFiles: [],
+        _bitbakeVersion: ''
+      }
+    }
+    return this._bitbakeScanResults[activeBuildConfiguration]
   }
 
   get bitbakeDriver (): BitbakeDriver {
@@ -199,7 +213,7 @@ export class BitBakeProjectScanner {
     }
     logger.info('Bitbake version: ' + match[1])
 
-    this._bitbakeScanResult._bitbakeVersion = match[1]
+    this.activeScanResult._bitbakeVersion = match[1]
   }
 
   public async scanAvailableLayers (): Promise<void> {

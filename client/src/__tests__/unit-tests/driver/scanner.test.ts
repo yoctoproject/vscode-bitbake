@@ -74,7 +74,7 @@ describe('BitBakeProjectScanner', () => {
   }, BITBAKE_TIMEOUT)
 
   it('can get the bitbake version', async () => {
-    const version = bitBakeProjectScanner.scanResult._bitbakeVersion
+    const version = bitBakeProjectScanner.activeScanResult._bitbakeVersion
     expect(version).toMatch(/^[\d.]+$/);
   })
 
