@@ -97,7 +97,11 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     }
 
     while (this.bitbakeScanResults === undefined) {
-      await new Promise(resolve => setTimeout(resolve, 300))
+      await new Promise(resolve => {
+        this.bitbakeProjectScanner.onChange.once(BitBakeProjectScanner.EventType.SCAN_COMPLETE, () => {
+          resolve(undefined)
+        })
+      })
     }
     const fileItems: BitbakeRecipeTreeItem[] = []
     this.bitbakeScanResults._recipes.forEach((recipe: ElementInfo) => {
