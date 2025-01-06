@@ -5,10 +5,9 @@
 
 import * as vscode from 'vscode'
 import { BitbakeWorkspace } from './BitbakeWorkspace'
-import { type ElementInfo, type BitbakeScanResult, scanContainsData, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
+import { type ElementInfo, type BitbakeScanResult, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
 import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
-import { bitbakeESDKMode } from '../driver/BitbakeESDK'
 
 export class BitbakeRecipesView {
   private readonly bitbakeTreeProvider: BitbakeTreeDataProvider
@@ -72,11 +71,14 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipeTreeItem | undefined> = new vscode.EventEmitter<BitbakeRecipeTreeItem | undefined>()
   readonly onDidChangeTreeData: vscode.Event<BitbakeRecipeTreeItem | undefined> = this._onDidChangeTreeData.event
   private readonly bitbakeProjectScanner: BitBakeProjectScanner
-  private bitbakeScanResults: BitbakeScanResult | undefined
+  private bitbakeScanResults: BitbakeScanResult
+  private scanCompletePromise: Promise<void> | undefined
+  private resolveScanCompletePromise: (() => void) | undefined
 
   constructor (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScanner: BitBakeProjectScanner) {
     this.bitbakeWorkspace = bitbakeWorkspace
     this.bitbakeProjectScanner = bitbakeProjectScanner
+    this.bitbakeScanResults = bitbakeProjectScanner.activeScanResult
 
     bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_ADDED, () => {
       this._onDidChangeTreeData.fire(undefined)
@@ -84,10 +86,22 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_DROPPED, () => {
       this._onDidChangeTreeData.fire(undefined)
     })
+    bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.START_SCAN, () => {
+      if (this.scanCompletePromise === undefined) {
+        this.scanCompletePromise = new Promise<void>((resolve) => {
+          this.resolveScanCompletePromise = resolve
+        })
+      }
+      this._onDidChangeTreeData.fire(undefined)
+    })
     bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.SCAN_COMPLETE, (scanResults: BitbakeScanResult) => {
       // In case a parsing error was just introduced, we keep the previous results to keep navigation functional
       if (this.bitbakeScanResults === undefined || !scanContainsRecipes(this.bitbakeScanResults) || scanContainsRecipes(scanResults)) {
         this.bitbakeScanResults = scanResults
+      }
+      if (this.resolveScanCompletePromise) {
+        this.resolveScanCompletePromise()
+        this.resolveScanCompletePromise = undefined
       }
       this._onDidChangeTreeData.fire(undefined)
     })
@@ -98,22 +112,16 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   }
 
   async getChildren (element?: BitbakeRecipeTreeItem | undefined): Promise<BitbakeRecipeTreeItem[]> {
+    if (this.scanCompletePromise !== undefined) {
+      await this.scanCompletePromise
+      this.scanCompletePromise = undefined
+    }
     if (element === undefined) {
       const items = this.getBitbakeRecipes()
       items.push(this.getAddRecipeItem())
       return items
     }
-    if (bitbakeESDKMode) {
-      return []
-    }
 
-    while (this.bitbakeScanResults === undefined) {
-      await new Promise(resolve => {
-        this.bitbakeProjectScanner.onChange.once(BitBakeProjectScanner.EventType.SCAN_COMPLETE, () => {
-          resolve(undefined)
-        })
-      })
-    }
     const fileItems: BitbakeRecipeTreeItem[] = []
     this.bitbakeScanResults._recipes.forEach((recipe: ElementInfo) => {
       if (recipe.name === element.label) {
@@ -135,7 +143,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
         }
       }
     })
-    if (fileItems.length === 0 && scanContainsData(this.bitbakeScanResults)) {
+    if (fileItems.length === 0) {
       const errorItem = new BitbakeRecipeTreeItem('Recipe not found', vscode.TreeItemCollapsibleState.None)
       errorItem.contextValue = undefined
       errorItem.iconPath = new vscode.ThemeIcon('warning')
