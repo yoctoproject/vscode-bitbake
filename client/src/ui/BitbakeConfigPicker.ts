@@ -6,6 +6,7 @@
 import * as vscode from 'vscode'
 import { type BitbakeSettings } from '../lib/src/BitbakeSettings'
 import assert from 'assert'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 export class BitbakeConfigPicker {
   readonly statusBarItem: vscode.StatusBarItem
@@ -22,6 +23,7 @@ export class BitbakeConfigPicker {
     this._activeBuildConfiguration = value
     this.onActiveConfigChanged.fire(value)
     void this.memento?.update('BitbakeConfigPicker.activeBuildConfiguration', value)
+    logger.info(`BitBake buildConfiguration changed to ${value}`)
   }
 
   constructor (bitbakeSettings: BitbakeSettings, context: vscode.ExtensionContext) {
