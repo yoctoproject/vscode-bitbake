@@ -1,3 +1,18 @@
+# 2.8.0 - 2025.01.06
+
+ - Renamed command "Pick configuration" to "Change active buildConfiguration"
+ - Automatically re-scan when changing buildConfiguration
+ - Cache per-buildConfiguration scan results
+ - Make the recipes view appear as "loading" while a scan is ongoing
+ - Add "Change active buildConfiguration" to the main contextual menus
+ - Update dependencies and make according changes
+ - Verify Open VSX publisher for "The Yocto Project"
+ - Rate-limit loading bars in the debug logs
+ - Add support for the new `devtool modify --debug-build` option
+ - Add the "bitbake.disableDevtoolDebugBuild" setting to disable this new default behavior
+ - Fix an issue with the highlighting of the word "python"
+ - Improve compatibility and documentation around kas-container's ssh-agent option
+
 # 2.7.0 - 2024.09.13
 
  - Add bitbake environment scan for global variables
