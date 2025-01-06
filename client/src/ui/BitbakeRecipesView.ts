@@ -12,15 +12,26 @@ import { bitbakeESDKMode } from '../driver/BitbakeESDK'
 
 export class BitbakeRecipesView {
   private readonly bitbakeTreeProvider: BitbakeTreeDataProvider
+  private view: vscode.TreeView<BitbakeRecipeTreeItem> | undefined
 
   constructor (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScanner: BitBakeProjectScanner) {
     this.bitbakeTreeProvider = new BitbakeTreeDataProvider(bitbakeWorkspace, bitbakeProjectScanner)
   }
 
   registerView (context: vscode.ExtensionContext): void {
-    const view = vscode.window.createTreeView('bitbakeRecipes', { treeDataProvider: this.bitbakeTreeProvider, showCollapseAll: true })
-    context.subscriptions.push(view)
+    this.view = vscode.window.createTreeView('bitbakeRecipes', { treeDataProvider: this.bitbakeTreeProvider, showCollapseAll: true })
+    context.subscriptions.push(this.view)
     vscode.window.registerTreeDataProvider('bitbakeRecipes', this.bitbakeTreeProvider)
+  }
+
+  setTitleConfig(activeConfigName: string): void {
+    if (this.view) {
+      if (activeConfigName.includes("No BitBake configuration")) {
+        this.view.title = 'BitBake recipes';
+      } else {
+        this.view.title = 'BitBake recipes [' + activeConfigName + ']';
+      }
+    }
   }
 }
 
