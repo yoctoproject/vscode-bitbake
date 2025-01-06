@@ -43,6 +43,9 @@ export class BitbakeConfigPicker {
         assert(this.bitbakeSettings.buildConfigurations[0].name !== undefined) // Cannot happen with the definition in client/package.json
         // No need to update the memento here, the same default choice will be selected next time
         this.activeBuildConfiguration = this.bitbakeSettings.buildConfigurations[0].name
+      } else if (this.bitbakeSettings.buildConfigurations.length === 0) {
+        // We want to trigger a change event so that a re-scan is triggered
+        this.activeBuildConfiguration = 'No BitBake configuration'
       }
       this.statusBarItem.text = '$(list-selection) ' + this.activeBuildConfiguration
       this.statusBarItem.show()
