@@ -166,6 +166,10 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   const bitbakeConfigPicker = new BitbakeConfigPicker(bitbakeDriver.bitbakeSettings, context)
   context.subscriptions.push(bitbakeConfigPicker.statusBarItem)
   bitbakeDriver.activeBuildConfiguration = bitbakeConfigPicker.activeBuildConfiguration
+  bitbakeConfigPicker.onActiveConfigChanged.event((config) => {
+    bitbakeRecipesView?.setTitleConfig(config)
+  })
+  bitbakeRecipesView?.setTitleConfig(bitbakeDriver.activeBuildConfiguration)
   terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
   vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
   const terminalLinkProvider = new BitbakeTerminalLinkProvider(bitBakeProjectScanner)
