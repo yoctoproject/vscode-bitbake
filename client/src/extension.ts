@@ -285,6 +285,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   // FIXME it would be better if all UI participants directly read the cache at initialization than refreshing them here
   if (scanContainsData(bitBakeProjectScanner.activeScanResult)) {
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
+  } else {
+    void vscode.commands.executeCommand('bitbake.rescan-project')
   }
   logger.info('Congratulations, your extension "BitBake" is now active!')
 }
