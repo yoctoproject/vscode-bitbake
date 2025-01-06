@@ -13,6 +13,7 @@ export default [
       "__mocks__/vscode.ts",
       "**/jest.config.js",
       "**/eslint.config.mjs",
+      "integration-tests/project-folder/**",
     ],
   },
   {files: ["**/*.{js,mjs,cjs,ts}"]},
