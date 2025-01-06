@@ -386,7 +386,7 @@
       },
       {
         "command": "bitbake.pick-configuration",
-        "title": "BitBake: Pick configuration",
+        "title": "BitBake: Change active buildConfiguration",
         "description": "Select the active build configuration from the settings to use for bitbake commands."
       },
       {
@@ -621,6 +621,10 @@
         {
           "command": "bitbake.examine-dependency-taskexp",
           "group": "1@bitbake_dev@5"
+        },
+        {
+          "command": "bitbake.pick-configuration",
+          "group": "1@bitbake_dev@6"
         },
         {
           "command": "bitbake.devtool-modify",
