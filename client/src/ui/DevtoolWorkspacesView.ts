@@ -42,9 +42,6 @@ class DevtoolTreeDataProvider implements vscode.TreeDataProvider<DevtoolWorkspac
 
   async getChildren (element?: DevtoolWorkspaceTreeItem | undefined): Promise<DevtoolWorkspaceTreeItem[]> {
     if (element === undefined) {
-      while (this.bitbakeScanResults === undefined) {
-        await new Promise(resolve => setTimeout(resolve, 300))
-      }
       const items = this.getDevtoolWorkspaces()
       items.push(this.getAddWorkspaceItem())
       return items
