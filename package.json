@@ -559,6 +559,14 @@
           "contextualTitle": "Devtool workspaces",
           "icon": "$(symbol-property)",
           "when": "bitbake.active"
+        },
+        {
+          "type": "webview",
+          "id": "bitbake.oeDependsDot",
+          "name": "Dependency Graph",
+          "contextualTitle": "Dependency graph",
+          "icon": "$(graph)",
+          "when": "bitbake.active"
         }
       ]
     },

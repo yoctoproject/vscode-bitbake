@@ -28,6 +28,7 @@ import { type BitbakeScanResult, scanContainsData } from './lib/src/types/Bitbak
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
 import { NotificationMethod } from './lib/src/types/notifications'
+import { DependsDotView } from './ui/DependsDotView'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -37,6 +38,7 @@ const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 let bitbakeRecipesView: BitbakeRecipesView | undefined
 let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
 let terminalProvider: BitbakeTerminalProfileProvider | undefined
+let dependsDotWebview: DependsDotView | undefined
 
 export function canModifyConfig (): boolean {
   const disableConfigModification = vscode.workspace.getConfiguration('bitbake').get('disableConfigModification')
@@ -160,6 +162,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeRecipesView.registerView(context)
   devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
   devtoolWorkspacesView.registerView(context)
+  dependsDotWebview = new DependsDotView(bitbakeDriver, context.extensionUri)
+  dependsDotWebview.registerView(context)
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)
   context.subscriptions.push(bitbakeStatusBar.statusBarItem)
