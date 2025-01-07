@@ -215,12 +215,22 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
 
 export let isToasterStarted = false
 
+function openToasterBrowser (): void {
+  const DEFAULT_TOASTER_PORT = 8000
+  const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
+  void vscode.env.openExternal(vscode.Uri.parse(url)).then(success => {
+    if (!success) {
+      void vscode.window.showErrorMessage(`Failed to open URL ${url}`)
+    }
+  })
+}
+
 async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<void> {
   if (isToasterStarted) {
-    void vscode.window.showInformationMessage('Toaster is already started')
+    openToasterBrowser();
+    clientNotificationManager.showToasterStarted()
     return
   }
-  const DEFAULT_TOASTER_PORT = 8000
   const command = `nohup bash -c "${bitbakeDriver.composeToasterCommand('start')}"`
   const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
   process.onExit((e) => {
@@ -229,12 +239,8 @@ async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<voi
       return
     }
     isToasterStarted = true
-    const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
-    void vscode.env.openExternal(vscode.Uri.parse(url)).then(success => {
-      if (!success) {
-        void vscode.window.showErrorMessage(`Failed to open URL ${url}`)
-      }
-    })
+    openToasterBrowser()
+    clientNotificationManager.showToasterStarted()
   })
 }
 
