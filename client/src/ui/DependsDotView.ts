@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
+import ejs from 'ejs'
 import { BitbakeDriver } from '../driver/BitbakeDriver'
 
 export class DependsDotView {
@@ -31,7 +32,7 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
         this.extensionUri = extensionUri
     }
 
-    resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, token: vscode.CancellationToken): Thenable<void> | void {
+	async resolveWebviewView(webviewView: vscode.WebviewView, context: vscode.WebviewViewResolveContext, token: vscode.CancellationToken): Promise<void> {
 		this.view = webviewView;
 
 		webviewView.webview.options = {
@@ -43,7 +44,7 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 			]
 		};
 
-		webviewView.webview.html = this.getHtmlForWebview(webviewView.webview);
+		webviewView.webview.html = await this.getHtmlForWebview(webviewView.webview);
 
 		webviewView.webview.onDidReceiveMessage(data => {
 			switch (data.type) {
@@ -56,11 +57,9 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 		});
     }
 
-    private getHtmlForWebview(webview: vscode.Webview) {
-		// Get the local path to main script run in the webview, then convert it to a uri we can use in the webview.
+    private getHtmlForWebview(webview: vscode.Webview): Promise<string> {
+		const htmlUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'main.html'));
 		const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'main.js'));
-
-		// Do the same for the stylesheet.
 		const styleResetUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'reset.css'));
 		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'vscode.css'));
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'main.css'));
@@ -68,35 +67,15 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 		// Use a nonce to only allow a specific script to be run.
 		const nonce = this.getNonce();
 
-		return `<!DOCTYPE html>
-			<html lang="en">
-			<head>
-				<meta charset="UTF-8">
-
-				<!--
-					Use a content security policy to only allow loading styles from our extension directory,
-and only allow scripts that have a specific nonce.
-					(See the 'webview-sample' extension sample for img-src content security policy examples)
-				-->
-				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource}; script-src 'nonce-${nonce}';">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-				<link href="${styleResetUri}" rel="stylesheet">
-<link href="${styleVSCodeUri}" rel="stylesheet">
-				<link href="${styleMainUri}" rel="stylesheet">
-
-				<title>Cat Colors</title>
-			</head>
-			<body>
-				<ul class="color-list">
-				</ul>
-
-				<button class="add-color-button">Add Color</button>
-
-				<script nonce="${nonce}" src="${scriptUri}"></script>
-			</body>
-			</html>`;
+		const html = ejs.renderFile(htmlUri.fsPath, {
+			nonce: nonce,
+			scriptUri: scriptUri,
+			styleResetUri: styleResetUri,
+			styleVSCodeUri: styleVSCodeUri,
+			styleMainUri: styleMainUri,
+			webview: webview
+		});
+		return html;
 	}
 
     private getNonce() {
