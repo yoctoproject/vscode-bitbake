@@ -1,5 +1,11 @@
+<!-- --------------------------------------------------------------------------------------------
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ -->
+
 <!DOCTYPE html>
 			<html lang="en">
+
 			<head>
 				<meta charset="UTF-8">
 
@@ -16,13 +22,44 @@
 				<link href="<%= styleVSCodeUri %>" rel="stylesheet">
 				<link href="<%= styleMainUri %>" rel="stylesheet">
 
-				<title>Cat Colors</title>
+				<title>OE Depends Dot</title>
 			</head>
-			<body>
-				<ul class="color-list">
-				</ul>
 
-				<button class="add-color-button">Add Color</button>
+			<body>
+				<!-- To run oe-depends-dot, we need the following elements:
+
+					Name of the dotfile recipe field
+					bullet list to select among "why" or "depends" for the dependency - a button to run oe-depends-dot - a read-only text box to display the results
+					Name of the recipe to inspect the dependencies
+					Button to generate the dependency graph
+				-->
+				<div>
+					<h3>Recipe graph:</h3>
+					<input type="text" id="graphRecipe" />
+					<button id="genDotFile">Generate dependency dotfile</button>
+				</div>
+
+				<div>
+					<h3>Dependency type:</h3>
+					<ul id="depType">
+						<li><input type="radio" name="dependencyType" value="why" checked>Why</li>
+						<li><input type="radio" name="dependencyType" value="depends">Depends</li>
+					</ul>
+				</div>
+
+				<div>
+					<h3>Package:</h3>
+					<input type="text" id="packageName" />
+				</div>
+
+				<div>
+					<button id="runOeDepends">Run oe-depends-dot</button>
+				</div>
+
+				<div>
+					<h3>Results:</h3>
+					<textarea id="results" readonly></textarea>
+				</div>
 
 				<script nonce="<%= nonce %>" src="<%= scriptUri %>"></script>
 			</body>

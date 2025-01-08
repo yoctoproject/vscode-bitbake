@@ -568,8 +568,8 @@
         {
           "type": "webview",
           "id": "bitbake.oeDependsDot",
-          "name": "Dependency Graph",
-          "contextualTitle": "Dependency graph",
+          "name": "Dependency Analyzer",
+          "contextualTitle": "Dependency Analyzer",
           "icon": "$(graph)",
           "when": "bitbake.active"
         }

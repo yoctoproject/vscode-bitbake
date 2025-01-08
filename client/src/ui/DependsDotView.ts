@@ -6,6 +6,24 @@
 import * as vscode from 'vscode'
 import ejs from 'ejs'
 import { BitbakeDriver } from '../driver/BitbakeDriver'
+import { logger } from '../lib/src/utils/OutputLogger'
+import { BitbakeTaskDefinition } from './BitbakeTaskProvider'
+import { runBitbakeTerminal } from './BitbakeTerminal'
+import { finishProcessExecution } from '../utils/ProcessUtils'
+
+/*
+	TODO Beautify the view
+	 - make div elements side by side
+	 - Add some spacing
+	TODO Display a graph rather than text
+	TODO Make the graph interactive (click on elements open their .bb file) (bonus: right click brings the commands menu)
+	TODO Auto-refresh the dotfile when needed when click dependsDot
+	TODO display a checkbox wether the graph is up-to-date, successful or failed
+	TODO gray out the results when the graph or package is not up-to-date
+	TODO Use the select recipe command to get the image recipe list (not for the packageName though?)
+	TODO Add tests for this feature
+	TODO Save field values on workspace reload
+*/
 
 export class DependsDotView {
   private readonly provider: DependsDotViewProvider
@@ -27,6 +45,10 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
     private view?: vscode.WebviewView;
     private extensionUri: vscode.Uri
 
+	private depType: string = "-w";
+	private graphRecipe: string = "";
+	private packageName: string = "";
+
     constructor (bitbakeDriver: BitbakeDriver, extensionUri: vscode.Uri) {
         this.bitbakeDriver = bitbakeDriver
         this.extensionUri = extensionUri
@@ -46,16 +68,29 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 
 		webviewView.webview.html = await this.getHtmlForWebview(webviewView.webview);
 
-		webviewView.webview.onDidReceiveMessage(data => {
-			switch (data.type) {
-				case 'colorSelected':
-					{
-						vscode.window.activeTextEditor?.insertSnippet(new vscode.SnippetString(`#${data.value}`));
-						break;
-					}
-			}
-		});
+		webviewView.webview.onDidReceiveMessage(this.onWebviewMessage.bind(this));
     }
+
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	private onWebviewMessage(data: any) : any {
+		switch (data.type) {
+			case 'depType':
+				this.depType = data.value === "depends" ? "-d" : "-w";
+				break;
+			case 'graphRecipe':
+				this.graphRecipe = data.value;
+				break;
+			case 'packageName':
+				this.packageName = data.value;
+				break;
+			case 'genDotFile':
+				this.genDotFile();
+				break;
+			case 'runOeDepends':
+				this.runOeDepends();
+				break;
+		}
+	}
 
     private getHtmlForWebview(webview: vscode.Webview): Promise<string> {
 		const htmlUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'main.html'));
@@ -64,7 +99,6 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 		const styleVSCodeUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'vscode.css'));
 		const styleMainUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'client', 'web', 'depends-dot', 'main.css'));
 
-		// Use a nonce to only allow a specific script to be run.
 		const nonce = this.getNonce();
 
 		const html = ejs.renderFile(htmlUri.fsPath, {
@@ -78,6 +112,7 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 		return html;
 	}
 
+	/// The Nonce is a random value used to validate the CSP policy
     private getNonce() {
         let text = '';
         const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -86,4 +121,65 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
         }
         return text;
     }
+
+	private async genDotFile() : Promise<void> {
+		if(this.graphRecipe === "") {
+			logger.error("genDotFile: No image recipe selected");
+			void vscode.window.showErrorMessage(`Please select an image recipe first`);
+			return;
+		}
+		logger.info(`genDotFile: ${this.graphRecipe}`)
+		// isTaskexpStarted = true
+		// TODO add blocker for runOeDependsDOt to wait for completion.
+		// TODO do not bring to foreground
+		const process = await runBitbakeTerminal(this.bitbakeDriver,
+		  {
+			specialCommand: `bitbake -g ${this.graphRecipe}`,
+		  } as BitbakeTaskDefinition,
+		  `Bitbake: genDotFile: ${this.graphRecipe}`,)
+		process.onExit((e) => {
+		  // isTaskexpStarted = false
+		  if (e.exitCode !== 0) {
+			void vscode.window.showErrorMessage(`Failed to generate dependency graph with exit code ${e.exitCode}. See terminal output.`)
+		  }
+		})
+	}
+
+	private async runOeDepends() : Promise<void> {
+		if(this.packageName === "") {
+			logger.error("genDotFile: No package selected");
+			void vscode.window.showErrorMessage(`Please select a package first`);
+			return;
+		}
+		logger.info(`runOeDepends: ${this.packageName}`);
+		// TODO do not bring to foreground
+		const process = runBitbakeTerminal(this.bitbakeDriver,
+		  {
+			specialCommand: `oe-depends-dot -k ${this.packageName} ${this.depType} ./task-depends.dot`,
+		  } as BitbakeTaskDefinition,
+		  `Bitbake: oeDependsDot: ${this.packageName}`,)
+		const result = await finishProcessExecution(process)
+		if (result.status !== 0) {
+		void vscode.window.showErrorMessage(`Failed to run oe-depends-dot with exit code ${result.status}. See terminal output.`)
+		}
+		const filtered_output = this.filterOeDependsOutput(result.stdout.toString());
+		this.view?.webview.postMessage({ type: 'results', value: filtered_output });
+	}
+
+	/// Remove all lines of output that do not contain the actual results
+	private filterOeDependsOutput(output: string): string {
+		let filtered_output = ''
+		if(this.depType === "-d") {
+			filtered_output = output
+				.split('\n')
+				.filter(line => line.includes('Depends: '))
+				.join('\n');
+		} else {
+			filtered_output = output
+				.split('\n')
+				.filter(line => line.includes(' -> '))
+				.join('\n');
+		}
+		return filtered_output;
+	}
 }
