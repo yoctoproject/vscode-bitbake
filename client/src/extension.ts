@@ -162,7 +162,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeRecipesView.registerView(context)
   devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
   devtoolWorkspacesView.registerView(context)
-  dependsDotWebview = new DependsDotView(bitbakeDriver, context.extensionUri)
+  dependsDotWebview = new DependsDotView(bitBakeProjectScanner, context.extensionUri)
   dependsDotWebview.registerView(context)
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
   const bitbakeStatusBar = new BitbakeStatusBar(bitBakeProjectScanner)

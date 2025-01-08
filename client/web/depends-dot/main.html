@@ -34,21 +34,21 @@
 					Button to generate the dependency graph
 				-->
 				<div>
-					<h3>Recipe graph:</h3>
+					<h3>Select an image <b>Recipe</b> to analyze:</h3>
 					<input type="text" id="graphRecipe" />
-					<button id="genDotFile">Generate dependency dotfile</button>
+					<button id="genDotFile">Gather dependency data</button>
 				</div>
 
 				<div>
-					<h3>Dependency type:</h3>
+					<h3>You want to know:</h3>
 					<ul id="depType">
-						<li><input type="radio" name="dependencyType" value="why" checked>Why</li>
-						<li><input type="radio" name="dependencyType" value="depends">Depends</li>
+						<li><input type="radio" name="dependencyType" value="why" checked><h3><b>Why</b> a package is included</h3></li>
+						<li><input type="radio" name="dependencyType" value="depends"><h3>What it <b>Depends</b> on</h3></li>
 					</ul>
 				</div>
 
 				<div>
-					<h3>Package:</h3>
+					<h3>Select which <b>Package</b> you want to examine:</h3>
 					<input type="text" id="packageName" />
 				</div>
 
@@ -58,7 +58,8 @@
 
 				<div>
 					<h3>Results:</h3>
-					<textarea id="results" readonly></textarea>
+				</div>
+				<div id="results">
 				</div>
 
 				<script nonce="<%= nonce %>" src="<%= scriptUri %>"></script>

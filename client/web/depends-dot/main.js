@@ -11,7 +11,7 @@
     const oldState = vscode.getState() || { };
 
     // HTML Listeners
-    document.querySelector('#depType').addEventListener('click', () => {
+    document.querySelector('#depType').addEventListener('click', (event) => {
         vscode.postMessage({ type: 'depType', value: event.target.value });
     });
 
@@ -36,12 +36,71 @@
     // Extension Listeners
     window.addEventListener('message', event => {
         const message = event.data; // The json data that the extension sent
+        // TODO remove empty final line, especially when asking for an inexistent package
         switch (message.type) {
             case 'results':
                 {
-                    document.querySelector('#results').textContent = message.value;
+                    if(message.depType === '-w') {
+                        renderWhy(message, vscode);
+                    } else {
+                        renderDependencies(message, vscode);
+                    }
                     break;
                 }
         }
     });
 }());
+
+function renderDependencies(message, vscode) {
+    const resultsDiv = document.querySelector('#results');
+    resultsDiv.innerHTML = '';
+
+    const packages = message.value.split(' ');
+    packages.forEach(pkg => {
+        addPackageLine(resultsDiv, pkg, '•', vscode);
+    });
+}
+
+function renderWhy(message, vscode) {
+    const resultsDiv = document.querySelector('#results');
+    resultsDiv.innerHTML = '';
+
+    const dependencyChains = message.value.split('\n');
+    for(let i = 0; i < dependencyChains.length; i++) {
+        const chain = dependencyChains[i];
+        const chainDiv = document.createElement('div');
+        chainDiv.className = 'dependencyChain';
+        resultsDiv.appendChild(chainDiv);
+        renderDependencyChain(chain, chainDiv, vscode);
+    }
+}
+
+function renderDependencyChain(chain, element, vscode) {
+    // Use the unicode box drawing characters to draw the lines
+    // https://www.compart.com/en/unicode/block/U+2500
+    const packages = chain.split(' -> ');
+    for(let i = 0; i < packages.length; i++) {
+        const pkg = packages[i];
+        let icon = '┃';
+        if(i === 0) { icon = '┳'; }
+        if(i === packages.length - 1) { icon = '┻'; }
+        addPackageLine(element, pkg, icon, vscode);
+    }
+}
+
+function addPackageLine(element, name, graphIcon, vscode) {
+    const div = document.createElement('div');
+    div.className = 'packageLine';
+    div.innerHTML = `<span class="graphIcon">${graphIcon}</span> ${name}`;
+    element.appendChild(div);
+    div.addEventListener('click', () => {
+        vscode.postMessage({ type: 'openRecipe', value: name });
+    });
+}
+
+function addIconLine(element, icon) {
+    const div = document.createElement('div');
+    div.className = 'iconLine';
+    div.innerHTML = `<span class="icon">${icon}</span>`;
+    element.appendChild(div);
+}

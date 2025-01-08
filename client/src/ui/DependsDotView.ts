@@ -10,6 +10,9 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { BitbakeTaskDefinition } from './BitbakeTaskProvider'
 import { runBitbakeTerminal } from './BitbakeTerminal'
 import { finishProcessExecution } from '../utils/ProcessUtils'
+import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { ElementInfo } from '../lib/src/types/BitbakeScanResult'
+import path from 'path'
 
 /*
 	TODO Beautify the view
@@ -22,14 +25,17 @@ import { finishProcessExecution } from '../utils/ProcessUtils'
 	TODO gray out the results when the graph or package is not up-to-date
 	TODO Use the select recipe command to get the image recipe list (not for the packageName though?)
 	TODO Add tests for this feature
-	TODO Save field values on workspace reload
+	TODO Save field values on workspace reload (https://code.visualstudio.com/api/extension-guides/webview#getstate-and-setstate and serializer)
+	TODO test styling in white mode and high-contrast mode
+	TODO sanitize text input (server side)
+	TODO add a gif in the README for this feature
 */
 
 export class DependsDotView {
   private readonly provider: DependsDotViewProvider
 
-  constructor (bitbakeDriver: BitbakeDriver, extensionUri: vscode.Uri) {
-    this.provider = new DependsDotViewProvider(bitbakeDriver, extensionUri)
+  constructor (bitbakeProjectScanner: BitBakeProjectScanner, extensionUri: vscode.Uri) {
+    this.provider = new DependsDotViewProvider(bitbakeProjectScanner, extensionUri)
   }
 
   registerView (context: vscode.ExtensionContext): void {
@@ -41,6 +47,7 @@ export class DependsDotView {
 
 class DependsDotViewProvider implements vscode.WebviewViewProvider {
     private readonly bitbakeDriver: BitbakeDriver
+	private readonly bitbakeProjectScanner: BitBakeProjectScanner
     public static readonly viewType = "bitbake.oeDependsDot"
     private view?: vscode.WebviewView;
     private extensionUri: vscode.Uri
@@ -49,8 +56,9 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 	private graphRecipe: string = "";
 	private packageName: string = "";
 
-    constructor (bitbakeDriver: BitbakeDriver, extensionUri: vscode.Uri) {
-        this.bitbakeDriver = bitbakeDriver
+    constructor (bitbakeProjectScanner: BitBakeProjectScanner, extensionUri: vscode.Uri) {
+        this.bitbakeDriver = bitbakeProjectScanner.bitbakeDriver
+        this.bitbakeProjectScanner = bitbakeProjectScanner
         this.extensionUri = extensionUri
     }
 
@@ -88,6 +96,9 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 				break;
 			case 'runOeDepends':
 				this.runOeDepends();
+				break;
+			case 'openRecipe':
+				this.openRecipe(data.value);
 				break;
 		}
 	}
@@ -163,7 +174,7 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 		void vscode.window.showErrorMessage(`Failed to run oe-depends-dot with exit code ${result.status}. See terminal output.`)
 		}
 		const filtered_output = this.filterOeDependsOutput(result.stdout.toString());
-		this.view?.webview.postMessage({ type: 'results', value: filtered_output });
+		this.view?.webview.postMessage({ type: 'results', value: filtered_output, depType: this.depType });
 	}
 
 	/// Remove all lines of output that do not contain the actual results
@@ -173,6 +184,7 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 			filtered_output = output
 				.split('\n')
 				.filter(line => line.includes('Depends: '))
+				.map(line => line.replace('Depends: ', ''))
 				.join('\n');
 		} else {
 			filtered_output = output
@@ -181,5 +193,23 @@ class DependsDotViewProvider implements vscode.WebviewViewProvider {
 				.join('\n');
 		}
 		return filtered_output;
+	}
+
+	private openRecipe(recipeName: string) {
+		recipeName = recipeName.replace(/\r/g, '');
+		let recipeFound = false;
+		this.bitbakeProjectScanner.scanResult._recipes.forEach((recipe: ElementInfo) => {
+			// TODO fix resolving -native recipes (put that logic in a utility function) (could be shared with BitbakeRecipesView.getChildren)
+			// TODO fix resolving some packages like xz or busybox (only when in the bottom row?)
+			if (recipe.name === recipeName) {
+			    if (recipe.path !== undefined) {
+					vscode.window.showTextDocument(vscode.Uri.file(path.format(recipe.path)));
+					recipeFound = true;
+				}
+			}
+		})
+		if (!recipeFound) {
+			vscode.window.showErrorMessage(`Project scan was not able to resolve ${recipeName}`);
+		}
 	}
 }
