@@ -73,6 +73,11 @@ describe('BitBakeProjectScanner', () => {
     jest.clearAllMocks()
   }, BITBAKE_TIMEOUT)
 
+  it('can get the bitbake version', async () => {
+    const version = bitBakeProjectScanner.scanResult._bitbakeVersion
+    expect(version).toMatch(/^[\d.]+$/);
+  })
+
   it('can get a list of layers', async () => {
     const layers = bitBakeProjectScanner.scanResult._layers
     // poky provides the "core", "yocto" and "yoctobsp" layers
