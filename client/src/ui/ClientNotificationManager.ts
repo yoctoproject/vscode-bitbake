@@ -87,6 +87,24 @@ You can configure the sources' workspace to use the Yocto SDK for cross-compilat
       })
   }
 
+  showToasterStarted (): void {
+    void window.showInformationMessage(
+      'Toaster has been started and opened in your browser. Stop it with the "BitBake: Stop Toaster" command.',
+      'Re-open browser',
+      'Stop Toaster',
+      'Close'
+    )
+    .then((item) => {
+      if (item === 'Re-open browser') {
+        void commands.executeCommand('bitbake.start-toaster-in-browser')
+      } else if (item === 'Stop Toaster') {
+        void commands.executeCommand('bitbake.stop-toaster')
+      }
+    }, (reason) => {
+      logger.warn('Could not show toaster started dialog: ' + reason)
+    })
+  }
+
   private neverShowAgain (method: string): Thenable<void> {
     if (this._memento === undefined) {
       throw new Error('ClientNotificationManager Memento not set')
