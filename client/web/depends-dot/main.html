@@ -1,0 +1,67 @@
+<!-- --------------------------------------------------------------------------------------------
+ * Copyright (c) 2023 Savoir-faire Linux. All rights reserved.
+ * Licensed under the MIT License. See License.txt in the project root for license information.
+ * ------------------------------------------------------------------------------------------ -->
+
+<!DOCTYPE html>
+			<html lang="en">
+
+			<head>
+				<meta charset="UTF-8">
+
+				<!--
+					Use a content security policy to only allow loading styles from our extension directory,
+					and only allow scripts that have a specific nonce.
+					(See the 'webview-sample' extension sample for img-src content security policy examples)
+				-->
+				<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src <%= webview.cspSource %>; script-src 'nonce-<%= nonce %>';">
+
+				<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+				<link href="<%= styleResetUri %>" rel="stylesheet">
+				<link href="<%= styleVSCodeUri %>" rel="stylesheet">
+				<link href="<%= styleMainUri %>" rel="stylesheet">
+
+				<title>OE Depends Dot</title>
+			</head>
+
+			<body>
+				<!-- To run oe-depends-dot, we need the following elements:
+
+					Name of the dotfile recipe field
+					bullet list to select among "why" or "depends" for the dependency - a button to run oe-depends-dot - a read-only text box to display the results
+					Name of the recipe to inspect the dependencies
+					Button to generate the dependency graph
+				-->
+				<div>
+					<h3>Select an image <b>Recipe</b> to analyze:</h3>
+					<input type="text" id="graphRecipe" />
+					<button id="genDotFile">Gather dependency data</button>
+				</div>
+
+				<div>
+					<h3>You want to know:</h3>
+					<ul id="depType">
+						<li><input type="radio" name="dependencyType" value="why" checked><h3><b>Why</b> a package is included</h3></li>
+						<li><input type="radio" name="dependencyType" value="depends"><h3>What it <b>Depends</b> on</h3></li>
+					</ul>
+				</div>
+
+				<div>
+					<h3>Select which <b>Package</b> you want to examine:</h3>
+					<input type="text" id="packageName" />
+				</div>
+
+				<div>
+					<button id="runOeDepends">Run oe-depends-dot</button>
+				</div>
+
+				<div>
+					<h3>Results:</h3>
+				</div>
+				<div id="results">
+				</div>
+
+				<script nonce="<%= nonce %>" src="<%= scriptUri %>"></script>
+			</body>
+</html>

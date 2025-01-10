@@ -54,6 +54,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }),
     vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
     vscode.commands.registerCommand('bitbake.examine-dependency-taskexp', async (uri) => { await examineDependenciesTaskexp(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    // Repurpose to be per recipe? (and ask for image if not already supplied)
+    vscode.commands.registerCommand('bitbake.oe-depends-dot', async (uri) => { await runOeDependsDot(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {
@@ -600,6 +602,30 @@ export async function examineDependenciesTaskexp (bitbakeWorkspace: BitbakeWorks
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: examine-dependency-taskexp: ${chosenRecipe}`)
+    isTaskexpStarted = true
+    const process = await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
+      {
+        specialCommand: `bitbake -g ${chosenRecipe} -u taskexp`
+      } as BitbakeTaskDefinition,
+    `Bitbake: taskexp: ${chosenRecipe}`)
+    process.onExit((e) => {
+      isTaskexpStarted = false
+      if (e.exitCode !== 0) {
+        void vscode.window.showErrorMessage(`Failed to start taskexp with exit code ${e.exitCode}. See terminal output.`)
+      }
+    })
+  }
+}
+
+export async function runOeDependsDot (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: unknown): Promise<void> {
+  if (isTaskexpStarted) {
+    void vscode.window.showInformationMessage('taskexp is already started')
+    return
+  }
+  const chosenImage = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+  if (chosenImage !== undefined && chosenRecipe !== undefined) {
+    logger.debug(`Command: oe-depends-dot: ${chosenRecipe}`)
     isTaskexpStarted = true
     const process = await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
       {

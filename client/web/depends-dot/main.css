@@ -1,0 +1,11 @@
+/* More variables in https://code.visualstudio.com/api/references/theme-color */
+
+body {
+	background-color: transparent;
+}
+
+.packageLine:hover {
+	color: var(--vscode-list-hoverForeground);
+	background: var(--vscode-list-hoverBackground);
+	cursor: pointer;
+}
