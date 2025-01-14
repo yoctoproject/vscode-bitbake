@@ -1,2 +1,2 @@
-"https://api.github.com/repos/idillon-sfl/tree-sitter-bitbake/git/commits/bc577daab90b551ad1dc42c3373db2cb7c43857d"
-tree-sitter-cli "^0.22.6"
+"https://api.github.com/repos/tree-sitter-grammars/tree-sitter-bitbake/git/commits/a5d04fdb5a69a02b8fa8eb5525a60dfb5309b73b"
+tree-sitter-cli 0.24.7
