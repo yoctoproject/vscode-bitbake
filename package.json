@@ -906,7 +906,7 @@
   },
   "//": "See https://github.com/Stuk/eslint-plugin-header/issues/57",
   "devDependencies": {
-    "@eslint/js": "^9.17.0",
+    "@eslint/js": "^9.23.0",
     "@types/find": "^0.2.4",
     "@types/glob": "^8.1.0",
     "@types/jest": "^29.5.14",
