@@ -99,7 +99,7 @@ async function getBitBakeCompletionItems (textDocumentPositionParams: TextDocume
 
     const variablesAllowedForLicenseCompletion = ['LICENSE']
     const isVariableAllowedForLicenseCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForLicenseCompletion)
-    if (isVariableAllowedForLicenseCompletion && recipeLocalFiles !== undefined && word !== null) {
+    if (isVariableAllowedForLicenseCompletion && word !== null) {
       const textDocument = analyzer.getAnalyzedDocument(documentUri)?.document
       if (textDocument !== undefined) {
         return await getLicenseCompletionItems(textDocument, textDocumentPositionParams.position)
