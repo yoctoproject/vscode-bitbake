@@ -8,7 +8,6 @@ import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell, type BitbakeBuildConfigSettings, getBuildSetting } from '../lib/src/BitbakeSettings'
-import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
@@ -23,6 +22,7 @@ export class BitbakeDriver {
   bitbakeProcess: IPty | undefined
   bitbakeProcessCommand: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
+  logBitbakeSettingsError: (message: string) => void = logger.error.bind(logger)
 
   loadSettings (settings: Record<string, unknown>, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -126,14 +126,14 @@ export class BitbakeDriver {
 
   async checkBitbakeSettingsSanity (): Promise<boolean> {
     if (!fs.existsSync(this.bitbakeSettings.pathToBitbakeFolder)) {
-      clientNotificationManager.showBitbakeSettingsError('Bitbake folder not found on disk.')
+      this.logBitbakeSettingsError('Bitbake folder not found on disk.')
       return false
     }
 
     const workingDirectory = this.getBuildConfig('workingDirectory')
     if (typeof workingDirectory === 'string' && !fs.existsSync(workingDirectory)) {
       // If it is not defined, then we will use the workspace folder which is always valid
-      clientNotificationManager.showBitbakeSettingsError('Working directory does not exist.')
+      this.logBitbakeSettingsError('Working directory does not exist.')
       return false
     }
 
@@ -144,7 +144,7 @@ export class BitbakeDriver {
     const outLines = ret.stdout.toString().split(/\r?\n/g)
 
     if (outLines.filter((line) => /devtool$/.test(line)).length === 0) {
-      clientNotificationManager.showBitbakeSettingsError('devtool not found in $PATH\nSee Bitbake Terminal for command output.')
+      this.logBitbakeSettingsError('devtool not found in $PATH\nSee Bitbake Terminal for command output.')
       return false
     }
 

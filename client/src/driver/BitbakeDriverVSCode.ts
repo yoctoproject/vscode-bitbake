@@ -4,6 +4,8 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { BitbakeDriver } from "./BitbakeDriver";
+import { clientNotificationManager } from '../ui/ClientNotificationManager'
 
 export class BitbakeDriverVSCode extends BitbakeDriver {
+  logBitbakeSettingsError: (message: string) => void = clientNotificationManager.showBitbakeSettingsError.bind(clientNotificationManager)
 }
