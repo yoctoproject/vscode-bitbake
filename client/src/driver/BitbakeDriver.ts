@@ -9,7 +9,6 @@ import fs from 'fs'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell, type BitbakeBuildConfigSettings, getBuildSetting } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
-import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
 import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution, pty } from '../utils/ProcessUtils'
 
@@ -23,6 +22,14 @@ export class BitbakeDriver {
   bitbakeProcessCommand: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
   logBitbakeSettingsError: (message: string) => void = logger.error.bind(logger)
+  runTerminalCommand: (
+    bitbakeDriver: BitbakeDriver,
+    command: string,
+    terminalName: string,
+    isBackground?: boolean
+  ) => Promise<IPty> = async () => {
+    return {} as IPty;
+  };
 
   loadSettings (settings: Record<string, unknown>, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -139,7 +146,7 @@ export class BitbakeDriver {
 
     // We could test for devtool and bitbake to know if we are in an eSDK or not
     const command = 'which devtool bitbake || true'
-    const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
+    const process = this.runTerminalCommand(this, command, 'Bitbake: Sanity test', true)
     const ret = await finishProcessExecution(process, async () => { await this.killBitbake() })
     const outLines = ret.stdout.toString().split(/\r?\n/g)
 

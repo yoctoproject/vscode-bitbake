@@ -5,7 +5,6 @@
 
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from '../../../driver/BitbakeESDK'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
@@ -47,7 +46,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
       pathToBuildFolder: 'nonexistent'
     }
     bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-    const bitbakeTerminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+    const bitbakeTerminalSpy = jest.spyOn(bitbakeDriver, 'runTerminalCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
     const bitbakeExecutionSpy = jest.spyOn(ProcessUtils, 'finishProcessExecution')
     clientNotificationManager.showBitbakeSettingsError = jest.fn()
 
