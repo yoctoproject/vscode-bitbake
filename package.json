@@ -915,7 +915,7 @@
     "@types/vscode": "^1.92.0",
     "@vscode/test-electron": "^2.4.1",
     "@vscode/vsce": "^3.2.1",
-    "eslint": "^9.17.0",
+    "eslint": "^9.25.1",
     "eslint-plugin-header": "github:tonyganchev/eslint-plugin-header#36161b3282e088ad2f19657ab0e377651b6886c2",
     "glob": "^11.0.0",
     "globals": "^15.14.0",
