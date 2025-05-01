@@ -33,7 +33,7 @@
   "devDependencies": {
     "@types/find": "^0.2.4",
     "@types/semver": "^7.5.8",
-    "@types/vscode": "^1.96.0"
+    "@types/vscode": "^1.99.1"
   },
   "workspaces": [
     "src/lib"
