@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Tag: yocto-5.1.1
-COMMIT=7e081bd98fdc5435e850d1df79a5e0f1e30293d0
+# Tag: yocto-5.2.1
+COMMIT=fd9b605507a20d850a9991316cd190c1d20dc4a6
 
 set -e
 
