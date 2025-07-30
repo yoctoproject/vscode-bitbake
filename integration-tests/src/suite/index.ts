@@ -7,26 +7,25 @@ import * as path from 'path'
 import Mocha from 'mocha'
 import { glob } from 'glob'
 
-export async function run (): Promise<void> {
+export function run (testsRoot: string, cb: (error: unknown, failures?: number) => void): void {
   const mocha = new Mocha({
     ui: 'tdd',
     color: true
   })
-  const testsRoot = path.resolve(__dirname, '../..')
 
-  const files: string[] = await glob('**/integration-tests/**/**.test.js', { cwd: testsRoot })
+  glob('**/**.test.js', { cwd: testsRoot }).then(files => {
+    console.log(`Found test files: ${files}`)
 
-  // Add files to the test suite
-  files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)))
+    // Add files to the test suite
+    files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)))
 
-  // Run the mocha test
-  await new Promise<void>((resolve, reject) => {
+    // Run the mocha test
     mocha.run(failures => {
       if (failures > 0) {
-        reject(new Error('Tests failed: ' + failures))
+        cb('Tests failed', failures)
       } else {
+        // Say that the tests passed
         console.log('All tests passed.')
-        resolve()
       }
     })
   })

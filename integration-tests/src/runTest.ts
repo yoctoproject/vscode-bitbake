@@ -36,7 +36,7 @@ async function main (): Promise<void> {
 
     // The path to the extension test runner script
     // Passed to --extensionTestsPath
-    const extensionTestsPath = path.resolve(__dirname, './index')
+    const extensionTestsPath = path.resolve(__dirname, './suite')
 
     const testWorkspace = path.resolve(__dirname, '../../integration-tests/project-folder')
 
