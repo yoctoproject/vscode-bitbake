@@ -56,27 +56,26 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     synchronize: {
       configurationSection: 'bitbake'
     },
-    middleware: {
-      provideCompletionItem: middlewareProvideCompletion,
-      provideDefinition: middlewareProvideDefinition,
-      provideHover: middlewareProvideHover,
-      provideReferences: middlewareProvideReferences,
-      prepareRename: middlewarePrepareRename,
-      provideRenameEdits: middlewareProvideRenameEdits
-    }
+    // middleware: {
+    //   provideDefinition: middlewareProvideDefinition,
+    //   provideHover: middlewareProvideHover,
+    //   provideReferences: middlewareProvideReferences,
+    //   prepareRename: middlewarePrepareRename,
+    //   provideRenameEdits: middlewareProvideRenameEdits
+    // }
   }
 
   languages.setLanguageConfiguration('bitbake', getLanguageConfiguration())
 
-  languages.onDidChangeDiagnostics(e => {
-    e.uris.forEach(uri => {
-      void updateDiagnostics(uri)
-    })
-  })
+  // languages.onDidChangeDiagnostics(e => {
+  //   e.uris.forEach(uri => {
+  //     void updateDiagnostics(uri)
+  //   })
+  // })
 
-  context.subscriptions.push(
-    languages.registerCodeActionsProvider('bitbake', new BitbakeCodeActionProvider())
-  )
+  // context.subscriptions.push(
+  //   languages.registerCodeActionsProvider('bitbake', new BitbakeCodeActionProvider())
+  // )
 
   if (context.storageUri?.fsPath === undefined) {
     logger.error('Failed to get storage path')
@@ -113,27 +112,27 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
     void embeddedLanguageDocsManager.saveEmbeddedLanguageDocs(embeddedLanguageDocs)
   })
 
-  window.tabGroups.onDidChangeTabs((event) => {
-    [...event.opened, ...event.changed].forEach((tab) => {
-      if (tab.input instanceof TabInputText) {
-        const uri = tab.input.uri
-        if (embeddedLanguageDocsManager.embeddedLanguageDocsFolder === undefined) {
-          return
-        }
-        // Close embedded document tabs when they open automatically
-        if (uri.fsPath.includes(embeddedLanguageDocsManager.embeddedLanguageDocsFolder)) {
-          if (
-            // Prevent prompt to appear on unsaved files
-            !tab.isDirty &&
-            // Make possible to open embedded documents in a tab
-            !tab.isPreview && !tab.isActive && !tab.isPinned
-          ) {
-            void window.tabGroups.close(tab, false)
-          }
-        }
-      }
-    })
-  })
+  // window.tabGroups.onDidChangeTabs((event) => {
+  //   [...event.opened, ...event.changed].forEach((tab) => {
+  //     if (tab.input instanceof TabInputText) {
+  //       const uri = tab.input.uri
+  //       if (embeddedLanguageDocsManager.embeddedLanguageDocsFolder === undefined) {
+  //         return
+  //       }
+  //       // Close embedded document tabs when they open automatically
+  //       if (uri.fsPath.includes(embeddedLanguageDocsManager.embeddedLanguageDocsFolder)) {
+  //         if (
+  //           // Prevent prompt to appear on unsaved files
+  //           !tab.isDirty &&
+  //           // Make possible to open embedded documents in a tab
+  //           !tab.isPreview && !tab.isActive && !tab.isPinned
+  //         ) {
+  //           void window.tabGroups.close(tab, false)
+  //         }
+  //       }
+  //     }
+  //   })
+  // })
 
   // Start the client and launch the server
   await client.start()
