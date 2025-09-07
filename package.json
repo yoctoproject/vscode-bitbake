@@ -396,6 +396,11 @@
         "icon": "$(gear)"
       },
       {
+        "command": "bitbake.debugCurrentFile",
+        "title": "BitBake: Debug Current File",
+        "description": "Generate a debug configuration for the currently open BitBake client script."
+      },
+      {
         "command": "bitbake.clean-recipe",
         "title": "BitBake: Clean recipe",
         "description": "Clean a recipe or an image (bitbake -c clean).",

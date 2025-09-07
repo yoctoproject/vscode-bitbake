@@ -155,6 +155,13 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     bitbakeEnvScanner.envScanComplete.event(reviewDiagnostics)
   )
 
+    // Register BitBake debug configuration commands
+    const { debugCurrentFile } = await import('./commands/debugBitbakeClient');
+
+    context.subscriptions.push(
+      vscode.commands.registerCommand('bitbake.debugCurrentFile', debugCurrentFile)
+    );
+
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
   bitbakeRecipesView.registerView(context)
