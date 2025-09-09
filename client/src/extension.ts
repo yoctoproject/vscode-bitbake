@@ -160,7 +160,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     const { debugCurrentFile } = await import('./commands/debugBitbakeClient');
 
     context.subscriptions.push(
-      vscode.commands.registerCommand('bitbake.debugCurrentFile', debugCurrentFile)
+      vscode.commands.registerCommand('bitbake.debugCurrentFile', () => debugCurrentFile(bitbakeDriver))
     );
 
   clientNotificationManager.setMemento(context.workspaceState)

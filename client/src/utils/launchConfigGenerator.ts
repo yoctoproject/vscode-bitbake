@@ -2,15 +2,17 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { exec } from 'child_process';
+import { type BitbakeDriver } from '../driver/BitbakeDriver'
 
 // Utility to source BitBake environment script and return key env vars as dict
-export async function getBitbakeEnvironmentVars(workspaceFolder: string): Promise<Record<string, string> | undefined> {
-    const config = vscode.workspace.getConfiguration('bitbake');
-    const pathToEnvScript = config.get<string>('pathToEnvScript');
-    if (!pathToEnvScript) {
-        vscode.window.showErrorMessage('BitBake environment script path is not set (bitbake.pathToEnvScript)');
+export async function getBitbakeEnvironmentVars(bitbakeDriver: BitbakeDriver, workspaceFolder: string): Promise<Record<string, string> | undefined> {
+    const pathToEnvScriptRaw = bitbakeDriver.getBuildConfig('pathToEnvScript');
+    if (!pathToEnvScriptRaw || typeof pathToEnvScriptRaw !== 'string') {
+        vscode.window.showErrorMessage('BitBake environment script path is not set or invalid (bitbake.pathToEnvScript)');
         return;
     }
+    // TypeScript now knows pathToEnvScriptRaw is a string after the type guard
+    const pathToEnvScript: string = pathToEnvScriptRaw;
     // Compose shell command to source env script and print env vars
     const fullEnvScriptPath = path.isAbsolute(pathToEnvScript) ? pathToEnvScript : path.resolve(workspaceFolder, pathToEnvScript);
     const shellCmd = `sh -c '. "${fullEnvScriptPath}" >/dev/null 2>&1 && printf "BUILDDIR=%s\\nBBPATH=%s\\nPATH=%s\\nPYTHONPATH=%s\\n" "$BUILDDIR" "$BBPATH" "$PATH" "$PYTHONPATH"'`;
@@ -37,9 +39,14 @@ export async function getBitbakeEnvironmentVars(workspaceFolder: string): Promis
 }
 
 // Generates a tasks.json file with a bitbake-server task
-export function generateTasksJson(taskName: string, workspaceFolder: string) {
-    const config = vscode.workspace.getConfiguration('bitbake');
-    const pathToEnvScript = config.get<string>('pathToEnvScript');
+export function generateTasksJson(bitbakeDriver: BitbakeDriver, taskName: string, workspaceFolder: string) {
+    const pathToEnvScriptRaw = bitbakeDriver.getBuildConfig('pathToEnvScript');
+    if (!pathToEnvScriptRaw || typeof pathToEnvScriptRaw !== 'string') {
+        vscode.window.showErrorMessage('BitBake environment script path is not set or invalid (bitbake.pathToEnvScript)');
+        return;
+    }
+    // TypeScript now knows pathToEnvScriptRaw is a string after the type guard
+    const pathToEnvScript: string = pathToEnvScriptRaw;
     const tasksJson = {
         version: '2.0.0',
         tasks: [
@@ -97,7 +104,7 @@ export function generateLaunchConfig(program: string, taskName: string, workspac
 }
 
 // Shared function to create debug configuration
-export async function createDebugConfiguration(program: string): Promise<any | null> {
+export async function createDebugConfiguration(bitbakeDriver: BitbakeDriver, program: string): Promise<any | null> {
     const bbServerTask = 'bitbake-server';
     const workspaceFolder = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath || '';
 
@@ -109,10 +116,10 @@ export async function createDebugConfiguration(program: string): Promise<any | n
     const args = argsInput ? argsInput.split(' ').filter(arg => arg.trim()) : [];
 
     // Create tasks.json for bitbake-server
-    generateTasksJson(bbServerTask, workspaceFolder);
+    generateTasksJson(bitbakeDriver, bbServerTask, workspaceFolder);
 
     // Source environment and get env vars
-    const envVars = await getBitbakeEnvironmentVars(workspaceFolder);
+    const envVars = await getBitbakeEnvironmentVars(bitbakeDriver, workspaceFolder);
     if (!envVars) {
         vscode.window.showWarningMessage('Failed to retrieve BitBake environment variables. Debug configuration will be created without environment setup.');
     }
