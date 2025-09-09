@@ -30,6 +30,8 @@ import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { getVariableValue } from '../language/languageClient'
+import { createDebugConfiguration } from '../utils/launchConfigGenerator';
+
 
 let parsingPending = false
 let bitbakeSanity = false
@@ -687,4 +689,38 @@ async function collapseActiveList (): Promise<void> {
 
 function bitbakeVersionAboveEqual (scanResult: BitbakeScanResult, version: string): boolean {
   return semver.gte(scanResult._bitbakeVersion, version);
+}
+
+export function registerBitbakeDebugCommands (context: vscode.ExtensionContext, bitbakeDriver: BitbakeDriver): void {
+  context.subscriptions.push(
+    vscode.commands.registerCommand('bitbake.debug-bitbake-client', async () => { await debugBitbakeClient(bitbakeDriver) })
+  )
+}
+
+export async function debugBitbakeClient(bitbakeDriver: BitbakeDriver) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+        vscode.window.showErrorMessage('No active file to debug.');
+        return;
+    }
+    const filePath = editor.document.fileName;
+
+    try {
+        // Create debug configuration
+        const debugConfig = await createDebugConfiguration(bitbakeDriver, filePath);
+
+        if (debugConfig) {
+            // Start debug session with the created configuration
+            const success = await vscode.debug.startDebugging(
+                vscode.workspace.workspaceFolders?.[0],
+                debugConfig
+            );
+
+            if (!success) {
+                vscode.window.showErrorMessage('Failed to start debug session.');
+            }
+        }
+    } catch (error) {
+        vscode.window.showErrorMessage(`Failed to create debug configuration: ${error}`);
+    }
 }

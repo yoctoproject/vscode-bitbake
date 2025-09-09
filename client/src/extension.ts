@@ -11,7 +11,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
-import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCommands'
+import { registerBitbakeCommands, registerDevtoolCommands, registerBitbakeDebugCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
@@ -156,13 +156,6 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     bitbakeEnvScanner.envScanComplete.event(reviewDiagnostics)
   )
 
-    // Register BitBake debug configuration commands
-    const { debugCurrentFile } = await import('./commands/debugBitbakeClient');
-
-    context.subscriptions.push(
-      vscode.commands.registerCommand('bitbake.debugCurrentFile', () => debugCurrentFile(bitbakeDriver))
-    );
-
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
   bitbakeRecipesView.registerView(context)
@@ -288,6 +281,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, terminalProvider, client)
   registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner, client)
+  registerBitbakeDebugCommands(context, bitbakeDriver)
 
   // In case we restored a scan from the cache, tell all listeners about it
   // FIXME it would be better if all UI participants directly read the cache at initialization than refreshing them here
