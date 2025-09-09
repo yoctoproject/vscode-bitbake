@@ -397,7 +397,7 @@
       },
       {
         "command": "bitbake.debugCurrentFile",
-        "title": "BitBake: Debug Current File",
+        "title": "BitBake: Debug BitBake Client Script",
         "description": "Generate a debug configuration for the currently open BitBake client script."
       },
       {
