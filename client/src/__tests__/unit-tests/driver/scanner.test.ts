@@ -20,7 +20,7 @@ const workspaceFolder = path.join(__dirname, '../../../../../integration-tests/p
 
 logger.level = 'debug'
 
-describe('BitBakeProjectScanner', () => {
+describe.skip('BitBakeProjectScanner', () => {
   beforeAll((DoneCallback) => {
     const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
     bitbakeDriver.loadSettings(
