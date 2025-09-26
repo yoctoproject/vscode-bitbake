@@ -67,7 +67,7 @@
 			"runtimeExecutable": "${execPath}",
 			"args": [
 			  "--extensionDevelopmentPath=${workspaceRoot}",
-			  "--extensionTestsPath=${workspaceRoot}/integration-tests/out/index",
+			  "--extensionTestsPath=${workspaceRoot}/integration-tests/out/suite",
 			  "--disable-workspace-trust",
 			  "${workspaceRoot}/integration-tests/project-folder"
 			],

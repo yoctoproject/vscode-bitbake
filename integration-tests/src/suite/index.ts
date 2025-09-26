@@ -13,11 +13,11 @@ export function run (testsRoot: string, cb: (error: unknown, failures?: number) 
     color: true
   })
 
-  glob('**/**.test.js', { cwd: testsRoot }).then(files => {
+  glob('**/**.test.js', { cwd: path.join(testsRoot, '../tests') }).then(files => {
     console.log(`Found test files: ${files}`)
 
     // Add files to the test suite
-    files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)))
+    files.forEach(f => mocha.addFile(path.resolve(testsRoot, '../tests', f)))
 
     // Run the mocha test
     mocha.run(failures => {
