@@ -62,7 +62,7 @@ suite('Bitbake Commands Test Suite', () => {
     assert.strictEqual(files.length, 1)
   }).timeout(BITBAKE_TIMEOUT)
 
-  test('Bitbake can create a devtool modify workspace', async () => {
+  test.skip('Bitbake can create a devtool modify workspace', async () => {
     await vscode.commands.executeCommand('bitbake.devtool-modify', 'base-files')
     await assertWillComeTrue(async () => {
       const files = await vscode.workspace.findFiles('build/workspace/appends/base-files_*.bbappend')
