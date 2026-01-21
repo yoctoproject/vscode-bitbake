@@ -7,7 +7,7 @@
 
 import * as vscode from 'vscode'
 import fs from 'fs'
-import semver from 'semver';
+import { gte } from 'semver'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
@@ -686,5 +686,5 @@ async function collapseActiveList (): Promise<void> {
 }
 
 function bitbakeVersionAboveEqual (scanResult: BitbakeScanResult, version: string): boolean {
-  return semver.gte(scanResult._bitbakeVersion, version);
+  return gte(scanResult._bitbakeVersion, version)
 }
