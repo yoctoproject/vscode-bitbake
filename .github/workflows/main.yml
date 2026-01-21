@@ -29,9 +29,6 @@ jobs:
       node-version: 20
 
     steps:
-    - name: Enable unprivileged user namespaces
-      run: echo 0 | sudo tee /proc/sys/kernel/apparmor_restrict_unprivileged_userns
-
     - name: Checkout Repository
       uses: actions/checkout@v4
 
