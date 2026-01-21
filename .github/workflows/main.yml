@@ -10,11 +10,14 @@ on:
   pull_request:
     branches:
       - '*'
+  schedule: # This run is just to keep the self-hosted runner active. They get deleted after 14 days of inactivity.
+    - cron: '0 8 * * 1'  # Run weekly on Mondays at 9AM CET (8AM UTC)
 
 jobs:
   build-test-vscode:
 
-    runs-on: ubuntu-latest
+    # We need a faster runner with a Yocto cache in order for the tests to complete in time
+    runs-on: self-hosted
 
     defaults:
       run:
