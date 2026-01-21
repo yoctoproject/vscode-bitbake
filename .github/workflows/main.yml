@@ -99,6 +99,11 @@ jobs:
 
     - name: Test Project
       run: npm run test
+      env:
+        # NFS Yocto cache directories on the self-hosted runner
+        DL_DIR: /var/cache/yocto/yocto-dldir
+        SSTATE_DIR: /var/cache/yocto/yocto-sstate
+        BB_ENV_PASSTHROUGH_ADDITIONS: "DL_DIR SSTATE_DIR"
 
     - name: Build the VSIX
       run: npm run package
