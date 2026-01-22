@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - '*'
+      - 'staging'
+      - 'main'
     tags:
       - "v*"
   pull_request:
