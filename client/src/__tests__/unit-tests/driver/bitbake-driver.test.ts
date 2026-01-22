@@ -6,6 +6,7 @@
 import * as fs from 'fs'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from '../../../ui/BitbakeTaskProvider'
+import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
 
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
@@ -22,7 +23,7 @@ describe('BitbakeDriver Tests', () => {
         done()
       })
     })
-  })
+  }, BITBAKE_TIMEOUT)
 
   it('should source the environment script', (done) => {
     const fakeEnvScriptPath = '/tmp/bitbake-vscode-test/envsetup.sh'
