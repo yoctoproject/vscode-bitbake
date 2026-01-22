@@ -7,7 +7,7 @@ import path from 'path'
 import fs from 'fs'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
+import { BITBAKE_BUILD_TIMEOUT, BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
 import { mockVscodeEvents } from '../../utils/vscodeMock'
 import { importRecipe, removeRecipe, integrationBitbakeFolder } from '../../utils/bitbake'
 import { logger } from '../../../lib/src/utils/OutputLogger'
@@ -54,7 +54,14 @@ describe('BitBakeProjectScanner', () => {
     }, (error) => {
       throw error
     })
-  }, BITBAKE_TIMEOUT)
+  // Running devtool modify needs to build uninative, quilt-native, and a few recipes
+  // Since the age of AI, fetching anything now takes ages, so we increase the timeout
+  // Note that such a timeout is only possible on Github self-hosted runners or local machines
+  // Public Github runners have a max timeout of 1 hour per job
+  // The workspace is kept for the remaining tests, so we don't need to do it again
+  // Also, our self-hosted runner have a Yocto sstate cache, so it's only
+  // rebuilt when changing the openembedded version
+  }, BITBAKE_BUILD_TIMEOUT)
 
   afterAll((done) => {
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {

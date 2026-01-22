@@ -36,7 +36,8 @@ function importFromVSCode (id: string): NodeRequire {
 // The conversion allows the linter to understand the type of the imported module
 export const pty = importFromVSCode('node-pty') as unknown as typeof nodepty
 
-export const BITBAKE_TIMEOUT = 600000 // 10 minutes
+export const BITBAKE_TIMEOUT = 300000 // 3 minutes
+export const BITBAKE_BUILD_TIMEOUT = 600000 // 10 minutes
 export const BITBAKE_EXIT_TIMEOUT = 30000
 
 export type KillProcessFunction = (child: nodepty.IPty) => Promise<void>
