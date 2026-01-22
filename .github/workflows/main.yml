@@ -108,6 +108,10 @@ jobs:
         name: vscode-bitbake
         path: ./yocto-bitbake*.vsix
 
+    - name: Cleanup
+      if: success()
+      run: npm run clean
+
   # Inspired by https://github.com/microsoft/vscode-platform-specific-sample/blob/a0192a21122dfa5c90934b006f027cdf4e4d892d/.github/workflows/ci.yml#L64C11-L64C11 MIT License
   publish-vsce:
     runs-on: ubuntu-latest
