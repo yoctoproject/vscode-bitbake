@@ -7,6 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
+import { forceDocumentAnalysis } from '../utils/vscode-tools'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake CodeAction Test Suite', () => {
@@ -20,9 +21,7 @@ suite('Bitbake CodeAction Test Suite', () => {
       assert.fail('Bitbake extension is not available')
     }
     await vscodeBitbake.activate()
-    await vscode.workspace.openTextDocument(docUri)
-    await vscode.window.showTextDocument(docUri)
-    await vscode.commands.executeCommand('workbench.action.files.save')
+    await forceDocumentAnalysis(docUri)
   })
 
   const testPythonAddImport = async (
