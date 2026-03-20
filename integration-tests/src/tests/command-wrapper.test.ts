@@ -46,7 +46,7 @@ suite('Bitbake Command Wrapper', () => {
   suiteTeardown(async function (this: Mocha.Context) {
     this.timeout(BITBAKE_TIMEOUT)
     const bitbakeConfiguration = vscode.workspace.getConfiguration('bitbake')
-    await bitbakeConfiguration.update('commandWrapper', undefined)
+    await bitbakeConfiguration.update('commandWrapper', "")
     await bitbakeConfiguration.update('pathToBuildFolder', savedSettings.pathToBuildFolder)
     await bitbakeConfiguration.update('pathToEnvScript', savedSettings.pathToEnvScript)
     await awaitBitbakeParsingResult()
