@@ -33,11 +33,12 @@ suite('Bitbake Diagnostics Test Suite', () => {
   })
 
   test('Diagnostics', async () => {
-    void vscode.workspace.openTextDocument(docUri)
+    await vscode.workspace.openTextDocument(docUri)
+    await vscode.window.showTextDocument(docUri)
     await assertWillComeTrue(async () => {
       const diagnostics = vscode.languages.getDiagnostics(docUri)
       return diagnostics.length === 1 &&
-        diagnostics[0].source === 'Pylance, bitbake-python' &&
+        diagnostics[0].source === 'Pylint, bitbake-python' &&
         diagnostics[0].range.isEqual(new vscode.Range(1, 4, 1, 9))
     })
   }).timeout(BITBAKE_TIMEOUT)
