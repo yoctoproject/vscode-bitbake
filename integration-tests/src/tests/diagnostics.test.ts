@@ -34,19 +34,13 @@ suite('Bitbake Diagnostics Test Suite', () => {
   })
 
   test('Diagnostics', async () => {
-    await forceDocumentAnalysis(docUri)
-    await warmEmbeddedDocument('python', 'error()')
-    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(docUri), { preview: false })
-
+    await vscode.workspace.openTextDocument(docUri)
+    await vscode.window.showTextDocument(docUri)
     await assertWillComeTrue(async () => {
-      const diagnostics = vscode.languages.getDiagnostics()
-      return diagnostics.some(([uri, fileDiagnostics]) => {
-      return uri.path.includes('diagnostics.bb') &&
-        fileDiagnostics.some((diagnostic) =>
-        diagnostic.source?.includes('bitbake-python') &&
-        diagnostic.range.isEqual(new vscode.Range(1, 4, 1, 9))
-        )
-      })
+      const diagnostics = vscode.languages.getDiagnostics(docUri)
+      return diagnostics.length === 1 &&
+        diagnostics[0].source === 'Pylint, bitbake-python' &&
+        diagnostics[0].range.isEqual(new vscode.Range(1, 4, 1, 9))
     })
   }).timeout(BITBAKE_TIMEOUT)
 })

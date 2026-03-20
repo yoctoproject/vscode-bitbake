@@ -21,9 +21,9 @@ suite('Bitbake CodeAction Test Suite', () => {
       assert.fail('Bitbake extension is not available')
     }
     await vscodeBitbake.activate()
-    await forceDocumentAnalysis(docUri)
-    await warmEmbeddedDocument('python', 'random')
-    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(docUri), { preview: false })
+    await vscode.workspace.openTextDocument(docUri)
+    await vscode.window.showTextDocument(docUri)
+    await vscode.commands.executeCommand('workbench.action.files.save')
   })
 
   const testPythonAddImport = async (
@@ -39,7 +39,7 @@ suite('Bitbake CodeAction Test Suite', () => {
         docUri,
         targetRange
       )
-      return actionResult.length > 0
+      return actionResult.length > 0 && actionResult.find(action => action.title === expectedTitle) !== undefined
     })
 
     // Code action titles are user-facing and can be localized by VS Code/Pylance.
