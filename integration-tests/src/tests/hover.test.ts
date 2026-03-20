@@ -7,6 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
+import { forceDocumentAnalysis } from '../utils/vscode-tools'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake Hover Test Suite', () => {
@@ -20,7 +21,7 @@ suite('Bitbake Hover Test Suite', () => {
       assert.fail('Bitbake extension is not available')
     }
     await vscodeBitbake.activate()
-    await vscode.workspace.openTextDocument(docUri)
+    await forceDocumentAnalysis(docUri)
   })
 
   const testHover = async (position: vscode.Position, expected: string): Promise<void> => {

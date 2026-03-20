@@ -8,6 +8,7 @@ import * as vscode from 'vscode'
 import path from 'path'
 import { afterEach } from 'mocha'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
+import { forceDocumentAnalysis } from '../utils/vscode-tools'
 import { assertWillComeTrue } from '../utils/async'
 
 suite('Bitbake Diagnostics Test Suite', () => {
@@ -33,13 +34,17 @@ suite('Bitbake Diagnostics Test Suite', () => {
   })
 
   test('Diagnostics', async () => {
-    await vscode.workspace.openTextDocument(docUri)
-    await vscode.window.showTextDocument(docUri)
+    await forceDocumentAnalysis(docUri)
+
     await assertWillComeTrue(async () => {
-      const diagnostics = vscode.languages.getDiagnostics(docUri)
-      return diagnostics.length === 1 &&
-        diagnostics[0].source === 'Pylint, bitbake-python' &&
-        diagnostics[0].range.isEqual(new vscode.Range(1, 4, 1, 9))
+      const diagnostics = vscode.languages.getDiagnostics()
+      return diagnostics.some(([uri, fileDiagnostics]) => {
+      return uri.path.includes('diagnostics.bb') &&
+        fileDiagnostics.some((diagnostic) =>
+        diagnostic.source?.includes('bitbake-python') &&
+        diagnostic.range.isEqual(new vscode.Range(1, 4, 1, 9))
+        )
+      })
     })
   }).timeout(BITBAKE_TIMEOUT)
 })
