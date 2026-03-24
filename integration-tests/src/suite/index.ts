@@ -24,9 +24,11 @@ export function run (testsRoot: string, cb: (error: unknown, failures?: number) 
       if (failures > 0) {
         cb('Tests failed', failures)
       } else {
-        // Say that the tests passed
         console.log('All tests passed.')
+        cb(null, 0)
       }
     })
+  }).catch(err => {
+    cb(err)
   })
 }

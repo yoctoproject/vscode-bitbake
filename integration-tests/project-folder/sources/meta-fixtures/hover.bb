@@ -5,6 +5,8 @@ python do_foo(){
 }
 
 do_bar(){
+    ## HA ah
+    A='123'
     echo '123'
 }
 
@@ -16,3 +18,4 @@ do_build() {
     oe_runmake
     do_bar
 }
+

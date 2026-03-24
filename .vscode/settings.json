@@ -16,4 +16,19 @@
 	"jest.jestCommandLine": "node_modules/.bin/jest",
 	"jest.monitorLongRun": 300000,
 	"eslint.nodePath": "${workspaceFolder}/node_modules",
+	"python.autoComplete.extraPaths": [
+		"${workspaceFolder}/yocto-build/sources/poky/bitbake/lib",
+		"${workspaceFolder}/yocto-build/sources/poky/meta/lib"
+	],
+	"python.analysis.extraPaths": [
+		"${workspaceFolder}/yocto-build/sources/poky/bitbake/lib",
+		"${workspaceFolder}/yocto-build/sources/poky/meta/lib"
+	],
+	"files.associations": {
+		"*.txt": "diff",
+		"*.patch": "diff",
+		"diff": "diff",
+		"*.conf": "bitbake",
+		"*.inc": "bitbake"
+	},
 }

@@ -1,8 +1,8 @@
 {
     "bitbake.loggingLevel": "debug",
     "bitbake.pathToBitbakeFolder": "${workspaceFolder}/sources/poky/bitbake",
-    "bitbake.pathToEnvScript": "${workspaceFolder}/sources/poky/oe-init-build-env",
-    "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
+    "bitbake.pathToEnvScript": "/workdir/integration-tests/project-folder/sources/poky/oe-init-build-env",
+    "bitbake.pathToBuildFolder": "/workdir/integration-tests/project-folder/build-crops",
     "python.autoComplete.extraPaths": [
         "${workspaceFolder}/sources/poky/bitbake/lib",
         "${workspaceFolder}/sources/poky/meta/lib"
@@ -11,6 +11,9 @@
         "${workspaceFolder}/sources/poky/bitbake/lib",
         "${workspaceFolder}/sources/poky/meta/lib"
     ],
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.typeCheckingMode": "basic",
+    "python.analysis.inlayHints.variableTypes": true,
     "task.saveBeforeRun": "always",
     "[python]": {
         "diffEditor.ignoreTrimWhitespace": false,
@@ -24,6 +27,8 @@
     },
     "files.associations": {
         "*.txt": "diff",
+        "*.patch": "diff",
+        "diff": "diff",
         "*.conf": "bitbake",
         "*.inc": "bitbake"
     },
