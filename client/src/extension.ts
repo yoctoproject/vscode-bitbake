@@ -24,6 +24,7 @@ import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
 import { extractRecipeName } from './lib/src/utils/files'
 import { BitbakeConfigPicker } from './ui/BitbakeConfigPicker'
+import { BitbakeMachinePicker } from './ui/BitbakeMachinePicker'
 import { type BitbakeScanResult, scanContainsData } from './lib/src/types/BitbakeScanResult'
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
@@ -166,6 +167,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   const bitbakeConfigPicker = new BitbakeConfigPicker(bitbakeDriver.bitbakeSettings, context)
   context.subscriptions.push(bitbakeConfigPicker.statusBarItem)
   bitbakeDriver.activeBuildConfiguration = bitbakeConfigPicker.activeBuildConfiguration
+  const bitbakeMachinePicker = new BitbakeMachinePicker(bitbakeDriver.bitbakeSettings, context)
+  context.subscriptions.push(bitbakeMachinePicker.statusBarItem)
   bitbakeConfigPicker.onActiveConfigChanged.event((config) => {
     bitbakeRecipesView?.setTitleConfig(config)
   })
@@ -193,6 +196,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
         event.affectsConfiguration('bitbake.commandWrapper') ||
         event.affectsConfiguration('bitbake.buildConfigurations')) {
       bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
+      bitbakeMachinePicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
       await clientNotificationManager.resetNeverShowAgain('bitbake/bitbakeSettingsError')
       logger.debug('Bitbake settings changed')
       updatePythonPath()
@@ -215,6 +219,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
     loadLoggerSettings()
     bitbakeDriver.loadSettings(vscode.workspace.getConfiguration('bitbake'), vscode.workspace.workspaceFolders?.[0].uri.fsPath)
     bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
+    bitbakeMachinePicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
     updatePythonPath()
     bitbakeWorkspace.loadBitbakeWorkspace(context.workspaceState)
   }))

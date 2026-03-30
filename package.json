@@ -195,6 +195,10 @@
               "sdkImage": {
                 "type": "string",
                 "markdownDescription": "Sub-configuration specific setting to replace the main `sdkImage`. See the `bitbake.sdkImage` setting."
+              },
+              "machine": {
+                "type": "string",
+                "markdownDescription": "Default MACHINE for this build configuration. Used as the initial value by the BitBake MACHINE picker."
               }
             },
             "required": [
@@ -388,6 +392,11 @@
         "command": "bitbake.pick-configuration",
         "title": "BitBake: Change active buildConfiguration",
         "description": "Select the active build configuration from the settings to use for bitbake commands."
+      },
+      {
+        "command": "bitbake.pick-machine",
+        "title": "BitBake: Change active MACHINE",
+        "description": "Set the MACHINE for the active build folder. Writes MACHINE = \"value\" to conf/local.conf."
       },
       {
         "command": "bitbake.build-recipe",

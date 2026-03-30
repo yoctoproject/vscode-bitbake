@@ -11,6 +11,7 @@ export interface BitbakeBuildConfigSettings {
   shellEnv?: NodeJS.Dict<string>
   sshTarget?: string
   sdkImage?: string
+  machine?: string
   name?: string
   disableDevtoolDebugBuild?: boolean
 }
@@ -100,6 +101,7 @@ function expandBuildConfig (settings: Record<string, unknown>, variables: NodeJS
     shellEnv: expandStringDict(toStringDict(settings.shellEnv), variables),
     sdkImage: expandSettingString(settings.sdkImage, variables),
     sshTarget: expandSettingString(settings.sshTarget, variables),
+    machine: expandSettingString(settings.machine, variables),
     name: expandSettingString(settings.name, variables)
   }
 }
