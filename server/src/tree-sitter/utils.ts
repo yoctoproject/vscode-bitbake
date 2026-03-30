@@ -84,11 +84,25 @@ export function isOverride (n: SyntaxNode): boolean {
               (variable_expansion [0, 27] - [0, 32]
                 (identifier [0, 29] - [0, 31]))
               (identifier [0, 32] - [0, 36])))))
+   *
+   * Example (OVERRIDES statement):
+   * OVERRIDES = "linux:arm:pn-foo"
+   *
+   * Tree node:
+   *    (overrides_statement
+   *      (OVERRIDES)
+   *      (identifier "linux")
+   *      (identifier "arm")
+   *      (identifier "pn-foo"))
+   *
+   * The override names inside overrides_statement are identifiers whose parent
+   * is 'overrides_statement' rather than 'override'. They are semantically
+   * override tokens and should be highlighted as such.
    */
   const parentType = n?.parent?.type
   switch (n.type) {
     case 'identifier':
-      return parentType === 'override' || parentType === 'concatenation'
+      return parentType === 'override' || parentType === 'concatenation' || parentType === 'overrides_statement'
     default:
       return false
   }

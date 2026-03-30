@@ -110,6 +110,23 @@ export function getBashParsedTokens (uri: string): ParsedToken[] {
       })
     }
 
+    // Bash control-flow keywords have node types matching their text in the
+    // tree-sitter-bash grammar (e.g. 'if', 'then', 'else', 'fi', 'for',
+    // 'while', 'do', 'done', 'case', 'in', 'esac', 'elif').
+    const BASH_KEYWORDS = new Set([
+      'if', 'then', 'else', 'elif', 'fi',
+      'for', 'while', 'until', 'do', 'done',
+      'case', 'in', 'esac',
+      'function', 'select', 'time'
+    ])
+    if (BASH_KEYWORDS.has(node.type)) {
+      resultTokens.push({
+        ...nodeRange,
+        tokenType: TOKEN_LEGEND.types.keyword,
+        tokenModifiers: []
+      })
+    }
+
     // Traverse every node
     return true
   })
@@ -133,6 +150,17 @@ export function getBitBakeParsedTokens (uri: string): ParsedToken[] {
     }
 
     if (TreeSitterUtils.isVariableReference(node)) {
+      resultTokens.push({
+        ...nodeRange,
+        tokenType: TOKEN_LEGEND.types.variable,
+        tokenModifiers: [TOKEN_LEGEND.modifiers.declaration]
+      })
+    }
+
+    // OVERRIDES is a named token in the tree-sitter-bitbake grammar (not 'identifier').
+    // It is the left-hand side of an overrides_statement and should be treated as a
+    // variable declaration for semantic highlighting purposes.
+    if (node.type === 'OVERRIDES') {
       resultTokens.push({
         ...nodeRange,
         tokenType: TOKEN_LEGEND.types.variable,
