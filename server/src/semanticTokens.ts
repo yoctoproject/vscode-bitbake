@@ -56,6 +56,16 @@ const generateSemanticTokensLegend = (): SemanticTokensLegend => {
 
 export const legend: SemanticTokensLegend = generateSemanticTokensLegend()
 
+// Bash control-flow keywords have node types matching their text in the
+// tree-sitter-bash grammar (e.g. 'if', 'then', 'else', 'fi', 'for',
+// 'while', 'do', 'done', 'case', 'in', 'esac', 'elif').
+const BASH_KEYWORDS = new Set([
+  'if', 'then', 'else', 'elif', 'fi',
+  'for', 'while', 'until', 'do', 'done',
+  'case', 'in', 'esac',
+  'function', 'select', 'time'
+])
+
 // Check node_modules/@types/vscode/index.d.ts for more encoding details
 function encodeTokenType (tokenType: string): number {
   if (tokenTypes.has(tokenType)) {
@@ -110,15 +120,6 @@ export function getBashParsedTokens (uri: string): ParsedToken[] {
       })
     }
 
-    // Bash control-flow keywords have node types matching their text in the
-    // tree-sitter-bash grammar (e.g. 'if', 'then', 'else', 'fi', 'for',
-    // 'while', 'do', 'done', 'case', 'in', 'esac', 'elif').
-    const BASH_KEYWORDS = new Set([
-      'if', 'then', 'else', 'elif', 'fi',
-      'for', 'while', 'until', 'do', 'done',
-      'case', 'in', 'esac',
-      'function', 'select', 'time'
-    ])
     if (BASH_KEYWORDS.has(node.type)) {
       resultTokens.push({
         ...nodeRange,
