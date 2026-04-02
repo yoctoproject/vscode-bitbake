@@ -9,7 +9,7 @@ import { type LanguageClient } from 'vscode-languageclient/node'
 import { clientNotificationManager } from './ui/ClientNotificationManager'
 import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
-import { BitbakeDriver } from './driver/BitbakeDriver'
+import { BitbakeDriverVSCode } from './driver/BitbakeDriverVSCode'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
@@ -30,7 +30,7 @@ import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsMana
 import { NotificationMethod } from './lib/src/types/notifications'
 
 let client: LanguageClient
-const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
+const bitbakeDriver: BitbakeDriverVSCode = new BitbakeDriverVSCode()
 let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
 const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
