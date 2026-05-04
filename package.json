@@ -222,6 +222,69 @@
         "files.trimTrailingWhitespace": false
       }
     },
+    "walkthroughs": [
+      {
+        "id": "bitbake.getStarted",
+        "title": "Get Started with BitBake",
+        "description": "Configure the BitBake extension and learn the main VS Code features for Yocto Project workspaces.",
+        "steps": [
+          {
+            "id": "bitbake.getStarted.host",
+            "title": "Check your host setup",
+            "description": "Check that your workspace runs on a supported Linux host.",
+            "media": {
+              "markdown": "walkthroughs/host-setup.md"
+            }
+          },
+          {
+            "id": "bitbake.getStarted.dependencies",
+            "title": "Install the required dependencies",
+            "description": "Install the required host packages and locale before starting BitBake from the extension.",
+            "media": {
+              "markdown": "walkthroughs/dependencies.md"
+            }
+          },
+          {
+            "id": "bitbake.getStarted.settings",
+            "title": "Configure BitBake settings",
+            "description": "Open VS Code Settings and search for `BitBake`. Configure the basic workspace settings needed to start BitBake, such as `bitbake.pathToBuildFolder`, `bitbake.pathToEnvScript`, and `bitbake.pathToBitbakeFolder`.",
+            "media": {
+              "image": "images/config-picker.png",
+              "altText": "BitBake configuration picker"
+            },
+            "completionEvents": [
+              "onCommand:bitbake.pick-configuration",
+              "onSettingChanged:bitbake.pathToBuildFolder",
+              "onSettingChanged:bitbake.pathToEnvScript",
+              "onSettingChanged:bitbake.pathToBitbakeFolder"
+            ]
+          },
+          {
+            "id": "bitbake.getStarted.language",
+            "title": "Try language features",
+            "description": "Open a BitBake recipe and try language server features such as hover information, completion, and go to definition.",
+            "media": {
+              "markdown": "walkthroughs/language-features.md"
+            }
+          },
+          {
+            "id": "bitbake.getStarted.gui",
+            "title": "Use BitBake views and commands",
+            "description": "Use the Recipes Explorer and command links to try common BitBake extension actions.",
+            "media": {
+              "markdown": "walkthroughs/bitbake-gui.md"
+            },
+            "completionEvents": [
+              "onView:bitbakeRecipes",
+              "onCommand:bitbake.watch-recipe",
+              "onCommand:bitbake.rescan-project",
+              "onCommand:bitbake.terminal-profile",
+              "onCommand:bitbake.build-recipe"
+            ]
+          }
+        ]
+      }
+    ],
     "taskDefinitions": [
       {
         "type": "bitbake",
