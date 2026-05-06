@@ -193,11 +193,10 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
         event.affectsConfiguration('bitbake.commandWrapper') ||
         event.affectsConfiguration('bitbake.buildConfigurations')) {
       bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
-      await clientNotificationManager.resetNeverShowAgain('bitbake/bitbakeSettingsError')
       logger.debug('Bitbake settings changed')
       updatePythonPath()
       if (!scanContainsData(bitBakeProjectScanner.activeScanResult)) {
-        void vscode.commands.executeCommand('bitbake.rescan-project')
+        void vscode.commands.executeCommand('bitbake.rescan-project', false)
       } else {
         void vscode.commands.executeCommand('bitbake.parse-recipes')
         bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
@@ -221,7 +220,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(bitbakeConfigPicker.onActiveConfigChanged.event((config) => {
     bitbakeDriver.activeBuildConfiguration = config
     if (!scanContainsData(bitBakeProjectScanner.activeScanResult)) {
-      void vscode.commands.executeCommand('bitbake.rescan-project')
+      void vscode.commands.executeCommand('bitbake.rescan-project', false)
     } else {
       bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
     }
@@ -286,7 +285,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   if (scanContainsData(bitBakeProjectScanner.activeScanResult)) {
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
   } else {
-    void vscode.commands.executeCommand('bitbake.rescan-project')
+    void vscode.commands.executeCommand('bitbake.rescan-project', false)
   }
   logger.info('Congratulations, your extension "BitBake" is now active!')
 }

@@ -4,9 +4,13 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as fs from 'fs'
+import { SpawnSyncReturns } from 'child_process'
+import { IPty } from 'node-pty'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from '../../../ui/BitbakeTaskProvider'
 import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
+import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
+import * as ProcessUtils from '../../../utils/ProcessUtils'
 
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
@@ -102,6 +106,71 @@ describe('BitbakeDriver Tests', () => {
     driver.activeBuildConfiguration = 'Alternative'
     const script = driver.composeBitbakeScript('bitbake busybox')
     expect(script).toEqual(expect.stringContaining('. /tmp/envsetup.sh /tmp/alternative-build'))
+  })
+
+  describe('settings sanity', () => {
+    afterEach(() => {
+      jest.clearAllMocks()
+    })
+
+    it('tracks sane BitBake settings', async () => {
+      const bitbakeDriver = new BitbakeDriver()
+      const bitbakeSettings: Record<string, unknown> = {
+        pathToBitbakeFolder: __dirname,
+        workingDirectory: __dirname,
+        commandWrapper: '',
+        pathToEnvScript: 'fakeEnvScript',
+        pathToBuildFolder: 'nonexistent'
+      }
+
+      bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
+      jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+      jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValueOnce(Promise.resolve({
+        status: 0,
+        stdout: '/tmp/devtool\r\n/tmp/bitbake'
+      } as unknown as Promise<SpawnSyncReturns<Buffer>>))
+
+      const onSanityChange = jest.fn()
+      bitbakeDriver.onBitbakeSettingsSanityChange.on('change', onSanityChange)
+
+      const sane = await bitbakeDriver.checkBitbakeSettingsSanity()
+
+      expect(sane).toStrictEqual(true)
+      expect(bitbakeDriver.isBitbakeSettingsSane()).toStrictEqual(true)
+      expect(bitbakeDriver.getBitbakeSettingsError()).toBeUndefined()
+      expect(onSanityChange).toHaveBeenCalledWith({ sane: true, error: undefined })
+    })
+
+    it('tracks BitBake settings errors', async () => {
+      const bitbakeDriver = new BitbakeDriver()
+      const bitbakeSettings: Record<string, unknown> = {
+        pathToBitbakeFolder: __dirname,
+        workingDirectory: __dirname,
+        commandWrapper: '',
+        pathToEnvScript: 'fakeEnvScript',
+        pathToBuildFolder: 'nonexistent'
+      }
+
+      bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
+      jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+      jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValueOnce(Promise.resolve({
+        status: 1,
+        stdout: 'error'
+      } as unknown as Promise<SpawnSyncReturns<Buffer>>))
+
+      const onSanityChange = jest.fn()
+      bitbakeDriver.onBitbakeSettingsSanityChange.on('change', onSanityChange)
+
+      const sane = await bitbakeDriver.checkBitbakeSettingsSanity()
+
+      expect(sane).toStrictEqual(false)
+      expect(bitbakeDriver.isBitbakeSettingsSane()).toStrictEqual(false)
+      expect(bitbakeDriver.getBitbakeSettingsError()).toStrictEqual('devtool not found in $PATH\nSee Bitbake Terminal for command output.')
+      expect(onSanityChange).toHaveBeenCalledWith({
+        sane: false,
+        error: 'devtool not found in $PATH\nSee Bitbake Terminal for command output.'
+      })
+    })
   })
 
   describe('composeBitbakeCommand', () => {

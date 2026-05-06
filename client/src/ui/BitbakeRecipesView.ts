@@ -8,6 +8,7 @@ import { BitbakeWorkspace } from './BitbakeWorkspace'
 import { type ElementInfo, type BitbakeScanResult, scanContainsRecipes } from '../lib/src/types/BitbakeScanResult'
 import path from 'path'
 import { BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
+import { type BitbakeDriver } from '../driver/BitbakeDriver'
 
 export class BitbakeRecipesView {
   private readonly bitbakeTreeProvider: BitbakeTreeDataProvider
@@ -15,6 +16,7 @@ export class BitbakeRecipesView {
 
   constructor (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScanner: BitBakeProjectScanner) {
     this.bitbakeTreeProvider = new BitbakeTreeDataProvider(bitbakeWorkspace, bitbakeProjectScanner)
+    this.registerBitbakeSettingsErrorContext(bitbakeProjectScanner.bitbakeDriver)
   }
 
   registerView (context: vscode.ExtensionContext): void {
@@ -31,6 +33,17 @@ export class BitbakeRecipesView {
         this.view.title = 'BitBake recipes [' + activeConfigName + ']';
       }
     }
+  }
+
+  private registerBitbakeSettingsErrorContext (bitbakeDriver: BitbakeDriver): void {
+    const updateContext = (): void => {
+      const hasSettingsError = !bitbakeDriver.isBitbakeSettingsSane()
+      void vscode.commands.executeCommand('setContext', 'bitbake.settingsError', hasSettingsError)
+      this.bitbakeTreeProvider.setHideRecipes(hasSettingsError)
+    }
+
+    bitbakeDriver.onBitbakeSettingsSanityChange.on('change', updateContext)
+    updateContext()
   }
 }
 
@@ -72,6 +85,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
   readonly onDidChangeTreeData: vscode.Event<BitbakeRecipeTreeItem | undefined> = this._onDidChangeTreeData.event
   private readonly bitbakeProjectScanner: BitBakeProjectScanner
   private bitbakeScanResults: BitbakeScanResult
+  private hideRecipes = false
   private scanCompletePromise: Promise<void> | undefined
   private resolveScanCompletePromise: (() => void) | undefined
 
@@ -111,12 +125,21 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     return element
   }
 
+  setHideRecipes (hideRecipes: boolean): void {
+    this.hideRecipes = hideRecipes
+    this._onDidChangeTreeData.fire(undefined)
+  }
+
   async getChildren (element?: BitbakeRecipeTreeItem | undefined): Promise<BitbakeRecipeTreeItem[]> {
     if (this.scanCompletePromise !== undefined) {
       await this.scanCompletePromise
       this.scanCompletePromise = undefined
     }
     if (element === undefined) {
+      if (this.hideRecipes) {
+        return []
+      }
+
       const items = this.getBitbakeRecipes()
       items.push(this.getAddRecipeItem())
       return items

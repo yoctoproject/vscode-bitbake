@@ -8,7 +8,6 @@ import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from '../../../driver/BitbakeESDK'
-import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
 import { SpawnSyncReturns } from 'child_process'
 import { IPty } from 'node-pty'
 
@@ -49,7 +48,6 @@ describe('Devtool eSDK Mode Test Suite', () => {
     bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
     const bitbakeTerminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
     const bitbakeExecutionSpy = jest.spyOn(ProcessUtils, 'finishProcessExecution')
-    clientNotificationManager.showBitbakeSettingsError = jest.fn()
 
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
       status: 1,

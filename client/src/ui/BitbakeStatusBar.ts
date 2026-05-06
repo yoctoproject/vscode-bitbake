@@ -36,6 +36,10 @@ export class BitbakeStatusBar {
       this.updateStatusBar()
     })
 
+    this.bitbakeProjectScanner.bitbakeDriver.onBitbakeSettingsSanityChange.on('change', () => {
+      this.updateStatusBar()
+    })
+
     this.bitbakeProjectScanner.bitbakeDriver.onBitbakeProcessChange.on('spawn', (command) => {
       this.commandInProgress = command
       this.updateStatusBar()
@@ -104,7 +108,12 @@ export class BitbakeStatusBar {
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.prominentBackground')
       return
     }
-    if (this.scanExitCode !== 0) {
+    if (!this.bitbakeProjectScanner.bitbakeDriver.isBitbakeSettingsSane()) {
+      this.statusBarItem.text = '$(warning) BitBake: not configured'
+      this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground')
+      this.statusBarItem.command = 'bitbakeRecipes.focus'
+      this.statusBarItem.tooltip = this.bitbakeProjectScanner.bitbakeDriver.getBitbakeSettingsError() ?? 'BitBake settings have not been validated yet'
+    } else if (this.scanExitCode !== 0) {
       this.statusBarItem.text = '$(error) BitBake: Parsing error'
       this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground')
       this.statusBarItem.command = 'workbench.action.problems.focus'
