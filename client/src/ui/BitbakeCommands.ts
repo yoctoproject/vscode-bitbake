@@ -32,7 +32,6 @@ import { type LanguageClient } from 'vscode-languageclient/node'
 import { getVariableValue } from '../language/languageClient'
 
 let parsingPending = false
-let bitbakeSanity = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider, client: LanguageClient): void {
   context.subscriptions.push(
@@ -45,7 +44,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }),
     vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }),
-    vscode.commands.registerCommand('bitbake.rescan-project', async () => { await rescanProject(bitBakeProjectScanner) }),
+    vscode.commands.registerCommand('bitbake.rescan-project', async (focusOnError = true) => { await rescanProject(bitBakeProjectScanner, focusOnError) }),
     vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }),
     vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
     vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }),
@@ -94,14 +93,25 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
   )
 }
 
+async function ensureBitbakeSettingsSane (bitbakeDriver: BitbakeDriver, focusOnError: boolean): Promise<boolean> {
+  if (bitbakeDriver.isBitbakeSettingsSane() || await bitbakeDriver.checkBitbakeSettingsSanity()) {
+    return true
+  }
+
+  if (focusOnError) {
+    await vscode.commands.executeCommand('bitbakeRecipes.focus')
+  }
+
+  return false
+}
+
 async function parseAllrecipes (bitbakeWorkspace: BitbakeWorkspace, taskProvider: BitbakeTaskProvider): Promise<void> {
   logger.debug('Command: parse-recipes')
 
-  if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+  if (!(await ensureBitbakeSettingsSane(taskProvider.bitbakeDriver, true))) {
     logger.warn('bitbake settings are not sane, skip parse')
     return
   }
-  bitbakeSanity = true
 
   if (bitbakeESDKMode) {
     return
@@ -154,12 +164,10 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakePr
 async function scanEnvironmentCommand (taskProvider: BitbakeTaskProvider): Promise<void> {
   logger.debug('Executing command: scan-global-env')
 
-  if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+  if (!(await ensureBitbakeSettingsSane(taskProvider.bitbakeDriver, true))) {
     logger.warn('bitbake settings are not sane, Abort scan')
     return
   }
-
-  bitbakeSanity = true
 
   if (bitbakeESDKMode) {
     return
@@ -178,12 +186,10 @@ async function scanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, taskProvid
 
   logger.debug('Command: scan-recipe-env')
 
-  if (!bitbakeSanity && !(await taskProvider.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+  if (!(await ensureBitbakeSettingsSane(taskProvider.bitbakeDriver, true))) {
     logger.warn('bitbake settings are not sane, Abort scan')
     return
   }
-
-  bitbakeSanity = true
 
   if (bitbakeESDKMode) {
     return
@@ -374,13 +380,11 @@ export async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.Ta
   }
 }
 
-async function rescanProject (bitBakeProjectScanner: BitBakeProjectScanner): Promise<void> {
-  bitbakeSanity = false
-  if (!(await bitBakeProjectScanner.bitbakeDriver?.checkBitbakeSettingsSanity())) {
+async function rescanProject (bitBakeProjectScanner: BitBakeProjectScanner, focusOnError: boolean): Promise<void> {
+  if (!(await ensureBitbakeSettingsSane(bitBakeProjectScanner.bitbakeDriver, focusOnError))) {
     logger.warn('bitbake settings are not sane, skip rescan')
     return
   }
-  bitbakeSanity = true
 
   await bitBakeProjectScanner.rescanProject()
 }

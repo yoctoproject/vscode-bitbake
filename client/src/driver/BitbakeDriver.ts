@@ -8,7 +8,6 @@ import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell, type BitbakeBuildConfigSettings, getBuildSetting } from '../lib/src/BitbakeSettings'
-import { clientNotificationManager } from '../ui/ClientNotificationManager'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
 import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
@@ -22,10 +21,14 @@ export class BitbakeDriver {
   activeBuildConfiguration: string = 'No BitBake configuration'
   bitbakeProcess: IPty | undefined
   bitbakeProcessCommand: string | undefined
+  private bitbakeSettingsSane = false
+  private bitbakeSettingsError: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
+  onBitbakeSettingsSanityChange: EventEmitter = new EventEmitter()
 
   loadSettings (settings: Record<string, unknown>, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
+    this.setBitbakeSettingsSanity(false)
     logger.debug('BitbakeDriver settings updated: ' + JSON.stringify(this.bitbakeSettings))
   }
 
@@ -42,6 +45,20 @@ export class BitbakeDriver {
 
   getBuildConfig (property: keyof BitbakeBuildConfigSettings): string | NodeJS.Dict<string> | boolean | undefined {
     return getBuildSetting(this.bitbakeSettings, this.activeBuildConfiguration, property)
+  }
+
+  isBitbakeSettingsSane (): boolean {
+    return this.bitbakeSettingsSane
+  }
+
+  getBitbakeSettingsError (): string | undefined {
+    return this.bitbakeSettingsError
+  }
+
+  private setBitbakeSettingsSanity (sane: boolean, error?: string): void {
+    this.bitbakeSettingsSane = sane
+    this.bitbakeSettingsError = error
+    this.onBitbakeSettingsSanityChange.emit('change', { sane, error })
   }
 
   /// Execute a command in the bitbake environment
@@ -126,14 +143,14 @@ export class BitbakeDriver {
 
   async checkBitbakeSettingsSanity (): Promise<boolean> {
     if (!fs.existsSync(this.bitbakeSettings.pathToBitbakeFolder)) {
-      clientNotificationManager.showBitbakeSettingsError('Bitbake folder not found on disk.')
+      this.setBitbakeSettingsSanity(false, 'Bitbake folder not found on disk.')
       return false
     }
 
     const workingDirectory = this.getBuildConfig('workingDirectory')
     if (typeof workingDirectory === 'string' && !fs.existsSync(workingDirectory)) {
       // If it is not defined, then we will use the workspace folder which is always valid
-      clientNotificationManager.showBitbakeSettingsError('Working directory does not exist.')
+      this.setBitbakeSettingsSanity(false, 'Working directory does not exist.')
       return false
     }
 
@@ -144,7 +161,7 @@ export class BitbakeDriver {
     const outLines = ret.stdout.toString().split(/\r?\n/g)
 
     if (outLines.filter((line) => /devtool$/.test(line)).length === 0) {
-      clientNotificationManager.showBitbakeSettingsError('devtool not found in $PATH\nSee Bitbake Terminal for command output.')
+      this.setBitbakeSettingsSanity(false, 'devtool not found in $PATH\nSee Bitbake Terminal for command output.')
       return false
     }
 
@@ -154,6 +171,7 @@ export class BitbakeDriver {
       setBitbakeESDKMode(false)
     }
     logger.info(`Bitbake settings are sane, eSDK mode: ${bitbakeESDKMode}`)
+    this.setBitbakeSettingsSanity(true)
 
     return true
   }

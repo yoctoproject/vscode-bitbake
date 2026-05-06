@@ -20,7 +20,9 @@ describe('BitbakeDriver Recipes View', () => {
 
   it('should list recipes', (done) => {
     const bitbakeWorkspace = new BitbakeWorkspace()
-    const bitBakeProjectScanner = new BitBakeProjectScanner(new BitbakeDriver())
+    const bitbakeDriver = new BitbakeDriver()
+    jest.spyOn(bitbakeDriver, 'isBitbakeSettingsSane').mockReturnValue(true)
+    const bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
     void bitbakeWorkspace.addActiveRecipe('base-files') // The promise is the memento which is under mock
 
     const contextMock = {
@@ -77,6 +79,32 @@ describe('BitbakeDriver Recipes View', () => {
 
     const bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, scanResult)
+    bitbakeRecipesView.registerView(contextMock)
+  })
+
+  it('should show welcome content when BitBake settings are not sane', (done) => {
+    const bitbakeWorkspace = new BitbakeWorkspace()
+    const bitbakeDriver = new BitbakeDriver()
+    jest.spyOn(bitbakeDriver, 'isBitbakeSettingsSane').mockReturnValue(false)
+    const bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
+
+    const contextMock = {
+      subscriptions: {
+        push: jest.fn()
+      }
+    } as unknown as vscode.ExtensionContext
+
+    vscode.window.registerTreeDataProvider = jest.fn().mockImplementation(
+      async (viewId: string, treeDataProvider: vscode.TreeDataProvider<BitbakeRecipeTreeItem>): Promise<void> => {
+        const rootTreeItem = await treeDataProvider.getChildren(undefined)
+        expect(rootTreeItem).toBeDefined()
+        expect(rootTreeItem).toStrictEqual([])
+        expect(vscode.commands.executeCommand).toHaveBeenCalledWith('setContext', 'bitbake.settingsError', true)
+        done()
+      })
+    mockVscodeEvents()
+
+    const bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
     bitbakeRecipesView.registerView(contextMock)
   })
 })

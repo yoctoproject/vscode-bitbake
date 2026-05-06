@@ -940,7 +940,14 @@
           "title": "bitbake"
         }
       ]
-    }
+    },
+    "viewsWelcome": [
+      {
+        "view": "bitbakeRecipes",
+        "contents": "BitBake could not be configured and started. Configure the extension to enable recipe scanning, navigation, and task commands.\n[Open BitBake walkthrough](command:workbench.action.openWalkthrough?%5B%22yocto-project.yocto-bitbake%23bitbake.getStarted%22%2Cfalse%5D)\n[Open BitBake settings](command:workbench.action.openWorkspaceSettings?%5B%22%40ext%3Ayocto-project.yocto-bitbake%22%5D)",
+        "when": "bitbake.settingsError"
+      }
+    ]
   },
   "scripts": {
     "postinstall": "cd server && npm install && cd ../client && npm install && cd ..",

@@ -13,27 +13,6 @@ export class ClientNotificationManager {
     this._memento = memento
   }
 
-  showBitbakeSettingsError (message?: string): void {
-    logger.error('BitBake settings error: ' + message)
-    if (!this.checkIsNeverShowAgain('bitbake/bitbakeSettingsError')) {
-      void window.showErrorMessage(
-        'BitBake could not be configured and started. To enable advanced Bitbake features, please configure the Bitbake extension.\n\n' + message,
-        'Open Settings',
-        'Close',
-        'Don\'t Show Again'
-      )
-        .then((item) => {
-          if (item === 'Open Settings') {
-            void commands.executeCommand('workbench.action.openWorkspaceSettings', '@ext:yocto-project.yocto-bitbake')
-          } else if (item === 'Don\'t Show Again') {
-            void this.neverShowAgain('bitbake/bitbakeSettingsError')
-          }
-        }, (reason) => {
-          logger.warn('Could not show bitbake error dialog: ' + reason)
-        })
-    }
-  }
-
   showSDKUnavailableError (recipe: string): void {
     void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to enable SDK features. Alternatively, use the "Devtool: SDK fallback" command with less features.',
       'Run devtool SDK fallback',
