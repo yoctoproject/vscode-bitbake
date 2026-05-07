@@ -247,16 +247,12 @@
           {
             "id": "bitbake.getStarted.settings",
             "title": "Configure BitBake settings",
-            "description": "Open VS Code Settings and search for `BitBake`. Configure the basic workspace settings needed to start BitBake, such as `bitbake.pathToBuildFolder`, `bitbake.pathToEnvScript`, and `bitbake.pathToBitbakeFolder`.",
+            "description": "Configure the basic workspace settings needed to start BitBake.\n[Open BitBake settings](command:workbench.action.openWorkspaceSettings?%5B%22%40ext%3Ayocto-project.yocto-bitbake%22%5D)",
             "media": {
-              "image": "images/config-picker.png",
-              "altText": "BitBake configuration picker"
+              "markdown": "walkthroughs/bitbake-settings.md"
             },
             "completionEvents": [
-              "onCommand:bitbake.pick-configuration",
-              "onSettingChanged:bitbake.pathToBuildFolder",
-              "onSettingChanged:bitbake.pathToEnvScript",
-              "onSettingChanged:bitbake.pathToBitbakeFolder"
+              "onContext:!bitbake.settingsError"
             ]
           },
           {
