@@ -9,7 +9,7 @@ import { BitbakeWorkspace } from '../../../ui/BitbakeWorkspace'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { type BitbakeScanResult } from '../../../lib/src/types/BitbakeScanResult'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import { mockVscodeEvents } from '../../utils/vscodeMock'
+import { mockVscodeEvents, mockVscodeExtensionContext } from '../../utils/vscodeMock'
 
 jest.mock('vscode')
 
@@ -25,11 +25,7 @@ describe('BitbakeDriver Recipes View', () => {
     const bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
     void bitbakeWorkspace.addActiveRecipe('base-files') // The promise is the memento which is under mock
 
-    const contextMock = {
-      subscriptions: {
-        push: jest.fn()
-      }
-    } as unknown as vscode.ExtensionContext
+    const contextMock = mockVscodeExtensionContext()
 
     const scanResult: BitbakeScanResult = {
       _recipes: [
@@ -88,11 +84,7 @@ describe('BitbakeDriver Recipes View', () => {
     jest.spyOn(bitbakeDriver, 'isBitbakeSettingsSane').mockReturnValue(false)
     const bitBakeProjectScanner = new BitBakeProjectScanner(bitbakeDriver)
 
-    const contextMock = {
-      subscriptions: {
-        push: jest.fn()
-      }
-    } as unknown as vscode.ExtensionContext
+    const contextMock = mockVscodeExtensionContext()
 
     vscode.window.registerTreeDataProvider = jest.fn().mockImplementation(
       async (viewId: string, treeDataProvider: vscode.TreeDataProvider<BitbakeRecipeTreeItem>): Promise<void> => {
