@@ -7,6 +7,7 @@ import * as vscode from 'vscode'
 import type childProcess from 'child_process'
 import { BitbakeWorkspace } from '../../../ui/BitbakeWorkspace'
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
+import { mockVscodeExtensionContext } from '../../utils/vscodeMock'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { addDevtoolDebugBuild, registerDevtoolCommands } from '../../../ui/BitbakeCommands'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
@@ -21,11 +22,7 @@ jest.mock('vscode')
 
 function mockExtensionContext (bitBakeProjectScanner: BitBakeProjectScanner): (...args: unknown[]) => unknown {
   const bitbakeWorkspace = new BitbakeWorkspace()
-  const contextMock: vscode.ExtensionContext = {
-    subscriptions: {
-      push: jest.fn()
-    }
-  } as unknown as vscode.ExtensionContext
+  const contextMock = mockVscodeExtensionContext()
   const clientMock = jest.fn() as unknown as LanguageClient
 
   let ideSDKCommand = () => {}

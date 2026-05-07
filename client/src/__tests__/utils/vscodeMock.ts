@@ -15,3 +15,11 @@ export function mockVscodeEvents (): void {
     }
   })
 }
+
+export function mockVscodeExtensionContext (): vscode.ExtensionContext {
+  return {
+    subscriptions: {
+      push: jest.fn()
+    }
+  } as unknown as vscode.ExtensionContext
+}
