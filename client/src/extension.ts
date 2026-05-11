@@ -184,14 +184,17 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {
     const currentSettings = vscode.workspace.getConfiguration('bitbake')
+    const wasBitbakeSettingsSane = bitbakeDriver.isBitbakeSettingsSane()
     bitbakeDriver.loadSettings(currentSettings, vscode.workspace.workspaceFolders?.[0].uri.fsPath)
-    if (event.affectsConfiguration('bitbake.shellEnv') ||
-        event.affectsConfiguration('bitbake.workingDirectory') ||
-        event.affectsConfiguration('bitbake.pathToEnvScript') ||
-        event.affectsConfiguration('bitbake.pathToBitbakeFolder') ||
-        event.affectsConfiguration('bitbake.pathToBuildFolder') ||
-        event.affectsConfiguration('bitbake.commandWrapper') ||
-        event.affectsConfiguration('bitbake.buildConfigurations')) {
+    const bitbakeSettingsChanged = event.affectsConfiguration('bitbake.shellEnv') ||
+      event.affectsConfiguration('bitbake.workingDirectory') ||
+      event.affectsConfiguration('bitbake.pathToEnvScript') ||
+      event.affectsConfiguration('bitbake.pathToBitbakeFolder') ||
+      event.affectsConfiguration('bitbake.pathToBuildFolder') ||
+      event.affectsConfiguration('bitbake.commandWrapper') ||
+      event.affectsConfiguration('bitbake.buildConfigurations')
+
+    if (bitbakeSettingsChanged) {
       bitbakeConfigPicker.updateStatusBar(bitbakeDriver.bitbakeSettings)
       logger.debug('Bitbake settings changed')
       updatePythonPath()
@@ -201,6 +204,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
         void vscode.commands.executeCommand('bitbake.parse-recipes')
         bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
       }
+    } else if (wasBitbakeSettingsSane && scanContainsData(bitBakeProjectScanner.activeScanResult)) {
+      bitbakeDriver.markBitbakeSettingsSane()
     }
     if (event.affectsConfiguration('bitbake.loggingLevel')) {
       loadLoggerSettings()
@@ -283,6 +288,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   // In case we restored a scan from the cache, tell all listeners about it
   // FIXME it would be better if all UI participants directly read the cache at initialization than refreshing them here
   if (scanContainsData(bitBakeProjectScanner.activeScanResult)) {
+    bitbakeDriver.markBitbakeSettingsSane()
     bitBakeProjectScanner.onChange.emit(BitBakeProjectScanner.EventType.SCAN_COMPLETE, bitBakeProjectScanner.activeScanResult)
   } else {
     void vscode.commands.executeCommand('bitbake.rescan-project', false)

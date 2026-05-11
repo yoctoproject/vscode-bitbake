@@ -171,6 +171,18 @@ describe('BitbakeDriver Tests', () => {
         error: 'devtool not found in $PATH\nSee Bitbake Terminal for command output.'
       })
     })
+
+    it('can mark cached BitBake settings as sane', () => {
+      const bitbakeDriver = new BitbakeDriver()
+      const onSanityChange = jest.fn()
+      bitbakeDriver.onBitbakeSettingsSanityChange.on('change', onSanityChange)
+
+      bitbakeDriver.markBitbakeSettingsSane()
+
+      expect(bitbakeDriver.isBitbakeSettingsSane()).toStrictEqual(true)
+      expect(bitbakeDriver.getBitbakeSettingsError()).toBeUndefined()
+      expect(onSanityChange).toHaveBeenCalledWith({ sane: true, error: undefined })
+    })
   })
 
   describe('composeBitbakeCommand', () => {

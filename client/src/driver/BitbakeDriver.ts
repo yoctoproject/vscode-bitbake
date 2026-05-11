@@ -55,6 +55,10 @@ export class BitbakeDriver {
     return this.bitbakeSettingsError
   }
 
+  markBitbakeSettingsSane (): void {
+    this.setBitbakeSettingsSanity(true)
+  }
+
   private setBitbakeSettingsSanity (sane: boolean, error?: string): void {
     this.bitbakeSettingsSane = sane
     this.bitbakeSettingsError = error
