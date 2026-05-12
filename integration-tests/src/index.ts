@@ -20,12 +20,14 @@ export async function run (): Promise<void> {
   files.forEach(f => mocha.addFile(path.resolve(testsRoot, f)))
 
   // Run the mocha test
-  mocha.run(failures => {
-    if (failures > 0) {
-      throw new Error('Tests failed: ' + failures)
-    } else {
-      // Say that the tests passed
-      console.log('All tests passed.')
-    }
+  await new Promise<void>((resolve, reject) => {
+    mocha.run(failures => {
+      if (failures > 0) {
+        reject(new Error('Tests failed: ' + failures))
+      } else {
+        console.log('All tests passed.')
+        resolve()
+      }
+    })
   })
 }
