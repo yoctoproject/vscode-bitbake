@@ -13,6 +13,30 @@ The changelog for the extension can be found [here](./CHANGELOG.md).
 To install this extension from the VS Code Extension Marketplace, please follow [this guide](https://marketplace.visualstudio.com/items?itemName=yocto-project.yocto-bitbake).
 For more information regarding the Extension Marketplace, please see the [official documentation](https://code.visualstudio.com/docs/editor/extension-gallery).
 
+## Local development prerequisites
+
+Ubuntu is the default supported platform for running the local test setup, matching the CI and the Yocto/Poky integration environment.
+
+Install the external packages needed by the local build and test workflows:
+
+```sh
+# Node.js/npm dependencies.
+sudo apt install npm
+
+# Yocto/BitBake host dependencies used when running the integration tests natively.
+# See the Yocto documentation for the full Ubuntu/Debian host package list:
+# https://docs.yoctoproject.org/ref-manual/system-requirements.html#ubuntu-and-debian
+sudo apt install chrpath diffstat lz4
+
+# Tree-sitter Wasm rebuild dependencies.
+sudo apt install docker.io
+
+# VS Code integration test dependencies.
+sudo apt install xvfb
+```
+
+The GitHub CI uses a self-hosted runner with Yocto-oriented caches. Local runs can therefore be slower and use more disk space, especially the tests that exercise a real Yocto/Poky project.
+
 ## Manual installation
 
 Once compiled, the extension can either be launched in VS Code's debug mode or built into a VSIX file and installed.
@@ -77,6 +101,8 @@ and other external libraries. They can individually be run with:
 npm run jest
 ```
 Unit tests are defined in the `__tests__` folders.
+
+Some Jest tests intentionally exercise the Yocto integration project and can be heavier than pure unit tests. For example, scanner-related tests may parse the test Poky project and create a devtool workspace to validate behavior against real Yocto data.
 
 If you have installed the recommended extensions, you'll find launch and debug
 tasks for the unit tests in the debug section of VSCode.
