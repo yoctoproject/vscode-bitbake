@@ -37,7 +37,7 @@ suite('Bitbake CodeAction Test Suite', () => {
         docUri,
         targetRange
       )
-      return actionResult.length > 0 && actionResult.find(action => action.title === expectedTitle) !== undefined
+      return actionResult.length > 0
     })
 
     // Code action titles are user-facing and can be localized by VS Code/Pylance.
