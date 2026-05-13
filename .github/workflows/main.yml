@@ -25,7 +25,7 @@ jobs:
         shell: bash
 
     env:
-      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/1001/bus
+      DBUS_SESSION_BUS_ADDRESS: unix:path=/run/user/13010/bus
       SHELL: /usr/bin/bash
       node-version: 20
 
