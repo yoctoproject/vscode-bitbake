@@ -13,13 +13,6 @@ import {
 import { pythonVersion, bashVersion } from './utils/version'
 
 async function main (): Promise<void> {
-  // Set a 30-minute timeout for the entire test process to prevent indefinite hangs in CI
-  const testTimeoutMs = 30 * 60 * 1000
-  const timeoutHandle = setTimeout(() => {
-    console.error('Test timeout: exceeded 30 minutes. Force exiting.')
-    process.exit(1)
-  }, testTimeoutMs)
-
   try {
     const vscodeVersion = '1.102.3'
     const vscodeExecutablePath = await downloadAndUnzipVSCode(vscodeVersion)
@@ -51,19 +44,16 @@ async function main (): Promise<void> {
     const extensionTestsEnv = {}
 
     // Download VS Code, unzip it and run the integration test
-    const ret = await runTests({
+    await runTests({
       launchArgs,
       vscodeExecutablePath,
       extensionDevelopmentPath,
       extensionTestsPath,
       extensionTestsEnv
     })
-    clearTimeout(timeoutHandle)
-    process.exit(ret)
   } catch (err) {
     console.error(err)
     console.error('Failed to run tests')
-    clearTimeout(timeoutHandle)
     process.exit(1)
   }
 }

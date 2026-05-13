@@ -4,51 +4,21 @@
  * ------------------------------------------------------------------------------------------ */
 
 import * as vscode from 'vscode'
-import { assertWillComeTrue, delay } from './async'
+import { assertWillComeTrue } from './async'
 import path from 'path'
 
-// Increased timeout for CI headless environments where language servers take longer to respond
-export const BITBAKE_TIMEOUT = 10 * 60 * 1000 // 10 minutes
-
-const isBitbakeTaskExecution = (execution: vscode.TaskExecution): boolean => {
-  return execution.task.definition.type === 'bitbake'
-}
-
-export async function awaitBitbakeIdle (quietPeriod: number = 1500, timeout: number = BITBAKE_TIMEOUT): Promise<void> {
-  const startTime = Date.now()
-  let idleStartTime: number | undefined
-
-  while (Date.now() - startTime < timeout) {
-    const hasRunningBitbakeTask = vscode.tasks.taskExecutions.some(isBitbakeTaskExecution)
-    if (hasRunningBitbakeTask) {
-      idleStartTime = undefined
-    } else if (idleStartTime === undefined) {
-      idleStartTime = Date.now()
-    } else if (Date.now() - idleStartTime >= quietPeriod) {
-      return
-    }
-
-    await delay(250)
-  }
-
-  throw new Error('Timed out waiting for BitBake tasks to become idle')
-}
+export const BITBAKE_TIMEOUT = 300000
 
 /// Wait for the bitbake parsing task to finish
 export async function awaitBitbakeParsingResult (): Promise<void> {
-  let taskExecuted = vscode.tasks.taskExecutions.some((execution) => execution.task.definition.type === 'bitbake' && execution.task.definition.options?.parseOnly === true)
-  const disposable = vscode.tasks.onDidEndTask((e) => {
-    if (e.execution.task.definition.type === 'bitbake' && e.execution.task.definition.options?.parseOnly === true) {
+  let taskExecuted = false
+  const disposable = vscode.tasks.onDidEndTask(async (e) => {
+    if (e.execution.task.definition.options.parseOnly === true) {
       taskExecuted = true
     }
   })
-
-  try {
-    await assertWillComeTrue(async () => taskExecuted)
-    await awaitBitbakeIdle()
-  } finally {
-    disposable.dispose()
-  }
+  await assertWillComeTrue(async () => taskExecuted)
+  disposable.dispose()
 }
 
 /// Copy a recipe into poky
