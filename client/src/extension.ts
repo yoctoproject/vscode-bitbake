@@ -11,7 +11,7 @@ import { logger } from './lib/src/utils/OutputLogger'
 import { activateLanguageServer, deactivateLanguageServer } from './language/languageClient'
 import { BitbakeDriver } from './driver/BitbakeDriver'
 import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
-import { registerBitbakeCommands, registerDevtoolCommands } from './ui/BitbakeCommands'
+import { registerBitbakeCommands, registerDevtoolCommands, registerBitbakeDebugCommands } from './ui/BitbakeCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
@@ -77,10 +77,11 @@ function updatePythonPath (): void {
   const pathToBitbakeFolder = bitbakeConfig.pathToBitbakeFolder
   const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
   const pathToPokyMetaLib = path.join(pathToBitbakeFolder, '../meta/lib') // We assume BitBake is into Poky
+  const pathToScriptsLib = path.join(pathToBitbakeFolder, '../scripts/lib') // Add scripts/lib
   for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
     let extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
     if (!Object.isExtensible(extraPaths)) extraPaths = []
-    for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib]) {
+    for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib, pathToScriptsLib]) {
       if (!extraPaths.includes(pathToAdd)) {
         extraPaths.push(pathToAdd)
       }
@@ -284,6 +285,7 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
 
   registerBitbakeCommands(context, bitbakeWorkspace, bitbakeTaskProvider, bitBakeProjectScanner, terminalProvider, client)
   registerDevtoolCommands(context, bitbakeWorkspace, bitBakeProjectScanner, client)
+  registerBitbakeDebugCommands(context, bitbakeDriver)
 
   // In case we restored a scan from the cache, tell all listeners about it
   // FIXME it would be better if all UI participants directly read the cache at initialization than refreshing them here
