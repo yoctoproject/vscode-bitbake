@@ -26,6 +26,7 @@ suite('Bitbake CodeAction Test Suite', () => {
 
   const testPythonAddImport = async (
     targetRange: vscode.Range,
+    expectedTitle: string,
     expectedNewText: string,
     expectedRange: vscode.Range
   ): Promise<void> => {
@@ -60,6 +61,7 @@ suite('Bitbake CodeAction Test Suite', () => {
 
   test('CodeAction can properly show "import random"', async () => {
     const targetRange = new vscode.Range(1, 4, 1, 10)
+    const expectedTitle = 'import random'
     const expectedNewText = '    import random\n'
     const expectedRange = new vscode.Range(1, 0, 1, 0)
     await testPythonAddImport(targetRange, expectedTitle, expectedNewText, expectedRange)
@@ -67,6 +69,7 @@ suite('Bitbake CodeAction Test Suite', () => {
 
   test('CodeAction can properly show "from random import random"', async () => {
     const targetRange = new vscode.Range(1, 4, 1, 10)
+    const expectedTitle = 'from random import random'
     const expectedNewText = '    from random import random\n'
     const expectedRange = new vscode.Range(1, 0, 1, 0)
     await testPythonAddImport(targetRange, expectedTitle, expectedNewText, expectedRange)
