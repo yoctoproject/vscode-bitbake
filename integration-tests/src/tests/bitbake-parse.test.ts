@@ -36,8 +36,9 @@ suite('Bitbake Parsing Test Suite', () => {
   test('Bitbake can detect parsing errors', async () => {
     await importRecipe(errorRecipePath, pokyPath)
 
+    const parsingResult = awaitBitbakeParsingResult()
     await vscode.commands.executeCommand('bitbake.parse-recipes')
-    await awaitBitbakeParsingResult()
+    await parsingResult
 
     await assertWillComeTrue(async () => {
       const diagnostics = vscode.languages.getDiagnostics()
