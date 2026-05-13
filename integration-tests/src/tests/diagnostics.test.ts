@@ -8,7 +8,7 @@ import * as vscode from 'vscode'
 import path from 'path'
 import { afterEach } from 'mocha'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
-import { forceDocumentAnalysis } from '../utils/vscode-tools'
+import { forceDocumentAnalysis, warmEmbeddedDocument } from '../utils/vscode-tools'
 import { assertWillComeTrue } from '../utils/async'
 
 suite('Bitbake Diagnostics Test Suite', () => {
@@ -35,6 +35,8 @@ suite('Bitbake Diagnostics Test Suite', () => {
 
   test('Diagnostics', async () => {
     await forceDocumentAnalysis(docUri)
+    await warmEmbeddedDocument('python', 'error()')
+    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(docUri), { preview: false })
 
     await assertWillComeTrue(async () => {
       const diagnostics = vscode.languages.getDiagnostics()

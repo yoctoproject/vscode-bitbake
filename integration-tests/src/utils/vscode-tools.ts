@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { delay } from './async'
+import { assertWillComeTrue, delay } from './async'
 import { Location, Position, Range, TextDocument, window, workspace, type LocationLink, type Uri } from 'vscode'
 
 export const getDefinitionUri = (definition: Location | LocationLink): Uri => {
@@ -30,4 +30,29 @@ export async function forceDocumentAnalysis (docUri: Uri): Promise<TextDocument>
   })
   await delay(2000)
   return await workspace.openTextDocument(docUri)
+}
+
+export async function warmEmbeddedDocument (
+  languageId: string,
+  expectedText: string
+): Promise<TextDocument> {
+  let embeddedDocument: TextDocument | undefined
+
+  await assertWillComeTrue(async () => {
+    embeddedDocument = workspace.textDocuments.find((document) =>
+      document.uri.fsPath.includes('embedded-documents') &&
+      document.languageId === languageId &&
+      document.getText().includes(expectedText)
+    )
+    return embeddedDocument !== undefined
+  }, 500, 10000)
+
+  if (embeddedDocument === undefined) {
+    throw new Error(`Unable to find embedded ${languageId} document containing "${expectedText}"`)
+  }
+
+  await window.showTextDocument(embeddedDocument, { preview: false })
+  await delay(3000)
+
+  return embeddedDocument
 }

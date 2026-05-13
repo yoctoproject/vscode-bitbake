@@ -7,7 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
-import { forceDocumentAnalysis } from '../utils/vscode-tools'
+import { forceDocumentAnalysis, warmEmbeddedDocument } from '../utils/vscode-tools'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 suite('Bitbake CodeAction Test Suite', () => {
@@ -22,6 +22,8 @@ suite('Bitbake CodeAction Test Suite', () => {
     }
     await vscodeBitbake.activate()
     await forceDocumentAnalysis(docUri)
+    await warmEmbeddedDocument('python', 'random')
+    await vscode.window.showTextDocument(await vscode.workspace.openTextDocument(docUri), { preview: false })
   })
 
   const testPythonAddImport = async (
