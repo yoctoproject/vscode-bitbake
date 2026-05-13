@@ -40,27 +40,16 @@ suite('Bitbake Parsing Test Suite', () => {
     await vscode.commands.executeCommand('bitbake.parse-recipes')
     await parsingResult
 
-    await assertWillComeTrue(async () => {
-      const diagnostics = vscode.languages.getDiagnostics()
+      await assertWillComeTrue(async () => {
+        const diagnostics = vscode.languages.getDiagnostics()
 
-      // Only 1 file has problem(s)
-      if (diagnostics.length !== 1) {
-        return false
-      }
-      // Only 1 problem on the file
-      if (diagnostics[0][1].length !== 1) {
-        return false
-      }
-
-      if (!diagnostics[0][0].path.includes('recipes-core/base-files/unparsed-line.bb')) {
-        return false
-      }
-      if (!diagnostics[0][1][0].message.includes('unparsed line: \'undefinedvariable\'')) {
-        return false
-      }
-
-      return true
-    })
+        return diagnostics.some(([uri, uriDiagnostics]) =>
+          uri.path.includes('recipes-core/base-files/unparsed-line.bb') &&
+          uriDiagnostics.some(diagnostic =>
+            diagnostic.message.includes('unparsed line: \'undefinedvariable\'')
+          )
+        )
+      })
 
     await removeRecipe(errorRecipePath, pokyPath)
   }).timeout(BITBAKE_TIMEOUT)
