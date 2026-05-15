@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
+import * as vscode from 'vscode'
 import { getBuildSetting, type BitbakeSettings } from '../lib/src/BitbakeSettings'
 import { type DevtoolWorkspaceInfo } from '../lib/src/types/BitbakeScanResult'
 import { loadJsonFile, setJsonProperty, saveJsonFile, mergeJsonArray } from '../utils/JSONFile'
@@ -17,6 +18,7 @@ export let bitbakeESDKMode: boolean = false
 
 export function setBitbakeESDKMode (mode: boolean): void {
   bitbakeESDKMode = mode
+  void vscode.commands.executeCommand('setContext', 'bitbake.eSDKMode', mode)
 }
 
 function createVSCodeFolderIfNotExists (workspace: string): void {
