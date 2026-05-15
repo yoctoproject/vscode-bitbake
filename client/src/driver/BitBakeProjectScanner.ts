@@ -368,57 +368,7 @@ You should adjust your docker volumes to use the same URIs as those present on y
       outputRecipeSection = splittedOutput.slice(startingIndex).join('\n')
     }
 
-    /**
-     * Example:
-     * zstd:
-        meta                 1.5.5
-       virt-viewer:
-        meta-virtualization  11.0 (skipped: one of 'wayland x11' needs to be in DISTRO_FEATURES)
-
-       The ones that are followed by (skipped) are not included.
-     */
-    const recipeRegex = /(?<name>.+):\r?\n((?:\s+(?<layer>\S+)\s+(?<version>\S+)(?<skipped>\s+\(skipped[^\r\n]*\))?\r?\n)+)/g
-
-    for (const match of outputRecipeSection.matchAll(recipeRegex)) {
-      const name = match.groups?.name
-      const layerName = match.groups?.layer
-      const version = match.groups?.version
-      const skipped = match.groups?.skipped
-
-      if (name === undefined) {
-        logger.error('[scanForRecipes] recipeName is undefined')
-        continue
-      }
-
-      const extraInfo = [`layer: ${layerName}`, `version: ${version} `].join('\r\n')
-
-      /**
-       * The output of 'bitbake-layers show-layers' is like this:
-       * layer                 path                                                              priority
-         =================================================================================================
-         core                  /home/projects/poky/meta                                          5
-
-         The output of 'bitbake-layers show-recipes' is like this:
-         acl:
-         meta                 2.3.2
-
-         Here 'meta' is used to refer to the layer instead of 'core'. So in such case we need to compare
-         the basename of the path found in 'show-layers' with the layer name found in this function.
-       */
-      const layerInfo = this.activeScanResult._layers.find((layer) => {
-        return layer.name === layerName || path.parse(layer.path).name === layerName
-      })
-
-      const element: ElementInfo = {
-        name,
-        extraInfo,
-        layerInfo,
-        version,
-        skipped
-      }
-
-      this.activeScanResult._recipes.push(element)
-    }
+    this.activeScanResult._recipes = parseRecipesOutput(outputRecipeSection, this.activeScanResult._layers)
 
     await this.scanForRecipesPath()
   }
@@ -545,6 +495,86 @@ You should adjust your docker volumes to use the same URIs as those present on y
     }
     return result.output.toString()
   }
+}
+
+export function parseRecipesOutput (outputRecipeSection: string, layers: LayerInfo[]): ElementInfo[] {
+  const recipes: ElementInfo[] = []
+
+  /**
+   * Example:
+   * zstd:
+      meta                 1.5.5
+     virt-viewer:
+      meta-virtualization  11.0 (skipped: one of 'wayland x11' needs to be in DISTRO_FEATURES)
+
+     Entries followed by (skipped) are not buildable. When multiple entries are
+     listed for a recipe, keep them all but place a buildable entry first.
+   */
+  const recipeRegex = /(?<name>.+):\r?\n(?<entries>(?:[^\S\r\n]+\S+[^\S\r\n]+\S+(?:[^\S\r\n]+\(skipped[^\r\n]*\))?(?:\r?\n|$))+)/g
+  const recipeEntryRegex = /^[^\S\r\n]+(?<layer>\S+)[^\S\r\n]+(?<version>\S+)(?<skipped>[^\S\r\n]+\(skipped[^\r\n]*\))?$/gm
+
+  for (const match of outputRecipeSection.matchAll(recipeRegex)) {
+    const name = match.groups?.name
+    const entries = match.groups?.entries
+
+    if (name === undefined || entries === undefined) {
+      logger.error('[parseRecipesOutput] recipeName or entries are undefined')
+      continue
+    }
+
+    const recipeEntries = [...entries.matchAll(recipeEntryRegex)]
+    const selectedEntry = recipeEntries.find((entry) => entry.groups?.skipped === undefined) ?? recipeEntries[0]
+
+    if (selectedEntry === undefined) {
+      logger.error(`[parseRecipesOutput] no recipe entries found for ${name}`)
+      continue
+    }
+
+    const orderedRecipeEntries = [
+      selectedEntry,
+      ...recipeEntries.filter((entry) => entry !== selectedEntry)
+    ]
+
+    // Keep the existing recipe-wide skip indicator: if no buildable entry exists,
+    // the selected entry is skipped and the recipe should still be shown as skipped.
+    const skipped = selectedEntry.groups?.skipped
+
+    for (const recipeEntry of orderedRecipeEntries) {
+      const layerName = recipeEntry.groups?.layer
+      const version = recipeEntry.groups?.version
+
+      const extraInfo = [`layer: ${layerName}`, `version: ${version} `].join('\r\n')
+
+      /**
+       * The output of 'bitbake-layers show-layers' is like this:
+       * layer                 path                                                              priority
+         =================================================================================================
+         core                  /home/projects/poky/meta                                          5
+
+         The output of 'bitbake-layers show-recipes' is like this:
+         acl:
+         meta                 2.3.2
+
+         Here 'meta' is used to refer to the layer instead of 'core'. So in such case we need to compare
+         the basename of the path found in 'show-layers' with the layer name found in this function.
+       */
+      const layerInfo = layers.find((layer) => {
+        return layer.name === layerName || path.parse(layer.path).name === layerName
+      })
+
+      const element: ElementInfo = {
+        name,
+        extraInfo,
+        layerInfo,
+        version,
+        skipped
+      }
+
+      recipes.push(element)
+    }
+  }
+
+  return recipes
 }
 
 function bbappendVersionMatches (bbappendVersion: string | undefined, recipeVersion: string | undefined): boolean {
