@@ -10,12 +10,23 @@ import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from '../../../driver/BitbakeESDK'
 import { SpawnSyncReturns } from 'child_process'
 import { IPty } from 'node-pty'
+import * as vscode from 'vscode'
 
 // Yocto's eSDKs contain devtool but not bitbake. These tests ensure we can still provide devtool functionalities without bitbake.
 describe('Devtool eSDK Mode Test Suite', () => {
   afterEach(() => {
-    jest.clearAllMocks()
     setBitbakeESDKMode(false)
+    jest.clearAllMocks()
+  })
+
+  it('updates the VS Code eSDK mode context', () => {
+    setBitbakeESDKMode(true)
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith('setContext', 'bitbake.eSDKMode', true)
+
+    jest.clearAllMocks()
+
+    setBitbakeESDKMode(false)
+    expect(vscode.commands.executeCommand).toHaveBeenCalledWith('setContext', 'bitbake.eSDKMode', false)
   })
 
   it('should scan devtool without bitbake', async () => {
