@@ -292,15 +292,12 @@ export class BitBakeProjectScanner {
       resolvedPath = path.resolve(destMountPoint, relativePath.replace('../', ''))
     }
     if (!await fileExistsFn(resolvedPath)) {
-      // Showing a modal here because this can only happend through the command devtool-update-recipe which is not used often
       if (!quiet) {
-        await vscode.window.showErrorMessage(
-          'Bitbake extension couldn\'t locate a file.', {
-            modal: true,
-            detail: `It looks like you are using the bitbake.commandWrapper setting to use a docker container.\n
-Couldn't find ${inputPath} corresponding paths inside and outside of the container.\n
-You should adjust your docker volumes to use the same URIs as those present on your host machine.`
-          })
+        const message = 'Bitbake extension couldn\'t locate a file. ' +
+          'It looks like you are using the bitbake.commandWrapper setting to use a docker container. ' +
+          `Couldn't find ${inputPath} corresponding paths inside and outside of the container. ` +
+          'You should adjust your docker volumes to use the same URIs as those present on your host machine.'
+        await vscode.window.showErrorMessage(message)
       }
       return resolvedPath
     }

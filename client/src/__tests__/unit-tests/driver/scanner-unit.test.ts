@@ -3,9 +3,17 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { parseRecipesOutput } from '../../../driver/BitBakeProjectScanner'
+import * as vscode from 'vscode'
+import { BitBakeProjectScanner, parseRecipesOutput } from '../../../driver/BitBakeProjectScanner'
+import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+
+jest.mock('vscode')
 
 describe('BitBakeProjectScanner unit tests', () => {
+  afterEach(() => {
+    jest.clearAllMocks()
+  })
+
   const layers = [
     {
       name: 'meta-variscite-bsp-imx',
@@ -68,4 +76,35 @@ systemd:
       })
     )
   })
+  it('shows a non-modal error when path mapping fails', async () => {
+    const scanner = new BitBakeProjectScanner(new BitbakeDriver())
+
+    const scannerInternals = scanner as unknown as {
+      hostMountPoint: string
+      containerMountPoint: string
+      existsInContainer: (containerPath: string) => Promise<boolean>
+    }
+
+    scannerInternals.hostMountPoint = '/host'
+    scannerInternals.containerMountPoint = '/container'
+
+    jest.spyOn(scannerInternals, 'existsInContainer').mockResolvedValue(false)
+
+    const errorSpy = jest.spyOn(vscode.window, 'showErrorMessage')
+      .mockResolvedValue(undefined)
+
+    await scanner.resolveHostPath('/container/test.bb')
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Bitbake extension couldn\'t locate a file')
+    )
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('bitbake.commandWrapper')
+    )
+    expect(errorSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/container/test.bb')
+    )
+    expect(errorSpy.mock.calls[0]).toHaveLength(1)
+  })
+
 })
