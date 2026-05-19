@@ -40,8 +40,11 @@ async function main (): Promise<void> {
 
     const testWorkspace = path.resolve(__dirname, '../../integration-tests/project-folder')
 
-    const launchArgs = ['--disable-workspace-trust', testWorkspace]
-    const extensionTestsEnv = {}
+    const launchArgs = [
+      '--disable-workspace-trust',
+      testWorkspace
+    ]
+    const extensionTestsEnv = { ...process.env }
 
     // Download VS Code, unzip it and run the integration test
     await runTests({

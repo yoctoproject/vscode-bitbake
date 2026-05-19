@@ -13,7 +13,10 @@ export function run (testsRoot: string, cb: (error: unknown, failures?: number) 
     color: true
   })
 
-  glob('**/**.test.js', { cwd: path.join(testsRoot, '../tests') }).then(files => {
+  const testGlob = process.env.INTEGRATION_TEST_GLOB ?? '**/**.test.js'
+
+  glob(testGlob, { cwd: path.join(testsRoot, '../tests') }).then(files => {
+    console.log(`Using test glob: ${testGlob}`)
     console.log(`Found test files: ${files}`)
 
     // Add files to the test suite
@@ -24,9 +27,9 @@ export function run (testsRoot: string, cb: (error: unknown, failures?: number) 
       if (failures > 0) {
         cb('Tests failed', failures)
       } else {
-        // Say that the tests passed
         console.log('All tests passed.')
+        cb(null, 0)
       }
     })
-  })
+  }).catch(error => cb(error))
 }
