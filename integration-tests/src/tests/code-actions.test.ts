@@ -7,7 +7,7 @@ import * as assert from 'assert'
 import * as vscode from 'vscode'
 import path from 'path'
 import { assertWillComeTrue } from '../utils/async'
-import { forceDocumentAnalysis } from '../utils/vscode-tools'
+import { forceDocumentAnalysis, waitForDiagnostics } from '../utils/vscode-tools'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
 
 // These tests depend on Pylance/Pyright diagnostics from embedded Python documents.
@@ -19,6 +19,7 @@ const pylanceDependentSuite = process.env.GITHUB_ACTIONS === 'true' ? suite.skip
 pylanceDependentSuite('Bitbake CodeAction Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/code-actions.bb')
   const docUri = vscode.Uri.parse(`file://${filePath}`)
+  const DIAGNOSTICS_WAIT_TIMEOUT = BITBAKE_TIMEOUT - 30000
 
   suiteSetup(async function (this: Mocha.Context) {
     this.timeout(100000)
@@ -28,6 +29,13 @@ pylanceDependentSuite('Bitbake CodeAction Test Suite', () => {
     }
     await vscodeBitbake.activate()
     await forceDocumentAnalysis(docUri)
+    await waitForDiagnostics(
+      () => vscode.languages.getDiagnostics(docUri).some(diagnostic =>
+        diagnostic.message.includes('random')
+      ),
+      DIAGNOSTICS_WAIT_TIMEOUT,
+      'mapped BitBake diagnostics for "random" on code-actions.bb'
+    )
   })
 
   const testPythonAddImport = async (
