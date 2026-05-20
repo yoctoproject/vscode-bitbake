@@ -8,8 +8,7 @@ import * as vscode from 'vscode'
 import path from 'path'
 import { afterEach } from 'mocha'
 import { BITBAKE_TIMEOUT } from '../utils/bitbake'
-import { forceDocumentAnalysis } from '../utils/vscode-tools'
-import { assertWillComeTrue } from '../utils/async'
+import { forceDocumentAnalysis, waitForDiagnostics } from '../utils/vscode-tools'
 
 // These tests depend on Pylance/Pyright diagnostics from embedded Python documents.
 // In GitHub Actions' fresh VS Code profile, Pylance can be installed but still fail
@@ -20,6 +19,7 @@ const pylanceDependentSuite = process.env.GITHUB_ACTIONS === 'true' ? suite.skip
 pylanceDependentSuite('Bitbake Diagnostics Test Suite', () => {
   const filePath = path.resolve(__dirname, '../../project-folder/sources/meta-fixtures/diagnostics.bb')
   const docUri = vscode.Uri.parse(`file://${filePath}`)
+  const DIAGNOSTICS_WAIT_TIMEOUT = BITBAKE_TIMEOUT - 30000
 
   let disposables: vscode.Disposable[] = []
 
@@ -42,15 +42,19 @@ pylanceDependentSuite('Bitbake Diagnostics Test Suite', () => {
   test('Diagnostics', async () => {
     await forceDocumentAnalysis(docUri)
 
-    await assertWillComeTrue(async () => {
-      const diagnostics = vscode.languages.getDiagnostics()
-      return diagnostics.some(([uri, fileDiagnostics]) =>
-        uri.path.includes('diagnostics.bb') &&
-        fileDiagnostics.some((diagnostic) =>
-          diagnostic.source?.includes('bitbake-python') &&
-          diagnostic.range.isEqual(new vscode.Range(1, 4, 1, 9))
+    await waitForDiagnostics(
+      () => {
+        const diagnostics = vscode.languages.getDiagnostics()
+        return diagnostics.some(([uri, fileDiagnostics]) =>
+          uri.path.includes('diagnostics.bb') &&
+          fileDiagnostics.some((diagnostic) =>
+            diagnostic.source?.includes('bitbake-python') &&
+            diagnostic.range.isEqual(new vscode.Range(1, 4, 1, 9))
+          )
         )
-      )
-    })
+      },
+      DIAGNOSTICS_WAIT_TIMEOUT,
+      'mapped BitBake diagnostics for "error()" on diagnostics.bb'
+    )
   }).timeout(BITBAKE_TIMEOUT)
 })
