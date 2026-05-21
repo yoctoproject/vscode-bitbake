@@ -508,13 +508,15 @@
         "command": "bitbake.start-toaster-in-browser",
         "title": "BitBake: Start toaster in browser",
         "description": "Start Toaster and reveal it in the browser.",
-        "icon": "$(preview)"
+        "icon": "$(preview)",
+        "enablement": "!bitbake.eSDKMode"
       },
       {
         "command": "bitbake.stop-toaster",
         "title": "BitBake: Stop Toaster",
         "description": "This stops Toaster by running `source toaster stop`.",
-        "icon": "$(stop-circle)"
+        "icon": "$(stop-circle)",
+        "enablement": "!bitbake.eSDKMode"
       },
       {
         "command": "bitbake.clear-workspace-state",
@@ -676,7 +678,8 @@
         },
         {
           "command": "bitbake.start-toaster-in-browser",
-          "group": "1@bitbake_dev@4"
+          "group": "1@bitbake_dev@4",
+          "when": "!bitbake.eSDKMode"
         },
         {
           "command": "bitbake.examine-dependency-taskexp",
