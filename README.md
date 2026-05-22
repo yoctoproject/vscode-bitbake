@@ -48,6 +48,41 @@ Here are some examples using the most popular bitbake wrappers:
 { "bitbake.commandWrapper": "${workspaceFolder}/build.sh --" }
 ```
 
+#### Container and Makefile wrappers
+
+The command wrapper receives the generated BitBake command as a single shell argument. For advanced container setups, prefer a small wrapper script instead of putting a long `docker run` or Makefile command directly in `settings.json`.
+
+For a container that is already running, a wrapper can forward the generated command with `docker exec`:
+
+```shell
+#!/bin/sh
+docker exec -i yocto_container /bin/bash -lc "$1"
+```
+
+Configured as:
+
+```json
+{
+    "bitbake.commandWrapper": "${workspaceFolder}/vscode-bitbake-wrapper.sh",
+    "bitbake.pathToEnvScript": "${workspaceFolder}/sources/poky/oe-init-build-env",
+    "bitbake.pathToBuildFolder": "${workspaceFolder}/build"
+}
+```
+
+For Makefile-driven environments, the wrapper can pass the generated command to a dedicated Makefile target:
+
+```shell
+#!/bin/sh
+export VSCODE_BITBAKE_COMMAND="$1"
+make vscode-proxy
+```
+
+The Makefile target can then run the command in the expected container environment, for example with `docker run` or `docker exec`.
+
+Make sure the wrapper script is executable, for example with `chmod +x vscode-bitbake-wrapper.sh`.
+
+Make sure that paths configured in `bitbake.pathToEnvScript`, `bitbake.pathToBuildFolder`, and `bitbake.workingDirectory` are valid from the environment where the wrapped command runs. If host and container paths differ, mount the workspace using matching paths where possible.
+
 ### Defining Multiple Configurations
 
 Sometimes it is necessary to build the same project with different distros or
