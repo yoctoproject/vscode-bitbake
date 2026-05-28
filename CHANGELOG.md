@@ -1,3 +1,11 @@
+# 2.9.0 - 2026.05.28
+
+ - Updated npm dependencies, addressing various security warnings
+ - Ported license completion to the generic language server (neovim)
+ - Added a Walkthrough for getting started with the extension
+ - Minor bugfixes
+ - Adopted a self-hosted runner for CI to improve build times and reliability
+
 # 2.8.0 - 2025.01.06
 
  - Renamed command "Pick configuration" to "Change active buildConfiguration"
