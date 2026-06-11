@@ -174,7 +174,9 @@ describe('BitBakeProjectScanner', () => {
         })
       })
     )
-    const goCrossRecipe = recipes.find((recipe) => recipe.name.includes('go-cross-core2-64'))
+    const goCrossRecipe = recipes.find(
+      (recipe) => recipe.name.startsWith('go-cross-') && recipe.path?.base.includes('go-cross_')
+    )
     expect(goCrossRecipe).toEqual(
       expect.objectContaining({
         path: expect.objectContaining({
