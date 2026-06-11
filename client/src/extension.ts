@@ -257,6 +257,9 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       if (parseOnSave !== true) {
         return
       }
+      if (!bitbakeDriver.isBitbakeSettingsSane() && !await bitbakeDriver.checkBitbakeSettingsSanity()) {
+        return
+      }
       const recipeExts = ['.bb', '.bbappend', '.inc']
       const extsForGlobalEnvScan = ['.conf', '.bbclass']
       const { fsPath } = document.uri
