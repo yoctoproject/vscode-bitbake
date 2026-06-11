@@ -28,3 +28,42 @@ mkdir -p "$YOCTO_DIR"
 clone_repo https://git.openembedded.org/bitbake "$BITBAKE_TAG" "$BITBAKE_COMMIT" "$YOCTO_DIR/bitbake"
 clone_repo https://git.openembedded.org/openembedded-core "$OE_CORE_TAG" "$OE_CORE_COMMIT" "$YOCTO_DIR/openembedded-core"
 clone_repo https://git.yoctoproject.org/meta-yocto "$META_YOCTO_TAG" "$META_YOCTO_COMMIT" "$YOCTO_DIR/meta-yocto"
+
+ln -s openembedded-core/oe-init-build-env "$YOCTO_DIR/oe-init-build-env"
+ln -s openembedded-core/meta "$YOCTO_DIR/meta"
+ln -s openembedded-core/scripts "$YOCTO_DIR/scripts"
+ln -s meta-yocto/meta-poky "$YOCTO_DIR/meta-poky"
+ln -s meta-yocto/meta-yocto-bsp "$YOCTO_DIR/meta-yocto-bsp"
+
+TEMPLATE_DIR="$YOCTO_DIR/meta-poky/conf/templates/vscode-bitbake"
+mkdir -p "$TEMPLATE_DIR"
+cp -R "$YOCTO_DIR/meta/conf/templates/default/." "$TEMPLATE_DIR/"
+
+cat > "$TEMPLATE_DIR/bblayers.conf.sample" <<'BBLAYERS_EOF'
+# LAYER_CONF_VERSION is increased each time build/conf/bblayers.conf
+# changes incompatibly
+LCONF_VERSION = "7"
+
+BBPATH = "${TOPDIR}"
+BBFILES ?= ""
+
+BBLAYERS ?= " \
+  ##OEROOT##/meta \
+  ##OEROOT##/meta-poky \
+  ##OEROOT##/meta-yocto-bsp \
+  "
+BBLAYERS_EOF
+
+cat >> "$TEMPLATE_DIR/local.conf.sample" <<'LOCALCONF_EOF'
+
+#
+# Keep the vscode-bitbake integration workspace aligned with the Yocto Project
+# reference distro assumptions exercised by the scanner tests.
+#
+DISTRO ?= "poky"
+LOCALCONF_EOF
+
+cat > "$YOCTO_DIR/.templateconf" <<'TEMPLATECONF_EOF'
+# Template settings
+TEMPLATECONF=${TEMPLATECONF:-meta-poky/conf/templates/vscode-bitbake}
+TEMPLATECONF_EOF
