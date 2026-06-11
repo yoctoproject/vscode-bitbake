@@ -257,6 +257,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
       if (parseOnSave !== true) {
         return
       }
+      // Parse-on-save is automatic: skip invalid settings instead of running
+      // commands that would focus the BitBake view on every save.
       if (!bitbakeDriver.isBitbakeSettingsSane() && !await bitbakeDriver.checkBitbakeSettingsSanity()) {
         return
       }
