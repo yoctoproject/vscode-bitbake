@@ -80,20 +80,20 @@ systemd:
     const scanner = new BitBakeProjectScanner(new BitbakeDriver())
 
     const scannerInternals = scanner as unknown as {
-      hostMountPoint: string
-      containerMountPoint: string
+      containerToHostMap: Map<string, string>
+      hostToContainerMap: Map<string, string>
       existsInContainer: (containerPath: string) => Promise<boolean>
     }
 
-    scannerInternals.hostMountPoint = '/host'
-    scannerInternals.containerMountPoint = '/container'
+    scannerInternals.containerToHostMap = new Map([['/container', '/host']])
+    scannerInternals.hostToContainerMap = new Map([['/host', '/container']])
 
     jest.spyOn(scannerInternals, 'existsInContainer').mockResolvedValue(false)
 
     const errorSpy = jest.spyOn(vscode.window, 'showErrorMessage')
       .mockResolvedValue(undefined)
 
-    await scanner.resolveHostPath('/container/test.bb')
+    await scanner.resolveHostPath('/host/test.bb')
 
     expect(errorSpy).toHaveBeenCalledWith(
       expect.stringContaining('Bitbake extension couldn\'t locate a file')
@@ -102,7 +102,7 @@ systemd:
       expect.stringContaining('bitbake.commandWrapper')
     )
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('/container/test.bb')
+      expect.stringContaining('/host/test.bb')
     )
     expect(errorSpy.mock.calls[0]).toHaveLength(1)
   })
