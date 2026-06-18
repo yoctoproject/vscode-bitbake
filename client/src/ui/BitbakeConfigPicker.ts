@@ -61,6 +61,7 @@ export class BitbakeConfigPicker {
     if (this.bitbakeSettings?.buildConfigurations !== undefined && this.bitbakeSettings?.buildConfigurations?.length > 0) {
       if (name !== undefined && this.bitbakeSettings.buildConfigurations.find((config) => config.name === name) !== undefined) {
         this.activeBuildConfiguration = name
+        this.updateStatusBar(this.bitbakeSettings)
       } else {
         const options = this.bitbakeSettings.buildConfigurations.map((config) => config.name)
         const filteredOptions = options.filter((option) => typeof option === 'string') as string[] // Always all according to the definition in client/package.json
