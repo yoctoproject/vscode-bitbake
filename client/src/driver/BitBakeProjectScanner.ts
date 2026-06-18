@@ -50,8 +50,8 @@ export class BitBakeProjectScanner {
   private readonly _bitbakeDriver: BitbakeDriver
 
   /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
-  private containerMountPoint: string | undefined
-  private hostMountPoint: string | undefined
+  private containerToHostMap: Map<string, string> = new Map<string, string>()
+  private hostToContainerMap: Map<string, string> = new Map<string, string>()
 
   constructor (bitbakeDriver: BitbakeDriver) {
     this._bitbakeDriver = bitbakeDriver
@@ -106,7 +106,7 @@ export class BitBakeProjectScanner {
   }
 
   public needsContainerPathsResolution (): boolean {
-    return this.containerMountPoint !== undefined
+    return this.containerToHostMap.size > 0
   }
 
   /// A quick scan to present devtool modify/reset results. A full rescan is required for .bbappends.
@@ -167,9 +167,7 @@ export class BitBakeProjectScanner {
   }
 
   /// Find corresponding mount point inode in layerPath/hostWorkdir and all parents
-  private async scanContainerMountPoint (layerPath: string, hostWorkdir: string): Promise<void> {
-    this.containerMountPoint = undefined
-    this.hostMountPoint = undefined
+  private async scanContainerMountPoint (layerPath: string, hostWorkdir: string): Promise<{ container: string, host: string } | undefined>{
 
     if (fs.existsSync(layerPath)) {
       // We're not inside a container, or the container is not using a different workdir
@@ -188,10 +186,10 @@ export class BitBakeProjectScanner {
         const containerDirInode = containerDirInodes[containerIdx]
         logger.debug('Comparing container inodes: ' + containerDir + ':' + containerDirInode + ' ' + hostDir + ':' + hostDirInode)
         if (containerDirInode === hostDirInode) {
-          this.containerMountPoint = containerDir
-          this.hostMountPoint = hostDir
-          logger.info(`Found container mount point: ${this.containerMountPoint} -> ${this.hostMountPoint}`)
-          return
+          this.containerToHostMap.set(containerDir, hostDir)
+          this.hostToContainerMap.set(hostDir, containerDir)
+          logger.info(`Found container mount point: ${containerDir} -> ${hostDir}`)
+          return { container: containerDir, host: hostDir }
         }
         containerDir = path.dirname(containerDir)
         containerIdx++
@@ -241,7 +239,8 @@ export class BitBakeProjectScanner {
 
   public async scanAvailableLayers (): Promise<void> {
     this.activeScanResult._layers = new Array < LayerInfo >()
-    this.containerMountPoint = undefined
+    this.containerToHostMap.clear()
+    this.hostToContainerMap.clear()
 
     const output = await this.executeBitBakeCommand('bitbake-layers show-layers')
     const outputLines = output.split(/\r?\n/g)
@@ -271,31 +270,64 @@ export class BitBakeProjectScanner {
     if (inputPath === undefined) {
       return undefined
     }
-    if (this.containerMountPoint === undefined && !hostToContainer) {
-      // Should only be called through scanAvailableLayers()
+
+    const normalizedInput = path.normalize(inputPath)
+    const activeMap = hostToContainer ? this.hostToContainerMap : this.containerToHostMap    
+    let origMountPoint: string | undefined
+    let destMountPoint: string | undefined
+
+    const fileExistsFn = hostToContainer ? this.existsInContainer.bind(this) : fs.existsSync
+
+    // Find the longest matching mount point prefix
+    let pathMatch = ''
+    for (const sourcePrefix of activeMap.keys()) {
+      const isExactMatch = normalizedInput === sourcePrefix
+      const isChildFolder = normalizedInput.startsWith(sourcePrefix + path.sep)
+      if (isExactMatch || isChildFolder) {
+        if (sourcePrefix.length > pathMatch.length) {
+          pathMatch = sourcePrefix
+        }
+      }
+    }
+
+    // Check if the match results in a resolving path
+    if (pathMatch !== '' ) {
+      origMountPoint = pathMatch
+      destMountPoint = activeMap.get(pathMatch)
+    }
+    if (origMountPoint !== undefined && destMountPoint !== undefined) {
+      const relativePath = path.relative(origMountPoint, normalizedInput)
+      const resolvedPath = path.resolve(destMountPoint, relativePath)
+      if (await fileExistsFn(resolvedPath)) {
+        return resolvedPath 
+      }
+    }
+
+    // No matching mount point in the map, try to find new mount point
+    if (!hostToContainer) {
       const hostWorkdir = this.bitbakeDriver?.getBuildConfig('workingDirectory')
       if (typeof hostWorkdir !== 'string') {
         throw new Error('hostWorkdir is not a string')
       }
-      await this.scanContainerMountPoint(inputPath, hostWorkdir)
+
+      const newMountPoint = await this.scanContainerMountPoint(normalizedInput, hostWorkdir)
+      if (newMountPoint) {
+        origMountPoint = newMountPoint.container
+        destMountPoint = newMountPoint.host
+      }
     }
-    const origMountPoint = hostToContainer ? this.hostMountPoint : this.containerMountPoint
-    const destMountPoint = hostToContainer ? this.containerMountPoint : this.hostMountPoint
-    const fileExistsFn = hostToContainer ? this.existsInContainer.bind(this) : fs.existsSync
+
     if (origMountPoint === undefined || destMountPoint === undefined) {
-      return inputPath
+      return normalizedInput
     }
-    const relativePath = path.relative(origMountPoint, inputPath)
-    let resolvedPath = path.resolve(destMountPoint, relativePath)
-    if (!await fileExistsFn(resolvedPath)) {
-      // This makes it work with the default kas-container configuration (/work & /build volumes)
-      resolvedPath = path.resolve(destMountPoint, relativePath.replace('../', ''))
-    }
+    const relativePath = path.relative(origMountPoint, normalizedInput)
+    const resolvedPath = path.resolve(destMountPoint, relativePath)
+
     if (!await fileExistsFn(resolvedPath)) {
       if (!quiet) {
         const message = 'Bitbake extension couldn\'t locate a file. ' +
           'It looks like you are using the bitbake.commandWrapper setting to use a docker container. ' +
-          `Couldn't find ${inputPath} corresponding paths inside and outside of the container. ` +
+          `Couldn't find ${normalizedInput} corresponding paths inside and outside of the container. ` +
           'You should adjust your docker volumes to use the same URIs as those present on your host machine.'
         await vscode.window.showErrorMessage(message)
       }
