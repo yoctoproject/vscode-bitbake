@@ -58,19 +58,23 @@ export class BitbakeConfigPicker {
   }
 
   public async pickConfiguration (name?: string): Promise<void> {
-    if (this.bitbakeSettings?.buildConfigurations !== undefined && this.bitbakeSettings?.buildConfigurations?.length > 0) {
-      if (name !== undefined && this.bitbakeSettings.buildConfigurations.find((config) => config.name === name) !== undefined) {
-        this.activeBuildConfiguration = name
-        this.updateStatusBar(this.bitbakeSettings)
-      } else {
-        const options = this.bitbakeSettings.buildConfigurations.map((config) => config.name)
-        const filteredOptions = options.filter((option) => typeof option === 'string') as string[] // Always all according to the definition in client/package.json
-        const selection = await vscode.window.showQuickPick(filteredOptions, { placeHolder: 'Select a BitBake configuration' })
-        if (selection !== undefined) {
-          this.activeBuildConfiguration = selection
-          this.updateStatusBar(this.bitbakeSettings)
-        }
-      }
+    const buildConfigurations = this.bitbakeSettings?.buildConfigurations
+    if (buildConfigurations === undefined || buildConfigurations.length === 0) {
+      return
     }
+
+    let selection = name
+    if (selection === undefined || buildConfigurations.find((config) => config.name === selection) === undefined) {
+      const options = buildConfigurations.map((config) => config.name)
+      const filteredOptions = options.filter((option) => typeof option === 'string') as string[] // Always all according to the definition in client/package.json
+      selection = await vscode.window.showQuickPick(filteredOptions, { placeHolder: 'Select a BitBake configuration' })
+    }
+
+    if (selection === undefined) {
+      return
+    }
+
+    this.activeBuildConfiguration = selection
+    this.updateStatusBar(this.bitbakeSettings)
   }
 }
