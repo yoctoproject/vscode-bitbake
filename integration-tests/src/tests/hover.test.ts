@@ -74,15 +74,15 @@ suite('Bitbake Hover Test Suite', () => {
     await testHover(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
-  test('Hover shows description for function defined into poky/meta/classes-global/logging.bbclass', async () => {
+  test('Hover shows description for function defined into layers/openembedded-core/meta/classes-global/logging.bbclass', async () => {
     const position = new vscode.Position(14, 6)
-    const expected = 'Function: **bbwarn** - *defined in ../poky/meta/classes-global/logging.bbclass*'
+    const expected = 'Function: **bbwarn** - *defined in ../../layers/openembedded-core/meta/classes-global/logging.bbclass*'
     await testHover(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
-  test('Hover shows description for function defined into poky/meta/classes-global/base.bbclass', async () => {
+  test('Hover shows description for function defined into layers/openembedded-core/meta/classes-global/base.bbclass', async () => {
     const position = new vscode.Position(15, 6)
-    const expected = 'Function: **oe_runmake** - *defined in ../poky/meta/classes-global/base.bbclass*'
+    const expected = 'Function: **oe_runmake** - *defined in ../../layers/openembedded-core/meta/classes-global/base.bbclass*'
     await testHover(position, expected)
   }).timeout(BITBAKE_TIMEOUT)
 
