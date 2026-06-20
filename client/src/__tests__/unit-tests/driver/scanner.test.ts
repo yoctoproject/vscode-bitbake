@@ -15,7 +15,7 @@ import { logger } from '../../../lib/src/utils/OutputLogger'
 let bitBakeProjectScanner: BitBakeProjectScanner
 
 const pathToBuildFolder = path.join(__dirname, '../../../../../integration-tests/project-folder/build')
-const pathToEnvScript = path.join(__dirname, '../../../../../integration-tests/project-folder/sources/poky/oe-init-build-env')
+const pathToEnvScript = path.join(__dirname, '../../../../../integration-tests/project-folder/build/init-build-env')
 const workspaceFolder = path.join(__dirname, '../../../../../integration-tests/project-folder')
 
 logger.level = 'debug'
@@ -41,7 +41,7 @@ describe('BitBakeProjectScanner', () => {
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool modify busybox').then((child) => {
       child.onExit(async (event) => {
         expect(event.exitCode).toBe(0)
-        const pokyPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/poky')
+        const pokyPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder')
         const fixtureVersionPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions/recipes-fixtures/fixture-version')
         const recipes = fs.readdirSync(fixtureVersionPath)
         for (const recipe of recipes) {
@@ -65,7 +65,7 @@ describe('BitBakeProjectScanner', () => {
 
   afterAll((done) => {
     bitBakeProjectScanner.bitbakeDriver.spawnBitbakeProcess('devtool reset busybox').then((child) => {
-      const pokyPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/poky')
+      const pokyPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder')
       const fixtureVersionPath = path.resolve(__dirname, '../../../../../integration-tests/project-folder/sources/meta-fixtures-versions/recipes-fixtures/fixture-version')
       const recipes = fs.readdirSync(fixtureVersionPath)
       for (const recipe of recipes) {

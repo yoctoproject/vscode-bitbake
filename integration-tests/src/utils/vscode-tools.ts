@@ -4,7 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { delay } from './async'
-import { languages, Location, Position, TextDocument, window, workspace, type Disposable, type LocationLink, type Uri } from 'vscode'
+import { languages, Location, Position, Range, TextDocument, window, workspace, type Disposable, type LocationLink, type Uri } from 'vscode'
 
 export const getDefinitionUri = (definition: Location | LocationLink): Uri => {
   if (definition instanceof Location) {
@@ -14,7 +14,7 @@ export const getDefinitionUri = (definition: Location | LocationLink): Uri => {
 }
 
 /// Work around headless VS Code not always firing the expected document-open analysis flow.
-/// We force a real edit, save it, wait for the analyzers to react, then undo the change.
+/// We force a real edit, save it, wait for the analyzers to react, then restore the file.
 export async function forceDocumentAnalysis (docUri: Uri): Promise<TextDocument> {
   const doc = await workspace.openTextDocument(docUri)
   const editor = await window.showTextDocument(doc)
@@ -27,6 +27,13 @@ export async function forceDocumentAnalysis (docUri: Uri): Promise<TextDocument>
   })
   await doc.save()
   await delay(1500)
+
+  await editor.edit(edit => {
+    edit.delete(new Range(lastLinePos, new Position(lastLinePos.line + 1, 0)))
+  })
+  await doc.save()
+  await delay(1500)
+
   return doc
 }
 

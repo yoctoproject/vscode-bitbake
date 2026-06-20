@@ -36,7 +36,7 @@ suite('Bitbake Command Wrapper', () => {
     }
 
     // We use purposely complex mount points to test the scanner path resolution logic
-    await bitbakeConfiguration.update('pathToEnvScript', '/workdir/integration-tests/project-folder/sources/poky/oe-init-build-env')
+    await bitbakeConfiguration.update('pathToEnvScript', '/workdir/integration-tests/project-folder/build/init-build-env')
     await bitbakeConfiguration.update('pathToBuildFolder', '/workdir/integration-tests/project-folder/build-crops')
     await bitbakeConfiguration.update('commandWrapper', 'docker run --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c')
     // We can't update the settings atomically. Each update may trigger a scan/parsing. We wait for a successful scan after all the settings are updated.

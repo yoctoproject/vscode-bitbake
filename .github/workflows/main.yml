@@ -59,12 +59,14 @@ jobs:
         path: |
           server/resources/docs
           server/resources/spdx-licenses.json
-          resources/poky
-        key: cache-${{ hashFiles('scripts/fetch-poky.sh', 'scripts/fetch-docs.sh', 'scripts/fetch-spdx-licenses.sh') }}
+        key: cache-${{ hashFiles('scripts/fetch-docs.sh', 'scripts/fetch-spdx-licenses.sh') }}
 
-    - name: Fetch
+    - name: Fetch BitBake workspace
+      run: npm run fetch:poky
+
+    - name: Fetch cached resources
       if: steps.cache-fetch.outputs.cache-hit != 'true'
-      run: npm run fetch:poky && npm run fetch:docs && npm run fetch:spdx-licenses
+      run: npm run fetch:docs && npm run fetch:spdx-licenses
 
     - name: Cache build Wasm files
       id: cache-wasm

@@ -33,7 +33,7 @@ jobs:
         ref: ${{ env.BASE_BRANCH }}
 
     - name: Update required extension version
-      run: bash scripts/update-ref.sh
+      run: python3 scripts/update-ref.py
 
     - name: Verify file changes
       uses: tj-actions/verify-changed-files@v20
