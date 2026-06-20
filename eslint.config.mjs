@@ -9,6 +9,9 @@ export default [
     ignores: [
       "**/out",
       "**/poky",
+      "resources/**",
+      "integration-tests/.bitbake-setup-downloads/**",
+      "integration-tests/.sstate-cache/**",
       "**/.vscode-test",
       "__mocks__/vscode.ts",
       "**/jest.config.js",

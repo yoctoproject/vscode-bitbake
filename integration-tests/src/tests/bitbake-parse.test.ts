@@ -21,7 +21,7 @@ suite('Bitbake Parsing Test Suite', () => {
     workspaceURI = (vscode.workspace.workspaceFolders as vscode.WorkspaceFolder[])[0].uri
     errorRecipePath = path.resolve(__dirname, '../../project-folder/sources/meta-error/recipes-error/error/unparsed-line.bb')
     workspacePath = workspaceURI.fsPath
-    pokyPath = path.resolve(workspacePath, 'sources/poky')
+    pokyPath = path.resolve(workspacePath)
   })
 
   suiteTeardown(async () => {

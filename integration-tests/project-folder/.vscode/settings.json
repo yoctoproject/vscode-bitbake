@@ -1,15 +1,17 @@
 {
     "bitbake.loggingLevel": "debug",
-    "bitbake.pathToBitbakeFolder": "${workspaceFolder}/sources/poky/bitbake",
-    "bitbake.pathToEnvScript": "${workspaceFolder}/sources/poky/oe-init-build-env",
+    "bitbake.pathToBitbakeFolder": "${workspaceFolder}/layers/bitbake",
+    "bitbake.pathToEnvScript": "${workspaceFolder}/build/init-build-env",
     "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
     "python.autoComplete.extraPaths": [
-        "${workspaceFolder}/sources/poky/bitbake/lib",
-        "${workspaceFolder}/sources/poky/meta/lib"
+        "${workspaceFolder}/layers/bitbake/lib",
+        "${workspaceFolder}/layers/openembedded-core/scripts",
+        "${workspaceFolder}/layers/openembedded-core/meta/lib"
     ],
     "python.analysis.extraPaths": [
-        "${workspaceFolder}/sources/poky/bitbake/lib",
-        "${workspaceFolder}/sources/poky/meta/lib"
+        "${workspaceFolder}/layers/bitbake/lib",
+        "${workspaceFolder}/layers/openembedded-core/scripts",
+        "${workspaceFolder}/layers/openembedded-core/meta/lib"
     ],
     "task.saveBeforeRun": "always",
     "[python]": {

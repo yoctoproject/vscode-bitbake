@@ -1,0 +1,25 @@
+# init-build-env wrapper for command-wrapper integration tests.
+#
+# bitbake-setup generates the main build/init-build-env wrapper with absolute
+# host paths. That is correct for the normal integration workspace, but the
+# command-wrapper test runs through a container-mounted /workdir path. Keep this
+# wrapper local to build-crops so only the container wrapper test needs the
+# portable path handling.
+
+if [ -n "$BASH_SOURCE" ]; then
+    vscode_bitbake_env_script="$BASH_SOURCE"
+else
+    vscode_bitbake_env_script="$0"
+fi
+
+vscode_bitbake_build_dir="$(cd "$(dirname "$vscode_bitbake_env_script")" && pwd)"
+vscode_bitbake_setup_dir="$(cd "$vscode_bitbake_build_dir/.." && pwd)"
+
+cd "$vscode_bitbake_setup_dir/layers/openembedded-core"
+set "$vscode_bitbake_build_dir"
+. ./oe-init-build-env
+set --
+
+unset vscode_bitbake_env_script
+unset vscode_bitbake_build_dir
+unset vscode_bitbake_setup_dir
