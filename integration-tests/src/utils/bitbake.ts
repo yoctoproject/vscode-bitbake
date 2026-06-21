@@ -21,13 +21,13 @@ export async function awaitBitbakeParsingResult (): Promise<void> {
   disposable.dispose()
 }
 
-/// Copy a recipe into poky
+/// Copy a recipe into the OpenEmbedded Core layer.
 export async function importRecipe (recipePath: string, pokyPath: string): Promise<void> {
-  const pokyDestinationPath = path.resolve(pokyPath, 'meta/recipes-core/base-files', path.basename(recipePath))
+  const pokyDestinationPath = path.resolve(pokyPath, 'openembedded-core/meta/recipes-core/base-files', path.basename(recipePath))
   await vscode.workspace.fs.copy(vscode.Uri.file(recipePath), vscode.Uri.file(pokyDestinationPath))
 }
 
 export async function removeRecipe (recipePath: string, pokyPath: string): Promise<void> {
-  const pokyDestinationPath = path.resolve(pokyPath, 'meta/recipes-core/base-files', path.basename(recipePath))
+  const pokyDestinationPath = path.resolve(pokyPath, 'openembedded-core/meta/recipes-core/base-files', path.basename(recipePath))
   await vscode.workspace.fs.delete(vscode.Uri.file(pokyDestinationPath))
 }
