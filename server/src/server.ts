@@ -5,6 +5,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import path from 'path'
+import fs from 'fs'
 import {
   type Connection,
   type InitializeResult,
@@ -40,7 +41,7 @@ export const connection: Connection = createConnection(ProposedFeatures.all)
 setDefinitionsConnection(connection)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let workspaceFolder: string | undefined
-let pokyFolder: string | undefined
+let coreMetaFolder: string | undefined
 
 const disposables: Disposable[] = []
 
@@ -57,8 +58,6 @@ disposables.push(
     logger.info('[onInitialize] Initializing connection')
 
     workspaceFolder = params.workspaceFolders?.[0].uri.replace('file://', '')
-
-    pokyFolder = pokyFolder ?? workspaceFolder
 
     logger.info('[onInitialize] Parsing doc files')
     bitBakeDocScanner.parseDocs()
@@ -120,7 +119,25 @@ disposables.push(
     logger.level = change.settings.bitbake?.loggingLevel ?? logger.level
     const bitbakeFolder = expandSettingPath(change.settings.bitbake?.pathToBitbakeFolder, { workspaceFolder })
     if (bitbakeFolder !== undefined) {
-      pokyFolder = path.join(bitbakeFolder, '..') // We assume BitBake is into Poky
+      const pokyFolder = path.join(bitbakeFolder, '..')
+
+      /*
+       * Before Yocto Wrynose, BitBake used to be a subdirectory of the Poky
+       * repository. Poky has since been dissolved, and bitbake-setup places
+       * BitBake and all core layers in a directory named "layers".
+       *
+       * Here, pokyFolder may refer either to the old Poky repository or to
+       * the new layers directory.
+       */
+      const candidateMetaFolders = [
+        path.join(pokyFolder, 'meta'),
+        path.join(pokyFolder, 'openembedded-core', 'meta')
+      ]
+
+      coreMetaFolder = candidateMetaFolders.find(candidate =>
+        fs.existsSync(path.join(candidate, 'classes-global', 'logging.bbclass')) &&
+        fs.existsSync(path.join(candidate, 'classes-global', 'base.bbclass'))
+      ) ?? path.join(pokyFolder, 'meta')
     }
   }),
 
@@ -227,7 +244,7 @@ async function analyzeDocument (event: TextDocumentChangeEvent<TextDocument>): P
   const previousVersion = analyzer.getAnalyzedDocument(textDocument.uri)?.version ?? -1
   if (textDocument.getText().length > 0 && previousVersion < textDocument.version) {
     const diagnostics = analyzer.analyze({ document: textDocument, uri: textDocument.uri })
-    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document, pokyFolder)
+    const embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs'] | undefined = generateEmbeddedLanguageDocs(event.document, coreMetaFolder)
     if (embeddedLanguageDocs !== undefined) {
       void connection.sendNotification(NotificationMethod.EmbeddedLanguageDocs, embeddedLanguageDocs)
     }

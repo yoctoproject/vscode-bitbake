@@ -19,6 +19,7 @@ import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
 import { BitbakeDocumentLinkProvider } from './documentLinkProvider'
 import { DevtoolWorkspacesView } from './ui/DevtoolWorkspacesView'
 import path from 'path'
+import fs from 'fs'
 import bitbakeEnvScanner from './driver/BitbakeEnvScanner'
 import { BitbakeTerminalProfileProvider } from './ui/BitbakeTerminalProfile'
 import { BitbakeTerminalLinkProvider } from './ui/BitbakeTerminalLinkProvider'
@@ -76,11 +77,24 @@ function updatePythonPath (): void {
   const pythonConfig = vscode.workspace.getConfiguration('python')
   const pathToBitbakeFolder = bitbakeConfig.pathToBitbakeFolder
   const pathToBitbakeLib = `${pathToBitbakeFolder}/lib`
-  const pathToPokyMetaLib = path.join(pathToBitbakeFolder, '../meta/lib') // We assume BitBake is into Poky
+  // Preserve legacy Poky workspaces while supporting the standard
+  // bitbake-setup layout, where BitBake and openembedded-core are siblings.
+  const coreMetaLibRelativePath = fs.existsSync(
+    path.join(
+      bitbakeDriver.bitbakeSettings.pathToBitbakeFolder,
+      '..',
+      'openembedded-core',
+      'meta',
+      'lib'
+    )
+  )
+    ? '../openembedded-core/meta/lib'
+    : '../meta/lib'
+  const pathToCoreMetaLib = path.join(pathToBitbakeFolder, coreMetaLibRelativePath)
   for (const pythonSubConf of ['autoComplete.extraPaths', 'analysis.extraPaths']) {
     let extraPaths = pythonConfig.get<string[]>(pythonSubConf) ?? []
     if (!Object.isExtensible(extraPaths)) extraPaths = []
-    for (const pathToAdd of [pathToBitbakeLib, pathToPokyMetaLib]) {
+    for (const pathToAdd of [pathToBitbakeLib, pathToCoreMetaLib]) {
       if (!extraPaths.includes(pathToAdd)) {
         extraPaths.push(pathToAdd)
       }
