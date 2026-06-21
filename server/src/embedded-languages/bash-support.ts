@@ -24,7 +24,7 @@ export const generateBashEmbeddedLanguageDoc = (
   textDocument: TextDocument,
   bitBakeTree: Parser.Tree,
   shouldKeepExactPositions: boolean, // Indicates the positions in the generated document should map exactly with the original document
-  pokyFolder?: string
+  coreMetaFolder?: string
 ): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'bash')
   TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
@@ -40,8 +40,8 @@ export const generateBashEmbeddedLanguageDoc = (
   })
   if (!shouldKeepExactPositions) {
     insertBashHeader(embeddedLanguageDoc)
-    if (pokyFolder !== undefined) {
-      insertBashTools(embeddedLanguageDoc, pokyFolder)
+    if (coreMetaFolder !== undefined) {
+      insertBashTools(embeddedLanguageDoc, coreMetaFolder)
     }
   }
   return embeddedLanguageDoc
@@ -60,10 +60,10 @@ const insertBashHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, getBashHeader(embeddedLanguageDoc.originalUri))
 }
 
-const insertBashTools = (embeddedLanguageDoc: EmbeddedLanguageDoc, pokyFolder: string): void => {
+const insertBashTools = (embeddedLanguageDoc: EmbeddedLanguageDoc, coreMetaFolder: string): void => {
   const bashTools = [
-    `. ${pokyFolder}/meta/classes-global/logging.bbclass`,
-    `. ${pokyFolder}/meta/classes-global/base.bbclass`,
+    `. ${coreMetaFolder}/classes-global/logging.bbclass`,
+    `. ${coreMetaFolder}/classes-global/base.bbclass`,
     ''
   ].join('\n')
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashTools)
