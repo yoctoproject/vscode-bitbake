@@ -36,7 +36,7 @@ suite('Bitbake Command Wrapper', () => {
     }
 
     // We use purposely complex mount points to test the scanner path resolution logic
-    await bitbakeConfiguration.update('pathToEnvScript', '/workdir/integration-tests/project-folder/build/init-build-env')
+    await bitbakeConfiguration.update('pathToEnvScript', '/workdir/integration-tests/project-folder/build-crops/init-build-env')
     await bitbakeConfiguration.update('pathToBuildFolder', '/workdir/integration-tests/project-folder/build-crops')
     await bitbakeConfiguration.update('commandWrapper', 'docker run --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c')
     // We can't update the settings atomically. Each update may trigger a scan/parsing. We wait for a successful scan after all the settings are updated.
@@ -56,7 +56,7 @@ suite('Bitbake Command Wrapper', () => {
   test('Bitbake can run a task inside a crops container', async () => {
     await vscode.commands.executeCommand('bitbake.run-task', 'base-files', 'unpack')
     await assertWillComeTrue(async () => {
-      const files = await vscode.workspace.findFiles('build-crops/tmp/work/*/base-files/*/sources/issue')
+      const files = await vscode.workspace.findFiles('build-crops/tmp/work/*/base-files/*/sources/issue', null)
       return files.length === 1
     })
   }).timeout(BITBAKE_TIMEOUT)

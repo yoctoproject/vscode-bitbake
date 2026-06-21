@@ -47,5 +47,12 @@ git -C "$BOOTSTRAP_DIR" checkout --detach "$BITBAKE_COMMIT"
 
 mkdir -p "$PROJECT_DIR/build-crops"
 cp -R "$PROJECT_DIR/build/conf" "$PROJECT_DIR/build-crops/conf"
+rm -f "$PROJECT_DIR/build-crops/conf/site.conf"
+cat > "$PROJECT_DIR/build-crops/conf/site.conf" <<'EOF'
+# Container-specific site configuration for the command-wrapper integration test.
+DL_DIR ?= "/workdir/integration-tests/.bitbake-setup-downloads"
+SSTATE_DIR ?= "/workdir/integration-tests/.sstate-cache"
+BB_HASHSERVE_DB_DIR ?= "${SSTATE_DIR}"
+EOF
 cp "$BUILD_CROPS_INIT_ENV" "$PROJECT_DIR/build-crops/init-build-env"
 cp "$BUILD_CROPS_BBLAYERS" "$PROJECT_DIR/build-crops/conf/bblayers.conf"
