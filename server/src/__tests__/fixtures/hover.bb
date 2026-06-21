@@ -54,4 +54,16 @@ do_foo() {
 
 LICENSE = "GPL-2.0-only & GPL-2.0-with-bison-exception"
 
+MYVAR = "value"
+MYVAR ?= "default"
+MYVAR ??= "weakdefault"
+MYVAR := "immediate"
+MYVAR += "appended"
+MYVAR =+ "prepended"
+MYVAR .= "appendednospace"
+MYVAR =. "prependednospace"
+MYVAR:append = " append"
+MYVAR:prepend = "prepend "
+MYVAR:remove = "remove"
+
 d.getVar("DESCRIPTION")
