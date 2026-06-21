@@ -97,6 +97,21 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     }
   }
 
+  // Bitbake operators
+  const ASSIGNMENT_OPERATORS = new Set(['=', '?=', '??=', ':=', '+=', '=+', '.=', '=.'])
+  const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
+  if (bitbakeNode !== null) {
+    const isAssignmentOperator = bitbakeNode.parent?.type === 'variable_assignment' && ASSIGNMENT_OPERATORS.has(bitbakeNode.type)
+    const isOverrideOperator = bitbakeNode.parent?.type === 'override' && OVERRIDE_OPERATORS.has(bitbakeNode.type)
+    if (isAssignmentOperator || isOverrideOperator) {
+      const operatorInfo = bitBakeDocScanner.operatorInfo.find(item => item.name === bitbakeNode.text.trim())
+      if (operatorInfo !== undefined) {
+        logger.debug(`[onHover] Found operator: ${operatorInfo.name}`)
+        hoverValue = `**${operatorInfo.name}**\n___\n${operatorInfo.definition}`
+      }
+    }
+  }
+
   let comments: string | null = null
   if (exactSymbol !== undefined) {
     comments = getGlobalSymbolComments(textDocument.uri, word)

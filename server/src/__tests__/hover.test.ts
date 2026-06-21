@@ -735,6 +735,78 @@ describe('on hover', () => {
     )
   })
 
+  it('should show hover documentation for assignment operators', async () => {
+    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 56,
+        character: 6
+      }
+    })
+
+    expect(shouldShow).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('occurs immediately as the statement is parsed')
+        })
+      })
+    )
+  })
+
+  it('should show hover documentation for override style operators', async () => {
+    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldShow = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 64,
+        character: 6
+      }
+    })
+
+    expect(shouldShow).toEqual(
+      expect.objectContaining({
+        contents: expect.objectContaining({
+          value: expect.stringContaining('You can also append and prepend a variable')
+        })
+      })
+    )
+  })
+
+  it('should not show hover for append when not used as an operator', async () => {
+    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const shouldNotShow = await onHoverHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 64,
+        character: 20
+      }
+    })
+
+    expect(shouldNotShow).toBe(null)
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,

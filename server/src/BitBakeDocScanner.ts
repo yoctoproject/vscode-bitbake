@@ -76,6 +76,7 @@ export class BitBakeDocScanner {
   private _pythonDatastoreFunction: string[] = []
   private readonly _docPath: string = path.join(__dirname, '../resources/docs')
   private readonly _keywordInfo: DocInfo[] = KEYWORDS
+  private _operatorInfo: DocInfo[] = []
 
   get bitbakeVariableInfo (): VariableInfo[] {
     return this._bitbakeVariableInfo
@@ -97,6 +98,10 @@ export class BitBakeDocScanner {
     return this._keywordInfo
   }
 
+  get operatorInfo (): DocInfo[] {
+    return this._operatorInfo
+  }
+
   get pythonDatastoreFunction (): string[] {
     return this._pythonDatastoreFunction
   }
@@ -107,6 +112,7 @@ export class BitBakeDocScanner {
     this._variableFlagInfo = []
     this._yoctoTaskInfo = []
     this._pythonDatastoreFunction = []
+    this._operatorInfo = []
   }
 
   public parseDocs (): void {
@@ -115,6 +121,7 @@ export class BitBakeDocScanner {
     this.parseYoctoVariablesFile()
     this.parseYoctoTaskFile()
     this.parsePythonDatastoreFunction()
+    this.parseBitbakeOperatorsFile()
   }
 
   // TODO: Generalize these parse functions. They all read a file, match some content and store it.
@@ -290,6 +297,75 @@ export class BitBakeDocScanner {
       pythonDatastoreFunction.push(name)
     }
     this._pythonDatastoreFunction = pythonDatastoreFunction
+  }
+
+  public parseBitbakeOperatorsFile (): void {
+    const filePath = path.join(this._docPath, 'bitbake-user-manual-metadata.rst')
+    let file = ''
+    try {
+      file = fs.readFileSync(filePath, 'utf8')
+    } catch {
+      logger.warn(`Failed to read file at ${filePath}`)
+    }
+
+    const sectionNameToOperators: Record<string, string[]> = {
+      'Basic Variable Setting': ['='],
+      'Setting a default value (?=)': ['?='],
+      'Setting a weak default value (??=)': ['??='],
+      'Immediate variable expansion (:=)': [':='],
+      'Appending (+=) and prepending (=+) With Spaces': ['+=', '=+'],
+      'Appending (.=) and Prepending (=.) Without Spaces': ['.=', '=.'],
+      'Appending and Prepending (Override Style Syntax)': ['append', 'prepend'],
+      'Removal (Override Style Syntax)': ['remove']
+    }
+
+    // Override the auto-derived URL for sections whose RST anchor differs from their title
+    const overriddenUrls: Partial<Record<string, string>> = {
+      'Appending (+=) and prepending (=+) With Spaces': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#appending-and-prepending',
+      'Removal (Override Style Syntax)': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#removing-override-style-syntax'
+    }
+
+    // Find all dash-underlined section headers
+    const headerRegex = /^[^\n]+\n-{3,}\n\n/gm
+    const headerMatches = Array.from(file.matchAll(headerRegex))
+
+    const operatorInfo: DocInfo[] = []
+    for (const [i, match] of headerMatches.entries()) {
+      const title = match[0].split('\n')[0]
+      if (!(title in sectionNameToOperators)) continue
+      const operators = sectionNameToOperators[title]
+
+      // Extract content from this header to the next
+      const contentStart = match.index + match[0].length
+      const contentEnd = i + 1 < headerMatches.length ? headerMatches[i + 1].index : file.length
+      const rawContent = file.slice(contentStart, contentEnd)
+
+      const definition = rawContent
+        .replace(/^ {3}/gm, '')
+        .replace(/:term:|:ref:/g, '')
+        .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
+        .replace(/::/g, ':')
+        .replace(/``/g, '`')
+        .replace(/^\n(\s{5,})/gm, ' ')
+        .replace(/^(\s{5,})/gm, ' ')
+
+      const anchor = title
+        .toLowerCase()
+        .replace(/[^a-z0-9 -]/g, '')
+        .replace(/ +/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
+      const referenceUrl = overriddenUrls[title] ?? `https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#${anchor}`
+      for (const name of operators) {
+        operatorInfo.push({
+          name,
+          definition,
+          referenceUrl,
+          docSource: 'Bitbake'
+        })
+      }
+    }
+    this._operatorInfo = operatorInfo
   }
 }
 
