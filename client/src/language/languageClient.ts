@@ -98,15 +98,29 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
       return { foundFileUris: [], foundDirs: [] }
     }
 
-    const { pnDir, filesDir } = BitbakeDocumentLinkProvider.getLocalFoldersForRecipeUri(params.uri)
+    const search =
+      BitbakeDocumentLinkProvider.getRecipeLocalSearch(
+        params.uri
+      )
 
-    const filePatterns = [
-      { base: pnDir, pattern: '**/*' },
-      { base: filesDir, pattern: '**/*' }
-    ]
-    const { foundFiles, foundDirs } = await BitbakeDocumentLinkProvider.findFilesAndDirs(filePatterns, [pnDir, filesDir])
+    if (search === undefined) {
+      return { foundFileUris: [], foundDirs: [] }
+    }
 
-    return { foundFileUris: foundFiles.map(uri => uri.fsPath), foundDirs }
+    const patterns =
+      BitbakeDocumentLinkProvider.getRecipeLocalPatterns(
+        search
+      )
+
+    const { foundFiles, foundDirs } =
+      await BitbakeDocumentLinkProvider.findFilesAndDirs(
+        patterns
+      )
+
+    return {
+      foundFileUris: foundFiles.map(uri => uri.fsPath),
+      foundDirs
+    }
   })
 
   client.onNotification(NotificationMethod.EmbeddedLanguageDocs, (embeddedLanguageDocs: NotificationParams['EmbeddedLanguageDocs']) => {
