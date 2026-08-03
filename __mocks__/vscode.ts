@@ -34,6 +34,7 @@ const languages = {
     getConfiguration: jest.fn(),
     workspaceFolders: [],
     getWorkspaceFolder: jest.fn(),
+    findFiles: jest.fn(),
 
     onDidChangeConfiguration: jest.fn(),
     onDidChangeTextDocument: jest.fn(),
@@ -55,6 +56,9 @@ const languages = {
     parse: jest.fn(),
     joinPath: jest.fn(),
   };
+  const RelativePattern = jest.fn(
+    (base: string, pattern: string) => ({ base, pattern })
+  );
   const Range = jest.fn();
   const Location = jest.fn();
   const Position = jest.fn();
@@ -145,6 +149,7 @@ const languages = {
     workspace,
     OverviewRulerLane,
     Uri,
+    RelativePattern,
     Range,
     Location,
     Position,
