@@ -3,9 +3,10 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import find from 'find'
+import fg from 'fast-glob'
 import fs from 'fs'
 import path from 'path'
+import { Readable } from 'stream'
 import vscode, {
   type CancellationToken,
   type TextDocument
@@ -28,7 +29,10 @@ describe('BitbakeDocumentLinkProvider', () => {
     const filePath = '/workspace/busybox/defconfig'
     const directoryPath = '/workspace/busybox/patches'
 
-    const fileRange = { id: 'file-range' } as unknown as vscode.Range
+    const fileRange = {
+      id: 'file-range'
+    } as unknown as vscode.Range
+
     const directoryRange = {
       id: 'directory-range'
     } as unknown as vscode.Range
@@ -45,32 +49,35 @@ describe('BitbakeDocumentLinkProvider', () => {
       scheme: 'command'
     } as unknown as vscode.Uri
 
-    const sendRequest = jest.fn().mockResolvedValue([
+    const entries = [
       {
-        value: 'defconfig;subdir=source',
-        range: fileRange
+        name: 'defconfig',
+        path: filePath,
+        dirent: {
+          isDirectory: () => false,
+          isFile: () => true
+        }
       },
       {
-        value: 'patches',
-        range: directoryRange
+        name: 'patches',
+        path: directoryPath,
+        dirent: {
+          isDirectory: () => true,
+          isFile: () => false
+        }
       }
-    ])
+    ]
 
-    const findFiles =
-      vscode.workspace.findFiles as unknown as jest.Mock
+    const streamSpy = jest.spyOn(fg, 'stream')
+      .mockReturnValue(
+        Readable.from(
+          entries,
+          { objectMode: true }
+        ) as unknown as ReturnType<typeof fg.stream>
+      )
 
-    findFiles
-      .mockResolvedValueOnce([fileUri])
-      .mockResolvedValueOnce([])
-
-    jest.spyOn(fs, 'existsSync').mockReturnValue(true)
-
-    const findDirectories =
-      jest.spyOn(find, 'dirSync') as unknown as jest.Mock
-
-    findDirectories
-      .mockReturnValueOnce([directoryPath])
-      .mockReturnValueOnce([])
+    jest.spyOn(vscode.Uri, 'file')
+      .mockReturnValue(fileUri)
 
     const parseUri = vscode.Uri.parse as unknown as jest.Mock
 
@@ -88,6 +95,17 @@ describe('BitbakeDocumentLinkProvider', () => {
       })
     )
 
+    const sendRequest = jest.fn().mockResolvedValue([
+      {
+        value: 'defconfig;subdir=source',
+        range: fileRange
+      },
+      {
+        value: 'patches',
+        range: directoryRange
+      }
+    ])
+
     const provider = new BitbakeDocumentLinkProvider({
       sendRequest
     } as unknown as LanguageClient)
@@ -99,7 +117,12 @@ describe('BitbakeDocumentLinkProvider', () => {
       }
     } as unknown as TextDocument
 
-    const token = {} as CancellationToken
+    const token = {
+      isCancellationRequested: false,
+      onCancellationRequested: jest.fn(
+        () => ({ dispose: jest.fn() })
+      )
+    } as unknown as CancellationToken
 
     const result = await provider.provideDocumentLinks(
       document,
@@ -108,41 +131,39 @@ describe('BitbakeDocumentLinkProvider', () => {
 
     expect(sendRequest).toHaveBeenCalledWith(
       RequestMethod.getLinksInDocument,
-      {
-        documentUri: recipeUri
-      }
+      { documentUri: recipeUri }
     )
 
-    expect(findFiles).toHaveBeenNthCalledWith(
-      1,
+    expect(streamSpy).toHaveBeenCalledTimes(1)
+
+    expect(streamSpy).toHaveBeenCalledWith(
+      [
+        `${
+          fg.convertPathToPattern(
+            path.join('/workspace', 'busybox')
+          )
+        }/**/defconfig`,
+        `${
+          fg.convertPathToPattern(
+            path.join('/workspace', 'busybox')
+          )
+        }/**/patches`,
+        `${
+          fg.convertPathToPattern(
+            path.join('/workspace', 'files')
+          )
+        }/**/defconfig`,
+        `${
+          fg.convertPathToPattern(
+            path.join('/workspace', 'files')
+          )
+        }/**/patches`
+      ],
       expect.objectContaining({
-        base: path.join('/workspace', 'busybox'),
-        pattern: '**/{defconfig,patches}'
-      }),
-      undefined,
-      2,
-      token
-    )
-
-    expect(findFiles).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({
-        base: path.join('/workspace', 'files'),
-        pattern: '**/{defconfig,patches}'
-      }),
-      undefined,
-      2,
-      token
-    )
-
-    expect(findDirectories).toHaveBeenNthCalledWith(
-      1,
-      path.join('/workspace', 'busybox')
-    )
-
-    expect(findDirectories).toHaveBeenNthCalledWith(
-      2,
-      path.join('/workspace', 'files')
+        absolute: true,
+        objectMode: true,
+        onlyFiles: false
+      })
     )
 
     expect(result).toEqual([
@@ -157,5 +178,108 @@ describe('BitbakeDocumentLinkProvider', () => {
         tooltip: 'Bitbake: Reveal in explorer'
       }
     ])
+  })
+
+  it('does not scan recipe-local files for .conf documents', async () => {
+    const sendRequest = jest.fn()
+    const streamSpy = jest.spyOn(fg, 'stream')
+    const readdirSpy = jest.spyOn(
+      fs.promises,
+      'readdir'
+    )
+
+    const provider = new BitbakeDocumentLinkProvider({
+      sendRequest
+    } as unknown as LanguageClient)
+
+    const document = {
+      uri: {
+        fsPath: '/workspace/build.conf'
+      }
+    } as unknown as TextDocument
+
+    const result = await provider.provideDocumentLinks(
+      document,
+      {} as CancellationToken
+    )
+
+    expect(result).toEqual([])
+    expect(sendRequest).not.toHaveBeenCalled()
+    expect(streamSpy).not.toHaveBeenCalled()
+    expect(readdirSpy).not.toHaveBeenCalled()
+  })
+
+  it('does not start a scan when already cancelled', async () => {
+    const streamSpy = jest.spyOn(fg, 'stream')
+
+    const result =
+      await BitbakeDocumentLinkProvider.findFilesAndDirs(
+        ['/workspace/**/*'],
+        undefined,
+        {
+          isCancellationRequested: true
+        } as CancellationToken
+      )
+
+    expect(result).toEqual({
+      foundFiles: [],
+      foundDirs: []
+    })
+
+    expect(streamSpy).not.toHaveBeenCalled()
+  })
+
+  it('destroys an active scan when cancelled', async () => {
+    const scanStream = new Readable({
+      objectMode: true,
+      read: () => {}
+    })
+
+    const destroySpy = jest.spyOn(
+      scanStream,
+      'destroy'
+    )
+
+    jest.spyOn(fg, 'stream').mockReturnValue(
+      scanStream as unknown as ReturnType<typeof fg.stream>
+    )
+
+    let cancelled = false
+    let cancelScan: (() => void) | undefined
+    const dispose = jest.fn()
+
+    const token = {
+      get isCancellationRequested () {
+        return cancelled
+      },
+      onCancellationRequested: jest.fn(
+        (callback: () => void) => {
+          cancelScan = callback
+          return { dispose }
+        }
+      )
+    } as unknown as CancellationToken
+
+    const scan =
+      BitbakeDocumentLinkProvider.findFilesAndDirs(
+        ['/workspace/**/*'],
+        undefined,
+        token
+      )
+
+    expect(cancelScan).toBeDefined()
+
+    cancelled = true
+    cancelScan?.()
+
+    const result = await scan
+
+    expect(destroySpy).toHaveBeenCalledTimes(1)
+    expect(dispose).toHaveBeenCalledTimes(1)
+
+    expect(result).toEqual({
+      foundFiles: [],
+      foundDirs: []
+    })
   })
 })
