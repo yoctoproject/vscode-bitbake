@@ -211,6 +211,16 @@
           "type": "boolean",
           "default": false,
           "description": "Turn off `--debug-build` for the `bitbake.devtool-modify` command."
+        },
+        "bitbake.mcp.enabled": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable the bundled MCP server definition published by this extension. When enabled, AI agents can discover BitBake MCP tools from the extension."
+        },
+        "bitbake.mcp.includeExecutionTools": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Expose command execution tools (build/task/scan) in the bundled MCP server. Disable this to keep only read-only MCP tools."
         }
       }
     },
@@ -279,6 +289,12 @@
             ]
           }
         ]
+      }
+    ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "bitbake.mcp",
+        "label": "BitBake MCP Servers"
       }
     ],
     "taskDefinitions": [

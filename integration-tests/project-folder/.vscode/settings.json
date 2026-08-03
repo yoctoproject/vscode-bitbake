@@ -26,6 +26,8 @@
     },
     "files.associations": {
         "*.txt": "diff",
+        "*.patch": "diff",
+        "diff": "diff",
         "*.conf": "bitbake",
         "*.inc": "bitbake"
     },
