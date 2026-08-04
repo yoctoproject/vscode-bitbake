@@ -75,6 +75,27 @@ const languages = {
     registerTextEditorCommand: jest.fn(),
   };
 
+  class McpStdioServerDefinition {
+    label: string;
+    command: string;
+    args: string[];
+    env: Record<string, string | number | null>;
+    version?: string;
+    cwd?: unknown;
+
+    constructor(label: string, command: string, args: string[] = [], env: Record<string, string | number | null> = {}, version?: string) {
+      this.label = label;
+      this.command = command;
+      this.args = args;
+      this.env = env;
+      this.version = version;
+    }
+  }
+
+  const lm = {
+    registerMcpServerDefinitionProvider: jest.fn(),
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const CodeLens = function CodeLens() {};
 
@@ -154,6 +175,8 @@ const languages = {
     ConfigurationTarget,
     debug,
     commands,
+    lm,
+    McpStdioServerDefinition,
     QuickInputButtons,
     tests,
     TestRunProfileKind,

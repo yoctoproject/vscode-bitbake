@@ -25,6 +25,7 @@
     "vscode": "^1.92.0"
   },
   "dependencies": {
+    "fast-glob": "^3.3.3",
     "find": "^0.3.0",
     "node-pty": "^1.0.0",
     "semver": "^7.6.3",

@@ -3,7 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import { onCompletionHandler, onCompletionResolveHandler } from '../connectionHandlers/onCompletion'
+import { onCompletionHandler, onCompletionResolveHandler, setCompletionConnection } from '../connectionHandlers/onCompletion'
 import { analyzer } from '../tree-sitter/analyzer'
 import { FIXTURE_DOCUMENT, DUMMY_URI, FIXTURE_URI } from './fixtures/fixtures'
 import { generateBashParser, generateBitBakeParser } from '../tree-sitter/parser'
@@ -13,6 +13,9 @@ import path from 'path'
 import { extractRecipeName } from '../lib/src/utils/files'
 import { licenseOperators } from '../completions/spdx-licenses'
 import { BitbakeScanResult } from '../lib/src/types/BitbakeScanResult'
+import { type Connection } from 'vscode-languageserver/node'
+import { RequestMethod } from '../lib/src/types/requests'
+import { logger } from '../lib/src/utils/OutputLogger'
 
 /**
  * The onCompletion handler doesn't allow other parameters, so we can't pass the analyzer and therefore the same
@@ -31,7 +34,9 @@ describe('On Completion', () => {
 
   beforeEach(() => {
     analyzer.resetAnalyzedDocuments()
+    analyzer.clearRecipeLocalFiles()
     bitBakeDocScanner.clearScannedDocs()
+    setCompletionConnection(undefined)
   })
 
   afterEach(() => {
@@ -241,6 +246,153 @@ describe('On Completion', () => {
           }
         )
       ])
+    )
+  })
+
+  it('requests recipe-local files lazily for SRC_URI completion', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.CORRECT
+    })
+
+    const recipeLocalFiles = {
+      foundFileUris: [
+        '/home/projects/poky/meta/recipes-core/busybox/foo'
+      ],
+      foundDirs: [
+        '/home/projects/poky/meta/recipes-core/busybox/images'
+      ]
+    }
+    const sendRequest = jest.fn().mockResolvedValue(recipeLocalFiles)
+
+    setCompletionConnection({
+      sendRequest
+    } as unknown as Connection)
+
+    const result = await onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 6,
+        character: 25
+      }
+    })
+
+    expect(sendRequest).toHaveBeenCalledTimes(1)
+    expect(sendRequest).toHaveBeenCalledWith(
+      RequestMethod.getRecipeLocalFiles,
+      { uri: DUMMY_URI.replace('file://', '') }
+    )
+    expect(analyzer.getRecipeLocalFiles(DUMMY_URI)).toEqual(
+      recipeLocalFiles
+    )
+    expect(result).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: 'foo',
+          insertText: 'file://foo'
+        }),
+        expect.objectContaining({
+          label: 'images',
+          insertText: 'file://images/'
+        })
+      ])
+    )
+  })
+
+  it('reuses cached recipe-local files for later SRC_URI completions', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.CORRECT
+    })
+
+    const recipeLocalFiles = {
+      foundFileUris: [
+        '/home/projects/poky/meta/recipes-core/busybox/foo'
+      ],
+      foundDirs: []
+    }
+    const sendRequest = jest.fn().mockResolvedValue(recipeLocalFiles)
+
+    setCompletionConnection({
+      sendRequest
+    } as unknown as Connection)
+
+    const completionParams = {
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 6,
+        character: 25
+      }
+    }
+
+    await onCompletionHandler(completionParams)
+    await onCompletionHandler(completionParams)
+
+    expect(sendRequest).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not request recipe-local files outside SRC_URI completion', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.COMPLETION
+    })
+
+    const sendRequest = jest.fn()
+
+    setCompletionConnection({
+      sendRequest
+    } as unknown as Connection)
+
+    await onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 0,
+        character: 1
+      }
+    })
+
+    expect(sendRequest).not.toHaveBeenCalled()
+  })
+
+  it('does not fail SRC_URI completion when the client request is unsupported', async () => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.CORRECT
+    })
+
+    const sendRequest = jest.fn().mockRejectedValue(
+      new Error('Unsupported request')
+    )
+    const logError = jest
+      .spyOn(logger, 'error')
+      .mockImplementation()
+
+    setCompletionConnection({
+      sendRequest
+    } as unknown as Connection)
+
+    const result = await onCompletionHandler({
+      textDocument: {
+        uri: DUMMY_URI
+      },
+      position: {
+        line: 6,
+        character: 25
+      }
+    })
+
+    expect(result).toEqual([])
+    expect(sendRequest).toHaveBeenCalledTimes(1)
+    expect(logError).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'Error while getting recipe local files'
+      )
     )
   })
 

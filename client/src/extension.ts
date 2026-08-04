@@ -29,6 +29,7 @@ import { type BitbakeScanResult, scanContainsData } from './lib/src/types/Bitbak
 import { reviewDiagnostics } from './language/diagnosticsSupport'
 import { embeddedLanguageDocsManager } from './language/EmbeddedLanguageDocsManager'
 import { NotificationMethod } from './lib/src/types/notifications'
+import { registerMcpServerProvider } from './mcp/registerMcpServerProvider'
 
 let client: LanguageClient
 const bitbakeDriver: BitbakeDriver = new BitbakeDriver()
@@ -194,6 +195,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   context.subscriptions.push(vscode.languages.registerDocumentLinkProvider(selector, provider))
 
   configureBitBakeFileAssociation()
+
+  registerMcpServerProvider(context, bitbakeDriver)
 
   // Handle settings change for bitbake driver
   context.subscriptions.push(vscode.workspace.onDidChangeConfiguration(async (event) => {

@@ -9,7 +9,7 @@
  */
 
 import { logger } from '../lib/src/utils/OutputLogger'
-import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind, type Position } from 'vscode-languageserver/node'
+import { type TextDocumentPositionParams, type CompletionItem, type SymbolInformation, CompletionItemKind, type Position, type Connection } from 'vscode-languageserver/node'
 import { symbolKindToCompletionKind } from '../utils/lsp'
 import { BITBAKE_VARIABLES } from '../completions/bitbake-variables'
 import { RESERVED_KEYWORDS } from '../completions/reserved-keywords'
@@ -25,8 +25,16 @@ import { commonDirectoriesVariables } from '../lib/src/availableVariables'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { type BitbakeSymbolInformation } from '../tree-sitter/declarations'
 import { getSpdxLicenseCompletionResolve, getLicenseCompletionItems, spdxLicenseDescription } from '../completions/spdx-licenses'
+import { RequestMethod, type RequestResult } from '../lib/src/types/requests'
 
 let documentUri = ''
+let connection: Connection | undefined
+
+export function setCompletionConnection (
+  completionConnection: Connection | undefined
+): void {
+  connection = completionConnection
+}
 
 export async function onCompletionHandler (textDocumentPositionParams: TextDocumentPositionParams): Promise<CompletionItem[]> {
   const wordPosition = {
@@ -57,6 +65,8 @@ export async function onCompletionHandler (textDocumentPositionParams: TextDocum
 }
 
 async function getBitBakeCompletionItems (textDocumentPositionParams: TextDocumentPositionParams, word: string | null, wordPosition: Position): Promise<CompletionItem[]> {
+  const completionDocumentUri = textDocumentPositionParams.textDocument.uri
+
   if (analyzer.isString(documentUri, wordPosition.line, wordPosition.character)) {
     const variablesAllowedForRecipeCompletion = ['RDEPENDS', 'IMAGE_INSTALL', 'DEPENDS', 'RRECOMMENDS', 'RSUGGESTS', 'RCONFLICTS', 'RREPLACES', 'CORE_IMAGE_EXTRA_INSTALL', 'PACKAGE_INSTALL', 'PACKAGE_INSTALL_ATTEMPTONLY']
     const isVariableAllowedForRecipeCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForRecipeCompletion)
@@ -72,8 +82,30 @@ async function getBitBakeCompletionItems (textDocumentPositionParams: TextDocume
 
     const variablesAllowedForUriCompletion = ['SRC_URI']
     const isVariableAllowedForUriCompletion = analyzer.isStringContentOfVariableAssignment(documentUri, wordPosition.line, wordPosition.character, variablesAllowedForUriCompletion)
-    const recipeLocalFiles = analyzer.getRecipeLocalFiles(documentUri)
-    if (isVariableAllowedForUriCompletion && recipeLocalFiles !== undefined) {
+
+    if (isVariableAllowedForUriCompletion) {
+      let recipeLocalFiles = analyzer.getRecipeLocalFiles(completionDocumentUri)
+
+      if (recipeLocalFiles === undefined && connection !== undefined) {
+        try {
+          recipeLocalFiles =
+            await connection.sendRequest<RequestResult['getRecipeLocalFiles']>(
+              RequestMethod.getRecipeLocalFiles,
+              { uri: completionDocumentUri.replace('file://', '') }
+            )
+          analyzer.setRecipeLocalFiles(completionDocumentUri, recipeLocalFiles)
+        } catch (error) {
+          // When using the language server without the client, custom
+          // requests are not supported. CoC.nvim disables the server if
+          // this exception escapes the completion handler.
+          logger.error(`Error while getting recipe local files: ${error}`)
+        }
+      }
+
+      if (recipeLocalFiles === undefined) {
+        return []
+      }
+
       const fileUriCompletionItems = recipeLocalFiles.foundFileUris.map<CompletionItem>((fileUri) => {
         return {
           label: path.basename(fileUri),

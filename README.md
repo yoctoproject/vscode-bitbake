@@ -48,6 +48,27 @@ Here are some examples using the most popular bitbake wrappers:
 { "bitbake.commandWrapper": "${workspaceFolder}/build.sh --" }
 ```
 
+### MCP server for AI agents
+
+This extension can expose BitBake features to AI agents through a bundled MCP server.
+When enabled, VS Code can discover the MCP server through this extension and make its tools available in agent mode.
+
+Settings:
+```json
+{
+    "bitbake.mcp.enabled": true,
+    "bitbake.mcp.includeExecutionTools": true
+}
+```
+
+- `bitbake.mcp.enabled`: publish the bundled MCP server definition from this extension.
+- `bitbake.mcp.includeExecutionTools`: include command execution tools (`build/task/scan/custom`) in addition to read-only tools.
+
+Current read-only MCP tools include workspace summary, recipe listing, resolved settings inspection, and layer listing.
+When execution tools are enabled, agents can also run controlled BitBake commands.
+
+Use the `MCP: List Servers` command in VS Code to verify that the BitBake MCP server is registered.
+
 ### Defining Multiple Configurations
 
 Sometimes it is necessary to build the same project with different distros or

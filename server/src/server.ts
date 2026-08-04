@@ -23,7 +23,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument'
 import { analyzer } from './tree-sitter/analyzer'
 import { generateBashParser, generateBitBakeParser } from './tree-sitter/parser'
 import { logger } from './lib/src/utils/OutputLogger'
-import { onCompletionHandler, onCompletionResolveHandler } from './connectionHandlers/onCompletion'
+import { onCompletionHandler, onCompletionResolveHandler, setCompletionConnection } from './connectionHandlers/onCompletion'
 import { onDefinitionHandler, setDefinitionsConnection } from './connectionHandlers/onDefinition'
 import { onHoverHandler } from './connectionHandlers/onHover'
 import { generateEmbeddedLanguageDocs, getEmbeddedLanguageTypeOnPosition } from './embedded-languages/general-support'
@@ -39,6 +39,7 @@ import { onPrepareRenameHandler, onRenameRequestHandler } from './connectionHand
 // Create a connection for the server. The connection uses Node's IPC as a transport
 export const connection: Connection = createConnection(ProposedFeatures.all)
 setDefinitionsConnection(connection)
+setCompletionConnection(connection)
 const documents = new TextDocuments<TextDocument>(TextDocument)
 let workspaceFolder: string | undefined
 let coreMetaFolder: string | undefined
@@ -219,20 +220,7 @@ disposables.push(
 
   documents.onDidOpen(analyzeDocument),
 
-  documents.onDidChangeContent(async (event) => {
-    await analyzeDocument(event)
-
-    if (analyzer.getRecipeLocalFiles(event.document.uri) === undefined) {
-      try {
-        const recipeLocalFiles = await connection.sendRequest<RequestResult['getRecipeLocalFiles']>(RequestMethod.getRecipeLocalFiles, { uri: event.document.uri.replace('file://', '') })
-        analyzer.setRecipeLocalFiles(event.document.uri, recipeLocalFiles)
-      } catch (error) {
-        // When using the language server without the client, custom requests are not supported
-        // The CoC.nvim client will disable the server if an exception is thrown
-        logger.error(`Error while getting recipe local files: ${error}`)
-      }
-    }
-  })
+  documents.onDidChangeContent(analyzeDocument)
 )
 
 connection.listen()
