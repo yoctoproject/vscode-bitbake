@@ -46,26 +46,27 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
   }
 
 
-public static getRecipeLocalPatterns (
-  search: RecipeLocalSearch,
-  filenames?: string[]
-): string[] {
-  if (filenames?.length === 0) {
-    return []
-  }
-
-  return search.roots.flatMap(root => {
-    const rootPattern = fg.convertPathToPattern(root)
-
-    if (filenames === undefined) {
-      return [`${rootPattern}/**/*`]
+  public static getRecipeLocalPatterns (
+    search: RecipeLocalSearch,
+    filenames?: string[]
+  ): string[] {
+    if (filenames?.length === 0) {
+      return []
     }
 
-    return filenames.map(filename => {
-      return `${rootPattern}/**/${fg.escapePath(filename)}`
+    return search.roots.flatMap(root => {
+      const rootPattern = fg.convertPathToPattern(root)
+
+      if (filenames === undefined) {
+        return [`${rootPattern}/**/*`]
+      }
+
+      return filenames.map(filename => {
+        return `${rootPattern}/**/${fg.escapePath(filename)}`
+      })
     })
-  })
-}
+  }
+
   public static async findFilesAndDirs (
     patterns: string[],
     maxFileResults?: number,
@@ -95,21 +96,28 @@ public static getRecipeLocalPatterns (
       unique: true
     }) as GlobStream
 
+    let streamDestroyed = false
+
+    const destroyStream = (): void => {
+      if (streamDestroyed) {
+        return
+      }
+
+      streamDestroyed = true
+      stream.destroy()
+    }
+
     const cancellationSubscription =
       typeof token?.onCancellationRequested === 'function'
         ? token.onCancellationRequested(() => {
-          stream.destroy()
+          destroyStream()
         })
         : undefined
-
-    if (isCancelled()) {
-      stream.destroy()
-    }
 
     try {
       for await (const entry of stream) {
         if (isCancelled()) {
-          stream.destroy()
+          destroyStream()
           break
         }
 
@@ -129,14 +137,13 @@ public static getRecipeLocalPatterns (
         }
       }
     } catch (error) {
-      if (!isCancelled()) {
-        logger.error(
-          `An error occurred while finding recipe-local entries. ${
-            JSON.stringify(error)
-          }`
-        )
-      }
+      logger.error(
+        `An error occurred while finding recipe-local entries. ${
+          JSON.stringify(error)
+        }`
+      )
     } finally {
+      destroyStream()
       cancellationSubscription?.dispose()
     }
 
