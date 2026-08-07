@@ -13,6 +13,7 @@ import vscode, {
 } from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { BitbakeDocumentLinkProvider } from '../../documentLinkProvider'
+import { CancellableFileSearch } from '../../utils/CancellableFileSearch'
 import { RequestMethod } from '../../lib/src/types/requests'
 
 jest.mock('vscode')
@@ -213,7 +214,7 @@ describe('BitbakeDocumentLinkProvider', () => {
     const streamSpy = jest.spyOn(fg, 'stream')
 
     const result =
-      await BitbakeDocumentLinkProvider.findFilesAndDirs(
+      await CancellableFileSearch.findFilesAndDirs(
         ['/workspace/**/*'],
         undefined,
         {
@@ -261,7 +262,7 @@ describe('BitbakeDocumentLinkProvider', () => {
     } as unknown as CancellationToken
 
     const scan =
-      BitbakeDocumentLinkProvider.findFilesAndDirs(
+      CancellableFileSearch.findFilesAndDirs(
         ['/workspace/**/*'],
         undefined,
         token
