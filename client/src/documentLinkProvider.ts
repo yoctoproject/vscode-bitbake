@@ -6,20 +6,14 @@
 import vscode from 'vscode'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { RequestMethod, type RequestResult } from './lib/src/types/requests'
-import { logger } from './lib/src/utils/OutputLogger'
 import path from 'path'
 import { extractRecipeName } from './lib/src/utils/files'
+import { CancellableFileSearch } from './utils/CancellableFileSearch'
 import fg from 'fast-glob'
 
 interface RecipeLocalSearch {
   roots: string[]
 }
-
-type GlobStream =
-  NodeJS.ReadableStream &
-  AsyncIterable<fg.Entry> & {
-    destroy: () => void
-  }
 
 export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider {
   private readonly client: LanguageClient
@@ -67,89 +61,6 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
     })
   }
 
-  public static async findFilesAndDirs (
-    patterns: string[],
-    maxFileResults?: number,
-    token?: vscode.CancellationToken
-  ): Promise<{
-      foundFiles: vscode.Uri[]
-      foundDirs: string[]
-    }> {
-    const foundFiles: vscode.Uri[] = []
-    const foundDirs: string[] = []
-
-    const isCancelled = (): boolean => {
-      return token?.isCancellationRequested === true
-    }
-
-    if (patterns.length === 0 || isCancelled()) {
-      return { foundFiles, foundDirs }
-    }
-
-    const stream = fg.stream(patterns, {
-      absolute: true,
-      concurrency: 4,
-      dot: true,
-      followSymbolicLinks: false,
-      objectMode: true,
-      onlyFiles: false,
-      unique: true
-    }) as GlobStream
-
-    let streamDestroyed = false
-
-    const destroyStream = (): void => {
-      if (streamDestroyed) {
-        return
-      }
-
-      streamDestroyed = true
-      stream.destroy()
-    }
-
-    const cancellationSubscription =
-      typeof token?.onCancellationRequested === 'function'
-        ? token.onCancellationRequested(() => {
-          destroyStream()
-        })
-        : undefined
-
-    try {
-      for await (const entry of stream) {
-        if (isCancelled()) {
-          destroyStream()
-          break
-        }
-
-        if (entry.dirent.isDirectory()) {
-          foundDirs.push(entry.path)
-          continue
-        }
-
-        if (
-          entry.dirent.isFile() &&
-          (
-            maxFileResults === undefined ||
-            foundFiles.length < maxFileResults
-          )
-        ) {
-          foundFiles.push(vscode.Uri.file(entry.path))
-        }
-      }
-    } catch (error) {
-      logger.error(
-        `An error occurred while finding recipe-local entries. ${
-          JSON.stringify(error)
-        }`
-      )
-    } finally {
-      destroyStream()
-      cancellationSubscription?.dispose()
-    }
-
-    return { foundFiles, foundDirs }
-  }
-
   private basenameIsEqual (path1: string, path2: string): boolean {
     return path.basename(path1) === path.basename(path2)
   }
@@ -176,7 +87,7 @@ export class BitbakeDocumentLinkProvider implements vscode.DocumentLinkProvider 
       )
 
     const { foundFiles, foundDirs } =
-      await BitbakeDocumentLinkProvider.findFilesAndDirs(
+      await CancellableFileSearch.findFilesAndDirs(
         patterns,
         filenames.length,
         token

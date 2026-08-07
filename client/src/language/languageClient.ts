@@ -33,6 +33,7 @@ import * as vscode from 'vscode'
 import { middlewareProvideReferences } from './middlewareReferences'
 import { RequestMethod, type RequestParams, type RequestResult } from '../lib/src/types/requests'
 import { BitbakeDocumentLinkProvider } from '../documentLinkProvider'
+import { CancellableFileSearch } from '../utils/CancellableFileSearch'
 import { middlewarePrepareRename, middlewareProvideRenameEdits } from './middlewareRename'
 
 export async function activateLanguageServer (context: ExtensionContext, bitBakeProjectScanner: BitBakeProjectScanner): Promise<LanguageClient> {
@@ -113,7 +114,7 @@ export async function activateLanguageServer (context: ExtensionContext, bitBake
       )
 
     const { foundFiles, foundDirs } =
-      await BitbakeDocumentLinkProvider.findFilesAndDirs(
+      await CancellableFileSearch.findFilesAndDirs(
         patterns
       )
 
