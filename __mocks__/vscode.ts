@@ -52,11 +52,14 @@ const languages = {
     Left: null,
   };
 
-  const Uri = {
-    file: (f: any) => f,
-    parse: jest.fn(),
-    joinPath: jest.fn(),
-  };
+  class Uri {
+    static file (f: any): any {
+      return f
+    }
+
+    static parse = jest.fn()
+    static joinPath = jest.fn()
+  }
   const Range = jest.fn();
   const Location = jest.fn();
   const Position = jest.fn();
