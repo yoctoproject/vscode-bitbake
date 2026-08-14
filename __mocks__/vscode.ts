@@ -75,6 +75,10 @@ const languages = {
     registerTextEditorCommand: jest.fn(),
   };
 
+  const env = {
+    openExternal: jest.fn(),
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   const CodeLens = function CodeLens() {};
 
@@ -154,6 +158,7 @@ const languages = {
     ConfigurationTarget,
     debug,
     commands,
+    env,
     QuickInputButtons,
     tests,
     TestRunProfileKind,
