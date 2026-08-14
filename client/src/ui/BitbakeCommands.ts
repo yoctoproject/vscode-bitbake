@@ -26,6 +26,7 @@ import { clientNotificationManager } from './ClientNotificationManager'
 import { bitbakeESDKMode, configureDevtoolSDKFallback, generateCPPProperties } from '../driver/BitbakeESDK'
 import bitbakeEnvScanner from '../driver/BitbakeEnvScanner'
 import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from './BitbakeTerminalProfile'
+import { BitbakeToaster } from './BitbakeToaster'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { type LanguageClient } from 'vscode-languageclient/node'
@@ -34,6 +35,8 @@ import { getVariableValue } from '../language/languageClient'
 let parsingPending = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider, client: LanguageClient): void {
+  const bitbakeToaster = new BitbakeToaster(bitBakeProjectScanner.bitbakeDriver)
+
   context.subscriptions.push(
     vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }),
     vscode.commands.registerCommand('bitbake.build-recipe', async (uri) => { await buildRecipeCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
@@ -49,8 +52,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
     vscode.commands.registerCommand('bitbake.recipe-devshell', async (uri) => { await openBitbakeDevshell(bitbakeTerminalProfileProvider, bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.collapse-list', async () => { await collapseActiveList() }),
-    vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await startToasterInBrowser(bitBakeProjectScanner.bitbakeDriver) }),
-    vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await stopToaster(bitBakeProjectScanner.bitbakeDriver) }),
+    vscode.commands.registerCommand('bitbake.start-toaster-in-browser', async () => { await bitbakeToaster.startInBrowser() }),
+    vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await bitbakeToaster.stop() }),
     vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
     vscode.commands.registerCommand('bitbake.examine-dependency-taskexp', async (uri) => { await examineDependenciesTaskexp(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     // Handles enqueued parsing requests (onSave)
@@ -65,7 +68,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     // Close Toaster on extension shutdown
     {
       dispose: async () => {
-        await stopToasterOnShutdown(bitBakeProjectScanner.bitbakeDriver)
+        await bitbakeToaster.stopOnShutdown()
       }
     }
   )
@@ -217,60 +220,6 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
       `Bitbake: Task: ${chosenTask}: ${chosenRecipe}`)
     }
   }
-}
-
-export let isToasterStarted = false
-
-function openToasterBrowser (): void {
-  const DEFAULT_TOASTER_PORT = 8000
-  const url = `http://localhost:${DEFAULT_TOASTER_PORT}`
-  void vscode.env.openExternal(vscode.Uri.parse(url)).then(success => {
-    if (!success) {
-      void vscode.window.showErrorMessage(`Failed to open URL ${url}`)
-    }
-  })
-}
-
-async function startToasterInBrowser (bitbakeDriver: BitbakeDriver): Promise<void> {
-  if (isToasterStarted) {
-    openToasterBrowser();
-    clientNotificationManager.showToasterStarted()
-    return
-  }
-  const command = `nohup bash -c "${bitbakeDriver.composeToasterCommand('start')}"`
-  const process = await runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
-  process.onExit((e) => {
-    if (e.exitCode !== 0) {
-      void vscode.window.showErrorMessage(`Failed to start Toaster with exit code ${e.exitCode}. See terminal output.`)
-      return
-    }
-    isToasterStarted = true
-    openToasterBrowser()
-    clientNotificationManager.showToasterStarted()
-  })
-}
-
-async function stopToaster (bitbakeDriver: BitbakeDriver): Promise<void> {
-  if (!isToasterStarted) {
-    void vscode.window.showInformationMessage('Toaster has not been started')
-    return
-  }
-  const command = bitbakeDriver.composeToasterCommand('stop')
-  const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Toaster')
-  await finishProcessExecution(process)
-  isToasterStarted = false
-}
-
-export async function stopToasterOnShutdown (bitbakeDriver: BitbakeDriver): Promise<void> {
-  if (!isToasterStarted) {
-    return
-  }
-  const command = bitbakeDriver.composeToasterCommand('stop')
-  const script = bitbakeDriver.composeBitbakeScript(command)
-  // We can't spawn terminals or ptys when closing the extension, so we use child_process to stop Toaster
-  // Use BitbakeTerminals to spawn commands outside of this context! This is a special shutdown case.
-  child_process.execSync(script, { shell: '/bin/bash' })
-  isToasterStarted = false
 }
 
 async function selectTask (client: LanguageClient, recipe: string): Promise<string | undefined> {
