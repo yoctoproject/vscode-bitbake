@@ -26,6 +26,7 @@ const languages = {
     registerTreeDataProvider: jest.fn(),
     createTreeView: jest.fn(),
     createTerminal: jest.fn(),
+    visibleTextEditors: [],
   };
 
   const TerminalLink = jest.fn();
@@ -38,6 +39,7 @@ const languages = {
     onDidChangeConfiguration: jest.fn(),
     onDidChangeTextDocument: jest.fn(),
     onDidChangeWorkspaceFolders: jest.fn(),
+    onDidCloseTextDocument: jest.fn(),
     onDidCreateFiles: jest.fn(),
     onDidDeleteFiles: jest.fn(),
     onDidRenameFiles: jest.fn(),
