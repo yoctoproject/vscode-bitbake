@@ -115,6 +115,11 @@
           "default": "${workspaceFolder}/sources/poky/bitbake",
           "description": "Set the path to the BitBake folder. Used to provide Python embedded language features."
         },
+        "bitbake.bitbakeSetupPath": {
+          "type": "string",
+          "scope": "machine",
+          "markdownDescription": "Optional path to the `bitbake-setup` executable. When this setting is unset, the extension searches `$PATH` for `bitbake-setup`."
+        },
         "bitbake.commandWrapper": {
           "type": "string",
           "examples": [
