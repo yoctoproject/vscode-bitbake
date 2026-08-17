@@ -17,7 +17,8 @@ export async function runBitbakeSetupTerminal (
   executablePath: string,
   argv: string[],
   cwd: string,
-  terminalName = 'BitBake: Initialize workspace with bitbake-setup'
+  terminalName = 'BitBake: Initialize workspace with bitbake-setup',
+  isBackground = false
 ): Promise<BitbakeSetupTerminalRunResult> {
   let resolveResult: ((result: BitbakeSetupTerminalRunResult) => void) | undefined
   let rejectResult: ((error: unknown) => void) | undefined
@@ -99,7 +100,9 @@ export async function runBitbakeSetupTerminal (
     }
   })
 
-  terminal.show()
+  if (!isBackground) {
+    terminal.show()
+  }
 
   return await result
 }

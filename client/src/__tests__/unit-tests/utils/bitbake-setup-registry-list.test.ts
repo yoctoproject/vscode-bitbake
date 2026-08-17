@@ -7,19 +7,21 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-import { runBitbakeSetup } from '../../../utils/BitbakeSetupRunner'
+import { runBitbakeSetupTerminal } from '../../../ui/BitbakeSetupTerminal'
 import {
   listBitbakeSetupRegistryConfigurations,
   parseBitbakeSetupRegistryList
 } from '../../../utils/BitbakeSetupRegistryList'
 
-jest.mock('../../../utils/BitbakeSetupRunner', () => ({
-  runBitbakeSetup: jest.fn()
+jest.mock('../../../ui/BitbakeSetupTerminal', () => ({
+  runBitbakeSetupTerminal: jest.fn()
 }))
 
 describe('BitbakeSetupRegistryList', () => {
-  const mockedRunBitbakeSetup =
-    runBitbakeSetup as jest.MockedFunction<typeof runBitbakeSetup>
+  const mockedRunBitbakeSetupTerminal =
+    runBitbakeSetupTerminal as jest.MockedFunction<
+    typeof runBitbakeSetupTerminal
+    >
 
   const tempParents: string[] = []
 
@@ -54,7 +56,7 @@ describe('BitbakeSetupRegistryList', () => {
   function mockSuccessfulList (
     payload: unknown
   ): void {
-    mockedRunBitbakeSetup.mockImplementationOnce(
+    mockedRunBitbakeSetupTerminal.mockImplementationOnce(
       async (_executablePath, argv) => {
         const outputPath = argv[argv.length - 1]
 
@@ -70,8 +72,7 @@ describe('BitbakeSetupRegistryList', () => {
 
         return {
           exitCode: 0,
-          stdout: 'list stdout',
-          stderr: ''
+          output: 'list stdout'
         }
       }
     )
@@ -139,12 +140,13 @@ describe('BitbakeSetupRegistryList', () => {
       ]
     }))
 
-    const call = mockedRunBitbakeSetup.mock.calls[0]
+    const call = mockedRunBitbakeSetupTerminal.mock.calls[0]
 
     expect(call[0]).toBe('/opt/bin/bitbake-setup')
     expect(call[1][0]).toBe('list')
     expect(call[1][1]).toBe('--write-json')
     expect(call[2]).toBeDefined()
+    expect(call[4]).toBe(true)
   })
 
   it('passes a custom registry as an invocation-only setting', async () => {
@@ -156,7 +158,7 @@ describe('BitbakeSetupRegistryList', () => {
       'git://example/registry;protocol=https;branch=main;rev=main'
     )
 
-    const call = mockedRunBitbakeSetup.mock.calls[0]
+    const call = mockedRunBitbakeSetupTerminal.mock.calls[0]
 
     expect(call[1].slice(0, 7)).toStrictEqual([
       '--setting',
@@ -179,7 +181,7 @@ describe('BitbakeSetupRegistryList', () => {
 
     expect(result.kind).toBe('success')
 
-    const cwd = mockedRunBitbakeSetup.mock.calls[0][2]
+    const cwd = mockedRunBitbakeSetupTerminal.mock.calls[0][2]
 
     expect(cwd).toBeDefined()
 
@@ -189,10 +191,9 @@ describe('BitbakeSetupRegistryList', () => {
   })
 
   it('reports list-failed when bitbake-setup exits nonzero', async () => {
-    mockedRunBitbakeSetup.mockResolvedValueOnce({
+    mockedRunBitbakeSetupTerminal.mockResolvedValueOnce({
       exitCode: 2,
-      stdout: '',
-      stderr: 'registry failed'
+      output: 'registry failed'
     })
 
     const result = await listBitbakeSetupRegistryConfigurations(
@@ -204,12 +205,13 @@ describe('BitbakeSetupRegistryList', () => {
       kind: 'failure',
       reason: 'list-failed',
       exitCode: 2,
-      stderr: 'registry failed'
+      stdout: 'registry failed',
+      stderr: ''
     }))
   })
 
   it('reports malformed-json for invalid list output', async () => {
-    mockedRunBitbakeSetup.mockImplementationOnce(
+    mockedRunBitbakeSetupTerminal.mockImplementationOnce(
       async (_executablePath, argv) => {
         const outputPath = argv[argv.length - 1]
 
@@ -225,8 +227,7 @@ describe('BitbakeSetupRegistryList', () => {
 
         return {
           exitCode: 0,
-          stdout: '',
-          stderr: ''
+          output: ''
         }
       }
     )
@@ -243,7 +244,7 @@ describe('BitbakeSetupRegistryList', () => {
   })
 
   it('reports spawn-failed when the process cannot start', async () => {
-    mockedRunBitbakeSetup.mockRejectedValueOnce(
+    mockedRunBitbakeSetupTerminal.mockRejectedValueOnce(
       new Error('spawn ENOENT')
     )
 

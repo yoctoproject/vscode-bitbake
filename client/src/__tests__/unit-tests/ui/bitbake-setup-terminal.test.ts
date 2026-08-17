@@ -145,6 +145,34 @@ describe('BitbakeSetupTerminal', () => {
     })
   })
 
+  it('keeps the terminal in the background when requested', async () => {
+    const terminal = mockTerminal()
+    const process = mockProcess()
+
+    const execution = runBitbakeSetupTerminal(
+      '/opt/bin/bitbake-setup',
+      ['list', '--write-json', '/tmp/configurations.json'],
+      '/workspace',
+      'BitBake: Inspect bitbake-setup registry',
+      true
+    )
+
+    terminal.options.pty.open?.({
+      columns: 80,
+      rows: 30
+    })
+
+    expect(terminal.show).not.toHaveBeenCalled()
+
+    const exitListener = process.onExit.mock.calls[0][0]
+    exitListener({ exitCode: 0, signal: 0 })
+
+    await expect(execution).resolves.toStrictEqual({
+      exitCode: 0,
+      output: ''
+    })
+  })
+
   it('forwards process output to the pseudoterminal', async () => {
     const terminal = mockTerminal()
     const process = mockProcess()

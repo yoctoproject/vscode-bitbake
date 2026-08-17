@@ -7,7 +7,7 @@ import fs from 'fs'
 import path from 'path'
 import { parse as parseJson5 } from 'json5'
 
-import { runBitbakeSetup } from './BitbakeSetupRunner'
+import { runBitbakeSetupTerminal } from '../ui/BitbakeSetupTerminal'
 import {
   parseBitbakeSetupConfigurationManifest
 } from './BitbakeSetupConfiguration'
@@ -152,10 +152,12 @@ async function runProbe (
   let runResult
 
   try {
-    runResult = await runBitbakeSetup(
+    runResult = await runBitbakeSetupTerminal(
       executablePath,
       argv,
-      tempRoot
+      tempRoot,
+      'BitBake: Inspect bitbake-setup configuration',
+      true
     )
   } catch (error) {
     return {
@@ -170,8 +172,8 @@ async function runProbe (
       kind: 'failure',
       reason: 'unexpected-zero-exit',
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
@@ -180,30 +182,30 @@ async function runProbe (
       kind: 'failure',
       reason: 'unexpected-nonzero-exit',
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
-  if (!runResult.stdout.includes(WRYNOSE_CONFIGURATIONS_DIAGNOSTIC_MARKER)) {
+  if (!runResult.output.includes(WRYNOSE_CONFIGURATIONS_DIAGNOSTIC_MARKER)) {
     return {
       kind: 'failure',
       reason: 'missing-diagnostic-marker',
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
-  const payload = extractWrynoseDiagnosticObject(runResult.stdout)
+  const payload = extractWrynoseDiagnosticObject(runResult.output)
 
   if (payload === undefined) {
     return {
       kind: 'failure',
       reason: 'malformed-diagnostic-payload',
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
@@ -217,8 +219,8 @@ async function runProbe (
       reason: 'malformed-diagnostic-payload',
       details: errorToString(error),
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
@@ -232,16 +234,16 @@ async function runProbe (
       reason: 'invalid-diagnostic-schema',
       details: errorToString(error),
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
   return {
     kind: 'success',
     configurations,
-    stdout: runResult.stdout,
-    stderr: runResult.stderr
+    stdout: runResult.output,
+    stderr: ''
   }
 }
 

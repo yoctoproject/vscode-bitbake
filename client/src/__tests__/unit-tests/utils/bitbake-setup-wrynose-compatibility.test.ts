@@ -7,18 +7,21 @@ import fs from 'fs'
 import os from 'os'
 import path from 'path'
 
-import { runBitbakeSetup } from '../../../utils/BitbakeSetupRunner'
+import { runBitbakeSetupTerminal } from '../../../ui/BitbakeSetupTerminal'
 import {
   probeBitbakeSetupWrynoseConfigurations,
   WRYNOSE_CONFIGURATIONS_DIAGNOSTIC_MARKER
 } from '../../../utils/BitbakeSetupWrynoseCompatibility'
 
-jest.mock('../../../utils/BitbakeSetupRunner', () => ({
-  runBitbakeSetup: jest.fn()
+jest.mock('../../../ui/BitbakeSetupTerminal', () => ({
+  runBitbakeSetupTerminal: jest.fn()
 }))
 
 describe('BitbakeSetupWrynose Tests', () => {
-  const mockedRunBitbakeSetup = runBitbakeSetup as jest.MockedFunction<typeof runBitbakeSetup>
+  const mockedRunBitbakeSetupTerminal =
+    runBitbakeSetupTerminal as jest.MockedFunction<
+    typeof runBitbakeSetupTerminal
+    >
   const tempParents: string[] = []
 
   beforeEach(() => {
@@ -103,16 +106,18 @@ describe('BitbakeSetupWrynose Tests', () => {
     }`
   }
 
-  function mockRun (exitCode: number | null, stdout: string, stderr = ''): void {
-    mockedRunBitbakeSetup.mockResolvedValueOnce({
+  function mockRun (
+    exitCode: number,
+    output: string
+  ): void {
+    mockedRunBitbakeSetupTerminal.mockResolvedValueOnce({
       exitCode,
-      stdout,
-      stderr
+      output
     })
   }
 
   function getRunTempRoot (): string {
-    const cwd = mockedRunBitbakeSetup.mock.calls[0][2]
+    const cwd = mockedRunBitbakeSetupTerminal.mock.calls[0][2]
     if (cwd === undefined) {
       throw new Error('Expected probe cwd to be set')
     }
@@ -120,19 +125,19 @@ describe('BitbakeSetupWrynose Tests', () => {
   }
 
   async function runSuccessfulProbe (tempParent = createTempParent ()) {
-    mockRun(1, diagnosticStdout(pinnedWrynosePayload()), 'diagnostic stderr')
+    mockRun(1, diagnosticStdout(pinnedWrynosePayload()))
 
     return await probeBitbakeSetupWrynoseConfigurations('/opt/bin/bitbake-setup', tempParent, 'poky')
   }
 
-  it('passes the exact Wrynose probe argv and cwd to runBitbakeSetup', async () => {
+  it('passes the exact Wrynose probe argv and cwd to the background terminal', async () => {
     const tempParent = createTempParent()
 
     const result = await runSuccessfulProbe(tempParent)
 
     expect(result.kind).toBe('success')
     const tempRoot = getRunTempRoot()
-    expect(mockedRunBitbakeSetup).toHaveBeenCalledWith('/opt/bin/bitbake-setup', [
+    expect(mockedRunBitbakeSetupTerminal).toHaveBeenCalledWith('/opt/bin/bitbake-setup', [
       '--setting',
       'default',
       'top-dir-prefix',
@@ -144,7 +149,10 @@ describe('BitbakeSetupWrynose Tests', () => {
       'init',
       '--non-interactive',
       'poky'
-    ], tempRoot)
+    ],
+    tempRoot,
+    'BitBake: Inspect bitbake-setup configuration',
+    true)
   })
 
   it('passes a custom registry as an invocation-only setting', async () => {
@@ -164,7 +172,7 @@ describe('BitbakeSetupWrynose Tests', () => {
 
     const tempRoot = getRunTempRoot()
 
-    expect(mockedRunBitbakeSetup).toHaveBeenCalledWith(
+    expect(mockedRunBitbakeSetupTerminal).toHaveBeenCalledWith(
       '/opt/bin/bitbake-setup',
       [
         '--setting',
@@ -183,7 +191,9 @@ describe('BitbakeSetupWrynose Tests', () => {
         '--non-interactive',
         'poky'
       ],
-      tempRoot
+      tempRoot,
+      'BitBake: Inspect bitbake-setup configuration',
+      true
     )
   })
 
@@ -208,7 +218,7 @@ describe('BitbakeSetupWrynose Tests', () => {
 
   it('cleans up the temp root after spawn failure', async () => {
     const tempParent = createTempParent()
-    mockedRunBitbakeSetup.mockRejectedValueOnce(new Error('spawn ENOENT'))
+    mockedRunBitbakeSetupTerminal.mockRejectedValueOnce(new Error('spawn ENOENT'))
 
     const result = await probeBitbakeSetupWrynoseConfigurations('/missing/bitbake-setup', tempParent, 'poky')
 
@@ -537,7 +547,7 @@ describe('BitbakeSetupWrynose Tests', () => {
       reason: 'temporary-directory-failed',
       details: 'permission denied'
     }))
-    expect(mockedRunBitbakeSetup).not.toHaveBeenCalled()
+    expect(mockedRunBitbakeSetupTerminal).not.toHaveBeenCalled()
   })
 
   it('surfaces cleanup failure while preserving the successful probe result', async () => {

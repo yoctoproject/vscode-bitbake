@@ -6,7 +6,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import { runBitbakeSetup } from './BitbakeSetupRunner'
+import { runBitbakeSetupTerminal } from '../ui/BitbakeSetupTerminal'
 
 export interface BitbakeSetupRegistryConfiguration {
   id: string
@@ -132,10 +132,12 @@ async function runList (
   let runResult
 
   try {
-    runResult = await runBitbakeSetup(
+    runResult = await runBitbakeSetupTerminal(
       executablePath,
       argv,
-      tempRoot
+      tempRoot,
+      'BitBake: Inspect bitbake-setup registry',
+      true
     )
   } catch (error) {
     return {
@@ -150,8 +152,8 @@ async function runList (
       kind: 'failure',
       reason: 'list-failed',
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
@@ -165,8 +167,8 @@ async function runList (
       reason: 'read-failed',
       details: errorToString(error),
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
@@ -180,8 +182,8 @@ async function runList (
       reason: 'malformed-json',
       details: errorToString(error),
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
@@ -195,16 +197,16 @@ async function runList (
       reason: 'invalid-schema',
       details: errorToString(error),
       exitCode: runResult.exitCode,
-      stdout: runResult.stdout,
-      stderr: runResult.stderr
+      stdout: runResult.output,
+      stderr: ''
     }
   }
 
   return {
     kind: 'success',
     configurations,
-    stdout: runResult.stdout,
-    stderr: runResult.stderr
+    stdout: runResult.output,
+    stderr: ''
   }
 }
 
