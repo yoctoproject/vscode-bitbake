@@ -18,14 +18,12 @@ describe('BitbakeSetupInitArguments', () => {
     '--setting',
     'default',
     'top-dir-name',
-    '.'
+    'poky'
   ]
 
   const initArguments = [
     'init',
-    '--non-interactive',
-    '--setup-dir-name',
-    'poky'
+    '--non-interactive'
   ]
 
   it('builds a non-interactive init command for the builtin registry', () => {
@@ -127,7 +125,7 @@ describe('BitbakeSetupInitArguments', () => {
     ])
   })
 
-  it('maps the selected directory to the setup directory deterministically', () => {
+  it('maps the selected directory to the bitbake-setup top directory', () => {
     expect(buildBitbakeSetupInitArguments({
       directory: '/home/user/projects/my-yocto',
       registryConfiguration: 'poky-wrynose',
@@ -141,11 +139,9 @@ describe('BitbakeSetupInitArguments', () => {
       '--setting',
       'default',
       'top-dir-name',
-      '.',
+      'my-yocto',
       'init',
       '--non-interactive',
-      '--setup-dir-name',
-      'my-yocto',
       'poky-wrynose',
       'poky'
     ])

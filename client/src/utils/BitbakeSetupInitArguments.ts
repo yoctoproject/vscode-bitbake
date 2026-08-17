@@ -17,9 +17,9 @@ export interface BitbakeSetupInitArguments {
 export function buildBitbakeSetupInitArguments (
   input: BitbakeSetupInitArguments
 ): string[] {
-  const setupDirectoryName = path.basename(input.directory)
+  const topDirectoryName = path.basename(input.directory)
 
-  if (setupDirectoryName.length === 0) {
+  if (topDirectoryName.length === 0) {
     throw new Error(
       'The bitbake-setup initialization directory must not be a filesystem root.'
     )
@@ -33,7 +33,7 @@ export function buildBitbakeSetupInitArguments (
     '--setting',
     'default',
     'top-dir-name',
-    '.'
+    topDirectoryName
   ]
 
   if (input.registry !== undefined && input.registry.length > 0) {
@@ -47,9 +47,7 @@ export function buildBitbakeSetupInitArguments (
 
   argv.push(
     'init',
-    '--non-interactive',
-    '--setup-dir-name',
-    setupDirectoryName
+    '--non-interactive'
   )
 
   if (input.initializeVsCode === true) {
