@@ -15,6 +15,14 @@ Here's an example `settings.json` reflecting some default values to run bitbake 
 }
 ```
 
+### Initialize a workspace with bitbake-setup
+
+The extension can initialize a new workspace by running `bitbake-setup` through the **BitBake: Initialize workspace with bitbake-setup** command from the Command Palette.
+
+The command guides you through selecting the initialization directory, registry, configuration template, configuration, and available fragments. `bitbake-setup` remains responsible for creating the workspace and generating `bitbake.code-workspace`. After a successful initialization, the extension can open the generated workspace.
+
+By default, the extension searches `$PATH` for the `bitbake-setup` executable. If it is installed elsewhere, configure the global `bitbake.bitbakeSetupPath` setting with the path to the executable. When `bitbake-setup` cannot be found, the command also offers to install the supported version managed by the extension or to open the corresponding setting.
+
 ### BitBake Command wrappers
 
 Various tools provide ways to automatically configure the BitBake environment, or even call it inside containers. The `bitbake.commandWrapper` option allows you to use them through this extension by wrapping around the bitbake invocation.
@@ -178,6 +186,8 @@ Here's an example `tasks.json` configuration:
 ### BitBake commands
 
 The extension provides commands and shortcuts to run BitBake tasks. These commands are available in the command palette (`CTRL+SHIFT+P`) and in the editor's contextual menu.
+
+The Command Palette also provides **BitBake: Initialize workspace with bitbake-setup** to create a new BitBake workspace using `bitbake-setup`.
 
 ![Contextual menu](images/contextual-menu.png)
 
