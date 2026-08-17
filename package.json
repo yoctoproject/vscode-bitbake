@@ -534,6 +534,11 @@
         "description": "Examine the recipe's dependencies with taskexp."
       },
       {
+        "command": "bitbake.initialize-workspace-with-bitbake-setup",
+        "title": "BitBake: Initialize workspace with bitbake-setup",
+        "description": "Initialize a BitBake workspace using bitbake-setup."
+      },
+      {
         "command": "bitbake.devtool-modify",
         "title": "BitBake: Devtool: Modify recipe",
         "description": "Open a new devtool workspace to modify a recipe's sources.",
