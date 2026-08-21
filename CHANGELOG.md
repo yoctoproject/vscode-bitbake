@@ -1,3 +1,12 @@
+# 2.10.0 - 2026.08.21
+
+ - Updated npm dependencies, addressing various security warnings
+ - Added compatibility for bitbake-setup workspaces structures in pathToBitbakeFolder
+ - Improved performance of SRC_URI links resolution
+ - Fixed a bug where the extension could get stuck when searching huge directories
+ - Fixed a link resolution issue with kas-container workspaces
+ - Added hover documentation for bitbake operators
+
 # 2.9.0 - 2026.05.28
 
  - Updated npm dependencies, addressing various security warnings
