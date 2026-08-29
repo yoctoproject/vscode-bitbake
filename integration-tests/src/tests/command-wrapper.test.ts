@@ -60,4 +60,41 @@ suite('Bitbake Command Wrapper', () => {
       return files.length === 1
     })
   }).timeout(BITBAKE_TIMEOUT)
+
+  test('Bitbake command wrapper exposes scanned recipe final values in hover', async () => {
+    const recipeUris = await vscode.workspace.findFiles(
+      'layers/openembedded-core/meta/recipes-core/base-files/base-files_*.bb'
+    )
+    assert.strictEqual(recipeUris.length, 1)
+
+    const recipeUri = recipeUris[0]
+    const document = await vscode.workspace.openTextDocument(recipeUri)
+    const recipeText = document.getText()
+    const summaryMatch = /^SUMMARY\s*=\s*"([^"]+)"/m.exec(recipeText)
+    assert.notStrictEqual(summaryMatch, null)
+
+    const expectedSummary = summaryMatch?.[1] as string
+    const summaryOffset = recipeText.indexOf('SUMMARY')
+    assert.notStrictEqual(summaryOffset, -1)
+
+    const position = document.positionAt(summaryOffset + 2)
+    let hoverContent = ''
+
+    await vscode.commands.executeCommand('bitbake.scan-recipe-env', 'base-files')
+
+    await assertWillComeTrue(async () => {
+      const hoverResult = await vscode.commands.executeCommand<vscode.Hover[]>(
+        'vscode.executeHoverProvider',
+        recipeUri,
+        position
+      )
+      const content = hoverResult[0]?.contents[0]
+      hoverContent = content instanceof vscode.MarkdownString ? content.value : ''
+      return hoverContent.includes('**Final Value**') &&
+        hoverContent.includes(expectedSummary)
+    })
+
+    assert.strictEqual(hoverContent.includes('**Final Value**'), true)
+    assert.strictEqual(hoverContent.includes(expectedSummary), true)
+  }).timeout(BITBAKE_TIMEOUT)
 })
