@@ -4,28 +4,28 @@
             "git-remote": {
                 "uri": "https://git.openembedded.org/bitbake",
                 "branch": "2.18",
-                "rev": "acfe02fa38b5da9e6a36c6cedcf91d4fcbefbfbd"
+                "rev": "0ad6c1c34a5e07a5f8dd66ab248c1e7b37b69fa9"
             }
         },
         "openembedded-core": {
             "git-remote": {
                 "uri": "https://git.openembedded.org/openembedded-core",
                 "branch": "wrynose",
-                "rev": "5d1aa5c806c061a2994f4decb59016610f093213"
+                "rev": "f7397af248e1e338929d70a910b0fbc2341528ec"
             }
         },
         "meta-yocto": {
             "git-remote": {
                 "uri": "https://git.yoctoproject.org/meta-yocto",
                 "branch": "wrynose",
-                "rev": "24c24cef5d1523fefe43a3e3d34667b37ae551f3"
+                "rev": "1b132647002eea43a2c7a7f857f63f42dacbc26c"
             }
         },
         "yocto-docs": {
             "git-remote": {
                 "uri": "https://git.yoctoproject.org/yocto-docs",
                 "branch": "wrynose",
-                "rev": "78bd02a51fcc740180df95028c33045d23e31500"
+                "rev": "66194e7869d2df4f8157af2fb6ce804f785a1250"
             }
         }
     }
