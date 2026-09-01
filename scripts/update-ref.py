@@ -45,6 +45,29 @@ def latest_yocto_release_ref(url: str) -> tuple[str, str]:
     return commit, tag
 
 
+def latest_yocto_tag_ref(url: str) -> tuple[str, str]:
+    refs = git_ls_remote("--tags", "--sort=-v:refname", url, "refs/tags/yocto-*")
+
+    if not refs:
+        raise RuntimeError(f"Could not find Yocto tags for {url}")
+
+    commits_by_tag: dict[str, dict[str, str]] = {}
+    tags: list[str] = []
+
+    for commit, ref in refs:
+        tag = ref.removeprefix("refs/tags/").removesuffix("^{}")
+        if tag not in commits_by_tag:
+            commits_by_tag[tag] = {}
+            tags.append(tag)
+
+        key = "commit" if ref.endswith("^{}") else "tag"
+        commits_by_tag[tag][key] = commit
+
+    tag = tags[0]
+    commit = commits_by_tag[tag]["commit"] if "commit" in commits_by_tag[tag] else commits_by_tag[tag]["tag"]
+    return commit, tag
+
+
 def latest_ref(url: str, predicate=lambda ref: True) -> tuple[str, str]:
     refs = [
         (commit, ref)
@@ -170,8 +193,7 @@ def update_fetch_docs_refs() -> None:
     update_tag_comment_before_assignment(fetch_docs, "BITBAKE_DOCS_COMMIT", tag)
     replace_assignment(fetch_docs, "BITBAKE_DOCS_COMMIT", commit)
 
-    commit, ref = latest_ref("https://git.yoctoproject.org/yocto-docs")
-    tag = ref.removeprefix("refs/tags/")
+    commit, tag = latest_yocto_tag_ref("https://git.yoctoproject.org/yocto-docs")
     update_tag_comment_before_assignment(fetch_docs, "YOCTO_DOCS_COMMIT", tag)
     replace_assignment(fetch_docs, "YOCTO_DOCS_COMMIT", commit)
 
