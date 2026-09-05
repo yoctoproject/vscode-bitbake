@@ -8,7 +8,7 @@
  * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/util/declarations.ts
  */
 import * as LSP from 'vscode-languageserver/node'
-import type * as Parser from 'web-tree-sitter'
+import { type Node, type Tree } from 'web-tree-sitter'
 
 import * as TreeSitterUtil from './utils'
 
@@ -47,7 +47,7 @@ export function getGlobalDeclarations ({
   uri,
   getFinalValue = false // Whether to get the final value from the scan results obtained from scan recipe command, which is the only use case as of now
 }: {
-  bitBakeTree: Parser.Tree
+  bitBakeTree: Tree
   uri: string
   getFinalValue?: boolean
 }): GlobalDeclarations {
@@ -82,7 +82,7 @@ export function nodeToSymbolInformation ({
   getFinalValue,
   isBitBakeVariableExpansion = false
 }: {
-  node: Parser.SyntaxNode
+  node: Node
   uri: string
   getFinalValue?: boolean
   isBitBakeVariableExpansion?: boolean
@@ -163,7 +163,7 @@ function getDeclarationSymbolFromNode ({
   uri,
   getFinalValue
 }: {
-  node: Parser.SyntaxNode
+  node: Node
   uri: string
   getFinalValue?: boolean
 }): BitbakeSymbolInformation | null {
@@ -178,7 +178,7 @@ function getDeclarationSymbolFromNode ({
   return null
 }
 
-function extractCommentsAbove (node: Parser.SyntaxNode, comments: string[]): void {
+function extractCommentsAbove (node: Node, comments: string[]): void {
   const previousSibling = node.previousSibling
   if (previousSibling === null) {
     return

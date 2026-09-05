@@ -169,6 +169,9 @@ describe('getDirectiveFileUris', () => {
     const analyzer = await getAnalyzer()
 
     const parsedTree = bitBakeParser.parse(FIXTURE_DOCUMENT.DIRECTIVE.getText())
+    if (parsedTree === null) {
+      fail('Tree is null')
+    }
     const fileUris = analyzer.getDirectiveFileUris(parsedTree)
 
     expect(fileUris).toEqual(

@@ -8,7 +8,7 @@
  * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/util/tree-sitter.ts
  */
 import * as LSP from 'vscode-languageserver/node'
-import type { SyntaxNode } from 'web-tree-sitter'
+import { type Node } from 'web-tree-sitter'
 
 /**
  * Recursively iterate over all nodes in a tree.
@@ -16,14 +16,14 @@ import type { SyntaxNode } from 'web-tree-sitter'
  * @param node The node to start iterating from
  * @param callback The callback to call for each node. Return false to stop following children.
  */
-export function forEach (node: SyntaxNode, callback: (n: SyntaxNode) => boolean): void {
+export function forEach (node: Node, callback: (n: Node) => boolean): void {
   const followChildren = callback(node)
   if (followChildren && node.children.length > 0) {
     node.children.forEach((n) => { forEach(n, callback) })
   }
 }
 
-export function range (n: SyntaxNode): LSP.Range {
+export function range (n: Node): LSP.Range {
   return LSP.Range.create(
     n.startPosition.row,
     n.startPosition.column,
@@ -32,7 +32,7 @@ export function range (n: SyntaxNode): LSP.Range {
   )
 }
 
-export function isDefinition (n: SyntaxNode): boolean {
+export function isDefinition (n: Node): boolean {
   switch (n.type) {
     case 'variable_assignment':
     case 'function_definition': // Shell functions
@@ -44,19 +44,19 @@ export function isDefinition (n: SyntaxNode): boolean {
   }
 }
 
-export function isInlinePython (n: SyntaxNode): boolean {
+export function isInlinePython (n: Node): boolean {
   return n.type === 'inline_python'
 }
 
-export function isPythonDefinition (n: SyntaxNode): boolean {
+export function isPythonDefinition (n: Node): boolean {
   return n.type === 'anonymous_python_function' || n.type === 'python_function_definition'
 }
 
-export function isShellDefinition (n: SyntaxNode): boolean {
+export function isShellDefinition (n: Node): boolean {
   return n.type === 'function_definition'
 }
 
-export function isVariableReference (n: SyntaxNode): boolean {
+export function isVariableReference (n: Node): boolean {
   switch (n.type) {
     case 'identifier':
       return n?.parent?.type === 'variable_assignment' || n?.parent?.type === 'variable_expansion'
@@ -68,7 +68,7 @@ export function isVariableReference (n: SyntaxNode): boolean {
 /**
  * Check if the node is an override other than `append`, `prepend` or `remove`
  */
-export function isOverride (n: SyntaxNode): boolean {
+export function isOverride (n: Node): boolean {
   /**
    * Example:
    * FOO:append:override1:${PN}:${PN}-foo () {}
@@ -108,7 +108,7 @@ export function isOverride (n: SyntaxNode): boolean {
   }
 }
 
-export function isBitbakeOperator (n: SyntaxNode): boolean {
+export function isBitbakeOperator (n: Node): boolean {
   switch (n.type) {
     case 'append':
     case 'prepend':
@@ -119,7 +119,7 @@ export function isBitbakeOperator (n: SyntaxNode): boolean {
   }
 }
 
-export function isFunctionIdentifier (n: SyntaxNode): boolean {
+export function isFunctionIdentifier (n: Node): boolean {
   switch (n.type) {
     case 'identifier':
       return n?.parent?.type === 'function_definition' ||
@@ -135,9 +135,9 @@ export function isFunctionIdentifier (n: SyntaxNode): boolean {
  * Find the node's parent that passes the predicate
  */
 export function findParent (
-  start: SyntaxNode,
-  predicate: (n: SyntaxNode) => boolean
-): SyntaxNode | null {
+  start: Node,
+  predicate: (n: Node) => boolean
+): Node | null {
   let node = start.parent
   while (node !== null) {
     if (predicate(node)) {

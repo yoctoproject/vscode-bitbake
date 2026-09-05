@@ -8,13 +8,13 @@
  * Reference: https://github.com/bash-lsp/bash-language-server/blob/8c42218c77a9451b308839f9a754abde901323d5/server/src/parser.ts
  */
 import * as path from 'path'
-import Parser from 'web-tree-sitter'
+import { Language, Parser } from 'web-tree-sitter'
 
 export async function generateParser (wasmPath: string): Promise<Parser> {
   await Parser.init()
   const parser = new Parser()
 
-  const language = await Parser.Language.load(wasmPath)
+  const language = await Language.load(wasmPath)
   parser.setLanguage(language)
 
   return parser
