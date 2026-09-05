@@ -3,8 +3,7 @@
  * Licensed under the MIT License. See License.txt in the project root for license information.
  * ------------------------------------------------------------------------------------------ */
 
-import type Parser from 'web-tree-sitter'
-import { type SyntaxNode } from 'web-tree-sitter'
+import { type Node, type Tree } from 'web-tree-sitter'
 
 import * as TreeSitterUtils from '../tree-sitter/utils'
 
@@ -23,7 +22,7 @@ export const imports = [
 
 export const generatePythonEmbeddedLanguageDoc = (
   textDocument: TextDocument,
-  bitBakeTree: Parser.Tree
+  bitBakeTree: Tree
 ): EmbeddedLanguageDoc => {
   const embeddedLanguageDoc = initEmbeddedLanguageDoc(textDocument, 'python')
   TreeSitterUtils.forEach(bitBakeTree.rootNode, (node) => {
@@ -58,7 +57,7 @@ const insertHeader = (embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, getPythonHeader(embeddedLanguageDoc.originalUri))
 }
 
-const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handlePythonFunctionDefinition = (node: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     if (child.type === 'block') {
@@ -67,7 +66,7 @@ const handlePythonFunctionDefinition = (node: SyntaxNode, embeddedLanguageDoc: E
   })
 }
 
-const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleAnonymousPythonFunction = (node: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     switch (child.type) {
@@ -101,7 +100,7 @@ const handleAnonymousPythonFunction = (node: SyntaxNode, embeddedLanguageDoc: Em
   })
 }
 
-const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleInlinePythonNode = (inlinePythonNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   const openingNode = inlinePythonNode.child(0)
   const pythonContentNode = inlinePythonNode.child(1)
   const closingNode = inlinePythonNode.child(2)
@@ -122,13 +121,13 @@ const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDo
   handleBlockNode(pythonContentNode, embeddedLanguageDoc)
 }
 
-const handleBlockNode = (blockNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleBlockNode = (blockNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   if (blockNode.text === '') {
     insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, blockNode.startIndex, blockNode.endIndex, '\n  pass')
   }
 }
 
-const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleFakerootNode = (inlinePythonNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   const nextNode = inlinePythonNode.nextSibling
   if (nextNode === null) {
     console.debug('[handleFakerootNode]: nextNode is null')
@@ -138,7 +137,7 @@ const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: E
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, nextNode.startIndex, '')
 }
 
-const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleOverrideNode = (overrideNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Replace it by space
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
 }

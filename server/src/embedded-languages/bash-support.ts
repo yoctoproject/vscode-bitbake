@@ -6,8 +6,7 @@
 import * as TreeSitterUtils from '../tree-sitter/utils'
 import { initEmbeddedLanguageDoc, insertTextIntoEmbeddedLanguageDoc } from './utils'
 import { type EmbeddedLanguageDoc } from '../lib/src/types/embedded-languages'
-import type Parser from 'web-tree-sitter'
-import { type SyntaxNode } from 'web-tree-sitter'
+import { type Node, type Tree } from 'web-tree-sitter'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type TextDocument } from 'vscode-languageserver-textdocument'
 
@@ -22,7 +21,7 @@ const shellcheckDisables = [
 
 export const generateBashEmbeddedLanguageDoc = (
   textDocument: TextDocument,
-  bitBakeTree: Parser.Tree,
+  bitBakeTree: Tree,
   shouldKeepExactPositions: boolean, // Indicates the positions in the generated document should map exactly with the original document
   coreMetaFolder?: string
 ): EmbeddedLanguageDoc => {
@@ -69,7 +68,7 @@ const insertBashTools = (embeddedLanguageDoc: EmbeddedLanguageDoc, coreMetaFolde
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, 0, 0, bashTools)
 }
 
-const handleFunctionDefinitionNode = (node: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleFunctionDefinitionNode = (node: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, node.startIndex, node.endIndex, node.text)
   node.children.forEach((child) => {
     switch (child.type) {
@@ -88,7 +87,7 @@ const handleFunctionDefinitionNode = (node: SyntaxNode, embeddedLanguageDoc: Emb
   })
 }
 
-const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleInlinePythonNode = (inlinePythonNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Example:
   // if [ "${@d.getVar('FOO')}" = "0" ] ;
   // will become
@@ -106,12 +105,12 @@ const handleInlinePythonNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDo
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, inlinePythonNode.endIndex, replacement)
 }
 
-const handleFakerootNode = (inlinePythonNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleFakerootNode = (inlinePythonNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Replace it by spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, inlinePythonNode.startIndex, inlinePythonNode.endIndex, ' '.repeat(inlinePythonNode.text.length))
 }
 
-const handleOverrideNode = (overrideNode: SyntaxNode, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
+const handleOverrideNode = (overrideNode: Node, embeddedLanguageDoc: EmbeddedLanguageDoc): void => {
   // Replace it by spaces
   insertTextIntoEmbeddedLanguageDoc(embeddedLanguageDoc, overrideNode.startIndex, overrideNode.endIndex, ' '.repeat(overrideNode.text.length))
 }
