@@ -7,7 +7,7 @@ import { type SemanticTokens, SemanticTokensBuilder, type SemanticTokensLegend }
 import { logger } from './lib/src/utils/OutputLogger'
 import { analyzer } from './tree-sitter/analyzer'
 import * as TreeSitterUtils from './tree-sitter/utils'
-import { type SyntaxNode } from 'web-tree-sitter'
+import { type Node } from 'web-tree-sitter'
 
 interface ParsedToken {
   line: number
@@ -97,7 +97,7 @@ export function getBashParsedTokens (uri: string): ParsedToken[] {
     return []
   }
 
-  TreeSitterUtils.forEach(Tree.rootNode, (node: SyntaxNode) => {
+  TreeSitterUtils.forEach(Tree.rootNode, (node: Node) => {
     const nodeRange = {
       line: node.startPosition.row,
       startCharacter: node.startPosition.column,
@@ -143,7 +143,7 @@ export function getBitBakeParsedTokens (uri: string): ParsedToken[] {
     return []
   }
 
-  TreeSitterUtils.forEach(Tree.rootNode, (node: SyntaxNode) => {
+  TreeSitterUtils.forEach(Tree.rootNode, (node: Node) => {
     const nodeRange = {
       line: node.startPosition.row,
       startCharacter: node.startPosition.column,

@@ -17,10 +17,9 @@ import {
   Position,
   Location
 } from 'vscode-languageserver'
-import type Parser from 'web-tree-sitter'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { type BitbakeSymbolInformation, getGlobalDeclarations, type GlobalDeclarations, nodeToSymbolInformation } from './declarations'
-import { type SyntaxNode, type Tree } from 'web-tree-sitter'
+import { type Node, type Parser, type Tree } from 'web-tree-sitter'
 import * as TreeSitterUtils from './utils'
 import { DIRECTIVE_STATEMENT_KEYWORDS, type DirectiveStatementKeyword } from '../lib/src/types/directiveKeywords'
 import { logger } from '../lib/src/utils/OutputLogger'
@@ -42,8 +41,8 @@ export interface AnalyzedDocument {
   pythonDatastoreVariableSymbols: BitbakeSymbolInformation[]
   pythonGlobalFunctionCalls: BitbakeSymbolInformation[]
   includeFileUris: string[]
-  bitBakeTree: Parser.Tree
-  bashTree: Parser.Tree
+  bitBakeTree: Tree
+  bashTree: Tree
 }
 
 interface LastScanResult {
@@ -53,7 +52,7 @@ interface LastScanResult {
 
 interface BashScopeLocalSymbols {
   symbols: Set<string>
-  scope: Parser.SyntaxNode
+  scope: Node
 }
 
 export default class Analyzer {
@@ -179,16 +178,16 @@ export default class Analyzer {
     return this.executeAnalyzation()
   }
 
-  private generateBitBakeTree (document: TextDocument): Parser.Tree | undefined {
+  private generateBitBakeTree (document: TextDocument): Tree | undefined {
     if (this.bitBakeParser === undefined) {
       logger.debug('[Analyzer] The analyzer is not initialized with a BitBake parser')
       return
     }
 
-    return this.bitBakeParser?.parse(document.getText())
+    return this.bitBakeParser.parse(document.getText()) ?? undefined
   }
 
-  private generateBashTree (document: TextDocument, bitBakeTree: Parser.Tree): Parser.Tree | undefined {
+  private generateBashTree (document: TextDocument, bitBakeTree: Tree): Tree | undefined {
     if (this.bashParser === undefined) {
       logger.debug('[Analyzer] The analyzer is not initialized with a Bash parser')
       return
@@ -200,7 +199,7 @@ export default class Analyzer {
       true
     ).content
 
-    return this.bashParser.parse(bashContent)
+    return this.bashParser.parse(bashContent) ?? undefined
   }
 
   private executeAnalyzation (): Diagnostic[] {
@@ -582,7 +581,7 @@ export default class Analyzer {
   // See tree-sitter-bitbake issue: https://github.com/amaanq/tree-sitter-bitbake/issues/16
   // TODO: Remove this function when the issue is fixed
   public isBuggyIdentifier (
-    node: SyntaxNode
+    node: Node
   ): boolean {
     // The bug appears on identifiers, and also on the colon of overrides
     if (node.type !== 'identifier' && node.type !== ':') {
@@ -605,9 +604,9 @@ export default class Analyzer {
   }
 
   public isInsideBashRegion (
-    node: SyntaxNode
+    node: Node
   ): boolean {
-    let n: SyntaxNode | null = node
+    let n: Node | null = node
     if (n !== null && this.isBuggyIdentifier(n)) {
       return false
     }
@@ -623,9 +622,9 @@ export default class Analyzer {
   }
 
   public isInsidePythonRegion (
-    node: SyntaxNode
+    node: Node
   ): boolean {
-    let n: SyntaxNode | null = node
+    let n: Node | null = node
     if (n !== null && this.isBuggyIdentifier(n)) {
       return false
     }
@@ -641,7 +640,7 @@ export default class Analyzer {
   }
 
   public isPythonDatastoreVariable (
-    n: Parser.SyntaxNode,
+    n: Node,
     // Whether or not the opening quote should be considered as part of the variable
     // We want to be able to suggest completion items as the user open the quotes
     // However, when the user hover on the variable, the quotes are not part of the variable
@@ -821,8 +820,8 @@ export default class Analyzer {
     uri: string,
     line: number,
     column: number,
-    tree: Parser.Tree
-  ): Parser.SyntaxNode | null {
+    tree: Tree
+  ): Node | null {
     if (tree.rootNode === null) {
       // Check for lacking rootNode (due to failed parse?)
       return null
@@ -835,7 +834,7 @@ export default class Analyzer {
     uri: string,
     line: number,
     column: number
-  ): Parser.SyntaxNode | null {
+  ): Node | null {
     const bitBakeTree = this.uriToAnalyzedDocument[uri]?.bitBakeTree
 
     if (bitBakeTree === undefined) {
@@ -849,7 +848,7 @@ export default class Analyzer {
     uri: string,
     line: number,
     column: number
-  ): Parser.SyntaxNode | null {
+  ): Node | null {
     const bashTree = this.uriToAnalyzedDocument[uri]?.bashTree
 
     if (bashTree === undefined) {
@@ -860,7 +859,7 @@ export default class Analyzer {
   }
 
   // Return the uris in the diretive statements for unlimited depth
-  public extractIncludeFileUris (uri: string, bitBakeTree?: Parser.Tree): string[] {
+  public extractIncludeFileUris (uri: string, bitBakeTree?: Tree): string[] {
     const includeUris: string[] = []
     this.sourceIncludeFiles(uri, includeUris, bitBakeTree)
     return includeUris
@@ -869,11 +868,11 @@ export default class Analyzer {
   /**
    * The files pointed by the include URIs will analyzed if not yet done so such that the symbols in the included files are available for querying.
    */
-  private sourceIncludeFiles (uri: string, includeFileUris: string[], bitBakeTree?: Parser.Tree): void {
+  private sourceIncludeFiles (uri: string, includeFileUris: string[], bitBakeTree?: Tree): void {
     const filePath = uri.replace('file://', '')
     logger.debug(`[Analyzer] Sourcing file: ${filePath}`)
     try {
-      let parsedTree: Parser.Tree
+      let parsedTree: Tree
       if (bitBakeTree !== undefined) {
         parsedTree = bitBakeTree
       } else {
@@ -936,7 +935,7 @@ export default class Analyzer {
     }
   }
 
-  public getDirectiveFileUris (parsedTree: Parser.Tree): string[] {
+  public getDirectiveFileUris (parsedTree: Tree): string[] {
     const fileUris: string[] = []
     parsedTree.rootNode.children.forEach((childNode) => {
       if (childNode.type === 'inherit_directive') {
@@ -1093,7 +1092,7 @@ export default class Analyzer {
     return line === range.start.line && character >= range.start.character && character <= range.end.character
   }
 
-  private calculateSymbolPositionInStringContent (n: Parser.SyntaxNode, index: number, match: RegExpMatchArray): Range {
+  private calculateSymbolPositionInStringContent (n: Node, index: number, match: RegExpMatchArray): Range {
     const start = {
       line: n.startPosition.row + index,
       character: match.index !== undefined ? match.index + n.startPosition.column : 0
@@ -1118,7 +1117,7 @@ export default class Analyzer {
    * @param regex The regex to match the symbols
    * @param func The custom function to process the matched symbols
    */
-  private processSymbolsInStringContent (n: Parser.SyntaxNode, regex: RegExp, func: (start: Position, end: Position, match: RegExpMatchArray) => void): void {
+  private processSymbolsInStringContent (n: Node, regex: RegExp, func: (start: Position, end: Position, match: RegExpMatchArray) => void): void {
     const splittedStringContent = n.text.split(/\r?\n/g)
     for (let i = 0; i < splittedStringContent.length; i++) {
       const lineText = splittedStringContent[i]
@@ -1162,6 +1161,10 @@ export default class Analyzer {
 
     const scanResultText = lines.slice(index).join('\r\n')
     const scanResultParsedTree = this.bitBakeParser.parse(scanResultText)
+    if (scanResultParsedTree === null) {
+      logger.debug(`[${this.processEnvScanResults.name}] Failed to parse scan results`)
+      return undefined
+    }
 
     const scanResultGlobalDeclarations = getGlobalDeclarations({ bitBakeTree: scanResultParsedTree, uri: 'scanResultDummyUri', getFinalValue: true })
     const scanResultSymbols = this.getAllSymbolsFromGlobalDeclarations(scanResultGlobalDeclarations)
