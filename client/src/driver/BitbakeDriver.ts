@@ -5,6 +5,7 @@
 
 import EventEmitter from 'events'
 import fs from 'fs'
+import * as vscode from 'vscode'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell, type BitbakeBuildConfigSettings, getBuildSetting } from '../lib/src/BitbakeSettings'
@@ -69,7 +70,7 @@ export class BitbakeDriver {
   async spawnBitbakeProcess (command: string): Promise<IPty> {
     const { shell, shellEnv, script, workingDirectory } = this.prepareCommand(command)
     await this.waitForBitbakeToFinish()
-    logger.debug(`Executing Bitbake command with ${shell} in ${workingDirectory}: ${script}`)
+    logger.debug(`Executing Bitbake command with ${shell} in ${workingDirectory} (remote: ${vscode.env.remoteName}): ${script}`)
     const child = pty.spawn(
       shell,
       ['-c', script],
