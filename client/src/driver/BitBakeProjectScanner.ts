@@ -25,6 +25,9 @@ import { bitbakeESDKMode } from './BitbakeESDK'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { extractRecipeName, extractRecipeVersion } from '../lib/src/utils/files'
 
+const quoteShellArgument = (value: string): string =>
+  `'${value.replace(/'/g, `'"'"'`)}'`
+
 interface ScanStatus {
   scanIsRunning: boolean
   scanIsPending: boolean
@@ -160,7 +163,7 @@ export class BitBakeProjectScanner {
   }
 
   private async getContainerParentInodes (filepath: string): Promise<number[]> {
-    const stdout = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`, 20000)
+    const stdout = await this.executeBitBakeCommand(`f=${quoteShellArgument(filepath)}; while [[ $f != / ]]; do stat -c %i "$f"; f=$(realpath "$(dirname "$f")"); done;`, 20000)
     const regex = /^\d+$/gm
     const matches = stdout.match(regex)
     return (matches != null) ? matches.map((match) => parseInt(match)) : [NaN]
@@ -348,7 +351,7 @@ export class BitBakeProjectScanner {
   }
 
   private async existsInContainer (containerPath: string): Promise<boolean> {
-    const process = runBitbakeTerminalCustomCommand(this._bitbakeDriver, 'test -e ' + containerPath, 'BitBake: Test file', true)
+    const process = runBitbakeTerminalCustomCommand(this._bitbakeDriver, 'test -e ' + quoteShellArgument(containerPath), 'BitBake: Test file', true)
     const res = finishProcessExecution(process, async () => { await this.bitbakeDriver.killBitbake() })
     return (await res).status === 0
   }

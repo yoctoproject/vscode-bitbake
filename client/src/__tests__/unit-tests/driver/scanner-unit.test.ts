@@ -6,6 +6,9 @@
 import * as vscode from 'vscode'
 import { BitBakeProjectScanner, parseRecipesOutput } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
+import * as ProcessUtils from '../../../utils/ProcessUtils'
+import { type IPty } from 'node-pty'
 
 jest.mock('vscode')
 
@@ -76,6 +79,74 @@ systemd:
       })
     )
   })
+  it('preserves spaces when resolving a host path to a container path', async () => {
+    const scanner = new BitBakeProjectScanner(new BitbakeDriver())
+
+    const scannerInternals = scanner as unknown as {
+      containerToHostMap: Map<string, string>
+      hostToContainerMap: Map<string, string>
+      existsInContainer: (containerPath: string) => Promise<boolean>
+    }
+
+    scannerInternals.containerToHostMap = new Map([['/container', '/host']])
+    scannerInternals.hostToContainerMap = new Map([['/host', '/container']])
+
+    const existsSpy = jest.spyOn(scannerInternals, 'existsInContainer')
+      .mockResolvedValue(true)
+
+    const result = await scanner.resolveHostPath('/host/path with space/test.bb')
+
+    expect(existsSpy).toHaveBeenCalledWith('/container/path with space/test.bb')
+    expect(result).toBe('/container/path with space/test.bb')
+  })
+
+  it('preserves a path with spaces for the container existence check', async () => {
+    const scanner = new BitBakeProjectScanner(new BitbakeDriver())
+
+    const scannerInternals = scanner as unknown as {
+      containerToHostMap: Map<string, string>
+      hostToContainerMap: Map<string, string>
+    }
+
+    scannerInternals.containerToHostMap = new Map([['/container', '/host']])
+    scannerInternals.hostToContainerMap = new Map([['/host', '/container']])
+
+    const terminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand')
+      .mockReturnValue(undefined as unknown as Promise<IPty>)
+
+    jest.spyOn(ProcessUtils, 'finishProcessExecution')
+      .mockReturnValue(Promise.resolve({ status: 0 }) as ReturnType<typeof ProcessUtils.finishProcessExecution>)
+
+    await scanner.resolveHostPath('/host/path with space/test.bb')
+
+    expect(terminalSpy).toHaveBeenCalledWith(
+      expect.anything(),
+      `test -e '/container/path with space/test.bb'`,
+      'BitBake: Test file',
+      true
+    )
+  })
+
+  it('preserves a path with spaces when collecting container parent inodes', async () => {
+    const scanner = new BitBakeProjectScanner(new BitbakeDriver())
+
+    const scannerInternals = scanner as unknown as {
+      getContainerParentInodes: (filepath: string) => Promise<number[]>
+      executeBitBakeCommand: (command: string, timeout?: number) => Promise<string>
+    }
+
+    const executeSpy = jest.spyOn(scannerInternals, 'executeBitBakeCommand')
+      .mockResolvedValue('123\n456\n')
+
+    const result = await scannerInternals.getContainerParentInodes('/container/path with space/test.bb')
+
+    expect(executeSpy).toHaveBeenCalledWith(
+      `f='/container/path with space/test.bb'; while [[ $f != / ]]; do stat -c %i "$f"; f=$(realpath "$(dirname "$f")"); done;`,
+      20000
+    )
+    expect(result).toEqual([123, 456])
+  })
+
   it('shows a non-modal error when path mapping fails', async () => {
     const scanner = new BitBakeProjectScanner(new BitbakeDriver())
 
