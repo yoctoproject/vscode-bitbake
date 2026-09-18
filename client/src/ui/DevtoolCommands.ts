@@ -13,7 +13,7 @@ import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { type BitbakeSettings } from '../lib/src/BitbakeSettings'
 import { type BitbakeScanResult, type DevtoolWorkspaceInfo, type LayerInfo } from '../lib/src/types/BitbakeScanResult'
 import { logger } from '../lib/src/utils/OutputLogger'
-import { finishProcessExecution } from '../utils/ProcessUtils'
+import { BITBAKE_BUILD_TIMEOUT, finishProcessExecution } from '../utils/ProcessUtils'
 import { clientNotificationManager } from './ClientNotificationManager'
 import { selectRecipe } from './RecipeSelection'
 import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
@@ -102,9 +102,11 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       return
     }
     const command = bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
-    await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
-
-    showSDKConfigurationDone(chosenRecipe)
+    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
+    const result = await finishProcessExecution(process, undefined, BITBAKE_BUILD_TIMEOUT)
+    if (result.status === 0) {
+      showSDKConfigurationDone(chosenRecipe)
+    }
   }
 }
 
