@@ -86,6 +86,33 @@ describe('Devtool ide-sdk command', () => {
     expect(commandSpy).toHaveBeenCalledWith(expect.anything(), 'devtool ide-sdk -i code busybox core-image-minimal -t root@192.168.0.3', expect.anything())
   })
 
+  it('should wait for ide-sdk to finish successfully before notifying', async () => {
+    const bitBakeProjectScanner = new BitBakeProjectScanner(new BitbakeDriver())
+    bitBakeProjectScanner.bitbakeDriver.bitbakeSettings = {
+      pathToBitbakeFolder: '',
+      sdkImage: 'core-image-minimal'
+    }
+    jest.spyOn(bitBakeProjectScanner, 'activeScanResult', 'get').mockReturnValue({'_bitbakeVersion': '3.0.0'} as BitbakeScanResult)
+    const ideSDKCommand = mockExtensionContext(bitBakeProjectScanner)
+    const process = Promise.resolve({} as IPty)
+    let finishProcess: (result: childProcess.SpawnSyncReturns<Buffer>) => void
+    const processFinished = new Promise<childProcess.SpawnSyncReturns<Buffer>>((resolve) => {
+      finishProcess = resolve
+    })
+
+    jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(process)
+    jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValue(processFinished)
+    const informationMessageSpy = jest.spyOn(vscode.window, 'showInformationMessage').mockReturnValue({ then: jest.fn() } as unknown as Thenable<vscode.MessageItem | undefined>)
+
+    const commandPromise = ideSDKCommand('busybox')
+    await Promise.resolve()
+    expect(informationMessageSpy).not.toHaveBeenCalled()
+
+    finishProcess!({ status: 0 } as childProcess.SpawnSyncReturns<Buffer>)
+    await commandPromise
+    expect(informationMessageSpy).toHaveBeenCalledWith('Devtool workspace for busybox successfully configured', 'Open Workspace')
+  })
+
   it('should properly detect devtool modify options', async () => {
     // Test addDevtoolDebugBuild
     expect(await addDevtoolDebugBuild('', {_bitbakeVersion: '3.0.0'} as BitbakeScanResult, {disableDevtoolDebugBuild: false} as BitbakeSettings, undefined as unknown as BitbakeDriver)).toBe(' --debug-build')
