@@ -494,6 +494,18 @@
         "description": "Start watching or suggesting a recipe in bitbake commands."
       },
       {
+        "command": "bitbake.drop-class",
+        "title": "BitBake: Drop a class from the active workspace",
+        "description": "Stop watching a class in the BitBake Classes view.",
+        "icon": "$(close)"
+      },
+      {
+        "command": "bitbake.watch-class",
+        "title": "BitBake: Add a class to the active workspace",
+        "icon": "$(add)",
+        "description": "Start watching a class in the BitBake Classes view."
+      },
+      {
         "command": "bitbake.drop-all-recipes",
         "title": "BitBake: Drop all recipes from the active workspace",
         "description": "Clear all recipes in the recipes view and from all command suggestions.",
@@ -613,6 +625,13 @@
           "name": "Recipes Explorer",
           "contextualTitle": "Recipes explorer",
           "icon": "$(library)",
+          "when": "bitbake.active"
+        },
+        {
+          "id": "bitbakeClasses",
+          "name": "BitBake Classes",
+          "contextualTitle": "BitBake Classes",
+          "icon": "$(symbol-class)",
           "when": "bitbake.active"
         },
         {
@@ -761,14 +780,29 @@
           "when": "view == bitbakeRecipes"
         },
         {
+          "command": "bitbake.watch-class",
+          "group": "navigation@0",
+          "when": "view == bitbakeClasses"
+        },
+        {
           "command": "bitbake.rescan-project",
           "group": "navigation@1",
           "when": "view == bitbakeRecipes"
         },
         {
+          "command": "bitbake.rescan-project",
+          "group": "navigation@1",
+          "when": "view == bitbakeClasses"
+        },
+        {
           "command": "bitbake.collapse-list",
           "group": "navigation@2",
           "when": "view == bitbakeRecipes"
+        },
+        {
+          "command": "bitbake.collapse-list",
+          "group": "navigation@2",
+          "when": "view == bitbakeClasses"
         },
         {
           "command": "bitbake.drop-all-recipes",
@@ -811,6 +845,11 @@
           "command": "bitbake.drop-recipe",
           "group": "inline@2",
           "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.drop-class",
+          "group": "inline@0",
+          "when": "viewItem == bitbakeClassCtx"
         },
         {
           "submenu": "bitbake/main",
@@ -886,6 +925,11 @@
           "command": "bitbake.devtool-modify",
           "group": "2@bitbake_devtool@0",
           "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.drop-class",
+          "group": "0@bitbake_class@0",
+          "when": "viewItem == bitbakeClassCtx"
         },
         {
           "command": "bitbake.devtool-build",

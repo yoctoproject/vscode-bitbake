@@ -14,6 +14,7 @@ import { BitbakeTaskProvider } from './ui/BitbakeTaskProvider'
 import { registerBitbakeCommands } from './ui/BitbakeCommands'
 import { registerDevtoolCommands } from './ui/DevtoolCommands'
 import { BitbakeWorkspace } from './ui/BitbakeWorkspace'
+import { BitbakeClassesView } from './ui/BitbakeClassesView'
 import { BitbakeRecipesView } from './ui/BitbakeRecipesView'
 import { BitbakeStatusBar } from './ui/BitbakeStatusBar'
 import { BitBakeProjectScanner } from './driver/BitBakeProjectScanner'
@@ -37,6 +38,7 @@ let bitbakeTaskProvider: BitbakeTaskProvider
 let taskProvider: vscode.Disposable
 const bitbakeWorkspace: BitbakeWorkspace = new BitbakeWorkspace()
 let bitbakeRecipesView: BitbakeRecipesView | undefined
+let bitbakeClassesView: BitbakeClassesView | undefined
 let devtoolWorkspacesView: DevtoolWorkspacesView | undefined
 let terminalProvider: BitbakeTerminalProfileProvider | undefined
 
@@ -173,6 +175,8 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   clientNotificationManager.setMemento(context.workspaceState)
   bitbakeRecipesView = new BitbakeRecipesView(bitbakeWorkspace, bitBakeProjectScanner)
   bitbakeRecipesView.registerView(context)
+  bitbakeClassesView = new BitbakeClassesView(bitbakeWorkspace, bitBakeProjectScanner)
+  bitbakeClassesView.registerView(context)
   devtoolWorkspacesView = new DevtoolWorkspacesView(bitBakeProjectScanner)
   devtoolWorkspacesView.registerView(context)
   void vscode.commands.executeCommand('setContext', 'bitbake.active', true)
@@ -183,8 +187,10 @@ export async function activate (context: vscode.ExtensionContext): Promise<void>
   bitbakeDriver.activeBuildConfiguration = bitbakeConfigPicker.activeBuildConfiguration
   bitbakeConfigPicker.onActiveConfigChanged.event((config) => {
     bitbakeRecipesView?.setTitleConfig(config)
+    bitbakeClassesView?.setTitleConfig(config)
   })
   bitbakeRecipesView?.setTitleConfig(bitbakeDriver.activeBuildConfiguration)
+  bitbakeClassesView?.setTitleConfig(bitbakeDriver.activeBuildConfiguration)
   terminalProvider = new BitbakeTerminalProfileProvider(bitbakeDriver)
   vscode.window.registerTerminalProfileProvider('bitbake.terminal', terminalProvider)
   const terminalLinkProvider = new BitbakeTerminalLinkProvider(bitBakeProjectScanner)

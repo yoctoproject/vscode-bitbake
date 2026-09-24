@@ -10,6 +10,7 @@ import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
+import { addActiveClass, selectClass } from './ClassSelection'
 import { addActiveRecipe, selectRecipe } from './RecipeSelection'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { runBitbakeTerminal } from './BitbakeTerminal'
@@ -38,6 +39,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }),
     vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }),
+    vscode.commands.registerCommand('bitbake.drop-class', async (uri) => { await dropClass(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.watch-class', async (bitbakeClass) => { await addActiveClass(bitbakeWorkspace, bitBakeProjectScanner, bitbakeClass) }),
     vscode.commands.registerCommand('bitbake.rescan-project', async (focusOnError = true) => { await rescanProject(bitBakeProjectScanner, focusOnError) }),
     vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }),
     vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
@@ -231,6 +234,13 @@ async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectSca
 
 async function dropAllRecipes (bitbakeWorkspace: BitbakeWorkspace): Promise<void> {
   await bitbakeWorkspace.dropAllActiveRecipes()
+}
+
+async function dropClass (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: string): Promise<void> {
+  const chosenClass = await selectClass(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
+  if (chosenClass !== undefined) {
+    await bitbakeWorkspace.dropActiveClass(chosenClass)
+  }
 }
 
 export async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {
