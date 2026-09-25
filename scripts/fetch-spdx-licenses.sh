@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Tag: v3.27.0
-SPDX_LICENSES_COMMIT=60e0de29cbcf3e83bf9d5e299972a1969516d918
+# Tag: v3.28.0
+SPDX_LICENSES_COMMIT=779ef2e5dff6d4af389c53de5e97116ab0bb52e8
 
 set -e
 cd "$(dirname "$(readlink -f "$0")")/.."

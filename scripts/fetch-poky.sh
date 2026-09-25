@@ -1,7 +1,7 @@
 #!/bin/bash
 
-BITBAKE_TAG=yocto-6.0
-BITBAKE_COMMIT=33581c84f3a85008239acbd940501a35de48dc91
+BITBAKE_TAG=yocto-6.0.2
+BITBAKE_COMMIT=acfe02fa38b5da9e6a36c6cedcf91d4fcbefbfbd
 
 set -e
 
