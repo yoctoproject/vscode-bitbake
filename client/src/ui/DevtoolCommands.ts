@@ -102,9 +102,11 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       return
     }
     const command = bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
-    await runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
-
-    showSDKConfigurationDone(chosenRecipe)
+    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
+    const result = await finishProcessExecution(process)
+    if (result.status === 0) {
+      showSDKConfigurationDone(chosenRecipe)
+    }
   }
 }
 

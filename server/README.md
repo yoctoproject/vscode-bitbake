@@ -50,6 +50,15 @@ For vim:
 }
 ```
 
+Add these mappings to `~/.config/nvim/init.vim` to enable CoC features
+ with `K`, `gd` and `Ctrl-Space`:
+
+```vim
+nmap <silent> gd <Plug>(coc-definition)
+nnoremap <silent> K :call CocActionAsync('doHover')<CR>
+inoremap <silent><expr> <C-Space> coc#refresh()
+```
+
 Note: You need the [vim-bitbake](https://github.com/kergoth/vim-bitbake)
 language plugin. It is now part of recent neoVim releases, but you may need to
 install it manually for older versions.

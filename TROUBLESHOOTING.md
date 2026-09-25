@@ -71,6 +71,14 @@ commit to your poky repository:
 ### Settings are being ignored on Flake8 and Pylint
 Settings for Flake8 and Pylint do not work on BitBake files. In other words, they are not configurable. The reason for this issue is currently unknown.
 
+### Conflict with Python formatters
+
+Like the `files.trimTrailingWhitespace` issue, if a Python formatter extension is enabled, it may reformat the Python
+code in BitBake files, causing the lines and offsets to become misaligned.
+When using this feature, please disable the following extensions for the workspace:
+ - ms-python.autopep8
+ - ms-python.black-formatter
+
 ## Trade-offs
 
 ### Trade-offs on Diagnostics
@@ -85,13 +93,13 @@ Since Flake8 and Pylint are intended to be used on Python files, it is necessary
 
 The linting errors being completely ignored:
 
-Flake8:  
+Flake8:
 - E501 (Line too long)
 - E203 (whitespace before ':')
 - E211 (whitespace before '(')
 - E302 (expected 2 blank lines, found 1)
 - E303 (too many blank lines)
 
-Pylint:  
+Pylint:
 - W0104:pointless-statement
 - W0106:expression-not-assigned
