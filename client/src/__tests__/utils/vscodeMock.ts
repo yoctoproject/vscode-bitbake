@@ -14,6 +14,9 @@ export type StatusBarItemMock = vscode.StatusBarItem & {
 }
 
 export type VscodeExtensionContextMock = vscode.ExtensionContext & {
+  globalStorageUri: {
+    fsPath: string
+  }
   workspaceState: {
     get: jest.Mock
     update: jest.Mock
@@ -43,6 +46,9 @@ export function mockVscodeEvents (): void {
 
 export function mockVscodeExtensionContext (): VscodeExtensionContextMock {
   return {
+    globalStorageUri: {
+      fsPath: ''
+    },
     subscriptions: {
       push: jest.fn()
     },

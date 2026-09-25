@@ -22,6 +22,7 @@ import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from 
 import { BitbakeToaster } from './BitbakeToaster'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { getVariableValue } from '../language/languageClient'
+import { registerBitbakeSetupCommand } from './BitbakeSetupCommand'
 
 let parsingPending = false
 
@@ -47,6 +48,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await bitbakeToaster.stop() }),
     vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
     vscode.commands.registerCommand('bitbake.examine-dependency-taskexp', async (uri) => { await examineDependenciesTaskexp(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    registerBitbakeSetupCommand(context),
     // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {
