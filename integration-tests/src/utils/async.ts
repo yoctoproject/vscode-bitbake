@@ -18,9 +18,9 @@ export async function assertWillComeTrue (predicate: () => Promise<boolean>, int
   while (!(await predicate()) && (Date.now() - startTime < timeout)) {
     await delay(interval)
   }
-  assert.ok(predicate())
+  assert.ok(await predicate())
 }
 
 export async function assertWorkspaceWillBeOpen (timeout: number = 10000): Promise<void> {
-  await assertWillComeTrue(async () => (vscode.workspace.workspaceFolders !== undefined && vscode.workspace.workspaceFolders?.length !== 0), timeout)
+  await assertWillComeTrue(async () => (vscode.workspace.workspaceFolders !== undefined && vscode.workspace.workspaceFolders?.length !== 0), undefined, timeout)
 }
