@@ -9,6 +9,7 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
+import { pty } from '../utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
@@ -24,6 +25,24 @@ export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeT
 export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<IPty> {
   const script = bitbakeDriver.composeBitbakeScript(command)
   return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
+}
+
+export async function runRawProcessTerminal (
+  executablePath: string,
+  argv: string[],
+  cwd: string,
+  terminalName: string,
+  isBackground: boolean = false
+): Promise<{ exitCode: number, output: string }> {
+  const terminal = new BitbakeTerminal(terminalName, undefined, false)
+
+  await new Promise(resolve => terminal.pty.onDidOpen.event(resolve))
+
+  if (!isBackground) {
+    terminal.terminal.show()
+  }
+
+  return await terminal.pty.runRawProcess(executablePath, argv, cwd)
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
@@ -67,7 +86,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   private dimensions: vscode.TerminalDimensions | undefined
 
   readonly parentTerminal: BitbakeTerminal | undefined
-  bitbakeDriver: BitbakeDriver
+  bitbakeDriver: BitbakeDriver | undefined
 
   private isTaskTerminal (): boolean {
     // If parentTerminal is undefined, we are running in a task terminal which handles some events itself
@@ -75,7 +94,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   open (initialDimensions: vscode.TerminalDimensions | undefined): void {
-    if (!this.isTaskTerminal()) { bitbakeTerminals.push(this.parentTerminal as BitbakeTerminal) }
+    if (this.isReusableTerminal()) { bitbakeTerminals.push(this.parentTerminal as BitbakeTerminal) }
     this.onDidOpen.fire()
     this.dimensions = initialDimensions
     this.resizePty()
@@ -94,23 +113,26 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   async close (): Promise<void> {
-    if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
+    if (this.isReusableTerminal()) {
+      bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1)
+    }
     if (this.isBusy()) {
-      // Wait for this process to be the one executed by bitbakeDriver
       await this.process
-      void this.bitbakeDriver.killBitbake()
+      void this.killProcess?.()
     }
   }
 
   handleInput (data: string): void {
     if (this.process === undefined) {
       this.closeEmitter.fire(0)
-      if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
+      if (this.isReusableTerminal()) {
+        bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1)
+      }
     } else {
       if (!this.isTaskTerminal()) {
         if (data === '\x03') {
-          logger.info('Bitbake process killed by user')
-          void this.bitbakeDriver.killBitbake()
+          logger.info(this.bitbakeDriver === undefined ? 'Terminal process killed by user' : 'Bitbake process killed by user')
+          void this.killProcess?.()
         }
       }
     }
@@ -122,7 +144,13 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     return this.process !== undefined
   }
 
-  constructor (bitbakeDriver: BitbakeDriver, parentTerminal?: BitbakeTerminal) {
+  private killProcess: (() => void | Promise<void>) | undefined
+
+  private isReusableTerminal (): boolean {
+    return this.parentTerminal?.isReusable === true
+  }
+
+  constructor (bitbakeDriver?: BitbakeDriver, parentTerminal?: BitbakeTerminal) {
     this.parentTerminal = parentTerminal
     this.bitbakeDriver = bitbakeDriver
   }
@@ -135,8 +163,12 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     if (this.process !== undefined) {
       throw new Error('Bitbake process already running')
     }
+    if (this.bitbakeDriver === undefined) {
+      throw new Error('Bitbake driver is required to run Bitbake commands')
+    }
 
     this.process = process
+    this.killProcess = async () => { await this.bitbakeDriver?.killBitbake() }
     const processResolved = await this.process
     this.resizePty()
 
@@ -156,6 +188,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     processResolved.onExit((event) => {
       this.lastExitCode = event.exitCode ?? -1
       this.process = undefined
+      this.killProcess = undefined
       if (event.exitCode !== 0) {
         this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + event.exitCode + endOfLine)
         if (!this.isTaskTerminal()) {
@@ -172,13 +205,64 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
 
     return processResolved
   }
+
+  public async runRawProcess (executablePath: string, argv: string[], cwd: string): Promise<{ exitCode: number, output: string }> {
+    if (this.process !== undefined) {
+      throw new Error('Terminal process already running')
+    }
+
+    let processResolved: IPty
+
+    try {
+      processResolved = pty.spawn(
+        executablePath,
+        argv,
+        {
+          cwd,
+          env: processEnvToStrings(process.env),
+          cols: this.dimensions?.columns ?? 80,
+          rows: this.dimensions?.rows ?? 30,
+          name: 'xterm-color'
+        }
+      )
+    } catch (error) {
+      if (!this.isTaskTerminal()) { this.closeEmitter.fire(-1) }
+      throw error
+    }
+
+    this.process = Promise.resolve(processResolved)
+    this.killProcess = () => { processResolved.kill() }
+    this.resizePty()
+
+    return await new Promise<{ exitCode: number, output: string }>((resolve) => {
+      let output = ''
+
+      processResolved.onData((data) => {
+        output += data.toString()
+        this.output(data.toString())
+      })
+
+      processResolved.onExit((event) => {
+        this.lastExitCode = event.exitCode ?? -1
+        this.process = undefined
+        this.killProcess = undefined
+        resolve({
+          exitCode: event.exitCode ?? -1,
+          output
+        })
+        if (!this.isReusableTerminal()) { this.closeEmitter.fire(event.exitCode ?? -1) }
+      })
+    })
+  }
 }
 
 class BitbakeTerminal {
   readonly terminal: vscode.Terminal
   readonly pty: BitbakePseudoTerminal
+  readonly isReusable: boolean
 
-  constructor (terminalName: string, bitbakeDriver: BitbakeDriver) {
+  constructor (terminalName: string, bitbakeDriver?: BitbakeDriver, isReusable: boolean = true) {
+    this.isReusable = isReusable
     this.pty = new BitbakePseudoTerminal(bitbakeDriver, this)
     const extensionTerminalOptions: vscode.ExtensionTerminalOptions = {
       name: terminalName,
@@ -190,4 +274,11 @@ class BitbakeTerminal {
     }
     this.terminal = vscode.window.createTerminal(extensionTerminalOptions)
   }
+}
+
+function processEnvToStrings (environment: NodeJS.ProcessEnv): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(environment)
+      .filter((entry): entry is [string, string] => entry[1] !== undefined)
+  )
 }

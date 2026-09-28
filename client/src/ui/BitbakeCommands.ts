@@ -22,11 +22,13 @@ import { type BitbakeTerminalProfileProvider, openBitbakeTerminalProfile } from 
 import { BitbakeToaster } from './BitbakeToaster'
 import { type LanguageClient } from 'vscode-languageclient/node'
 import { getVariableValue } from '../language/languageClient'
+import { BitbakeSetup } from './BitbakeSetup'
 
 let parsingPending = false
 
 export function registerBitbakeCommands (context: vscode.ExtensionContext, bitbakeWorkspace: BitbakeWorkspace, bitbakeTaskProvider: BitbakeTaskProvider, bitBakeProjectScanner: BitBakeProjectScanner, bitbakeTerminalProfileProvider: BitbakeTerminalProfileProvider, client: LanguageClient): void {
   const bitbakeToaster = new BitbakeToaster(bitBakeProjectScanner.bitbakeDriver)
+  const bitbakeSetup = new BitbakeSetup(context)
 
   context.subscriptions.push(
     vscode.commands.registerCommand('bitbake.parse-recipes', async () => { await parseAllrecipes(bitbakeWorkspace, bitbakeTaskProvider) }),
@@ -47,6 +49,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.stop-toaster', async () => { await bitbakeToaster.stop() }),
     vscode.commands.registerCommand('bitbake.clear-workspace-state', async () => { await clearAllWorkspaceState(context) }),
     vscode.commands.registerCommand('bitbake.examine-dependency-taskexp', async (uri) => { await examineDependenciesTaskexp(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.initialize-workspace-with-bitbake-setup', async () => { await bitbakeSetup.initializeWorkspace() }),
     // Handles enqueued parsing requests (onSave)
     vscode.tasks.onDidEndTask((e) => {
       if (e.execution.task.name === 'Bitbake: Parse') {

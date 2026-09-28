@@ -115,6 +115,11 @@
           "default": "${workspaceFolder}/sources/poky/bitbake",
           "description": "Set the path to the BitBake folder. Used to provide Python embedded language features."
         },
+        "bitbake.bitbakeSetupPath": {
+          "type": "string",
+          "scope": "machine",
+          "markdownDescription": "Optional path to the `bitbake-setup` executable. The extension searches `$PATH` first and uses this setting when `bitbake-setup` is not available there."
+        },
         "bitbake.commandWrapper": {
           "type": "string",
           "examples": [
@@ -527,6 +532,11 @@
         "command": "bitbake.examine-dependency-taskexp",
         "title": "BitBake: Examine recipe's dependencies with taskexp",
         "description": "Examine the recipe's dependencies with taskexp."
+      },
+      {
+        "command": "bitbake.initialize-workspace-with-bitbake-setup",
+        "title": "BitBake: Initialize workspace with bitbake-setup",
+        "description": "Initialize a BitBake workspace using bitbake-setup."
       },
       {
         "command": "bitbake.devtool-modify",
