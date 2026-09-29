@@ -39,7 +39,7 @@ export class BitbakeTerminalLinkProvider implements vscode.TerminalLinkProvider 
   handleTerminalLink (link: vscode.TerminalLink): vscode.ProviderResult<void> {
     const path = link.tooltip as string
     const uri = vscode.Uri.file(path)
-    if (fs.existsSync(path) && fs.lstatSync(path).isDirectory()) { // TODO test folder
+    if (fs.existsSync(path) && fs.lstatSync(path).isDirectory()) {
       void vscode.commands.executeCommand('revealInExplorer', uri)
     } else {
       void vscode.commands.executeCommand('vscode.open', uri)
