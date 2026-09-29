@@ -54,6 +54,7 @@ const loadSpdxLicenses = async (): Promise<SpdxLicense[]> => {
       if (error !== null) {
         logger.error(`[loadSpdxLicenses] error: ${JSON.stringify(error)}`)
         resolve([])
+        return
       }
       const spdxLicensesCollection = JSON.parse(data.toString()) as SpdxLicenseCollection
       resolve(spdxLicensesCollection.licenses)
