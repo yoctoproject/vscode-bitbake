@@ -47,6 +47,17 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
   }
 }
 
+function normalizeRstDefinition (definition: string): string {
+  return definition
+    .replace(/^ {3}/gm, '')
+    .replace(/:term:|:ref:/g, '')
+    .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
+    .replace(/::/g, ':')
+    .replace(/``/g, '`')
+    .replace(/^\n(\s{5,})/gm, ' ')
+    .replace(/^(\s{5,})/gm, ' ')
+}
+
 const KEYWORDS = [
   {
     name: 'require',
@@ -137,21 +148,13 @@ export class BitBakeDocScanner {
     const bitbakeVariableInfo: VariableInfo[] = []
     for (const match of file.matchAll(variablesRegexForDoc)) {
       const name = match.groups?.name
-      // Naive silly inneficient incomplete conversion to markdown
       const definition = match.groups?.definition
-        .replace(/^ {3}/gm, '')
-        .replace(/:term:|:ref:/g, '')
-        .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
-        .replace(/::/g, ':')
-        .replace(/``/g, '`')
-        .replace(/^\n(\s{5,})/gm, ' ')
-        .replace(/^(\s{5,})/gm, ' ')
       if (name === undefined || definition === undefined) {
         return
       }
       bitbakeVariableInfo.push({
         name,
-        definition,
+        definition: normalizeRstDefinition(definition),
         ...variableInfosOverrides[name],
         referenceUrl: `https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-ref-variables.html#term-${name}`,
         docSource: 'Bitbake'
@@ -174,21 +177,13 @@ export class BitBakeDocScanner {
     const yoctoVariableInfo: VariableInfo[] = []
     for (const match of file.matchAll(variableRegex)) {
       const name = match.groups?.name
-      // Naive silly inneficient incomplete conversion to markdown
       const definition = match.groups?.definition
-        .replace(/^ {3}/gm, '')
-        .replace(/:term:|:ref:/g, '')
-        .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
-        .replace(/::/g, ':')
-        .replace(/``/g, '`')
-        .replace(/^\n(\s{5,})/gm, ' ')
-        .replace(/^(\s{5,})/gm, ' ')
       if (name === undefined || definition === undefined) {
         return
       }
       yoctoVariableInfo.push({
         name,
-        definition,
+        definition: normalizeRstDefinition(definition),
         referenceUrl: `https://docs.yoctoproject.org/ref-manual/variables.html#term-${name}`,
         docSource: 'Yocto'
       })
@@ -340,14 +335,7 @@ export class BitBakeDocScanner {
       const contentEnd = i + 1 < headerMatches.length ? headerMatches[i + 1].index : file.length
       const rawContent = file.slice(contentStart, contentEnd)
 
-      const definition = rawContent
-        .replace(/^ {3}/gm, '')
-        .replace(/:term:|:ref:/g, '')
-        .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
-        .replace(/::/g, ':')
-        .replace(/``/g, '`')
-        .replace(/^\n(\s{5,})/gm, ' ')
-        .replace(/^(\s{5,})/gm, ' ')
+      const definition = normalizeRstDefinition(rawContent)
 
       const anchor = title
         .toLowerCase()
