@@ -51,6 +51,10 @@ describe('BitbakeTerminalLinkProvider', () => {
     expect(result[0].startIndex).toBe(11)
     expect(result[0].length).toBe(13)
     expect(result[0].tooltip).toBe('resolved' + '/path/to/file')
+    expect(bitBakeProjectScanner.resolveContainerPath).toHaveBeenCalledWith(
+      '/path/to/file',
+      true
+    )
   })
 
 
