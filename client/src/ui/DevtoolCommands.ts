@@ -70,7 +70,7 @@ async function devtoolSDKFallbackCommand (bitbakeWorkspace: BitbakeWorkspace, bi
     if (workspace === undefined) throw new Error('Devtool Workspace not found')
     const resolvedWorkspace: DevtoolWorkspaceInfo = {
       name: workspace.name,
-      path: await bitBakeProjectScanner.resolveContainerPath(workspace.path) ?? workspace.path
+      path: await bitBakeProjectScanner.resolveContainerPath(workspace.path, true) ?? workspace.path
     }
     configureDevtoolSDKFallback(resolvedWorkspace, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings, bitBakeProjectScanner.bitbakeDriver.activeBuildConfiguration)
     await generateCPPProperties(resolvedWorkspace, bitBakeProjectScanner, languageClient)
@@ -155,7 +155,7 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   if (chosenRecipe === undefined) { return }
   const chosenLayer = await pickLayer(originalRecipeChoice, bitBakeProjectScanner)
   if (chosenLayer === undefined) { return }
-  const chosenLayerPath = await bitBakeProjectScanner.resolveHostPath(chosenLayer?.path)
+  const chosenLayerPath = await bitBakeProjectScanner.resolveHostPath(chosenLayer?.path, true)
   let command = ''
 
   if (chosenLayer?.name === originalRecipeChoice) {
@@ -183,7 +183,7 @@ async function openDevtoolUpdateBBAppend (res: child_process.SpawnSyncReturns<Bu
     return
   }
   let bbappendPath = match[1]
-  bbappendPath = await bitBakeProjectScanner.resolveContainerPath(bbappendPath) as string
+  bbappendPath = await bitBakeProjectScanner.resolveContainerPath(bbappendPath, true) as string
   const bbappendUri = vscode.Uri.file(bbappendPath)
   logger.debug(`Opening devtool-update-recipe bbappend file: ${bbappendPath}`)
   await vscode.commands.executeCommand('vscode.open', bbappendUri)
@@ -216,7 +216,7 @@ async function devtoolOpenWorkspaceCommand (bitbakeWorkspace: BitbakeWorkspace, 
 
   logger.debug(`Command: devtool-open-workspace: ${chosenRecipe}`)
   let workspacePath = bitBakeProjectScanner.activeScanResult._workspaces.find((workspace) => workspace.name === chosenRecipe)?.path
-  workspacePath = await bitBakeProjectScanner.resolveContainerPath(workspacePath)
+  workspacePath = await bitBakeProjectScanner.resolveContainerPath(workspacePath, true)
   if (workspacePath === undefined) {
     logger.error('Devtool workspace not found')
     return
