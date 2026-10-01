@@ -4,5 +4,5 @@
  * ------------------------------------------------------------------------------------------ */
 
 // Required extension versions
-export const bashVersion = '1.43.0'
-export const pythonVersion = '2025.10.1'
+export const bashVersion = '1.43.2'
+export const pythonVersion = '2026.6.0'
