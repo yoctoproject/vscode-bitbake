@@ -76,6 +76,64 @@ systemd:
       })
     )
   })
+  it('forwards quiet resolution to mount-point discovery', async () => {
+    const bitbakeDriver = {
+      getBuildConfig: jest.fn().mockReturnValue('/host/workdir')
+    } as unknown as BitbakeDriver
+    const scanner = new BitBakeProjectScanner(bitbakeDriver)
+
+    const scannerInternals = scanner as unknown as {
+      scanContainerMountPoint: (
+        layerPath: string,
+        hostWorkdir: string,
+        quiet?: boolean
+      ) => Promise<{ container: string, host: string } | undefined>
+    }
+
+    const discoverySpy = jest.spyOn(scannerInternals, 'scanContainerMountPoint')
+      .mockResolvedValue(undefined)
+
+    await scanner.resolveContainerPath('/container/unmapped/file.bb', true)
+
+    expect(discoverySpy).toHaveBeenCalledWith(
+      '/container/unmapped/file.bb',
+      '/host/workdir',
+      true
+    )
+  })
+
+  it('runs quiet scanner commands directly through the BitBake driver', async () => {
+    const process = {
+      pid: 1,
+      onData: jest.fn(() => ({ dispose: jest.fn() })),
+      onExit: jest.fn((callback: (event: { exitCode: number, signal: number }) => void) => {
+        queueMicrotask(() => {
+          callback({ exitCode: 0, signal: 0 })
+        })
+        return { dispose: jest.fn() }
+      }),
+      kill: jest.fn()
+    }
+
+    const bitbakeDriver = {
+      spawnBitbakeProcess: jest.fn().mockResolvedValue(process),
+      killBitbake: jest.fn()
+    } as unknown as BitbakeDriver
+
+    const scanner = new BitBakeProjectScanner(bitbakeDriver)
+    const scannerInternals = scanner as unknown as {
+      executeBitBakeCommand: (
+        command: string,
+        timeout?: number,
+        quiet?: boolean
+      ) => Promise<string>
+    }
+
+    await scannerInternals.executeBitBakeCommand('quiet command', 20000, true)
+
+    expect(bitbakeDriver.spawnBitbakeProcess).toHaveBeenCalledWith('quiet command')
+  })
+
   it('shows a non-modal error when path mapping fails', async () => {
     const scanner = new BitBakeProjectScanner(new BitbakeDriver())
 

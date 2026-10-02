@@ -159,22 +159,22 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private async getContainerParentInodes (filepath: string): Promise<number[]> {
-    const stdout = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`, 20000)
+  private async getContainerParentInodes (filepath: string, quiet: boolean = false): Promise<number[]> {
+    const stdout = await this.executeBitBakeCommand(`f=${filepath}; while [[ $f != / ]]; do stat -c %i $f; f=$(realpath $(dirname "$f")); done;`, 20000, quiet)
     const regex = /^\d+$/gm
     const matches = stdout.match(regex)
     return (matches != null) ? matches.map((match) => parseInt(match)) : [NaN]
   }
 
   /// Find corresponding mount point inode in layerPath/hostWorkdir and all parents
-  private async scanContainerMountPoint (layerPath: string, hostWorkdir: string): Promise<{ container: string, host: string } | undefined>{
+  private async scanContainerMountPoint (layerPath: string, hostWorkdir: string, quiet: boolean = false): Promise<{ container: string, host: string } | undefined>{
 
     if (fs.existsSync(layerPath)) {
       // We're not inside a container, or the container is not using a different workdir
       return
     }
 
-    const containerDirInodes = await this.getContainerParentInodes(layerPath)
+    const containerDirInodes = await this.getContainerParentInodes(layerPath, quiet)
     let hostDir = hostWorkdir
 
     while (hostDir !== '/') {
@@ -310,7 +310,7 @@ export class BitBakeProjectScanner {
         throw new Error('hostWorkdir is not a string')
       }
 
-      const newMountPoint = await this.scanContainerMountPoint(normalizedInput, hostWorkdir)
+      const newMountPoint = await this.scanContainerMountPoint(normalizedInput, hostWorkdir, quiet)
       if (newMountPoint) {
         origMountPoint = newMountPoint.container
         destMountPoint = newMountPoint.host
@@ -512,11 +512,14 @@ export class BitBakeProjectScanner {
     }
   }
 
-  private async executeBitBakeCommand (command: string, timeout?: number): Promise<string> {
+  private async executeBitBakeCommand (command: string, timeout?: number, quiet: boolean = false): Promise<string> {
     if (this._bitbakeDriver === undefined) {
       throw new Error('Bitbake driver is not set')
     }
-    const result = await finishProcessExecution(runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true),
+    const process = quiet
+      ? this._bitbakeDriver.spawnBitbakeProcess(command)
+      : runBitbakeTerminalCustomCommand(this._bitbakeDriver, command, 'BitBake: Scan Project', true)
+    const result = await finishProcessExecution(process,
       async () => { await this.bitbakeDriver.killBitbake() }, timeout)
     if (result.status !== 0) {
       logger.error(`Failed to execute bitbake command: ${command}`)
