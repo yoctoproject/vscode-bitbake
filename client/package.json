@@ -29,7 +29,7 @@
     "find": "^0.3.0",
     "node-pty": "^1.0.0",
     "semver": "^7.6.3",
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^10.1.2"
   },
   "devDependencies": {
     "@types/find": "^0.2.4",
