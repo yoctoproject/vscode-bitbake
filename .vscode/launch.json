@@ -78,7 +78,23 @@
 				"${workspaceRoot}/integration-tests/out/**/*.js",
 			],
 			"preLaunchTask": "compile",
-		  }
+		},
+		{
+			"name": "Launch Client (container mapping)",
+			"type": "extensionHost",
+			"request": "launch",
+			"runtimeExecutable": "${execPath}",
+			"args": [
+				"--extensionDevelopmentPath=${workspaceFolder}",
+				"${workspaceFolder}/integration-tests/project-folder/container-test.code-workspace"
+			],
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceFolder}/client/out/**/*.js",
+				"${workspaceFolder}/server/out/**/*.js"
+			],
+			"preLaunchTask": "watch"
+		}
 	],
 	"compounds": [
 		{
