@@ -1,0 +1,29 @@
+{
+  "folders": [
+    {
+      "path": "."
+    }
+  ],
+  "settings": {
+    "bitbake.pathToBitbakeFolder": "${workspaceFolder}/layers/bitbake",
+    "bitbake.pathToEnvScript": "/workdir/integration-tests/project-folder/build-crops/init-build-env",
+    "bitbake.pathToBuildFolder": "/workdir/integration-tests/project-folder/build-crops",
+    "bitbake.commandWrapper": "docker run -it --rm -v ${workspaceFolder}/../..:/workdir/ crops/poky --workdir=/workdir /bin/bash -c",
+    "bitbake.workingDirectory": "${workspaceFolder}",
+    "python.autoComplete.extraPaths": [
+      "${workspaceFolder}/layers/bitbake/lib",
+      "${workspaceFolder}/layers/openembedded-core/meta/lib"
+    ],
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/layers/bitbake/lib",
+      "${workspaceFolder}/layers/openembedded-core/meta/lib"
+    ],
+    "files.associations": {
+      "*.txt": "diff",
+      "*.patch": "diff",
+      "diff": "diff",
+      "*.conf": "bitbake",
+      "*.inc": "bitbake"
+    }
+  }
+}
