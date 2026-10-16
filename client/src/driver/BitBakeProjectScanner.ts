@@ -49,10 +49,6 @@ export class BitBakeProjectScanner {
   private _bitbakeScanResults: { [key: string]: BitbakeScanResult } = {}
   private readonly _bitbakeDriver: BitbakeDriver
 
-  /// These attributes map bind mounts of the workDir to the host system if a docker container commandWrapper is used (-v).
-  private containerToHostMap: Map<string, string> = new Map<string, string>()
-  private hostToContainerMap: Map<string, string> = new Map<string, string>()
-
   constructor (bitbakeDriver: BitbakeDriver) {
     this._bitbakeDriver = bitbakeDriver
   }
@@ -73,7 +69,11 @@ export class BitBakeProjectScanner {
         _recipes: [],
         _workspaces: [],
         _confFiles: [],
-        _bitbakeVersion: ''
+        _bitbakeVersion: '',
+        _containerPathMaps: {
+          containerToHost: {},
+          hostToContainer: {}
+        }
       }
     }
     return this._bitbakeScanResults[activeBuildConfiguration]
@@ -106,7 +106,7 @@ export class BitBakeProjectScanner {
   }
 
   public needsContainerPathsResolution (): boolean {
-    return this.containerToHostMap.size > 0
+    return Object.keys(this.activeScanResult._containerPathMaps.containerToHost).length > 0
   }
 
   /// A quick scan to present devtool modify/reset results. A full rescan is required for .bbappends.
@@ -186,8 +186,8 @@ export class BitBakeProjectScanner {
         const containerDirInode = containerDirInodes[containerIdx]
         logger.debug('Comparing container inodes: ' + containerDir + ':' + containerDirInode + ' ' + hostDir + ':' + hostDirInode)
         if (containerDirInode === hostDirInode) {
-          this.containerToHostMap.set(containerDir, hostDir)
-          this.hostToContainerMap.set(hostDir, containerDir)
+          this.activeScanResult._containerPathMaps.containerToHost[containerDir] = hostDir
+          this.activeScanResult._containerPathMaps.hostToContainer[hostDir] = containerDir
           logger.info(`Found container mount point: ${containerDir} -> ${hostDir}`)
           return { container: containerDir, host: hostDir }
         }
@@ -239,8 +239,10 @@ export class BitBakeProjectScanner {
 
   public async scanAvailableLayers (): Promise<void> {
     this.activeScanResult._layers = new Array < LayerInfo >()
-    this.containerToHostMap.clear()
-    this.hostToContainerMap.clear()
+    this.activeScanResult._containerPathMaps = {
+      containerToHost: {},
+      hostToContainer: {}
+    }
 
     const output = await this.executeBitBakeCommand('bitbake-layers show-layers')
     const outputLines = output.split(/\r?\n/g)
@@ -272,7 +274,9 @@ export class BitBakeProjectScanner {
     }
 
     const normalizedInput = path.normalize(inputPath)
-    const activeMap = hostToContainer ? this.hostToContainerMap : this.containerToHostMap    
+    const activeMap = hostToContainer
+      ? this.activeScanResult._containerPathMaps.hostToContainer
+      : this.activeScanResult._containerPathMaps.containerToHost
     let origMountPoint: string | undefined
     let destMountPoint: string | undefined
 
@@ -280,7 +284,7 @@ export class BitBakeProjectScanner {
 
     // Find the longest matching mount point prefix
     let pathMatch = ''
-    for (const sourcePrefix of activeMap.keys()) {
+    for (const sourcePrefix of Object.keys(activeMap)) {
       const isExactMatch = normalizedInput === sourcePrefix
       const isChildFolder = normalizedInput.startsWith(sourcePrefix + path.sep)
       if (isExactMatch || isChildFolder) {
@@ -293,7 +297,7 @@ export class BitBakeProjectScanner {
     // Check if the match results in a resolving path
     if (pathMatch !== '' ) {
       origMountPoint = pathMatch
-      destMountPoint = activeMap.get(pathMatch)
+      destMountPoint = activeMap[pathMatch]
     }
     if (origMountPoint !== undefined && destMountPoint !== undefined) {
       const relativePath = path.relative(origMountPoint, normalizedInput)

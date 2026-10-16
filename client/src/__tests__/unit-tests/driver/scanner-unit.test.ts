@@ -79,14 +79,15 @@ systemd:
   it('shows a non-modal error when path mapping fails', async () => {
     const scanner = new BitBakeProjectScanner(new BitbakeDriver())
 
-    const scannerInternals = scanner as unknown as {
-      containerToHostMap: Map<string, string>
-      hostToContainerMap: Map<string, string>
-      existsInContainer: (containerPath: string) => Promise<boolean>
+    const scanResult = scanner.activeScanResult
+    scanResult._containerPathMaps = {
+      containerToHost: { '/container': '/host' },
+      hostToContainer: { '/host': '/container' }
     }
 
-    scannerInternals.containerToHostMap = new Map([['/container', '/host']])
-    scannerInternals.hostToContainerMap = new Map([['/host', '/container']])
+    const scannerInternals = scanner as unknown as {
+      existsInContainer: (containerPath: string) => Promise<boolean>
+    }
 
     jest.spyOn(scannerInternals, 'existsInContainer').mockResolvedValue(false)
 
