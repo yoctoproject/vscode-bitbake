@@ -7,7 +7,7 @@ import { type ParsedPath } from 'path'
 
 // Make sure to increment this number when the structure of the scan data changes
 // This will invalidate previous scan data saved for the workspace
-export const SCAN_RESULT_VERSION: number = 3
+export const SCAN_RESULT_VERSION: number = 4
 
 export interface LayerInfo {
   name: string
@@ -31,6 +31,11 @@ export interface DevtoolWorkspaceInfo {
   path: string
 }
 
+export interface ContainerPathMaps {
+  containerToHost: Record<string, string>
+  hostToContainer: Record<string, string>
+}
+
 export interface BitbakeScanResult {
   _layers: LayerInfo[]
   _classes: ElementInfo[]
@@ -40,6 +45,7 @@ export interface BitbakeScanResult {
   _confFiles: ElementInfo[]
   _workspaces: DevtoolWorkspaceInfo[]
   _bitbakeVersion: string
+  _containerPathMaps: ContainerPathMaps
 }
 
 export function scanContainsData (scanResult: BitbakeScanResult): boolean {

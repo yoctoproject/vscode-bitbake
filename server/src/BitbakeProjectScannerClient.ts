@@ -16,7 +16,11 @@ export class BitBakeProjectScannerClient {
     _overrides: [],
     _confFiles: [],
     _workspaces: [],
-    _bitbakeVersion: ''
+    _bitbakeVersion: '',
+    _containerPathMaps: {
+      containerToHost: {},
+      hostToContainer: {}
+    }
   }
 
   public setScanResults (scanResults: BitbakeScanResult): void {
