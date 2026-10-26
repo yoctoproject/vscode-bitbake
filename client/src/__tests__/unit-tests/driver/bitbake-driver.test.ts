@@ -9,8 +9,9 @@ import { IPty } from 'node-pty'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from '../../../ui/BitbakeTaskProvider'
 import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
-import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
+import { type ProcessFrontend, type ProcessSpawner, type ProcessRunOptions } from '../../../utils/ProcessFrontend'
+import { createProcessMock } from '../../utils/processMock'
 
 describe('BitbakeDriver Tests', () => {
   it('should protect from shell injections', (done) => {
@@ -110,7 +111,7 @@ describe('BitbakeDriver Tests', () => {
 
   describe('settings sanity', () => {
     afterEach(() => {
-      jest.clearAllMocks()
+      jest.restoreAllMocks()
     })
 
     it('tracks sane BitBake settings', async () => {
@@ -124,7 +125,7 @@ describe('BitbakeDriver Tests', () => {
       }
 
       bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-      jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+      jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
       jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValueOnce(Promise.resolve({
         status: 0,
         stdout: '/tmp/devtool\r\n/tmp/bitbake'
@@ -152,7 +153,7 @@ describe('BitbakeDriver Tests', () => {
       }
 
       bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-      jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+      jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
       jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValueOnce(Promise.resolve({
         status: 1,
         stdout: 'error'
@@ -202,5 +203,102 @@ describe('BitbakeDriver Tests', () => {
       const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
       expect(command).toEqual('bitbake recipe1 -e')
     })
+  })
+})
+
+describe('BitbakeDriver process frontend', () => {
+  afterEach(() => {
+    jest.restoreAllMocks()
+    jest.useRealTimers()
+  })
+
+  function createFrontend (): ProcessFrontend & { runProcess: jest.Mock<Promise<IPty>, [ProcessSpawner, string, ProcessRunOptions?]> } {
+    return { runProcess: jest.fn<Promise<IPty>, [ProcessSpawner, string, ProcessRunOptions?]>(async spawn => await spawn({ columns: 110, rows: 35 })) }
+  }
+
+  it('composes the BitBake environment and consumes an alternative frontend', async () => {
+    const frontend = createFrontend()
+    const driver = new BitbakeDriver(frontend)
+    driver.bitbakeSettings = {
+      pathToBitbakeFolder: '', pathToEnvScript: '/env/setup', pathToBuildFolder: '/build',
+      workingDirectory: '/workspace', commandWrapper: 'wrapper', shellEnv: { DRIVER_TEST: 'value' }
+    }
+    const process = createProcessMock()
+    const spawn = jest.spyOn(ProcessUtils.pty, 'spawn').mockReturnValue(process.child)
+    await driver.runBitbakeCommand('devtool status', 'Devtool', true)
+
+    const script = "wrapper '. /env/setup /build && devtool status'"
+    expect(frontend.runProcess).toHaveBeenCalledWith(expect.any(Function), script, {
+      name: 'Devtool', background: true, cancel: expect.any(Function)
+    })
+    expect(spawn).toHaveBeenCalledWith(global.process.env.SHELL ?? '/bin/sh', ['-c', script], {
+      cwd: '/workspace', env: { ...global.process.env, DRIVER_TEST: 'value' }, cols: 110, rows: 35
+    })
+    process.exit(0)
+  })
+
+  it('composes task definitions before frontend execution', async () => {
+    const driver = new BitbakeDriver(createFrontend())
+    const run = jest.spyOn(driver, 'runBitbakeCommand').mockResolvedValue({} as IPty)
+    await driver.runBitbakeTask({ type: 'bitbake', recipes: ['busybox'], task: 'clean' }, 'Clean')
+    expect(run).toHaveBeenCalledWith('bitbake busybox -c clean', 'Clean', false)
+  })
+
+  it('serializes terminal-backed and headless commands until each process exits', async () => {
+    jest.useFakeTimers()
+    const frontend = createFrontend()
+    const driver = new BitbakeDriver(frontend)
+    const first = createProcessMock()
+    const second = createProcessMock()
+    const third = createProcessMock()
+    const spawn = jest.spyOn(ProcessUtils.pty, 'spawn')
+      .mockReturnValueOnce(first.child).mockReturnValueOnce(second.child).mockReturnValueOnce(third.child)
+    const commands = [driver.runBitbakeCommand('first', 'First'), driver.spawnBitbakeProcess('quiet'), driver.runBitbakeCommand('third', 'Third')]
+    await jest.advanceTimersByTimeAsync(100)
+    expect(spawn).toHaveBeenCalledTimes(1)
+    expect(driver.bitbakeProcessCommand).toBe('first')
+    await jest.advanceTimersByTimeAsync(200)
+    expect(spawn).toHaveBeenCalledTimes(1)
+    first.exit(0)
+    await jest.advanceTimersByTimeAsync(100)
+    expect(spawn).toHaveBeenCalledTimes(2)
+    expect(driver.bitbakeProcessCommand).toBe('quiet')
+    second.exit(0)
+    await jest.advanceTimersByTimeAsync(100)
+    expect(spawn).toHaveBeenCalledTimes(3)
+    expect(driver.bitbakeProcessCommand).toBe('third')
+    third.exit(0)
+    await Promise.all(commands)
+    expect(driver.bitbakeProcess).toBeUndefined()
+    expect(driver.bitbakeProcessCommand).toBeUndefined()
+    expect(frontend.runProcess).toHaveBeenCalledTimes(2)
+  })
+
+  it('retains driver cancellation and ignores stale frontend cancellation', async () => {
+    const frontend = createFrontend()
+    const driver = new BitbakeDriver(frontend)
+    const first = createProcessMock()
+    const second = createProcessMock()
+    jest.spyOn(ProcessUtils.pty, 'spawn').mockReturnValueOnce(first.child).mockReturnValueOnce(second.child)
+    const kill = jest.spyOn(driver, 'killBitbake').mockResolvedValue()
+    await driver.runBitbakeCommand('first', 'First')
+    const cancelFirst = frontend.runProcess.mock.calls[0][2]?.cancel
+    await cancelFirst?.(first.child)
+    expect(kill).toHaveBeenCalledTimes(1)
+    first.exit(0)
+    await driver.runBitbakeCommand('second', 'Second')
+    await cancelFirst?.(first.child)
+    expect(kill).toHaveBeenCalledTimes(1)
+    second.exit(0)
+  })
+
+  it('allows the next command after a spawn failure', async () => {
+    const driver = new BitbakeDriver(createFrontend())
+    const process = createProcessMock()
+    jest.spyOn(ProcessUtils.pty, 'spawn').mockImplementationOnce(() => { throw new Error('spawn failed') }).mockReturnValueOnce(process.child)
+    await expect(driver.runBitbakeCommand('first', 'First')).rejects.toThrow('spawn failed')
+    expect(driver.bitbakeProcess).toBeUndefined()
+    await expect(driver.runBitbakeCommand('second', 'Second')).resolves.toBe(process.child)
+    process.exit(0)
   })
 })

@@ -20,7 +20,6 @@ import {
 
 import { type BitbakeDriver } from './BitbakeDriver'
 import fs from 'fs'
-import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
 import { bitbakeESDKMode } from './BitbakeESDK'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 import { extractRecipeName, extractRecipeVersion } from '../lib/src/utils/files'
@@ -352,7 +351,7 @@ export class BitBakeProjectScanner {
   }
 
   private async existsInContainer (containerPath: string): Promise<boolean> {
-    const process = runBitbakeTerminalCustomCommand(this._bitbakeDriver, 'test -e ' + containerPath, 'BitBake: Test file', true)
+    const process = this._bitbakeDriver.runBitbakeCommand('test -e ' + containerPath, 'BitBake: Test file', true)
     const res = finishProcessExecution(process, async () => { await this.bitbakeDriver.killBitbake() })
     return (await res).status === 0
   }
@@ -522,9 +521,7 @@ export class BitBakeProjectScanner {
     }
     const process = quiet
       ? this._bitbakeDriver.spawnBitbakeProcess(command)
-      : runBitbakeTerminalCustomCommand(
-        this._bitbakeDriver, command, 'BitBake: Scan Project', true
-      )
+      : this._bitbakeDriver.runBitbakeCommand(command, 'BitBake: Scan Project', true)
     const result = await finishProcessExecution(process,
       async () => { await this.bitbakeDriver.killBitbake() }, timeout)
     if (result.status !== 0) {

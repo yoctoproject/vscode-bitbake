@@ -17,7 +17,6 @@ import { BITBAKE_BUILD_TIMEOUT, finishProcessExecution } from '../utils/ProcessU
 import { clientNotificationManager } from './ClientNotificationManager'
 import { selectRecipe } from './RecipeSelection'
 import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
-import { runBitbakeTerminal, runBitbakeTerminalCustomCommand } from './BitbakeTerminal'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { type LanguageClient } from 'vscode-languageclient/node'
 
@@ -48,7 +47,7 @@ async function devtoolModifyCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
     logger.debug(`Command: devtool-modify: ${chosenRecipe}`)
     let command = `devtool modify ${chosenRecipe}`
     command = await addDevtoolDebugBuild(command, bitBakeProjectScanner.activeScanResult, bitBakeProjectScanner.bitbakeDriver.bitbakeSettings, bitBakeProjectScanner.bitbakeDriver)
-    const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
+    const process = await bitBakeProjectScanner.bitbakeDriver.runBitbakeCommand(command, `Bitbake: Devtool Modify: ${chosenRecipe}`)
     process.onExit((event) => {
       if (event.exitCode === 0) {
         void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
@@ -102,7 +101,7 @@ async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       return
     }
     const command = bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
-    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
+    const process = bitbakeDriver.runBitbakeCommand(command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
     const result = await finishProcessExecution(process, undefined, BITBAKE_BUILD_TIMEOUT)
     if (result.status === 0) {
       showSDKConfigurationDone(chosenRecipe)
@@ -116,7 +115,7 @@ async function checkIdeSdkAvailable (scanResult: BitbakeScanResult, bitbakeDrive
     return bitbakeVersionAboveEqual(scanResult, '2.8.0')
   } else {
     const command = "devtool --help | grep 'ide-sdk'"
-    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool ide-sdk: check')
+    const process = bitbakeDriver.runBitbakeCommand(command, 'Bitbake: Devtool ide-sdk: check')
     const res = await finishProcessExecution(process)
     return res.status === 0
   }
@@ -128,7 +127,7 @@ async function checkDevtoolDebugBuildAvailable (scanResult: BitbakeScanResult, b
     return bitbakeVersionAboveEqual(scanResult, '2.12.0')
   } else {
     const command = "devtool modify --help | grep '\\-\\-debug-build'"
-    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool debug-build: check')
+    const process = bitbakeDriver.runBitbakeCommand(command, 'Bitbake: Devtool debug-build: check')
     const res = await finishProcessExecution(process)
     return res.status === 0
   }
@@ -167,7 +166,7 @@ async function devtoolUpdateCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
   }
 
   logger.debug(`Command: devtool-update: ${chosenRecipe}`)
-  const process = runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Update: ${chosenRecipe}`)
+  const process = bitBakeProjectScanner.bitbakeDriver.runBitbakeCommand(command, `Bitbake: Devtool Update: ${chosenRecipe}`)
   const res = await finishProcessExecution(process, async () => { await bitBakeProjectScanner.bitbakeDriver.killBitbake() })
   if (res.status === 0 && chosenLayer?.name !== originalRecipeChoice) {
     await openDevtoolUpdateBBAppend(res, bitBakeProjectScanner)
@@ -196,7 +195,7 @@ async function devtoolResetCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-reset: ${chosenRecipe}`)
     const command = `devtool reset ${chosenRecipe}`
-    const process = await runBitbakeTerminalCustomCommand(bitBakeProjectScanner.bitbakeDriver, command, `Bitbake: Devtool Reset: ${chosenRecipe}`)
+    const process = await bitBakeProjectScanner.bitbakeDriver.runBitbakeCommand(command, `Bitbake: Devtool Reset: ${chosenRecipe}`)
     process.onExit((event) => {
       if (event.exitCode === 0) {
         void bitBakeProjectScanner.rescanDevtoolWorkspaces().then(() => {
@@ -230,8 +229,7 @@ async function devtoolBuildCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-build: ${chosenRecipe}`)
-    await runBitbakeTerminal(
-      bitBakeProjectScanner.bitbakeDriver,
+    await bitBakeProjectScanner.bitbakeDriver.runBitbakeTask(
       {
         specialCommand: `devtool build ${chosenRecipe}`,
         type: 'bitbake'
@@ -250,8 +248,7 @@ async function devtoolDeployCommand (bitbakeWorkspace: BitbakeWorkspace, bitBake
       clientNotificationManager.showSDKConfigurationError()
       return
     }
-    await runBitbakeTerminal(
-      bitbakeDriver,
+    await bitbakeDriver.runBitbakeTask(
       {
         specialCommand: `devtool deploy-target ${chosenRecipe} ${sshTarget}`,
         type: 'bitbake'
@@ -264,8 +261,7 @@ async function devtoolCleanCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeP
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: devtool-clean: ${chosenRecipe}`)
-    await runBitbakeTerminal(
-      bitBakeProjectScanner.bitbakeDriver,
+    await bitBakeProjectScanner.bitbakeDriver.runBitbakeTask(
       {
         specialCommand: `devtool build -c ${chosenRecipe}`,
         type: 'bitbake'

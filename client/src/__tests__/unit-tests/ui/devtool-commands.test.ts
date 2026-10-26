@@ -11,7 +11,6 @@ import { mockVscodeExtensionContext } from '../../utils/vscodeMock'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { addDevtoolDebugBuild, registerDevtoolCommands } from '../../../ui/DevtoolCommands'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
-import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { LanguageClient } from 'vscode-languageclient/node'
 import { IPty } from 'node-pty'
@@ -60,7 +59,7 @@ describe('Devtool ide-sdk command', () => {
     jest.spyOn(bitBakeProjectScanner, 'activeScanResult', 'get').mockReturnValue({'_bitbakeVersion': '1.0.0'} as BitbakeScanResult)
     const ideSDKCommand = mockExtensionContext(bitBakeProjectScanner)
 
-    jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(undefined as unknown as Promise<IPty>)
+    jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockReturnValue(undefined as unknown as Promise<IPty>)
     jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValue({ status: 1 } as unknown as Promise<childProcess.SpawnSyncReturns<Buffer>>)
 
     clientNotificationManager.showSDKUnavailableError = jest.fn()
@@ -78,12 +77,12 @@ describe('Devtool ide-sdk command', () => {
     jest.spyOn(bitBakeProjectScanner, 'activeScanResult', 'get').mockReturnValue({'_bitbakeVersion': '3.0.0'} as BitbakeScanResult)
     const ideSDKCommand = mockExtensionContext(bitBakeProjectScanner)
 
-    const commandSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(undefined as unknown as Promise<IPty>)
+    const commandSpy = jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockReturnValue(undefined as unknown as Promise<IPty>)
     jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValue({ status: 0 } as unknown as Promise<childProcess.SpawnSyncReturns<Buffer>>)
 
     jest.spyOn(vscode.window, 'showInformationMessage').mockReturnValue({ then: jest.fn() } as unknown as Thenable<vscode.MessageItem | undefined>)
     await ideSDKCommand('busybox')
-    expect(commandSpy).toHaveBeenCalledWith(expect.anything(), 'devtool ide-sdk -i code busybox core-image-minimal -t root@192.168.0.3', expect.anything())
+    expect(commandSpy).toHaveBeenCalledWith('devtool ide-sdk -i code busybox core-image-minimal -t root@192.168.0.3', expect.anything())
   })
 
   it('should wait for ide-sdk to finish successfully before notifying', async () => {
@@ -100,7 +99,7 @@ describe('Devtool ide-sdk command', () => {
       finishProcess = resolve
     })
 
-    jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockReturnValue(process)
+    jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockReturnValue(process)
     jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValue(processFinished)
     const informationMessageSpy = jest.spyOn(vscode.window, 'showInformationMessage').mockReturnValue({ then: jest.fn() } as unknown as Thenable<vscode.MessageItem | undefined>)
 

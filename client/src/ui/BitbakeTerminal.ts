@@ -7,54 +7,20 @@ import { type IPty } from 'node-pty'
 import * as vscode from 'vscode'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
-import { type BitbakeDriver } from '../driver/BitbakeDriver'
-import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
+import { type ProcessFrontend, type ProcessSpawner, type ProcessRunOptions } from '../utils/ProcessFrontend'
+import { type KillProcessFunction, pty } from '../utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 
-/// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<IPty> {
-  const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
-  const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
-}
-
-/// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<IPty> {
-  const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
+export interface ProgramRunOptions extends ProcessRunOptions {
+  cwd?: string
+  env?: NodeJS.Dict<string>
 }
 
 const bitbakeTerminals: BitbakeTerminal[] = []
-async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<IPty> {
-  let terminal: BitbakeTerminal | undefined
-  for (const t of bitbakeTerminals) {
-    if (!t.pty.isBusy()) {
-      terminal = t
-      terminal.pty.changeNameEmitter.fire(terminalName)
-      break
-    }
-  }
-  if (terminal === undefined) {
-    // All bitbake calls are serialized under one big lock to prevent bitbake server container issues
-    // We want to open another terminal right away to show the user that the command is queued
-    // But the process will have to wait for the previous one to finish (await process)
-    terminal = new BitbakeTerminal(terminalName, bitbakeDriver)
-    // Wait for the terminal to be ready to receive input before spawning the process
-    // Otherwise it might miss the first input, or the whole process!
-    await new Promise(resolve => terminal?.pty.onDidOpen.event(resolve))
-  }
 
-  if (!isBackground) {
-    terminal.terminal.show()
-  }
-  const process = bitbakeDriver.spawnBitbakeProcess(command)
-  await terminal.pty.runProcess(process, bitbakeScript, terminalName)
-  return await process
-}
-
-export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
+export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFrontend {
   private readonly writeEmitter = new vscode.EventEmitter<string>()
   private readonly closeEmitter = new vscode.EventEmitter<number>()
   readonly changeNameEmitter = new vscode.EventEmitter<string>()
@@ -67,7 +33,9 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   private dimensions: vscode.TerminalDimensions | undefined
 
   readonly parentTerminal: BitbakeTerminal | undefined
-  bitbakeDriver: BitbakeDriver
+  private cancel: KillProcessFunction = async (child) => { child.kill() }
+  private didOpen!: () => void
+  private readonly ready = new Promise<void>((resolve) => { this.didOpen = resolve })
 
   private isTaskTerminal (): boolean {
     // If parentTerminal is undefined, we are running in a task terminal which handles some events itself
@@ -75,9 +43,9 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 
   open (initialDimensions: vscode.TerminalDimensions | undefined): void {
-    if (!this.isTaskTerminal()) { bitbakeTerminals.push(this.parentTerminal as BitbakeTerminal) }
-    this.onDidOpen.fire()
     this.dimensions = initialDimensions
+    this.didOpen()
+    this.onDidOpen.fire()
     this.resizePty()
   }
 
@@ -90,30 +58,35 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     void this.process?.then((process) => {
       if (this.dimensions === undefined) { return }
       process?.resize(this.dimensions.columns, this.dimensions.rows)
+    }, () => {
+      // runProcess reports spawn failures; a queued resize has no process to update.
     })
   }
 
   async close (): Promise<void> {
-    if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
+    this.removeFromPool()
     if (this.isBusy()) {
-      // Wait for this process to be the one executed by bitbakeDriver
-      await this.process
-      void this.bitbakeDriver.killBitbake()
+      await this.cancelProcess()
     }
   }
 
   handleInput (data: string): void {
     if (this.process === undefined) {
       this.closeEmitter.fire(0)
-      if (!this.isTaskTerminal()) { bitbakeTerminals.splice(bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal), 1) }
+      this.removeFromPool()
     } else {
       if (!this.isTaskTerminal()) {
         if (data === '\x03') {
-          logger.info('Bitbake process killed by user')
-          void this.bitbakeDriver.killBitbake()
+          logger.info('Process killed by user')
+          void this.cancelProcess()
         }
       }
     }
+  }
+
+  private removeFromPool (): void {
+    const index = bitbakeTerminals.indexOf(this.parentTerminal as BitbakeTerminal)
+    if (index !== -1) { bitbakeTerminals.splice(index, 1) }
   }
 
   private process: Promise<IPty> | undefined
@@ -122,22 +95,44 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     return this.process !== undefined
   }
 
-  constructor (bitbakeDriver: BitbakeDriver, parentTerminal?: BitbakeTerminal) {
+  constructor (parentTerminal?: BitbakeTerminal) {
     this.parentTerminal = parentTerminal
-    this.bitbakeDriver = bitbakeDriver
+  }
+
+  private async cancelProcess (): Promise<void> {
+    const pending = this.process
+    if (pending === undefined) { return }
+    try {
+      const child = await pending
+      if (this.process === pending) { await this.cancel(child) }
+    } catch {
+      // There is nothing to cancel if spawning failed.
+    }
   }
 
   output (line: string): void {
     this.writeEmitter.fire(line)
   }
 
-  public async runProcess (process: Promise<IPty>, bitbakeScript: string, terminalName?: string): Promise<IPty> {
+  public async runProcess (spawn: ProcessSpawner, command: string, options: ProcessRunOptions = {}): Promise<IPty> {
+    const terminalName = options.name
     if (this.process !== undefined) {
-      throw new Error('Bitbake process already running')
+      throw new Error('Process already running')
     }
 
-    this.process = process
-    const processResolved = await this.process
+    this.cancel = options.cancel ?? (async (child) => { child.kill() })
+    // Reserve this frontend synchronously, including while the process is queued.
+    this.process = this.ready.then(async () => await spawn(this.dimensions))
+    let processResolved: IPty
+    try {
+      processResolved = await this.process
+    } catch (error) {
+      this.process = undefined
+      this.lastExitCode = -1
+      this.output(emphasisedAsterisk + ' Failed to start process: ' + String(error) + endOfLine)
+      if (this.isTaskTerminal()) { this.closeEmitter.fire(-1) }
+      throw error
+    }
     this.resizePty()
 
     processResolved.onData((data) => {
@@ -149,7 +144,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
     const listener = processResolved.onData(() => {
       // I wanted to use appropriate events like process.on('spawn') or terminal.open() but they are not triggered at the right time for
       // the terminal to be ready to receive input
-      this.output(emphasisedAsterisk + ' Executing script: ' + bitbakeScript + endOfLine)
+      this.output(emphasisedAsterisk + ' Executing command: ' + command + endOfLine)
       listener.dispose()
     })
 
@@ -157,13 +152,13 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
       this.lastExitCode = event.exitCode ?? -1
       this.process = undefined
       if (event.exitCode !== 0) {
-        this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + event.exitCode + endOfLine)
+        this.output(emphasisedAsterisk + ' Process failed with code ' + event.exitCode + endOfLine)
         if (!this.isTaskTerminal()) {
           this.changeNameEmitter.fire('✖ ' + terminalName)
           this.parentTerminal?.terminal?.show()
         }
       } else {
-        this.output(emphasisedAsterisk + ' Bitbake process exited successfully' + endOfLine)
+        this.output(emphasisedAsterisk + ' Process exited successfully' + endOfLine)
         if (!this.isTaskTerminal()) { this.changeNameEmitter.fire('✔ ' + terminalName) }
       }
       if (!this.isTaskTerminal()) { this.output(emphasisedAsterisk + ' Terminal will be reused by BitBake, press any key to close it.' + endOfLine) }
@@ -174,12 +169,34 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal {
   }
 }
 
-class BitbakeTerminal {
+export class BitbakeTerminal {
   readonly terminal: vscode.Terminal
   readonly pty: BitbakePseudoTerminal
 
-  constructor (terminalName: string, bitbakeDriver: BitbakeDriver) {
-    this.pty = new BitbakePseudoTerminal(bitbakeDriver, this)
+  /// Run an executable and argv directly, outside any BitBake shell environment.
+  static async runProgram (executable: string, args: string[], options: ProgramRunOptions = {}): Promise<IPty> {
+    const command = [executable, ...args].map(arg => JSON.stringify(arg)).join(' ')
+    return await this.runProcess(async dimensions => pty.spawn(executable, args, {
+      cwd: options.cwd,
+      env: { ...process.env, ...options.env },
+      cols: dimensions?.columns,
+      rows: dimensions?.rows
+    }), command, options)
+  }
+
+  static async runProcess (spawn: ProcessSpawner, command: string, options: ProcessRunOptions = {}): Promise<IPty> {
+    const terminalName = options.name ?? 'BitBake'
+    const terminal = bitbakeTerminals.find(t => !t.pty.isBusy()) ?? new BitbakeTerminal(terminalName)
+    terminal.pty.changeNameEmitter.fire(terminalName)
+    return await terminal.pty.runProcess(async (dimensions) => {
+      if (options.background !== true) { terminal.terminal.show() }
+      return await spawn(dimensions)
+    }, command, { ...options, name: terminalName })
+  }
+
+  constructor (terminalName: string) {
+    this.pty = new BitbakePseudoTerminal(this)
+    bitbakeTerminals.push(this)
     const extensionTerminalOptions: vscode.ExtensionTerminalOptions = {
       name: terminalName,
       pty: this.pty,

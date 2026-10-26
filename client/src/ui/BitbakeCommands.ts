@@ -12,7 +12,6 @@ import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
 import { addActiveRecipe, selectRecipe } from './RecipeSelection'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
-import { runBitbakeTerminal } from './BitbakeTerminal'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition, type BitbakeTaskProvider } from './BitbakeTaskProvider'
@@ -119,8 +118,7 @@ async function buildRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakePr
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: build-recipe: ${chosenRecipe}`)
-    await runBitbakeTerminal(
-      bitBakeProjectScanner.bitbakeDriver,
+    await bitBakeProjectScanner.bitbakeDriver.runBitbakeTask(
       {
         recipes: [chosenRecipe]
       } as BitbakeTaskDefinition,
@@ -132,8 +130,7 @@ async function cleanRecipeCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakePr
   const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: clean-recipe: ${chosenRecipe}`)
-    await runBitbakeTerminal(
-      bitBakeProjectScanner.bitbakeDriver,
+    await bitBakeProjectScanner.bitbakeDriver.runBitbakeTask(
       {
         recipes: [chosenRecipe],
         task: 'clean'
@@ -190,7 +187,7 @@ async function runTaskCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjec
     }
     if (chosenTask !== undefined) {
       logger.debug(`Command: run-task: ${chosenRecipe}, ${chosenTask}`)
-      await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
+      await bitBakeProjectScanner.bitbakeDriver.runBitbakeTask(
         {
           recipes: [chosenRecipe],
           task: chosenTask
@@ -287,7 +284,7 @@ export async function examineDependenciesTaskexp (bitbakeWorkspace: BitbakeWorks
   if (chosenRecipe !== undefined) {
     logger.debug(`Command: examine-dependency-taskexp: ${chosenRecipe}`)
     isTaskexpStarted = true
-    const process = await runBitbakeTerminal(bitBakeProjectScanner.bitbakeDriver,
+    const process = await bitBakeProjectScanner.bitbakeDriver.runBitbakeTask(
       {
         specialCommand: `bitbake -g ${chosenRecipe} -u taskexp`
       } as BitbakeTaskDefinition,
