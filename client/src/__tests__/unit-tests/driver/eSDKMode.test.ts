@@ -5,7 +5,6 @@
 
 import { BitBakeProjectScanner } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
-import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 import { bitbakeESDKMode, setBitbakeESDKMode } from '../../../driver/BitbakeESDK'
 import { SpawnSyncReturns } from 'child_process'
@@ -57,7 +56,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
       pathToBuildFolder: 'nonexistent'
     }
     bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-    const bitbakeTerminalSpy = jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+    const bitbakeTerminalSpy = jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
     const bitbakeExecutionSpy = jest.spyOn(ProcessUtils, 'finishProcessExecution')
 
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({
@@ -66,7 +65,7 @@ describe('Devtool eSDK Mode Test Suite', () => {
     } as unknown as Promise<SpawnSyncReturns<Buffer>>))
     let sane = await bitbakeDriver.checkBitbakeSettingsSanity()
     expect(sane).toStrictEqual(true)
-    expect(bitbakeTerminalSpy).toHaveBeenCalledWith(expect.anything(), expect.stringContaining('which'), expect.anything(), expect.anything())
+    expect(bitbakeTerminalSpy).toHaveBeenCalledWith(expect.stringContaining('which'), expect.anything(), expect.anything())
     expect(bitbakeESDKMode).toStrictEqual(true)
 
     bitbakeExecutionSpy.mockReturnValueOnce(Promise.resolve({

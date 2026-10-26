@@ -11,7 +11,6 @@ import { type IPty } from 'node-pty'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { BitbakeToaster } from '../../../ui/BitbakeToaster'
 import { clientNotificationManager } from '../../../ui/ClientNotificationManager'
-import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 
 jest.mock('vscode')
@@ -72,18 +71,17 @@ describe('BitbakeToaster', () => {
   })
 
   it('starts Toaster and opens the browser after a successful exit', async () => {
-    const { toaster, driver } = createToaster()
+    const { toaster } = createToaster()
     const fakeProcess = createExitProcess()
 
     const terminalSpy = jest.spyOn(
-      BitbakeTerminal,
-      'runBitbakeTerminalCustomCommand'
+      BitbakeDriver.prototype,
+      'runBitbakeCommand'
     ).mockResolvedValue(fakeProcess.process)
 
     await toaster.startInBrowser()
 
     expect(terminalSpy).toHaveBeenCalledWith(
-      driver,
       'nohup bash -c "source toaster start"',
       'Toaster'
     )
@@ -108,8 +106,8 @@ describe('BitbakeToaster', () => {
     const fakeProcess = createExitProcess()
 
     const terminalSpy = jest.spyOn(
-      BitbakeTerminal,
-      'runBitbakeTerminalCustomCommand'
+      BitbakeDriver.prototype,
+      'runBitbakeCommand'
     ).mockResolvedValue(fakeProcess.process)
 
     await toaster.startInBrowser()
@@ -135,8 +133,8 @@ describe('BitbakeToaster', () => {
     const fakeProcess = createExitProcess()
 
     const terminalSpy = jest.spyOn(
-      BitbakeTerminal,
-      'runBitbakeTerminalCustomCommand'
+      BitbakeDriver.prototype,
+      'runBitbakeCommand'
     ).mockResolvedValue(fakeProcess.process)
 
     const errorSpy = jest.spyOn(
@@ -169,8 +167,8 @@ describe('BitbakeToaster', () => {
     const { toaster } = createToaster()
 
     const terminalSpy = jest.spyOn(
-      BitbakeTerminal,
-      'runBitbakeTerminalCustomCommand'
+      BitbakeDriver.prototype,
+      'runBitbakeCommand'
     )
 
     await toaster.stop()
@@ -182,12 +180,12 @@ describe('BitbakeToaster', () => {
   })
 
   it('waits for the stop command and marks Toaster as stopped', async () => {
-    const { toaster, driver } = createToaster()
+    const { toaster } = createToaster()
     const startProcess = createExitProcess()
 
     const terminalSpy = jest.spyOn(
-      BitbakeTerminal,
-      'runBitbakeTerminalCustomCommand'
+      BitbakeDriver.prototype,
+      'runBitbakeCommand'
     ).mockResolvedValue(startProcess.process)
 
     await toaster.startInBrowser()
@@ -210,7 +208,6 @@ describe('BitbakeToaster', () => {
     await toaster.stop()
 
     expect(terminalSpy).toHaveBeenCalledWith(
-      driver,
       'source toaster stop',
       'Toaster'
     )
@@ -231,8 +228,8 @@ describe('BitbakeToaster', () => {
     const startProcess = createExitProcess()
 
     jest.spyOn(
-      BitbakeTerminal,
-      'runBitbakeTerminalCustomCommand'
+      BitbakeDriver.prototype,
+      'runBitbakeCommand'
     ).mockResolvedValue(startProcess.process)
 
     await toaster.startInBrowser()
