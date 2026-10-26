@@ -489,9 +489,15 @@
       },
       {
         "command": "bitbake.watch-recipe",
-        "title": "BitBake: Add a recipe to the active workspace",
+        "title": "BitBake: Add a recipe or class to the active workspace",
         "icon": "$(add)",
-        "description": "Start watching or suggesting a recipe in bitbake commands."
+        "description": "Start watching or suggesting a recipe in bitbake commands, or show a class in the Recipes Explorer."
+      },
+      {
+        "command": "bitbake.drop-class",
+        "title": "BitBake: Drop a class from the active workspace",
+        "description": "Stop showing a class in the Recipes Explorer.",
+        "icon": "$(close)"
       },
       {
         "command": "bitbake.drop-all-recipes",
@@ -811,6 +817,11 @@
           "command": "bitbake.drop-recipe",
           "group": "inline@2",
           "when": "viewItem == bitbakeRecipeCtx"
+        },
+        {
+          "command": "bitbake.drop-class",
+          "group": "inline@0",
+          "when": "viewItem == bitbakeClassCtx"
         },
         {
           "submenu": "bitbake/main",
