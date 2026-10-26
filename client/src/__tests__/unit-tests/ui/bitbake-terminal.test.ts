@@ -11,6 +11,48 @@ import { createProcessMock } from '../../utils/processMock'
 
 jest.mock('vscode')
 
+describe('BitbakeTerminal with the shared VS Code mock', () => {
+  let frontend: BitbakePseudoTerminal | undefined
+
+  afterEach(async () => {
+    await frontend?.close()
+    jest.restoreAllMocks()
+    jest.useRealTimers()
+  })
+
+  it('opens asynchronously to unblock the default driver and releases state on completion', async () => {
+    jest.useFakeTimers()
+    const process = createProcessMock()
+    const spawn = jest.spyOn(pty, 'spawn').mockReturnValue(process.child)
+    const open = jest.spyOn(BitbakePseudoTerminal.prototype, 'open')
+    const driver = new BitbakeDriver()
+
+    const running = driver.runBitbakeCommand('devtool status', 'Devtool')
+    const options = jest.mocked(vscode.window.createTerminal).mock.calls[0][0] as vscode.ExtensionTerminalOptions
+    frontend = options.pty as BitbakePseudoTerminal
+    expect(frontend.isBusy()).toBe(true)
+    expect(open).not.toHaveBeenCalled()
+    expect(spawn).not.toHaveBeenCalled()
+
+    await jest.advanceTimersByTimeAsync(0)
+    expect(open).toHaveBeenCalledTimes(1)
+    expect(open).toHaveBeenCalledWith(undefined)
+    // Advance the driver's existing lock polling interval after readiness.
+    await jest.advanceTimersToNextTimerAsync()
+    expect(spawn).toHaveBeenCalledTimes(1)
+    await expect(running).resolves.toBe(process.child)
+    expect(driver.bitbakeProcess).toBe(process.child)
+    expect(driver.bitbakeProcessCommand).toBe('devtool status')
+    expect(frontend.isBusy()).toBe(true)
+
+    process.exit(0)
+    expect(driver.bitbakeProcess).toBeUndefined()
+    expect(driver.bitbakeProcessCommand).toBeUndefined()
+    expect(frontend.isBusy()).toBe(false)
+    expect(frontend.lastExitCode).toBe(0)
+  })
+})
+
 describe('BitbakeTerminal process frontend', () => {
   let terminals: Array<{ pty: BitbakePseudoTerminal, show: jest.Mock }>
 
