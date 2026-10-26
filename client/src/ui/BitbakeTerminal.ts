@@ -7,35 +7,13 @@ import { type IPty } from 'node-pty'
 import * as vscode from 'vscode'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
-import { type BitbakeDriver } from '../driver/BitbakeDriver'
-import { type BitbakeTaskDefinition } from './BitbakeTaskProvider'
 import { type ProcessFrontend, type ProcessSpawner, type ProcessRunOptions } from '../utils/ProcessFrontend'
 import { type KillProcessFunction } from '../utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
 
-/// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminal (bitbakeDriver: BitbakeDriver, bitbakeTaskDefinition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<IPty> {
-  const command = bitbakeDriver.composeBitbakeCommand(bitbakeTaskDefinition)
-  const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
-}
-
-/// Spawn a bitbake process in a dedicated terminal and wait for it to finish
-export async function runBitbakeTerminalCustomCommand (bitbakeDriver: BitbakeDriver, command: string, terminalName: string, isBackground: boolean = false): Promise<IPty> {
-  const script = bitbakeDriver.composeBitbakeScript(command)
-  return await runBitbakeTerminalScript(command, bitbakeDriver, terminalName, script, isBackground)
-}
-
 const bitbakeTerminals: BitbakeTerminal[] = []
-async function runBitbakeTerminalScript (command: string, bitbakeDriver: BitbakeDriver, terminalName: string, bitbakeScript: string, isBackground: boolean): Promise<IPty> {
-  return await BitbakeTerminal.runProcess(
-    async () => await bitbakeDriver.spawnBitbakeProcess(command),
-    bitbakeScript,
-    { name: terminalName, background: isBackground, cancel: async () => { await bitbakeDriver.killBitbake() } }
-  )
-}
 
 export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFrontend {
   private readonly writeEmitter = new vscode.EventEmitter<string>()

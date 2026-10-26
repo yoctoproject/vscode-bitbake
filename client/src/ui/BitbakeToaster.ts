@@ -8,7 +8,6 @@ import * as child_process from 'child_process'
 
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
 import { clientNotificationManager } from './ClientNotificationManager'
-import { runBitbakeTerminalCustomCommand } from './BitbakeTerminal'
 import { finishProcessExecution } from '../utils/ProcessUtils'
 
 export class BitbakeToaster {
@@ -35,8 +34,7 @@ export class BitbakeToaster {
     }
 
     const command = `nohup bash -c "${this.bitbakeDriver.composeToasterCommand('start')}"`
-    const process = await runBitbakeTerminalCustomCommand(
-      this.bitbakeDriver,
+    const process = await this.bitbakeDriver.runBitbakeCommand(
       command,
       'Toaster'
     )
@@ -62,8 +60,7 @@ export class BitbakeToaster {
     }
 
     const command = this.bitbakeDriver.composeToasterCommand('stop')
-    const process = runBitbakeTerminalCustomCommand(
-      this.bitbakeDriver,
+    const process = this.bitbakeDriver.runBitbakeCommand(
       command,
       'Toaster'
     )

@@ -55,10 +55,9 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
         new BitbakeCustomExecution(async (): Promise<vscode.Pseudoterminal> => {
           const pty = new BitbakePseudoTerminal();
           (resolvedTask.execution as BitbakeCustomExecution).pty = pty
-          void pty.runProcess(
-            async () => await this.bitbakeDriver.spawnBitbakeProcess(bitbakeCommand),
-            this.bitbakeDriver.composeBitbakeScript(bitbakeCommand),
-            { cancel: async () => { await this.bitbakeDriver.killBitbake() } })
+          void this.bitbakeDriver.runBitbakeCommand(bitbakeCommand, task.name, true, pty).catch(() => {
+            // The frontend reports spawn failures and closes the task with a failure code.
+          })
           return pty
         }),
         problemMatchers

@@ -9,7 +9,6 @@ import { IPty } from 'node-pty'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
 import { type BitbakeTaskDefinition } from '../../../ui/BitbakeTaskProvider'
 import { BITBAKE_TIMEOUT } from '../../../utils/ProcessUtils'
-import * as BitbakeTerminal from '../../../ui/BitbakeTerminal'
 import * as ProcessUtils from '../../../utils/ProcessUtils'
 
 describe('BitbakeDriver Tests', () => {
@@ -124,7 +123,7 @@ describe('BitbakeDriver Tests', () => {
       }
 
       bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-      jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+      jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
       jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValueOnce(Promise.resolve({
         status: 0,
         stdout: '/tmp/devtool\r\n/tmp/bitbake'
@@ -152,7 +151,7 @@ describe('BitbakeDriver Tests', () => {
       }
 
       bitbakeDriver.loadSettings(bitbakeSettings, __dirname)
-      jest.spyOn(BitbakeTerminal, 'runBitbakeTerminalCustomCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
+      jest.spyOn(BitbakeDriver.prototype, 'runBitbakeCommand').mockImplementation(async () => (undefined as unknown as Promise<IPty>))
       jest.spyOn(ProcessUtils, 'finishProcessExecution').mockReturnValueOnce(Promise.resolve({
         status: 1,
         stdout: 'error'
