@@ -53,11 +53,12 @@ export class BitbakeTaskProvider implements vscode.TaskProvider {
         task.name,
         task.source ?? 'bitbake',
         new BitbakeCustomExecution(async (): Promise<vscode.Pseudoterminal> => {
-          const pty = new BitbakePseudoTerminal(this.bitbakeDriver);
+          const pty = new BitbakePseudoTerminal();
           (resolvedTask.execution as BitbakeCustomExecution).pty = pty
           void pty.runProcess(
-            this.bitbakeDriver.spawnBitbakeProcess(bitbakeCommand),
-            this.bitbakeDriver.composeBitbakeScript(bitbakeCommand))
+            async () => await this.bitbakeDriver.spawnBitbakeProcess(bitbakeCommand),
+            this.bitbakeDriver.composeBitbakeScript(bitbakeCommand),
+            { cancel: async () => { await this.bitbakeDriver.killBitbake() } })
           return pty
         }),
         problemMatchers
