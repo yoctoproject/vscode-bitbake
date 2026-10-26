@@ -1,6 +1,8 @@
 // Jtest Mock from https://github.com/jest-community/vscode-jest/blob/1867bde9ebf8c21d45409e7ad8a95a743ac4390d/__mocks__/vscode.ts
 // under MIT License
 
+import type { ExtensionTerminalOptions, TerminalOptions } from 'vscode'
+
 const languages = {
     createDiagnosticCollection: jest.fn(),
     registerCodeLensProvider: jest.fn(),
@@ -25,7 +27,13 @@ const languages = {
     createWebviewPanel: jest.fn(),
     registerTreeDataProvider: jest.fn(),
     createTreeView: jest.fn(),
-    createTerminal: jest.fn(),
+    createTerminal: jest.fn((options?: ExtensionTerminalOptions | TerminalOptions | string) => {
+      if (typeof options === 'object' && 'pty' in options) {
+        // VS Code opens the pseudoterminal after createTerminal returns.
+        queueMicrotask(() => { options.pty.open(undefined) })
+        return { show: jest.fn() }
+      }
+    }),
     visibleTextEditors: [],
   };
 
