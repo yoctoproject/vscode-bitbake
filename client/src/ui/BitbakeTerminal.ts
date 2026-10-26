@@ -8,10 +8,15 @@ import * as vscode from 'vscode'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
 import { type ProcessFrontend, type ProcessSpawner, type ProcessRunOptions } from '../utils/ProcessFrontend'
-import { type KillProcessFunction } from '../utils/ProcessUtils'
+import { type KillProcessFunction, pty } from '../utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
+
+export interface ProgramRunOptions extends ProcessRunOptions {
+  cwd?: string
+  env?: NodeJS.Dict<string>
+}
 
 const bitbakeTerminals: BitbakeTerminal[] = []
 
@@ -53,6 +58,8 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFron
     void this.process?.then((process) => {
       if (this.dimensions === undefined) { return }
       process?.resize(this.dimensions.columns, this.dimensions.rows)
+    }, () => {
+      // runProcess reports spawn failures; a queued resize has no process to update.
     })
   }
 
@@ -110,7 +117,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFron
   public async runProcess (spawn: ProcessSpawner, command: string, options: ProcessRunOptions = {}): Promise<IPty> {
     const terminalName = options.name
     if (this.process !== undefined) {
-      throw new Error('Bitbake process already running')
+      throw new Error('Process already running')
     }
 
     this.cancel = options.cancel ?? (async (child) => { child.kill() })
@@ -137,7 +144,7 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFron
     const listener = processResolved.onData(() => {
       // I wanted to use appropriate events like process.on('spawn') or terminal.open() but they are not triggered at the right time for
       // the terminal to be ready to receive input
-      this.output(emphasisedAsterisk + ' Executing script: ' + command + endOfLine)
+      this.output(emphasisedAsterisk + ' Executing command: ' + command + endOfLine)
       listener.dispose()
     })
 
@@ -145,13 +152,13 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFron
       this.lastExitCode = event.exitCode ?? -1
       this.process = undefined
       if (event.exitCode !== 0) {
-        this.output(emphasisedAsterisk + ' Bitbake process failed with code ' + event.exitCode + endOfLine)
+        this.output(emphasisedAsterisk + ' Process failed with code ' + event.exitCode + endOfLine)
         if (!this.isTaskTerminal()) {
           this.changeNameEmitter.fire('✖ ' + terminalName)
           this.parentTerminal?.terminal?.show()
         }
       } else {
-        this.output(emphasisedAsterisk + ' Bitbake process exited successfully' + endOfLine)
+        this.output(emphasisedAsterisk + ' Process exited successfully' + endOfLine)
         if (!this.isTaskTerminal()) { this.changeNameEmitter.fire('✔ ' + terminalName) }
       }
       if (!this.isTaskTerminal()) { this.output(emphasisedAsterisk + ' Terminal will be reused by BitBake, press any key to close it.' + endOfLine) }
@@ -165,6 +172,17 @@ export class BitbakePseudoTerminal implements vscode.Pseudoterminal, ProcessFron
 export class BitbakeTerminal {
   readonly terminal: vscode.Terminal
   readonly pty: BitbakePseudoTerminal
+
+  /// Run an executable and argv directly, outside any BitBake shell environment.
+  static async runProgram (executable: string, args: string[], options: ProgramRunOptions = {}): Promise<IPty> {
+    const command = [executable, ...args].map(arg => JSON.stringify(arg)).join(' ')
+    return await this.runProcess(async dimensions => pty.spawn(executable, args, {
+      cwd: options.cwd,
+      env: { ...process.env, ...options.env },
+      cols: dimensions?.columns,
+      rows: dimensions?.rows
+    }), command, options)
+  }
 
   static async runProcess (spawn: ProcessSpawner, command: string, options: ProcessRunOptions = {}): Promise<IPty> {
     const terminalName = options.name ?? 'BitBake'
