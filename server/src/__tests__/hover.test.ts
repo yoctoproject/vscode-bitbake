@@ -28,6 +28,12 @@ describe('on hover', () => {
     bitBakeDocScanner.clearScannedDocs()
   })
 
+  const containing = (text: string): unknown => expect.objectContaining({
+    contents: expect.objectContaining({
+      value: expect.stringContaining(text)
+    })
+  })
+
   it('shows definition on hovering variable in variable assignment syntax or in variable expansion syntax after scanning the docs', async () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     analyzer.analyze({
@@ -805,6 +811,54 @@ describe('on hover', () => {
     })
 
     expect(shouldNotShow).toBe(null)
+  })
+
+  it('should show hover documentation for python keywords', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    // should show hover documentation for the python keyword
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 70, character: 2 }
+    })).toEqual(containing('**python**'))
+
+    // should show hover documentation for the def keyword
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 74, character: 1 }
+    })).toEqual(containing('**def**'))
+
+    // should show hover documentation for inline python expansion
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 77, character: 11 }
+    })).toEqual(containing('**${@**'))
+
+    // should show hover documentation for __anonymous
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 79, character: 9 }
+    })).toEqual(containing('**__anonymous**'))
+
+    // should show anonymous function documentation for the python keyword of an unnamed function
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 83, character: 2 }
+    })).toEqual(containing('**__anonymous**'))
+
+    // should not show python keyword documentation on function names
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 70, character: 8 }
+    })).toBe(null)
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 74, character: 6 }
+    })).toBe(null)
   })
 
   it('should show description of license on hover', async () => {

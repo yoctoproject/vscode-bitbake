@@ -67,3 +67,20 @@ MYVAR:prepend = "prepend "
 MYVAR:remove = "remove"
 
 d.getVar("DESCRIPTION")
+
+python do_pyfoo() {
+    pass
+}
+
+def pydef_func(d):
+    return "x"
+
+INLINE = "${@d.getVar('MYVAR')}"
+
+python __anonymous() {
+    pass
+}
+
+python() {
+    pass
+}
