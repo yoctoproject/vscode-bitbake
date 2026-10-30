@@ -951,6 +951,14 @@ describe('on hover', () => {
     it('should not show unset documentation on its argument', async () => {
       expect(await hoverAt(93, 8)).not.toEqual(containing('**unset**'))
     })
+
+    it('should show hover documentation for EXPORT_FUNCTIONS', async () => {
+      expect(await hoverAt(94, 2)).toEqual(containing('**EXPORT_FUNCTIONS**'))
+    })
+
+    it('should not show EXPORT_FUNCTIONS documentation on its argument', async () => {
+      expect(await hoverAt(94, 19)).not.toEqual(containing('**EXPORT_FUNCTIONS**'))
+    })
   })
 
   it('should show description of license on hover', async () => {
