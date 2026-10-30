@@ -28,6 +28,23 @@ describe('on hover', () => {
     bitBakeDocScanner.clearScannedDocs()
   })
 
+  const hoverAt = async (line: number, character: number): ReturnType<typeof onHoverHandler> => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+    return await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line, character }
+    })
+  }
+
+  const containing = (text: string): unknown => expect.objectContaining({
+    contents: expect.objectContaining({
+      value: expect.stringContaining(text)
+    })
+  })
+
   it('shows definition on hovering variable in variable assignment syntax or in variable expansion syntax after scanning the docs', async () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     analyzer.analyze({
@@ -805,6 +822,37 @@ describe('on hover', () => {
     })
 
     expect(shouldNotShow).toBe(null)
+  })
+
+  describe('python keywords', () => {
+    beforeEach(() => {
+      bitBakeDocScanner.parseBitbakeMetadataFile()
+    })
+
+    it('should show hover documentation for the python keyword', async () => {
+      expect(await hoverAt(70, 2)).toEqual(containing('**python**'))
+    })
+
+    it('should show hover documentation for the def keyword', async () => {
+      expect(await hoverAt(74, 1)).toEqual(containing('**def**'))
+    })
+
+    it('should show hover documentation for inline python expansion', async () => {
+      expect(await hoverAt(77, 11)).toEqual(containing('**${@**'))
+    })
+
+    it('should show hover documentation for __anonymous', async () => {
+      expect(await hoverAt(79, 9)).toEqual(containing('**__anonymous**'))
+    })
+
+    it('should show anonymous function documentation for the python keyword of an unnamed function', async () => {
+      expect(await hoverAt(83, 2)).toEqual(containing('**__anonymous**'))
+    })
+
+    it('should not show python keyword documentation on function names', async () => {
+      expect(await hoverAt(70, 8)).toBe(null)
+      expect(await hoverAt(74, 6)).toBe(null)
+    })
   })
 
   it('should show description of license on hover', async () => {

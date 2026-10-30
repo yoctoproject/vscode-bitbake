@@ -311,7 +311,11 @@ export class BitBakeDocScanner {
       'Appending (+=) and prepending (=+) With Spaces': ['+=', '=+'],
       'Appending (.=) and Prepending (=.) Without Spaces': ['.=', '=.'],
       'Appending and Prepending (Override Style Syntax)': ['append', 'prepend'],
-      'Removal (Override Style Syntax)': ['remove']
+      'Removal (Override Style Syntax)': ['remove'],
+      'Inline Python Variable Expansion': ['${@'],
+      'BitBake-Style Python Functions': ['python'],
+      'Python Functions': ['def'],
+      'Anonymous Python Functions': ['__anonymous']
     }
 
     // Override the auto-derived URL for sections whose RST anchor differs from their title

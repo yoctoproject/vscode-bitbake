@@ -176,6 +176,22 @@ function getMetadataDocName (node: Node): string | undefined {
     (parentType === 'override' && OVERRIDE_OPERATORS.has(node.type))) {
     return node.text.trim()
   }
+  if (node.type === '${@' && parentType === 'inline_python') {
+    return '${@'
+  }
+  if (node.type === 'def' && parentType === 'python_function_definition') {
+    return 'def'
+  }
+  if (parentType === 'anonymous_python_function') {
+    const name = node.parent?.firstNamedChild
+    const isAnonymous = name?.type !== 'identifier' || name.text === '__anonymous'
+    if (node.type === 'python') {
+      return isAnonymous ? '__anonymous' : 'python'
+    }
+    if (node.type === 'identifier' && node.text === '__anonymous') {
+      return '__anonymous'
+    }
+  }
   return undefined
 }
 
