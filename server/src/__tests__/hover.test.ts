@@ -961,6 +961,14 @@ describe('on hover', () => {
     })
   })
 
+  it('should not include RST hyperlink targets in hover documentation', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    // ":=" is followed by the section labelled ".. _appending-and-prepending:"
+    const hover = await hoverAt(59, 6)
+    expect(hover).toEqual(containing('**:=**'))
+    expect(hover).not.toEqual(containing('.. _appending-and-prepending:'))
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
