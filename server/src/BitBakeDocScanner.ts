@@ -315,7 +315,8 @@ export class BitBakeDocScanner {
       'Inline Python Variable Expansion': ['${@'],
       'BitBake-Style Python Functions': ['python'],
       'Python Functions': ['def'],
-      'Anonymous Python Functions': ['__anonymous']
+      'Anonymous Python Functions': ['__anonymous'],
+      'Exporting Variables to the Environment': ['export']
     }
 
     // Override the auto-derived URL for sections whose RST anchor differs from their title

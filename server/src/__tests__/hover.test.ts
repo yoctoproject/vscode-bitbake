@@ -855,6 +855,24 @@ describe('on hover', () => {
     })
   })
 
+  describe('export keyword', () => {
+    beforeEach(() => {
+      bitBakeDocScanner.parseBitbakeMetadataFile()
+    })
+
+    it('should show hover documentation for export combined with an assignment', async () => {
+      expect(await hoverAt(87, 2)).toEqual(containing('**export**'))
+    })
+
+    it('should show hover documentation for a standalone export statement', async () => {
+      expect(await hoverAt(88, 2)).toEqual(containing('**export**'))
+    })
+
+    it('should not show export documentation on the exported variable name', async () => {
+      expect(await hoverAt(88, 10)).not.toEqual(containing('**export**'))
+    })
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
