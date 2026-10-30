@@ -943,6 +943,14 @@ describe('on hover', () => {
     it('should not show addhandler documentation on its argument', async () => {
       expect(await hoverAt(92, 13)).not.toEqual(containing('**addhandler**'))
     })
+
+    it('should show hover documentation for unset', async () => {
+      expect(await hoverAt(93, 2)).toEqual(containing('**unset**'))
+    })
+
+    it('should not show unset documentation on its argument', async () => {
+      expect(await hoverAt(93, 8)).not.toEqual(containing('**unset**'))
+    })
   })
 
   it('should show description of license on hover', async () => {

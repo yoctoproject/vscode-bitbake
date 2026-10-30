@@ -299,7 +299,8 @@ export class BitBakeDocScanner {
       '``require`` Directive': ['require'],
       'Promoting a Function to a Task': ['addtask'],
       'Deleting a Task': ['deltask'],
-      'Events': ['addhandler']
+      'Events': ['addhandler'],
+      'Unsetting variables': ['unset']
     }
 
     // Override the auto-derived URL for sections whose RST anchor differs from their title

@@ -168,7 +168,8 @@ const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
 const STATEMENT_KEYWORDS: Record<string, { keyword: string, tokens: string[] }> = {
   addtask_statement: { keyword: 'addtask', tokens: ['addtask', 'before', 'after'] },
   deltask_statement: { keyword: 'deltask', tokens: ['deltask'] },
-  addhandler_statement: { keyword: 'addhandler', tokens: ['addhandler'] }
+  addhandler_statement: { keyword: 'addhandler', tokens: ['addhandler'] },
+  unset_statement: { keyword: 'unset', tokens: ['unset'] }
 }
 
 /**
