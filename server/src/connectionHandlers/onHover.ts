@@ -92,7 +92,7 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   // Keywords
   const keyword = analyzer.getKeywordForPosition(textDocument.uri, position.line, position.character)
   if (keyword !== undefined && DIRECTIVE_STATEMENT_KEYWORDS.includes(word)) {
-    const keywordInfo = bitBakeDocScanner.keywordInfo.find(item => item.name === word)
+    const keywordInfo = bitBakeDocScanner.bitbakeMetadataInfo.find(item => item.name === word)
     if (keywordInfo !== undefined) {
       hoverValue = `**${keywordInfo.name}**\n___\n${keywordInfo.definition}`
     }
