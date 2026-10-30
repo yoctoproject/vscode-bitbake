@@ -296,7 +296,8 @@ export class BitBakeDocScanner {
       '``inherit`` Directive': ['inherit'],
       '``inherit_defer`` Directive': ['inherit_defer'],
       '``include`` Directive': ['include'],
-      '``require`` Directive': ['require']
+      '``require`` Directive': ['require'],
+      'Promoting a Function to a Task': ['addtask']
     }
 
     // Override the auto-derived URL for sections whose RST anchor differs from their title

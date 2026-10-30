@@ -924,6 +924,36 @@ describe('on hover', () => {
     })).not.toEqual(containing('**export**'))
   })
 
+  it('should show hover documentation for statement keywords', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    // should show hover documentation for addtask
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 90, character: 2 }
+    })).toEqual(containing('**addtask**'))
+
+    // should show addtask documentation for its before and after arguments
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 90, character: 15 }
+    })).toEqual(containing('**addtask**'))
+
+    // should not show addtask documentation on task names
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 90, character: 9 }
+    })).not.toEqual(containing('**addtask**'))
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 90, character: 22 }
+    })).not.toEqual(containing('**addtask**'))
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
