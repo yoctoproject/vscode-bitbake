@@ -861,6 +861,32 @@ describe('on hover', () => {
     })).toBe(null)
   })
 
+  it('should show hover documentation for the export keyword', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    // should show hover documentation for export combined with an assignment
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 87, character: 2 }
+    })).toEqual(containing('**export**'))
+
+    // should show hover documentation for a standalone export statement
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 88, character: 2 }
+    })).toEqual(containing('**export**'))
+
+    // should not show export documentation on the exported variable name
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 88, character: 10 }
+    })).not.toEqual(containing('**export**'))
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,
