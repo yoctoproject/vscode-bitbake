@@ -294,6 +294,7 @@ export class BitBakeDocScanner {
       'Anonymous Python Functions': ['__anonymous'],
       'Exporting Variables to the Environment': ['export'],
       '``inherit`` Directive': ['inherit'],
+      '``inherit_defer`` Directive': ['inherit_defer'],
       '``include`` Directive': ['include'],
       '``require`` Directive': ['require']
     }
@@ -301,7 +302,8 @@ export class BitBakeDocScanner {
     // Override the auto-derived URL for sections whose RST anchor differs from their title
     const overriddenUrls: Partial<Record<string, string>> = {
       'Appending (+=) and prepending (=+) With Spaces': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#appending-and-prepending',
-      'Removal (Override Style Syntax)': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#removing-override-style-syntax'
+      'Removal (Override Style Syntax)': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#removing-override-style-syntax',
+      '``inherit_defer`` Directive': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#inherit-defer-directive'
     }
 
     // Find all section headers underlined with any of the adornments used by the document

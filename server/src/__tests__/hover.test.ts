@@ -339,6 +339,26 @@ describe('on hover', () => {
     )
   })
 
+  it('should show hover definition for the inherit_defer keyword', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const shouldShow = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 34, character: 2 }
+    })
+    const shouldNotShow = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 34, character: 15 }
+    })
+
+    expect(shouldShow).toEqual(containing('**inherit_defer**'))
+    expect(shouldNotShow).not.toEqual(containing('**inherit_defer**'))
+  })
+
   it('should not show RST reference targets in directive documentation', async () => {
     bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
