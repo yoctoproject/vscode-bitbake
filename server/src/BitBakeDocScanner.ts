@@ -300,7 +300,8 @@ export class BitBakeDocScanner {
       'Promoting a Function to a Task': ['addtask'],
       'Deleting a Task': ['deltask'],
       'Events': ['addhandler'],
-      'Unsetting variables': ['unset']
+      'Unsetting variables': ['unset'],
+      'Flexible Inheritance for Class Functions': ['EXPORT_FUNCTIONS']
     }
 
     // Override the auto-derived URL for sections whose RST anchor differs from their title

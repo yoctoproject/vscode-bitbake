@@ -169,7 +169,8 @@ const STATEMENT_KEYWORDS: Record<string, { keyword: string, tokens: string[] }> 
   addtask_statement: { keyword: 'addtask', tokens: ['addtask', 'before', 'after'] },
   deltask_statement: { keyword: 'deltask', tokens: ['deltask'] },
   addhandler_statement: { keyword: 'addhandler', tokens: ['addhandler'] },
-  unset_statement: { keyword: 'unset', tokens: ['unset'] }
+  unset_statement: { keyword: 'unset', tokens: ['unset'] },
+  export_functions_statement: { keyword: 'EXPORT_FUNCTIONS', tokens: ['EXPORT_FUNCTIONS'] }
 }
 
 /**
