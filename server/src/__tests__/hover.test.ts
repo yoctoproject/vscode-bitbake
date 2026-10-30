@@ -952,6 +952,18 @@ describe('on hover', () => {
       textDocument: { uri: DUMMY_URI },
       position: { line: 90, character: 22 }
     })).not.toEqual(containing('**addtask**'))
+
+    // should show hover documentation for deltask
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 91, character: 2 }
+    })).toEqual(containing('**deltask**'))
+
+    // should not show deltask documentation on its argument
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 91, character: 10 }
+    })).not.toEqual(containing('**deltask**'))
   })
 
   it('should show description of license on hover', async () => {

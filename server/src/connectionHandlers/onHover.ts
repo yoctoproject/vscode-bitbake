@@ -166,7 +166,8 @@ const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
 
 // Statement node types mapped to the keyword documenting them, and the tokens of the statement showing that documentation
 const STATEMENT_KEYWORDS: Record<string, { keyword: string, tokens: string[] }> = {
-  addtask_statement: { keyword: 'addtask', tokens: ['addtask', 'before', 'after'] }
+  addtask_statement: { keyword: 'addtask', tokens: ['addtask', 'before', 'after'] },
+  deltask_statement: { keyword: 'deltask', tokens: ['deltask'] }
 }
 
 /**
