@@ -1002,6 +1002,21 @@ describe('on hover', () => {
     })).not.toEqual(containing('**EXPORT_FUNCTIONS**'))
   })
 
+  it('should not include RST hyperlink targets in hover documentation', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+    // ":=" is followed by the section labelled ".. _appending-and-prepending:"
+    const hover = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 59, character: 6 }
+    })
+    expect(hover).toEqual(containing('**:=**'))
+    expect(hover).not.toEqual(containing('.. _appending-and-prepending:'))
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,

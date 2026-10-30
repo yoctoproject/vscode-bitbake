@@ -49,6 +49,8 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
 
 function normalizeRstDefinition (definition: string): string {
   return definition
+    // Hyperlink targets (e.g. ".. _appending-and-prepending:") label the following section and are not meant to be displayed
+    .replace(/^[ \t]*\.\. _[^\n]*:[ \t]*\n?/gm, '')
     .replace(/^ {3}/gm, '')
     // References with an explicit target (e.g. :ref:`inherit <ref-...>`) only display their text
     .replace(/:(?:term|ref):`([^`<]*?)\s*<[^>]*>`/g, (_match, text: string) => `\`${text.replace(/\s+/g, ' ')}\``)
