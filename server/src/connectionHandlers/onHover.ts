@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type HoverParams, type Hover, type MarkupKind } from 'vscode-languageserver'
+import { type Node } from 'web-tree-sitter'
 import { analyzer } from '../tree-sitter/analyzer'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { logger } from '../lib/src/utils/OutputLogger'
@@ -97,17 +98,14 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     }
   }
 
-  // Bitbake operators
-  const ASSIGNMENT_OPERATORS = new Set(['=', '?=', '??=', ':=', '+=', '=+', '.=', '=.'])
-  const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
+  // Constructs documented in the BitBake metadata manual (operators, keywords...)
   if (bitbakeNode !== null) {
-    const isAssignmentOperator = bitbakeNode.parent?.type === 'variable_assignment' && ASSIGNMENT_OPERATORS.has(bitbakeNode.type)
-    const isOverrideOperator = bitbakeNode.parent?.type === 'override' && OVERRIDE_OPERATORS.has(bitbakeNode.type)
-    if (isAssignmentOperator || isOverrideOperator) {
-      const operatorInfo = bitBakeDocScanner.operatorInfo.find(item => item.name === bitbakeNode.text.trim())
-      if (operatorInfo !== undefined) {
-        logger.debug(`[onHover] Found operator: ${operatorInfo.name}`)
-        hoverValue = `**${operatorInfo.name}**\n___\n${operatorInfo.definition}`
+    const metadataDocName = getMetadataDocName(bitbakeNode)
+    if (metadataDocName !== undefined) {
+      const metadataInfo = bitBakeDocScanner.metadataInfo.find(item => item.name === metadataDocName)
+      if (metadataInfo !== undefined) {
+        logger.debug(`[onHover] Found metadata documentation: ${metadataInfo.name}`)
+        hoverValue = `**${metadataInfo.name}**\n___\n${metadataInfo.definition}`
       }
     }
   }
@@ -161,6 +159,24 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   }
 
   return null
+}
+
+const ASSIGNMENT_OPERATORS = new Set(['=', '?=', '??=', ':=', '+=', '=+', '.=', '=.'])
+const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
+
+/**
+ * Get the name under which the BitBake metadata manual documents the given node, if any
+ */
+function getMetadataDocName (node: Node): string | undefined {
+  const parentType = node.parent?.type
+  if (parentType === undefined) {
+    return undefined
+  }
+  if ((parentType === 'variable_assignment' && ASSIGNMENT_OPERATORS.has(node.type)) ||
+    (parentType === 'override' && OVERRIDE_OPERATORS.has(node.type))) {
+    return node.text.trim()
+  }
+  return undefined
 }
 
 function getGlobalSymbolComments (uri: string, word: string): string | null {

@@ -87,7 +87,7 @@ export class BitBakeDocScanner {
   private _pythonDatastoreFunction: string[] = []
   private readonly _docPath: string = path.join(__dirname, '../resources/docs')
   private readonly _keywordInfo: DocInfo[] = KEYWORDS
-  private _operatorInfo: DocInfo[] = []
+  private _metadataInfo: DocInfo[] = []
 
   get bitbakeVariableInfo (): VariableInfo[] {
     return this._bitbakeVariableInfo
@@ -109,8 +109,8 @@ export class BitBakeDocScanner {
     return this._keywordInfo
   }
 
-  get operatorInfo (): DocInfo[] {
-    return this._operatorInfo
+  get metadataInfo (): DocInfo[] {
+    return this._metadataInfo
   }
 
   get pythonDatastoreFunction (): string[] {
@@ -123,7 +123,7 @@ export class BitBakeDocScanner {
     this._variableFlagInfo = []
     this._yoctoTaskInfo = []
     this._pythonDatastoreFunction = []
-    this._operatorInfo = []
+    this._metadataInfo = []
   }
 
   public parseDocs (): void {
@@ -132,7 +132,7 @@ export class BitBakeDocScanner {
     this.parseYoctoVariablesFile()
     this.parseYoctoTaskFile()
     this.parsePythonDatastoreFunction()
-    this.parseBitbakeOperatorsFile()
+    this.parseBitbakeMetadataFile()
   }
 
   // TODO: Generalize these parse functions. They all read a file, match some content and store it.
@@ -294,7 +294,7 @@ export class BitBakeDocScanner {
     this._pythonDatastoreFunction = pythonDatastoreFunction
   }
 
-  public parseBitbakeOperatorsFile (): void {
+  public parseBitbakeMetadataFile (): void {
     const filePath = path.join(this._docPath, 'bitbake-user-manual-metadata.rst')
     let file = ''
     try {
@@ -303,7 +303,7 @@ export class BitBakeDocScanner {
       logger.warn(`Failed to read file at ${filePath}`)
     }
 
-    const sectionNameToOperators: Record<string, string[]> = {
+    const sectionTitleToDocNames: Record<string, string[]> = {
       'Basic Variable Setting': ['='],
       'Setting a default value (?=)': ['?='],
       'Setting a weak default value (??=)': ['??='],
@@ -324,11 +324,11 @@ export class BitBakeDocScanner {
     const headerRegex = /^[^\n]+\n-{3,}\n\n/gm
     const headerMatches = Array.from(file.matchAll(headerRegex))
 
-    const operatorInfo: DocInfo[] = []
+    const metadataInfo: DocInfo[] = []
     for (const [i, match] of headerMatches.entries()) {
       const title = match[0].split('\n')[0]
-      if (!(title in sectionNameToOperators)) continue
-      const operators = sectionNameToOperators[title]
+      if (!(title in sectionTitleToDocNames)) continue
+      const names = sectionTitleToDocNames[title]
 
       // Extract content from this header to the next
       const contentStart = match.index + match[0].length
@@ -344,8 +344,8 @@ export class BitBakeDocScanner {
         .replace(/-+/g, '-')
         .replace(/^-+|-+$/g, '')
       const referenceUrl = overriddenUrls[title] ?? `https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#${anchor}`
-      for (const name of operators) {
-        operatorInfo.push({
+      for (const name of names) {
+        metadataInfo.push({
           name,
           definition,
           referenceUrl,
@@ -353,7 +353,7 @@ export class BitBakeDocScanner {
         })
       }
     }
-    this._operatorInfo = operatorInfo
+    this._metadataInfo = metadataInfo
   }
 }
 
