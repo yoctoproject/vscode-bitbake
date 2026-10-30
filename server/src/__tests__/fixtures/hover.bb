@@ -87,3 +87,5 @@ python() {
 
 export EXPORTED_VAR = "value"
 export EXPORTED_VAR
+
+addtask pyfoo after do_fetch before do_build
