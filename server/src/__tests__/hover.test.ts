@@ -927,6 +927,14 @@ describe('on hover', () => {
       expect(await hoverAt(90, 9)).not.toEqual(containing('**addtask**'))
       expect(await hoverAt(90, 22)).not.toEqual(containing('**addtask**'))
     })
+
+    it('should show hover documentation for deltask', async () => {
+      expect(await hoverAt(91, 2)).toEqual(containing('**deltask**'))
+    })
+
+    it('should not show deltask documentation on its argument', async () => {
+      expect(await hoverAt(91, 10)).not.toEqual(containing('**deltask**'))
+    })
   })
 
   it('should show description of license on hover', async () => {
