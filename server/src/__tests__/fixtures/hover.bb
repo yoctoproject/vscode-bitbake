@@ -67,3 +67,29 @@ MYVAR:prepend = "prepend "
 MYVAR:remove = "remove"
 
 d.getVar("DESCRIPTION")
+
+python do_pyfoo() {
+    pass
+}
+
+def pydef_func(d):
+    return "x"
+
+INLINE = "${@d.getVar('MYVAR')}"
+
+python __anonymous() {
+    pass
+}
+
+python() {
+    pass
+}
+
+export EXPORTED_VAR = "value"
+export EXPORTED_VAR
+
+addtask pyfoo after do_fetch before do_build
+deltask do_pyfoo
+addhandler my_handler
+unset MYVAR
+EXPORT_FUNCTIONS do_foo

@@ -28,6 +28,23 @@ describe('on hover', () => {
     bitBakeDocScanner.clearScannedDocs()
   })
 
+  const hoverAt = async (line: number, character: number): ReturnType<typeof onHoverHandler> => {
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+    return await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line, character }
+    })
+  }
+
+  const containing = (text: string): unknown => expect.objectContaining({
+    contents: expect.objectContaining({
+      value: expect.stringContaining(text)
+    })
+  })
+
   it('shows definition on hovering variable in variable assignment syntax or in variable expansion syntax after scanning the docs', async () => {
     bitBakeDocScanner.parseBitbakeVariablesFile()
     analyzer.analyze({
@@ -261,6 +278,7 @@ describe('on hover', () => {
   })
 
   it('should show hover definition for keywords', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -319,6 +337,42 @@ describe('on hover', () => {
         })
       })
     )
+  })
+
+  it('should show hover definition for the inherit_defer keyword', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.DIRECTIVE
+    })
+
+    const shouldShow = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 34, character: 2 }
+    })
+    const shouldNotShow = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 34, character: 15 }
+    })
+
+    expect(shouldShow).toEqual(containing('**inherit_defer**'))
+    expect(shouldNotShow).not.toEqual(containing('**inherit_defer**'))
+  })
+
+  it('should not show RST reference targets in directive documentation', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const hover = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 31, character: 1 }
+    })
+
+    expect(hover).toEqual(containing('**include**'))
+    expect(hover).not.toEqual(containing('<bitbake-user-manual'))
   })
 
   it('shows definition on hovering variable in Python functions for accessing datastore', async () => {
@@ -736,7 +790,7 @@ describe('on hover', () => {
   })
 
   it('should show hover documentation for assignment operators', async () => {
-    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -762,7 +816,7 @@ describe('on hover', () => {
   })
 
   it('should show hover documentation for override style operators', async () => {
-    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -788,7 +842,7 @@ describe('on hover', () => {
   })
 
   it('should not show hover for append when not used as an operator', async () => {
-    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -805,6 +859,114 @@ describe('on hover', () => {
     })
 
     expect(shouldNotShow).toBe(null)
+  })
+
+  describe('python keywords', () => {
+    beforeEach(() => {
+      bitBakeDocScanner.parseBitbakeMetadataFile()
+    })
+
+    it('should show hover documentation for the python keyword', async () => {
+      expect(await hoverAt(70, 2)).toEqual(containing('**python**'))
+    })
+
+    it('should show hover documentation for the def keyword', async () => {
+      expect(await hoverAt(74, 1)).toEqual(containing('**def**'))
+    })
+
+    it('should show hover documentation for inline python expansion', async () => {
+      expect(await hoverAt(77, 11)).toEqual(containing('**${@**'))
+    })
+
+    it('should show hover documentation for __anonymous', async () => {
+      expect(await hoverAt(79, 9)).toEqual(containing('**__anonymous**'))
+    })
+
+    it('should show anonymous function documentation for the python keyword of an unnamed function', async () => {
+      expect(await hoverAt(83, 2)).toEqual(containing('**__anonymous**'))
+    })
+
+    it('should not show python keyword documentation on function names', async () => {
+      expect(await hoverAt(70, 8)).toBe(null)
+      expect(await hoverAt(74, 6)).toBe(null)
+    })
+  })
+
+  describe('export keyword', () => {
+    beforeEach(() => {
+      bitBakeDocScanner.parseBitbakeMetadataFile()
+    })
+
+    it('should show hover documentation for export combined with an assignment', async () => {
+      expect(await hoverAt(87, 2)).toEqual(containing('**export**'))
+    })
+
+    it('should show hover documentation for a standalone export statement', async () => {
+      expect(await hoverAt(88, 2)).toEqual(containing('**export**'))
+    })
+
+    it('should not show export documentation on the exported variable name', async () => {
+      expect(await hoverAt(88, 10)).not.toEqual(containing('**export**'))
+    })
+  })
+
+  describe('statement keywords', () => {
+    beforeEach(() => {
+      bitBakeDocScanner.parseBitbakeMetadataFile()
+    })
+
+    it('should show hover documentation for addtask', async () => {
+      expect(await hoverAt(90, 2)).toEqual(containing('**addtask**'))
+    })
+
+    it('should show addtask documentation for its before and after arguments', async () => {
+      expect(await hoverAt(90, 15)).toEqual(containing('**addtask**'))
+    })
+
+    it('should not show addtask documentation on task names', async () => {
+      expect(await hoverAt(90, 9)).not.toEqual(containing('**addtask**'))
+      expect(await hoverAt(90, 22)).not.toEqual(containing('**addtask**'))
+    })
+
+    it('should show hover documentation for deltask', async () => {
+      expect(await hoverAt(91, 2)).toEqual(containing('**deltask**'))
+    })
+
+    it('should not show deltask documentation on its argument', async () => {
+      expect(await hoverAt(91, 10)).not.toEqual(containing('**deltask**'))
+    })
+
+    it('should show hover documentation for addhandler', async () => {
+      expect(await hoverAt(92, 2)).toEqual(containing('**addhandler**'))
+    })
+
+    it('should not show addhandler documentation on its argument', async () => {
+      expect(await hoverAt(92, 13)).not.toEqual(containing('**addhandler**'))
+    })
+
+    it('should show hover documentation for unset', async () => {
+      expect(await hoverAt(93, 2)).toEqual(containing('**unset**'))
+    })
+
+    it('should not show unset documentation on its argument', async () => {
+      expect(await hoverAt(93, 8)).not.toEqual(containing('**unset**'))
+    })
+
+    it('should show hover documentation for EXPORT_FUNCTIONS', async () => {
+      expect(await hoverAt(94, 2)).toEqual(containing('**EXPORT_FUNCTIONS**'))
+    })
+
+    it('should not show EXPORT_FUNCTIONS documentation on its argument', async () => {
+      expect(await hoverAt(94, 19)).not.toEqual(containing('**EXPORT_FUNCTIONS**'))
+    })
+  })
+
+  it('should not include RST hyperlink targets in hover documentation', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    // ":=" is followed by the section labelled ".. _appending-and-prepending:"
+    const hover = await hoverAt(59, 6)
+    expect(hover).toEqual(containing('**:=**'))
+    expect(hover).not.toEqual(containing('.. _appending-and-prepending:'))
   })
 
   it('should show description of license on hover', async () => {

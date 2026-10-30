@@ -49,7 +49,11 @@ const variableInfosOverrides: Record<string, VariableInfosOverride> = {
 
 function normalizeRstDefinition (definition: string): string {
   return definition
+    // Hyperlink targets (e.g. ".. _appending-and-prepending:") label the following section and are not meant to be displayed
+    .replace(/^[ \t]*\.\. _[^\n]*:[ \t]*\n?/gm, '')
     .replace(/^ {3}/gm, '')
+    // References with an explicit target (e.g. :ref:`inherit <ref-...>`) only display their text
+    .replace(/:(?:term|ref):`([^`<]*?)\s*<[^>]*>`/g, (_match, text: string) => `\`${text.replace(/\s+/g, ' ')}\``)
     .replace(/:term:|:ref:/g, '')
     .replace(/\.\. (note|important|tip)::/g, (_match, p1) => { return `**${p1}**` })
     .replace(/::/g, ':')
@@ -58,27 +62,6 @@ function normalizeRstDefinition (definition: string): string {
     .replace(/^(\s{5,})/gm, ' ')
 }
 
-const KEYWORDS = [
-  {
-    name: 'require',
-    definition: 'BitBake understands the require directive. This directive behaves just like the include directive with the exception that BitBake raises a parsing error if the file to be included cannot be found. Thus, any file you require is inserted into the file that is being parsed at the location of the directive. \n\nThe require directive, like the include directive previously described, is a more generic method of including functionality as compared to the inherit directive, which is restricted to class (i.e. .bbclass) files. The require directive is applicable for any other kind of shared or encapsulated functionality or configuration that does not suit a .bbclass file. \n\nSimilar to how BitBake handles include, if the path specified on the require line is a relative path, BitBake locates the first file it can find within BBPATH. \n\nAs an example, suppose you have two versions of a recipe (e.g. foo_1.2.2.bb and foo_2.0.0.bb) where each version contains some identical functionality that could be shared. You could create an include file named foo.inc that contains the common definitions needed to build “foo”. You need to be sure foo.inc is located in the same directory as your two recipe files as well. Once these conditions are set up, you can share the functionality using a require directive from within each recipe: \n ```require foo.inc```',
-    referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html?highlight=require#require-directive',
-    docSource: 'Bitbake'
-  },
-  {
-    name: 'include',
-    definition: 'BitBake understands the include directive. This directive causes BitBake to parse whatever file you specify, and to insert that file at that location. The directive is much like its equivalent in Make except that if the path specified on the include line is a relative path, BitBake locates the first file it can find within BBPATH. \n\nThe include directive is a more generic method of including functionality as compared to the inherit directive, which is restricted to class (i.e. .bbclass) files. The include directive is applicable for any other kind of shared or encapsulated functionality or configuration that does not suit a .bbclass file. \n\nAs an example, suppose you needed a recipe to include some self-test definitions: \n ```include test_defs.inc```',
-    referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html?highlight=require#include-directive',
-    docSource: 'Bitbake'
-  },
-  {
-    name: 'inherit',
-    definition: 'When writing a recipe or class file, you can use the inherit directive to inherit the functionality of a class (.bbclass). BitBake only supports this directive when used within recipe and class files (i.e. .bb and .bbclass).\n\nThe inherit directive is a rudimentary means of specifying functionality contained in class files that your recipes require. For example, you can easily abstract out the tasks involved in building a package that uses Autoconf and Automake and put those tasks into a class file and then have your recipe inherit that class file. \n\nAs an example, your recipes could use the following directive to inherit an autotools.bbclass file. The class file would contain common functionality for using Autotools that could be shared across recipes: \n```inherit autotools```',
-    referenceUrl: 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html?highlight=require#inherit-directive',
-    docSource: 'Bitbake'
-  }
-]
-
 export class BitBakeDocScanner {
   private _bitbakeVariableInfo: VariableInfo[] = []
   private _yoctoVariableInfo: VariableInfo[] = []
@@ -86,8 +69,7 @@ export class BitBakeDocScanner {
   private _yoctoTaskInfo: DocInfo[] = []
   private _pythonDatastoreFunction: string[] = []
   private readonly _docPath: string = path.join(__dirname, '../resources/docs')
-  private readonly _keywordInfo: DocInfo[] = KEYWORDS
-  private _operatorInfo: DocInfo[] = []
+  private _metadataInfo: DocInfo[] = []
 
   get bitbakeVariableInfo (): VariableInfo[] {
     return this._bitbakeVariableInfo
@@ -105,12 +87,8 @@ export class BitBakeDocScanner {
     return this._yoctoTaskInfo
   }
 
-  get keywordInfo (): DocInfo[] {
-    return this._keywordInfo
-  }
-
-  get operatorInfo (): DocInfo[] {
-    return this._operatorInfo
+  get metadataInfo (): DocInfo[] {
+    return this._metadataInfo
   }
 
   get pythonDatastoreFunction (): string[] {
@@ -123,7 +101,7 @@ export class BitBakeDocScanner {
     this._variableFlagInfo = []
     this._yoctoTaskInfo = []
     this._pythonDatastoreFunction = []
-    this._operatorInfo = []
+    this._metadataInfo = []
   }
 
   public parseDocs (): void {
@@ -132,7 +110,7 @@ export class BitBakeDocScanner {
     this.parseYoctoVariablesFile()
     this.parseYoctoTaskFile()
     this.parsePythonDatastoreFunction()
-    this.parseBitbakeOperatorsFile()
+    this.parseBitbakeMetadataFile()
   }
 
   // TODO: Generalize these parse functions. They all read a file, match some content and store it.
@@ -294,7 +272,7 @@ export class BitBakeDocScanner {
     this._pythonDatastoreFunction = pythonDatastoreFunction
   }
 
-  public parseBitbakeOperatorsFile (): void {
+  public parseBitbakeMetadataFile (): void {
     const filePath = path.join(this._docPath, 'bitbake-user-manual-metadata.rst')
     let file = ''
     try {
@@ -303,7 +281,7 @@ export class BitBakeDocScanner {
       logger.warn(`Failed to read file at ${filePath}`)
     }
 
-    const sectionNameToOperators: Record<string, string[]> = {
+    const sectionTitleToDocNames: Record<string, string[]> = {
       'Basic Variable Setting': ['='],
       'Setting a default value (?=)': ['?='],
       'Setting a weak default value (??=)': ['??='],
@@ -311,24 +289,39 @@ export class BitBakeDocScanner {
       'Appending (+=) and prepending (=+) With Spaces': ['+=', '=+'],
       'Appending (.=) and Prepending (=.) Without Spaces': ['.=', '=.'],
       'Appending and Prepending (Override Style Syntax)': ['append', 'prepend'],
-      'Removal (Override Style Syntax)': ['remove']
+      'Removal (Override Style Syntax)': ['remove'],
+      'Inline Python Variable Expansion': ['${@'],
+      'BitBake-Style Python Functions': ['python'],
+      'Python Functions': ['def'],
+      'Anonymous Python Functions': ['__anonymous'],
+      'Exporting Variables to the Environment': ['export'],
+      '``inherit`` Directive': ['inherit'],
+      '``inherit_defer`` Directive': ['inherit_defer'],
+      '``include`` Directive': ['include'],
+      '``require`` Directive': ['require'],
+      'Promoting a Function to a Task': ['addtask'],
+      'Deleting a Task': ['deltask'],
+      'Events': ['addhandler'],
+      'Unsetting variables': ['unset'],
+      'Flexible Inheritance for Class Functions': ['EXPORT_FUNCTIONS']
     }
 
     // Override the auto-derived URL for sections whose RST anchor differs from their title
     const overriddenUrls: Partial<Record<string, string>> = {
       'Appending (+=) and prepending (=+) With Spaces': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#appending-and-prepending',
-      'Removal (Override Style Syntax)': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#removing-override-style-syntax'
+      'Removal (Override Style Syntax)': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#removing-override-style-syntax',
+      '``inherit_defer`` Directive': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#inherit-defer-directive'
     }
 
-    // Find all dash-underlined section headers
-    const headerRegex = /^[^\n]+\n-{3,}\n\n/gm
+    // Find all section headers underlined with any of the adornments used by the document
+    const headerRegex = /^[^\n]+\n([-=~])\1{2,}\n\n/gm
     const headerMatches = Array.from(file.matchAll(headerRegex))
 
-    const operatorInfo: DocInfo[] = []
+    const metadataInfo: DocInfo[] = []
     for (const [i, match] of headerMatches.entries()) {
       const title = match[0].split('\n')[0]
-      if (!(title in sectionNameToOperators)) continue
-      const operators = sectionNameToOperators[title]
+      if (!(title in sectionTitleToDocNames)) continue
+      const names = sectionTitleToDocNames[title]
 
       // Extract content from this header to the next
       const contentStart = match.index + match[0].length
@@ -344,8 +337,8 @@ export class BitBakeDocScanner {
         .replace(/-+/g, '-')
         .replace(/^-+|-+$/g, '')
       const referenceUrl = overriddenUrls[title] ?? `https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#${anchor}`
-      for (const name of operators) {
-        operatorInfo.push({
+      for (const name of names) {
+        metadataInfo.push({
           name,
           definition,
           referenceUrl,
@@ -353,7 +346,7 @@ export class BitBakeDocScanner {
         })
       }
     }
-    this._operatorInfo = operatorInfo
+    this._metadataInfo = metadataInfo
   }
 }
 

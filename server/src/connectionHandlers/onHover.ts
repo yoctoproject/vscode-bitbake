@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { type HoverParams, type Hover, type MarkupKind } from 'vscode-languageserver'
+import { type Node } from 'web-tree-sitter'
 import { analyzer } from '../tree-sitter/analyzer'
 import { bitBakeDocScanner } from '../BitBakeDocScanner'
 import { logger } from '../lib/src/utils/OutputLogger'
@@ -88,26 +89,23 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
     }
   }
 
-  // Keywords
+  // Directives
   const keyword = analyzer.getKeywordForPosition(textDocument.uri, position.line, position.character)
   if (keyword !== undefined && DIRECTIVE_STATEMENT_KEYWORDS.includes(word)) {
-    const keywordInfo = bitBakeDocScanner.keywordInfo.find(item => item.name === word)
+    const keywordInfo = bitBakeDocScanner.metadataInfo.find(item => item.name === word)
     if (keywordInfo !== undefined) {
       hoverValue = `**${keywordInfo.name}**\n___\n${keywordInfo.definition}`
     }
   }
 
-  // Bitbake operators
-  const ASSIGNMENT_OPERATORS = new Set(['=', '?=', '??=', ':=', '+=', '=+', '.=', '=.'])
-  const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
+  // Constructs documented in the BitBake metadata manual (operators, keywords...)
   if (bitbakeNode !== null) {
-    const isAssignmentOperator = bitbakeNode.parent?.type === 'variable_assignment' && ASSIGNMENT_OPERATORS.has(bitbakeNode.type)
-    const isOverrideOperator = bitbakeNode.parent?.type === 'override' && OVERRIDE_OPERATORS.has(bitbakeNode.type)
-    if (isAssignmentOperator || isOverrideOperator) {
-      const operatorInfo = bitBakeDocScanner.operatorInfo.find(item => item.name === bitbakeNode.text.trim())
-      if (operatorInfo !== undefined) {
-        logger.debug(`[onHover] Found operator: ${operatorInfo.name}`)
-        hoverValue = `**${operatorInfo.name}**\n___\n${operatorInfo.definition}`
+    const metadataDocName = getMetadataDocName(bitbakeNode)
+    if (metadataDocName !== undefined) {
+      const metadataInfo = bitBakeDocScanner.metadataInfo.find(item => item.name === metadataDocName)
+      if (metadataInfo !== undefined) {
+        logger.debug(`[onHover] Found metadata documentation: ${metadataInfo.name}`)
+        hoverValue = `**${metadataInfo.name}**\n___\n${metadataInfo.definition}`
       }
     }
   }
@@ -161,6 +159,56 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
   }
 
   return null
+}
+
+const ASSIGNMENT_OPERATORS = new Set(['=', '?=', '??=', ':=', '+=', '=+', '.=', '=.'])
+const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
+
+// Statement node types mapped to the keyword documenting them, and the tokens of the statement showing that documentation
+const STATEMENT_KEYWORDS: Record<string, { keyword: string, tokens: string[] }> = {
+  addtask_statement: { keyword: 'addtask', tokens: ['addtask', 'before', 'after'] },
+  deltask_statement: { keyword: 'deltask', tokens: ['deltask'] },
+  addhandler_statement: { keyword: 'addhandler', tokens: ['addhandler'] },
+  unset_statement: { keyword: 'unset', tokens: ['unset'] },
+  export_functions_statement: { keyword: 'EXPORT_FUNCTIONS', tokens: ['EXPORT_FUNCTIONS'] }
+}
+
+/**
+ * Get the name under which the BitBake metadata manual documents the given node, if any
+ */
+function getMetadataDocName (node: Node): string | undefined {
+  const parentType = node.parent?.type
+  if (parentType === undefined) {
+    return undefined
+  }
+  if ((parentType === 'variable_assignment' && ASSIGNMENT_OPERATORS.has(node.type)) ||
+    (parentType === 'override' && OVERRIDE_OPERATORS.has(node.type))) {
+    return node.text.trim()
+  }
+  if (node.type === '${@' && parentType === 'inline_python') {
+    return '${@'
+  }
+  if (node.type === 'def' && parentType === 'python_function_definition') {
+    return 'def'
+  }
+  if (parentType === 'anonymous_python_function') {
+    const name = node.parent?.firstNamedChild
+    const isAnonymous = name?.type !== 'identifier' || name.text === '__anonymous'
+    if (node.type === 'python') {
+      return isAnonymous ? '__anonymous' : 'python'
+    }
+    if (node.type === 'identifier' && node.text === '__anonymous') {
+      return '__anonymous'
+    }
+  }
+  if (node.type === 'export' && parentType === 'export_statement') {
+    return 'export'
+  }
+  if (parentType in STATEMENT_KEYWORDS) {
+    const { keyword, tokens } = STATEMENT_KEYWORDS[parentType]
+    return tokens.includes(node.type) ? keyword : undefined
+  }
+  return undefined
 }
 
 function getGlobalSymbolComments (uri: string, word: string): string | null {
