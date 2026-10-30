@@ -910,6 +910,25 @@ describe('on hover', () => {
     })
   })
 
+  describe('statement keywords', () => {
+    beforeEach(() => {
+      bitBakeDocScanner.parseBitbakeMetadataFile()
+    })
+
+    it('should show hover documentation for addtask', async () => {
+      expect(await hoverAt(90, 2)).toEqual(containing('**addtask**'))
+    })
+
+    it('should show addtask documentation for its before and after arguments', async () => {
+      expect(await hoverAt(90, 15)).toEqual(containing('**addtask**'))
+    })
+
+    it('should not show addtask documentation on task names', async () => {
+      expect(await hoverAt(90, 9)).not.toEqual(containing('**addtask**'))
+      expect(await hoverAt(90, 22)).not.toEqual(containing('**addtask**'))
+    })
+  })
+
   it('should show description of license on hover', async () => {
     analyzer.analyze({
       uri: DUMMY_URI,

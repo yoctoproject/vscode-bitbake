@@ -164,6 +164,11 @@ export async function onHoverHandler (params: HoverParams): Promise<Hover | null
 const ASSIGNMENT_OPERATORS = new Set(['=', '?=', '??=', ':=', '+=', '=+', '.=', '=.'])
 const OVERRIDE_OPERATORS = new Set(['append', 'prepend', 'remove'])
 
+// Statement node types mapped to the keyword documenting them, and the tokens of the statement showing that documentation
+const STATEMENT_KEYWORDS: Record<string, { keyword: string, tokens: string[] }> = {
+  addtask_statement: { keyword: 'addtask', tokens: ['addtask', 'before', 'after'] }
+}
+
 /**
  * Get the name under which the BitBake metadata manual documents the given node, if any
  */
@@ -194,6 +199,10 @@ function getMetadataDocName (node: Node): string | undefined {
   }
   if (node.type === 'export' && parentType === 'export_statement') {
     return 'export'
+  }
+  if (parentType in STATEMENT_KEYWORDS) {
+    const { keyword, tokens } = STATEMENT_KEYWORDS[parentType]
+    return tokens.includes(node.type) ? keyword : undefined
   }
   return undefined
 }
