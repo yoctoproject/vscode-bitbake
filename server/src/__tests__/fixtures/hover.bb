@@ -91,3 +91,4 @@ export EXPORTED_VAR
 addtask pyfoo after do_fetch before do_build
 deltask do_pyfoo
 addhandler my_handler
+unset MYVAR
