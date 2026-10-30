@@ -976,6 +976,18 @@ describe('on hover', () => {
       textDocument: { uri: DUMMY_URI },
       position: { line: 92, character: 13 }
     })).not.toEqual(containing('**addhandler**'))
+
+    // should show hover documentation for unset
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 93, character: 2 }
+    })).toEqual(containing('**unset**'))
+
+    // should not show unset documentation on its argument
+    expect(await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 93, character: 8 }
+    })).not.toEqual(containing('**unset**'))
   })
 
   it('should show description of license on hover', async () => {
