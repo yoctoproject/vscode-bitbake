@@ -278,6 +278,7 @@ describe('on hover', () => {
   })
 
   it('should show hover definition for keywords', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -336,6 +337,22 @@ describe('on hover', () => {
         })
       })
     )
+  })
+
+  it('should not show RST reference targets in directive documentation', async () => {
+    bitBakeDocScanner.parseBitbakeMetadataFile()
+    analyzer.analyze({
+      uri: DUMMY_URI,
+      document: FIXTURE_DOCUMENT.HOVER
+    })
+
+    const hover = await onHoverHandler({
+      textDocument: { uri: DUMMY_URI },
+      position: { line: 31, character: 1 }
+    })
+
+    expect(hover).toEqual(containing('**include**'))
+    expect(hover).not.toEqual(containing('<bitbake-user-manual'))
   })
 
   it('shows definition on hovering variable in Python functions for accessing datastore', async () => {
