@@ -324,8 +324,8 @@ export class BitBakeDocScanner {
       'Removal (Override Style Syntax)': 'https://docs.yoctoproject.org/bitbake/bitbake-user-manual/bitbake-user-manual-metadata.html#removing-override-style-syntax'
     }
 
-    // Find all dash-underlined section headers
-    const headerRegex = /^[^\n]+\n-{3,}\n\n/gm
+    // Find all section headers underlined with any of the adornments used by the document
+    const headerRegex = /^[^\n]+\n([-=~])\1{2,}\n\n/gm
     const headerMatches = Array.from(file.matchAll(headerRegex))
 
     const metadataInfo: DocInfo[] = []
