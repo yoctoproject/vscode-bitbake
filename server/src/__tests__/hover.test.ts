@@ -736,7 +736,7 @@ describe('on hover', () => {
   })
 
   it('should show hover documentation for assignment operators', async () => {
-    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -762,7 +762,7 @@ describe('on hover', () => {
   })
 
   it('should show hover documentation for override style operators', async () => {
-    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
@@ -788,7 +788,7 @@ describe('on hover', () => {
   })
 
   it('should not show hover for append when not used as an operator', async () => {
-    bitBakeDocScanner.parseBitbakeOperatorsFile()
+    bitBakeDocScanner.parseBitbakeMetadataFile()
     analyzer.analyze({
       uri: DUMMY_URI,
       document: FIXTURE_DOCUMENT.HOVER
