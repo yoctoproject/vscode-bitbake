@@ -801,6 +801,8 @@ export default class Analyzer {
       switch (parentNodeType) {
         case 'inherit_directive':
           return 'inherit'
+        case 'inherit_defer_directive':
+          return 'inherit_defer'
         case 'include_directive':
           return 'include'
         case 'require_directive':
