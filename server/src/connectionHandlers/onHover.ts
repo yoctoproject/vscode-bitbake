@@ -192,6 +192,9 @@ function getMetadataSyntaxToken (node: Node): string | undefined {
       return '__anonymous'
     }
   }
+  if (node.type === 'export' && parentType === 'export_statement') {
+    return 'export'
+  }
   return undefined
 }
 

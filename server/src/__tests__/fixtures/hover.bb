@@ -84,3 +84,6 @@ python __anonymous() {
 python() {
     pass
 }
+
+export EXPORTED_VAR = "value"
+export EXPORTED_VAR
