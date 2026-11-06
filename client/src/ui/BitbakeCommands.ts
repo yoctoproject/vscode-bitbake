@@ -10,7 +10,7 @@ import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
-import { addActiveRecipe, selectRecipe } from './RecipeSelection'
+import { addActiveRecipeOrClass, selectClass, selectRecipe } from './RecipeSelection'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { runBitbakeTerminal } from './BitbakeTerminal'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
@@ -37,7 +37,8 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri, task) }),
     vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }),
-    vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }),
+    vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipeOrClass(bitbakeWorkspace, bitBakeProjectScanner, recipe) }),
+    vscode.commands.registerCommand('bitbake.drop-class', async (uri) => { await dropClass(bitbakeWorkspace, uri) }),
     vscode.commands.registerCommand('bitbake.rescan-project', async (focusOnError = true) => { await rescanProject(bitBakeProjectScanner, focusOnError) }),
     vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }),
     vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
@@ -231,6 +232,13 @@ async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectSca
 
 async function dropAllRecipes (bitbakeWorkspace: BitbakeWorkspace): Promise<void> {
   await bitbakeWorkspace.dropAllActiveRecipes()
+}
+
+async function dropClass (bitbakeWorkspace: BitbakeWorkspace, uri?: string): Promise<void> {
+  const chosenClass = await selectClass(bitbakeWorkspace, uri)
+  if (chosenClass !== undefined) {
+    await bitbakeWorkspace.dropActiveClass(chosenClass)
+  }
 }
 
 export async function runBitbakeTask (task: vscode.Task, taskProvider: vscode.TaskProvider): Promise<void> {

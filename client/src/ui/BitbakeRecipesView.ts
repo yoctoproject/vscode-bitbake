@@ -12,7 +12,7 @@ import { type BitbakeDriver } from '../driver/BitbakeDriver'
 
 export class BitbakeRecipesView {
   private readonly bitbakeTreeProvider: BitbakeTreeDataProvider
-  private view: vscode.TreeView<BitbakeRecipeTreeItem> | undefined
+  private view: vscode.TreeView<BitbakeRecipesTreeItem> | undefined
 
   constructor (bitbakeWorkspace: BitbakeWorkspace, bitbakeProjectScanner: BitBakeProjectScanner) {
     this.bitbakeTreeProvider = new BitbakeTreeDataProvider(bitbakeWorkspace, bitbakeProjectScanner)
@@ -65,6 +65,36 @@ export class BitbakeRecipeTreeItem extends vscode.TreeItem {
   }
 }
 
+export class BitbakeClassTreeItem extends vscode.TreeItem {
+  public readonly label: string
+  public readonly bitbakeClassName: string
+
+  constructor (bitbakeClass: ElementInfo | string) {
+    const label = typeof bitbakeClass === 'string' ? bitbakeClass : bitbakeClass.name
+    super(label, vscode.TreeItemCollapsibleState.None)
+    this.label = label
+    this.bitbakeClassName = label
+    this.collapsibleState = vscode.TreeItemCollapsibleState.None
+    this.contextValue = 'bitbakeClassCtx'
+    this.iconPath = new vscode.ThemeIcon('symbol-class')
+
+    if (typeof bitbakeClass === 'string' || bitbakeClass.path === undefined) {
+      this.tooltip = 'Class not found'
+      this.description = 'Class not found'
+      this.iconPath = new vscode.ThemeIcon('warning')
+      return
+    }
+
+    const resolvedPath = path.resolve(bitbakeClass.path.dir + '/' + bitbakeClass.path.base)
+    const uri: vscode.Uri = vscode.Uri.file(resolvedPath)
+    this.command = { command: 'vscode.open', title: 'Open file', arguments: [uri] }
+    this.description = vscode.workspace.asRelativePath(resolvedPath, false)
+    this.tooltip = resolvedPath
+  }
+}
+
+type BitbakeRecipesTreeItem = BitbakeRecipeTreeItem | BitbakeClassTreeItem
+
 class BitbakeFileTreeItem extends BitbakeRecipeTreeItem {
   constructor (public readonly pathInfo: path.ParsedPath, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
     const resolvedPath = path.resolve(pathInfo.dir + '/' + pathInfo.base)
@@ -78,11 +108,11 @@ class BitbakeFileTreeItem extends BitbakeRecipeTreeItem {
   }
 }
 
-class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTreeItem> {
+class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipesTreeItem> {
   readonly bitbakeWorkspace: BitbakeWorkspace
 
-  private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipeTreeItem | undefined> = new vscode.EventEmitter<BitbakeRecipeTreeItem | undefined>()
-  readonly onDidChangeTreeData: vscode.Event<BitbakeRecipeTreeItem | undefined> = this._onDidChangeTreeData.event
+  private readonly _onDidChangeTreeData: vscode.EventEmitter<BitbakeRecipesTreeItem | undefined> = new vscode.EventEmitter<BitbakeRecipesTreeItem | undefined>()
+  readonly onDidChangeTreeData: vscode.Event<BitbakeRecipesTreeItem | undefined> = this._onDidChangeTreeData.event
   private readonly bitbakeProjectScanner: BitBakeProjectScanner
   private bitbakeScanResults: BitbakeScanResult
   private hideRecipes = false
@@ -98,6 +128,12 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
       this._onDidChangeTreeData.fire(undefined)
     })
     bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.RECIPE_DROPPED, () => {
+      this._onDidChangeTreeData.fire(undefined)
+    })
+    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.CLASS_ADDED, () => {
+      this._onDidChangeTreeData.fire(undefined)
+    })
+    bitbakeWorkspace.onChange.on(BitbakeWorkspace.EventType.CLASS_DROPPED, () => {
       this._onDidChangeTreeData.fire(undefined)
     })
     bitbakeProjectScanner.onChange.on(BitBakeProjectScanner.EventType.START_SCAN, () => {
@@ -121,7 +157,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     })
   }
 
-  getTreeItem (element: BitbakeRecipeTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
+  getTreeItem (element: BitbakeRecipesTreeItem): vscode.TreeItem | Thenable<vscode.TreeItem> {
     return element
   }
 
@@ -130,7 +166,7 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     this._onDidChangeTreeData.fire(undefined)
   }
 
-  async getChildren (element?: BitbakeRecipeTreeItem | undefined): Promise<BitbakeRecipeTreeItem[]> {
+  async getChildren (element?: BitbakeRecipesTreeItem | undefined): Promise<BitbakeRecipesTreeItem[]> {
     if (this.scanCompletePromise !== undefined) {
       await this.scanCompletePromise
       this.scanCompletePromise = undefined
@@ -140,9 +176,16 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
         return []
       }
 
-      const items = this.getBitbakeRecipes()
+      const items: BitbakeRecipesTreeItem[] = [
+        ...this.getBitbakeRecipes(),
+        ...this.getBitbakeClasses()
+      ].sort((a, b) => a.label.localeCompare(b.label))
       items.push(this.getAddRecipeItem())
       return items
+    }
+
+    if (!(element instanceof BitbakeRecipeTreeItem)) {
+      return []
     }
 
     const fileItems: BitbakeRecipeTreeItem[] = []
@@ -189,15 +232,30 @@ class BitbakeTreeDataProvider implements vscode.TreeDataProvider<BitbakeRecipeTr
     return this.bitbakeWorkspace.activeRecipes.map((recipe: string) => {
       const recipeInfo = recipeInfoMap.get(recipe)
       return new BitbakeRecipeTreeItem(recipeInfo ?? recipe, vscode.TreeItemCollapsibleState.Collapsed)
-    }).sort((a, b) => a.label.localeCompare(b.label))
+    })
+  }
+
+  private getBitbakeClasses (): BitbakeClassTreeItem[] {
+    const classInfoMap = new Map<string, ElementInfo>()
+    if ((this.bitbakeScanResults?._classes) != null) {
+      this.bitbakeScanResults._classes.forEach((bitbakeClass: ElementInfo) => {
+        if (!classInfoMap.has(bitbakeClass.name)) {
+          classInfoMap.set(bitbakeClass.name, bitbakeClass)
+        }
+      })
+    }
+
+    return this.bitbakeWorkspace.activeClasses.map((bitbakeClass: string) => {
+      return new BitbakeClassTreeItem(classInfoMap.get(bitbakeClass) ?? bitbakeClass)
+    })
   }
 
   private getAddRecipeItem (): BitbakeRecipeTreeItem {
-    const item = new BitbakeRecipeTreeItem('Add recipe', vscode.TreeItemCollapsibleState.None)
-    item.command = { command: 'bitbake.watch-recipe', title: 'Add a recipe to the active workspace', arguments: [undefined] }
+    const item = new BitbakeRecipeTreeItem('Add recipe or class', vscode.TreeItemCollapsibleState.None)
+    item.command = { command: 'bitbake.watch-recipe', title: 'Add a recipe or class to the active workspace', arguments: [undefined] }
     item.iconPath = new vscode.ThemeIcon('add')
     item.contextValue = undefined
-    item.tooltip = 'Add a recipe to the active workspace'
+    item.tooltip = 'Add a recipe or class to the active workspace'
     return item
   }
 }
