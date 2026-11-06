@@ -6,6 +6,9 @@
 import * as vscode from 'vscode'
 import { BitBakeProjectScanner, parseRecipesOutput } from '../../../driver/BitBakeProjectScanner'
 import { BitbakeDriver } from '../../../driver/BitbakeDriver'
+import * as ProcessUtils from '../../../utils/ProcessUtils'
+import { type IPty } from 'node-pty'
+import { type SpawnSyncReturns } from 'child_process'
 
 jest.mock('vscode')
 
@@ -108,4 +111,31 @@ systemd:
     expect(errorSpy.mock.calls[0]).toHaveLength(1)
   })
 
+})
+
+describe('path discovery execution', () => {
+  afterEach(() => { jest.restoreAllMocks() })
+
+  it.each([true, false])('preserves the quiet=%s execution path', async quiet => {
+    const driver = new BitbakeDriver()
+    const scanner = new BitBakeProjectScanner(driver)
+    const headless = jest.spyOn(driver, 'spawnBitbakeProcess').mockResolvedValue({} as IPty)
+    const presented = jest.spyOn(driver, 'runBitbakeCommand').mockResolvedValue({} as IPty)
+    jest.spyOn(ProcessUtils, 'finishProcessExecution').mockResolvedValue({
+      status: 0, output: [Buffer.from('123\n456')]
+    } as SpawnSyncReturns<Buffer>)
+    const internals = scanner as unknown as {
+      getContainerParentInodes: (filepath: string, quiet: boolean) => Promise<number[]>
+    }
+    await expect(internals.getContainerParentInodes('/container/layer', quiet)).resolves.toEqual([123, 456])
+    const command = expect.stringContaining('f=/container/layer;')
+    if (quiet) {
+      expect(headless).toHaveBeenCalledWith(command)
+      expect(presented).not.toHaveBeenCalled()
+    } else {
+      expect(presented).toHaveBeenCalledWith(command, 'BitBake: Scan Project', true)
+      expect(headless).not.toHaveBeenCalled()
+    }
+    expect(vscode.window.createTerminal).not.toHaveBeenCalled()
+  })
 })
