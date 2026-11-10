@@ -10,7 +10,8 @@ import * as vscode from 'vscode'
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeSettings, loadBitbakeSettings, sanitizeForShell, type BitbakeBuildConfigSettings, getBuildSetting } from '../lib/src/BitbakeSettings'
 import { type BitbakeTaskDefinition } from '../ui/BitbakeTaskProvider'
-import { runBitbakeTerminalCustomCommand } from '../ui/BitbakeTerminal'
+import { BitbakeTerminal } from '../ui/BitbakeTerminal'
+import { type ProcessFrontend, type ProcessDimensions } from '../utils/ProcessFrontend'
 import { bitbakeESDKMode, setBitbakeESDKMode } from './BitbakeESDK'
 import { BITBAKE_EXIT_TIMEOUT, finishProcessExecution, pty } from '../utils/ProcessUtils'
 
@@ -26,6 +27,27 @@ export class BitbakeDriver {
   private bitbakeSettingsError: string | undefined
   onBitbakeProcessChange: EventEmitter = new EventEmitter()
   onBitbakeSettingsSanityChange: EventEmitter = new EventEmitter()
+
+  constructor (private readonly processFrontend: ProcessFrontend = BitbakeTerminal) {}
+
+  /// Execute an arbitrary command in the BitBake environment through a process frontend.
+  async runBitbakeCommand (command: string, terminalName: string, isBackground: boolean = false, frontend: ProcessFrontend = this.processFrontend): Promise<IPty> {
+    return await frontend.runProcess(
+      async dimensions => await this.spawnBitbakeProcess(command, dimensions),
+      this.composeBitbakeScript(command),
+      {
+        name: terminalName,
+        background: isBackground,
+        cancel: async child => {
+          if (this.bitbakeProcess === child) { await this.killBitbake() }
+        }
+      }
+    )
+  }
+
+  async runBitbakeTask (definition: BitbakeTaskDefinition, terminalName: string, isBackground: boolean = false): Promise<IPty> {
+    return await this.runBitbakeCommand(this.composeBitbakeCommand(definition), terminalName, isBackground)
+  }
 
   loadSettings (settings: Record<string, unknown>, workspaceFolder: string = '.'): void {
     this.bitbakeSettings = loadBitbakeSettings(settings, workspaceFolder)
@@ -67,7 +89,7 @@ export class BitbakeDriver {
   }
 
   /// Execute a command in the bitbake environment
-  async spawnBitbakeProcess (command: string): Promise<IPty> {
+  async spawnBitbakeProcess (command: string, dimensions?: ProcessDimensions): Promise<IPty> {
     const { shell, shellEnv, script, workingDirectory } = this.prepareCommand(command)
     await this.waitForBitbakeToFinish()
     logger.debug(`Executing Bitbake command with ${shell} in ${workingDirectory} (remote: ${vscode.env.remoteName}): ${script}`)
@@ -76,7 +98,9 @@ export class BitbakeDriver {
       ['-c', script],
       {
         cwd: workingDirectory,
-        env: shellEnv
+        env: shellEnv,
+        cols: dimensions?.columns,
+        rows: dimensions?.rows
       }
     )
     this.bitbakeProcess = child
@@ -161,7 +185,7 @@ export class BitbakeDriver {
 
     // We could test for devtool and bitbake to know if we are in an eSDK or not
     const command = 'which devtool bitbake || true'
-    const process = runBitbakeTerminalCustomCommand(this, command, 'Bitbake: Sanity test', true)
+    const process = this.runBitbakeCommand(command, 'Bitbake: Sanity test', true)
     const ret = await finishProcessExecution(process, async () => { await this.killBitbake() })
     const outLines = ret.stdout.toString().split(/\r?\n/g)
 
