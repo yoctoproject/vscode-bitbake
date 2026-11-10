@@ -7,16 +7,11 @@ import { type IPty } from 'node-pty'
 import * as vscode from 'vscode'
 import { logger } from '../lib/src/utils/OutputLogger'
 import path from 'path'
-import { type ProcessFrontend, type ProcessSpawner, type ProcessRunOptions } from '../utils/ProcessFrontend'
+import { type ProcessFrontend, type ProcessSpawner, type ProcessRunOptions, type ProgramRunOptions } from '../utils/ProcessFrontend'
 import { type KillProcessFunction, pty } from '../utils/ProcessUtils'
 
 const endOfLine: string = '\r\n'
 const emphasisedAsterisk: string = '\x1b[7m * \x1b[0m'
-
-export interface ProgramRunOptions extends ProcessRunOptions {
-  cwd?: string
-  env?: NodeJS.Dict<string>
-}
 
 const bitbakeTerminals: BitbakeTerminal[] = []
 
