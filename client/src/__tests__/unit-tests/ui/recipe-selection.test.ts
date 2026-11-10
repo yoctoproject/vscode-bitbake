@@ -13,7 +13,7 @@ jest.mock('vscode')
 
 function createWorkspace (activeRecipes: string[] = []): BitbakeWorkspace {
   return {
-    activeRecipes,
+    activeRecipes: activeRecipes.map((name) => ({ name, isClass: false })),
     addActiveRecipe: jest.fn()
   } as unknown as BitbakeWorkspace
 }
@@ -47,15 +47,15 @@ describe('RecipeSelection', () => {
     const workspace = createWorkspace(['busybox'])
     const scanner = createScanner(['workspace-recipe'])
 
-    jest.spyOn(vscode.window, 'showQuickPick').mockResolvedValue('workspace-recipe' as never)
+    jest.spyOn(vscode.window, 'showQuickPick').mockResolvedValue({ label: 'workspace-recipe', name: 'workspace-recipe', isClass: false } as never)
 
     await expect(selectRecipe(workspace, scanner)).resolves.toEqual('workspace-recipe')
 
     expect(vscode.window.showQuickPick).toHaveBeenCalledWith(
       expect.arrayContaining([
-        'busybox',
-        'workspace-recipe',
-        'Add another recipe...'
+        { label: 'busybox', name: 'busybox', isClass: false },
+        { label: 'workspace-recipe', name: 'workspace-recipe', isClass: false },
+        { label: 'Add another recipe...', name: '', isClass: false }
       ]),
       { placeHolder: 'Select bitbake recipe' }
     )
@@ -65,17 +65,17 @@ describe('RecipeSelection', () => {
     const workspace = createWorkspace()
     const scanner = createScanner([], ['busybox'])
 
-    jest.spyOn(vscode.window, 'showQuickPick').mockResolvedValue('busybox' as never)
+    jest.spyOn(vscode.window, 'showQuickPick').mockResolvedValue({ label: 'busybox', name: 'busybox', isClass: false } as never)
 
-    await expect(addActiveRecipe(workspace, scanner)).resolves.toEqual('busybox')
-    expect(workspace.addActiveRecipe).toHaveBeenCalledWith('busybox')
+    await expect(addActiveRecipe(workspace, scanner)).resolves.toEqual({ name: 'busybox', isClass: false })
+    expect(workspace.addActiveRecipe).toHaveBeenCalledWith('busybox', false)
   })
 
   it('adds a recipe supplied directly', async () => {
     const workspace = createWorkspace()
     const scanner = createScanner()
 
-    await expect(addActiveRecipe(workspace, scanner, 'busybox')).resolves.toEqual('busybox')
+    await expect(addActiveRecipe(workspace, scanner, 'busybox')).resolves.toEqual({ name: 'busybox', isClass: false })
     expect(workspace.addActiveRecipe).toHaveBeenCalledWith('busybox')
     expect(vscode.window.showQuickPick).not.toHaveBeenCalled()
   })

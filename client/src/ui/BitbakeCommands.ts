@@ -10,7 +10,7 @@ import fs from 'fs'
 
 import { logger } from '../lib/src/utils/OutputLogger'
 import { type BitbakeWorkspace } from './BitbakeWorkspace'
-import { addActiveRecipe, selectRecipe } from './RecipeSelection'
+import { addActiveRecipe, selectRecipe, selectRecipeOrClass } from './RecipeSelection'
 import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { runBitbakeTerminal } from './BitbakeTerminal'
 import { type BitbakeDriver } from '../driver/BitbakeDriver'
@@ -37,7 +37,7 @@ export function registerBitbakeCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.run-task', async (uri, task) => { await runTaskCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri, task) }),
     vscode.commands.registerCommand('bitbake.drop-recipe', async (uri) => { await dropRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.drop-all-recipes', async () => { await dropAllRecipes(bitbakeWorkspace) }),
-    vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe) }),
+    vscode.commands.registerCommand('bitbake.watch-recipe', async (recipe) => { await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, recipe, true) }),
     vscode.commands.registerCommand('bitbake.rescan-project', async (focusOnError = true) => { await rescanProject(bitBakeProjectScanner, focusOnError) }),
     vscode.commands.registerCommand('bitbake.terminal-profile', async () => { await openBitbakeTerminalProfile(bitbakeTerminalProfileProvider) }),
     vscode.commands.registerCommand('bitbake.open-recipe-workdir', async (uri) => { await openRecipeWorkdirCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
@@ -222,10 +222,10 @@ async function selectTask (client: LanguageClient, recipe: string): Promise<stri
   return sanitizeForShell(chosenTask)
 }
 
-async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: string): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
+async function dropRecipe (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: unknown): Promise<void> {
+  const chosenRecipe = await selectRecipeOrClass(bitbakeWorkspace, bitBakeProjectScanner, uri, false)
   if (chosenRecipe !== undefined) {
-    await bitbakeWorkspace.dropActiveRecipe(chosenRecipe)
+    await bitbakeWorkspace.dropActiveRecipe(chosenRecipe.name, chosenRecipe.isClass)
   }
 }
 

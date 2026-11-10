@@ -10,9 +10,15 @@ import { type BitBakeProjectScanner } from '../driver/BitBakeProjectScanner'
 import { sanitizeForShell } from '../lib/src/BitbakeSettings'
 import { extractRecipeName } from '../lib/src/utils/files'
 import { mergeArraysDistinctly } from '../lib/src/utils/arrays'
-import { BitbakeRecipeTreeItem } from './BitbakeRecipesView'
-import { type BitbakeWorkspace } from './BitbakeWorkspace'
+import { BitbakeClassTreeItem, BitbakeRecipeTreeItem } from './BitbakeRecipesView'
+import { type ActiveRecipe, type BitbakeWorkspace } from './BitbakeWorkspace'
 import { DevtoolWorkspaceTreeItem } from './DevtoolWorkspacesView'
+
+interface RecipeQuickPickItem extends vscode.QuickPickItem, ActiveRecipe {}
+
+function recipeQuickPickItem (recipe: ActiveRecipe): RecipeQuickPickItem {
+  return { ...recipe, label: recipe.isClass ? `${recipe.name} (class)` : recipe.name }
+}
 
 export async function selectRecipe (
   bitbakeWorkspace: BitbakeWorkspace,
@@ -20,81 +26,100 @@ export async function selectRecipe (
   uri?: unknown,
   canAdd: boolean = true
 ): Promise<string | undefined> {
-  let chosenRecipe: string | undefined
+  return (await selectRecipeOrClass(bitbakeWorkspace, bitBakeProjectScanner, uri, canAdd, false))?.name
+}
 
+export async function selectRecipeOrClass (
+  bitbakeWorkspace: BitbakeWorkspace,
+  bitBakeProjectScanner: BitBakeProjectScanner,
+  uri?: unknown,
+  canAdd: boolean = true,
+  includeClasses: boolean = true
+): Promise<ActiveRecipe | undefined> {
   if (typeof uri === 'string') {
-    return uri
+    return { name: uri, isClass: false }
   }
 
-  if (uri instanceof BitbakeRecipeTreeItem) {
-    return uri.label
+  if (uri instanceof BitbakeClassTreeItem) {
+    return includeClasses ? { name: uri.label, isClass: true } : undefined
   }
 
-  if (uri instanceof DevtoolWorkspaceTreeItem) {
-    return uri.label as string
+  if (uri instanceof BitbakeRecipeTreeItem || uri instanceof DevtoolWorkspaceTreeItem) {
+    return { name: uri.label as string, isClass: false }
   }
 
   if (uri instanceof vscode.Uri) {
     const extension = path.extname(uri.fsPath)
-    if (['.bb', '.bbappend', '.inc'].includes(extension)) {
-      chosenRecipe = extractRecipeName(uri.fsPath)
-      if (canAdd) await bitbakeWorkspace.addActiveRecipe(chosenRecipe)
+    const isClass = extension === '.bbclass'
+    if (isClass && !includeClasses) return undefined
+    if (isClass || ['.bb', '.bbappend', '.inc'].includes(extension)) {
+      const name = isClass ? path.parse(uri.fsPath).name : extractRecipeName(uri.fsPath)
+      if (canAdd) await bitbakeWorkspace.addActiveRecipe(name, isClass)
+      return { name, isClass }
     }
   }
 
-  if (chosenRecipe === undefined) {
-    const devtoolWorkspacesNames = bitBakeProjectScanner.activeScanResult._workspaces.map((workspace) => workspace.name)
-    const quickPickItems = mergeArraysDistinctly(
-      (name) => name,
-      bitbakeWorkspace.activeRecipes,
-      devtoolWorkspacesNames
-    )
+  const activeRecipes = bitbakeWorkspace.activeRecipes.filter((recipe) => includeClasses || !recipe.isClass)
+  const workspaces = bitBakeProjectScanner.activeScanResult._workspaces.map((workspace) => ({ name: workspace.name, isClass: false }))
+  const quickPickItems = mergeArraysDistinctly(
+    (recipe) => `${recipe.isClass}:${recipe.name}`,
+    activeRecipes,
+    workspaces
+  ).map(recipeQuickPickItem)
+  const addLabel = includeClasses ? 'Add another recipe or class...' : 'Add another recipe...'
 
-    if (canAdd || bitbakeWorkspace.activeRecipes.length === 0) {
-      quickPickItems.push('Add another recipe...')
-    }
-
-    chosenRecipe = await vscode.window.showQuickPick(
-      quickPickItems,
-      { placeHolder: 'Select bitbake recipe' }
-    )
-
-    if (chosenRecipe === 'Add another recipe...') {
-      chosenRecipe = await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner)
-    }
+  if (canAdd || activeRecipes.length === 0) {
+    quickPickItems.push({ label: addLabel, name: '', isClass: false })
   }
 
-  return chosenRecipe
+  const chosenRecipe = await vscode.window.showQuickPick(
+    quickPickItems,
+    { placeHolder: includeClasses ? 'Select bitbake recipe or class' : 'Select bitbake recipe' }
+  )
+
+  if (chosenRecipe?.label === addLabel) {
+    return await addActiveRecipe(bitbakeWorkspace, bitBakeProjectScanner, undefined, includeClasses)
+  }
+
+  return chosenRecipe === undefined ? undefined : { name: chosenRecipe.name, isClass: chosenRecipe.isClass }
 }
 
 export async function addActiveRecipe (
   bitbakeWorkspace: BitbakeWorkspace,
   bitBakeProjectScanner: BitBakeProjectScanner,
-  recipe?: string
-): Promise<string | undefined> {
+  recipe?: string,
+  includeClasses: boolean = false
+): Promise<ActiveRecipe | undefined> {
   if (typeof recipe === 'string') {
     await bitbakeWorkspace.addActiveRecipe(recipe)
-    return recipe
+    return { name: recipe, isClass: false }
   }
 
-  const recipeNames = bitBakeProjectScanner.activeScanResult._recipes.map((recipe) => recipe.name)
-  let chosenRecipe: string | undefined
+  const recipes: ActiveRecipe[] = bitBakeProjectScanner.activeScanResult._recipes.map((recipe) => ({ name: recipe.name, isClass: false }))
+  if (includeClasses) {
+    const classNames = new Set(bitBakeProjectScanner.activeScanResult._classes.map((classInfo) => classInfo.name))
+    recipes.push(...Array.from(classNames, (name) => ({ name, isClass: true })))
+  }
+  const quickPickItems = recipes
+    .filter((recipe) => !includeClasses || !bitbakeWorkspace.activeRecipes.some((active) => active.name === recipe.name && active.isClass === recipe.isClass))
+    .map(recipeQuickPickItem)
+  let chosenRecipe: ActiveRecipe | undefined
 
-  if (recipeNames.length !== 0) {
+  if (quickPickItems.length !== 0) {
     chosenRecipe = await vscode.window.showQuickPick(
-      recipeNames,
-      { placeHolder: 'Select recipe to add' }
+      quickPickItems,
+      { placeHolder: includeClasses ? 'Select recipe or class to add' : 'Select recipe to add' }
     )
   } else {
-    chosenRecipe = await vscode.window.showInputBox({
+    const name = await vscode.window.showInputBox({
       placeHolder: "Type the recipe's name to add. (Bitbake scan not complete yet)"
     })
+    if (name !== undefined) chosenRecipe = { name, isClass: false }
   }
 
-  if (chosenRecipe !== undefined) {
-    chosenRecipe = sanitizeForShell(extractRecipeName(chosenRecipe)) as string
-    await bitbakeWorkspace.addActiveRecipe(chosenRecipe)
-  }
+  if (chosenRecipe === undefined) return undefined
 
-  return chosenRecipe
+  const name = sanitizeForShell(chosenRecipe.isClass ? chosenRecipe.name : extractRecipeName(chosenRecipe.name)) as string
+  await bitbakeWorkspace.addActiveRecipe(name, chosenRecipe.isClass)
+  return { name, isClass: chosenRecipe.isClass }
 }

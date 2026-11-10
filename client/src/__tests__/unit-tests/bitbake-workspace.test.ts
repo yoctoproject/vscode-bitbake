@@ -12,7 +12,7 @@ describe('Bitbake Workspace Test Suite', () => {
   it('should manage a list of active recipes', async () => {
     expect(bitbakeWorkspace.activeRecipes).toEqual([])
     await bitbakeWorkspace.addActiveRecipe('foo')
-    expect(bitbakeWorkspace.activeRecipes).toEqual(['foo'])
+    expect(bitbakeWorkspace.activeRecipes).toEqual([{ name: 'foo', isClass: false }])
 
     await bitbakeWorkspace.dropActiveRecipe('foo')
     expect(bitbakeWorkspace.activeRecipes).toEqual([])
@@ -25,13 +25,16 @@ describe('Bitbake Workspace Test Suite', () => {
 
     workspace.loadBitbakeWorkspace(workspaceState)
     expect(workspaceState.get).toHaveBeenCalledWith('BitbakeWorkspace.activeRecipes', [])
-    expect(workspace.activeRecipes).toEqual(['foo'])
+    expect(workspace.activeRecipes).toEqual([{ name: 'foo', isClass: false }])
 
     await workspace.addActiveRecipe('bar')
-    expect(workspaceState.update).toHaveBeenLastCalledWith('BitbakeWorkspace.activeRecipes', ['bar', 'foo'])
+    expect(workspaceState.update).toHaveBeenLastCalledWith('BitbakeWorkspace.activeRecipes', [
+      { name: 'bar', isClass: false },
+      { name: 'foo', isClass: false }
+    ])
 
     await workspace.dropActiveRecipe('foo')
-    expect(workspaceState.update).toHaveBeenLastCalledWith('BitbakeWorkspace.activeRecipes', ['bar'])
+    expect(workspaceState.update).toHaveBeenLastCalledWith('BitbakeWorkspace.activeRecipes', [{ name: 'bar', isClass: false }])
     expect(workspaceState.update).toHaveBeenCalledTimes(2)
   })
 })
