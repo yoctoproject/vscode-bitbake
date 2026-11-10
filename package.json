@@ -483,20 +483,20 @@
       },
       {
         "command": "bitbake.drop-recipe",
-        "title": "BitBake: Drop a recipe from the active workspace",
-        "description": "Stop watching or suggesting a recipe in bitbake commands.",
+        "title": "BitBake: Drop a recipe or class from the active workspace",
+        "description": "Stop watching or suggesting a recipe in bitbake commands, or showing a class in the Recipes Explorer.",
         "icon": "$(close)"
       },
       {
         "command": "bitbake.watch-recipe",
-        "title": "BitBake: Add a recipe to the active workspace",
+        "title": "BitBake: Add a recipe or class to the active workspace",
         "icon": "$(add)",
-        "description": "Start watching or suggesting a recipe in bitbake commands."
+        "description": "Start watching or suggesting a recipe in bitbake commands, or show a class in the Recipes Explorer."
       },
       {
         "command": "bitbake.drop-all-recipes",
-        "title": "BitBake: Drop all recipes from the active workspace",
-        "description": "Clear all recipes in the recipes view and from all command suggestions.",
+        "title": "BitBake: Drop all recipes and classes from the active workspace",
+        "description": "Clear all recipes and classes in the recipes view and from all command suggestions.",
         "icon": "$(close-all)"
       },
       {
@@ -810,7 +810,7 @@
         {
           "command": "bitbake.drop-recipe",
           "group": "inline@2",
-          "when": "viewItem == bitbakeRecipeCtx"
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == bitbakeClassCtx"
         },
         {
           "submenu": "bitbake/main",
@@ -855,7 +855,7 @@
         {
           "command": "bitbake.drop-recipe",
           "group": "0@bitbake_build@3",
-          "when": "viewItem == bitbakeRecipeCtx"
+          "when": "viewItem == bitbakeRecipeCtx || viewItem == bitbakeClassCtx"
         },
         {
           "command": "bitbake.scan-recipe-env",
