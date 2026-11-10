@@ -20,6 +20,11 @@ export interface ProcessRunOptions {
   cancel?: KillProcessFunction
 }
 
+export interface ProgramRunOptions extends ProcessRunOptions {
+  cwd?: string
+  env?: NodeJS.Dict<string>
+}
+
 // A process frontend presents one execution and returns after attaching its event handlers.
 // Completion and output capture remain the responsibility of finishProcessExecution.
 export interface ProcessFrontend {
