@@ -4,6 +4,7 @@
  * ------------------------------------------------------------------------------------------ */
 
 import { BitbakeWorkspace } from '../../ui/BitbakeWorkspace'
+import { mockVscodeExtensionContext } from '../utils/vscodeMock'
 
 describe('Bitbake Workspace Test Suite', () => {
   const bitbakeWorkspace = new BitbakeWorkspace()
@@ -15,5 +16,22 @@ describe('Bitbake Workspace Test Suite', () => {
 
     await bitbakeWorkspace.dropActiveRecipe('foo')
     expect(bitbakeWorkspace.activeRecipes).toEqual([])
+  })
+
+  it('persists active recipes', async () => {
+    const workspace = new BitbakeWorkspace()
+    const { workspaceState } = mockVscodeExtensionContext()
+    workspaceState.get.mockReturnValue(['foo'])
+
+    workspace.loadBitbakeWorkspace(workspaceState)
+    expect(workspaceState.get).toHaveBeenCalledWith('BitbakeWorkspace.activeRecipes', [])
+    expect(workspace.activeRecipes).toEqual(['foo'])
+
+    await workspace.addActiveRecipe('bar')
+    expect(workspaceState.update).toHaveBeenLastCalledWith('BitbakeWorkspace.activeRecipes', ['bar', 'foo'])
+
+    await workspace.dropActiveRecipe('foo')
+    expect(workspaceState.update).toHaveBeenLastCalledWith('BitbakeWorkspace.activeRecipes', ['bar'])
+    expect(workspaceState.update).toHaveBeenCalledTimes(2)
   })
 })
