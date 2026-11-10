@@ -47,14 +47,28 @@ export class BitbakeRecipesView {
   }
 }
 
-export class BitbakeRecipeTreeItem extends vscode.TreeItem {
+export class BitbakeTreeItem extends vscode.TreeItem {
   // Explicit that label will be string to the TypeScript compiler
   public readonly label: string
 
-  constructor (public readonly recipe: ElementInfo | string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    const label = typeof recipe === 'string' ? recipe : recipe.name
+  constructor (element: ElementInfo | string, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
+    const label = typeof element === 'string' ? element : element.name
     super(label, collapsibleState)
     this.label = label
+  }
+
+  protected setFile (pathInfo: path.ParsedPath): void {
+    const resolvedPath = path.resolve(pathInfo.dir + '/' + pathInfo.base)
+    const uri: vscode.Uri = vscode.Uri.file(resolvedPath)
+    this.command = { command: 'vscode.open', title: 'Open file', arguments: [uri] }
+    this.description = vscode.workspace.asRelativePath(resolvedPath, false)
+    this.tooltip = resolvedPath
+  }
+}
+
+export class BitbakeRecipeTreeItem extends BitbakeTreeItem {
+  constructor (public readonly recipe: ElementInfo | string, collapsibleState: vscode.TreeItemCollapsibleState) {
+    super(recipe, collapsibleState)
     this.contextValue = 'bitbakeRecipeCtx'
     this.iconPath = new vscode.ThemeIcon('library')
     if (typeof recipe !== 'string' && recipe?.skipped !== undefined) {
@@ -67,14 +81,10 @@ export class BitbakeRecipeTreeItem extends vscode.TreeItem {
 
 class BitbakeFileTreeItem extends BitbakeRecipeTreeItem {
   constructor (public readonly pathInfo: path.ParsedPath, public readonly collapsibleState: vscode.TreeItemCollapsibleState) {
-    const resolvedPath = path.resolve(pathInfo.dir + '/' + pathInfo.base)
     super(pathInfo.base, collapsibleState)
     this.contextValue = 'bitbakeFileCtx'
     this.iconPath = new vscode.ThemeIcon('book')
-    const uri: vscode.Uri = vscode.Uri.file(resolvedPath)
-    this.command = { command: 'vscode.open', title: 'Open file', arguments: [uri] }
-    this.description = vscode.workspace.asRelativePath(resolvedPath, false)
-    this.tooltip = resolvedPath
+    this.setFile(pathInfo)
   }
 }
 
