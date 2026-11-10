@@ -6,9 +6,14 @@
 import { EventEmitter } from 'events'
 import type * as vscode from 'vscode'
 
-/// Class representing active bitbake recipes for a bitbake project
+export interface ActiveRecipe {
+  name: string
+  isClass: boolean
+}
+
+/// Class representing active BitBake recipes and classes for a BitBake project
 export class BitbakeWorkspace {
-  activeRecipes: string[] = []
+  activeRecipes: ActiveRecipe[] = []
   private memento: vscode.Memento | undefined
 
   public static readonly EventType = {
@@ -18,11 +23,11 @@ export class BitbakeWorkspace {
 
   onChange: EventEmitter = new EventEmitter()
 
-  async addActiveRecipe (recipe: string): Promise<void> {
-    if (this.activeRecipes.includes(recipe)) {
+  async addActiveRecipe (recipe: string, isClass: boolean = false): Promise<void> {
+    if (this.activeRecipes.some((activeRecipe) => activeRecipe.name === recipe && activeRecipe.isClass === isClass)) {
       return
     }
-    this.activeRecipes.unshift(recipe)
+    this.activeRecipes.unshift({ name: recipe, isClass })
     if (this.activeRecipes.length > 20) {
       this.activeRecipes.shift()
     }
@@ -32,8 +37,8 @@ export class BitbakeWorkspace {
     this.onChange.emit(BitbakeWorkspace.EventType.RECIPE_ADDED, recipe)
   }
 
-  async dropActiveRecipe (chosenRecipe: string): Promise<void> {
-    const index = this.activeRecipes.indexOf(chosenRecipe)
+  async dropActiveRecipe (chosenRecipe: string, isClass: boolean = false): Promise<void> {
+    const index = this.activeRecipes.findIndex((recipe) => recipe.name === chosenRecipe && recipe.isClass === isClass)
     if (index > -1) {
       this.activeRecipes.splice(index, 1)
     }
@@ -52,8 +57,8 @@ export class BitbakeWorkspace {
   }
 
   loadBitbakeWorkspace (workspaceState: vscode.Memento): void {
-    const activeRecipes = workspaceState.get('BitbakeWorkspace.activeRecipes', [])
-    this.activeRecipes = activeRecipes ?? []
+    const activeRecipes = workspaceState.get<Array<ActiveRecipe | string>>('BitbakeWorkspace.activeRecipes', [])
+    this.activeRecipes = (activeRecipes ?? []).map((recipe) => typeof recipe === 'string' ? { name: recipe, isClass: false } : recipe)
     this.memento = workspaceState
   }
 
