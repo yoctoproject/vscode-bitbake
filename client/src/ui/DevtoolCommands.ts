@@ -26,7 +26,7 @@ export function registerDevtoolCommands (context: vscode.ExtensionContext, bitba
     vscode.commands.registerCommand('bitbake.devtool-update', async (uri) => { await devtoolUpdateCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.devtool-reset', async (uri) => { await devtoolResetCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.devtool-open-workspace', async (uri) => { await devtoolOpenWorkspaceCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
-    vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async (uri) => { await devtoolIdeSDKCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
+    vscode.commands.registerCommand('bitbake.devtool-ide-sdk', async () => { await devtoolIdeSDKCommand(bitBakeProjectScanner) }),
     vscode.commands.registerCommand('bitbake.devtool-sdk-fallback', async (uri) => { await devtoolSDKFallbackCommand(bitbakeWorkspace, bitBakeProjectScanner, client, uri) }),
     vscode.commands.registerCommand('bitbake.devtool-build', async (uri) => { await devtoolBuildCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
     vscode.commands.registerCommand('bitbake.devtool-deploy', async (uri) => { await devtoolDeployCommand(bitbakeWorkspace, bitBakeProjectScanner, uri) }),
@@ -88,24 +88,31 @@ function showSDKConfigurationDone (recipe: string): void {
   })
 }
 
-async function devtoolIdeSDKCommand (bitbakeWorkspace: BitbakeWorkspace, bitBakeProjectScanner: BitBakeProjectScanner, uri?: unknown): Promise<void> {
-  const chosenRecipe = await selectRecipe(bitbakeWorkspace, bitBakeProjectScanner, uri)
+async function devtoolIdeSDKCommand (bitBakeProjectScanner: BitBakeProjectScanner): Promise<void> {
+  const scanResult = bitBakeProjectScanner.activeScanResult
+  const recipes = scanResult._workspaces.map(workspace => workspace.name)
+  if (recipes.length === 0) { return }
+
   const bitbakeDriver = bitBakeProjectScanner.bitbakeDriver
-  if (chosenRecipe !== undefined) {
-    logger.debug(`Command: devtool-ide-sdk: ${chosenRecipe}`)
-    if (!checkIdeSdkConfiguration(bitbakeDriver)) {
-      clientNotificationManager.showSDKConfigurationError()
-      return
-    }
-    if (!await checkIdeSdkAvailable(bitBakeProjectScanner.activeScanResult, bitBakeProjectScanner.bitbakeDriver)) {
-      clientNotificationManager.showSDKUnavailableError(chosenRecipe)
-      return
-    }
-    const command = bitbakeDriver.composeDevtoolIDECommand(chosenRecipe)
-    const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, `Bitbake: Devtool ide-sdk: ${chosenRecipe}`)
-    const result = await finishProcessExecution(process, undefined, BITBAKE_BUILD_TIMEOUT)
-    if (result.status === 0) {
-      showSDKConfigurationDone(chosenRecipe)
+  logger.debug(`Command: devtool-ide-sdk: ${recipes.join(' ')}`)
+  if (!checkIdeSdkConfiguration(bitbakeDriver)) {
+    clientNotificationManager.showSDKConfigurationError()
+    return
+  }
+  if (!await checkIdeSdkAvailable(scanResult, bitbakeDriver)) {
+    clientNotificationManager.showSDKUnavailableError(recipes.length === 1 ? recipes[0] : undefined)
+    return
+  }
+  const command = bitbakeDriver.composeDevtoolIDECommand(recipes)
+  const process = runBitbakeTerminalCustomCommand(bitbakeDriver, command, 'Bitbake: Devtool ide-sdk')
+  const result = await finishProcessExecution(process, undefined, BITBAKE_BUILD_TIMEOUT)
+  if (result.status === 0) {
+    if (recipes.length === 1) {
+      showSDKConfigurationDone(recipes[0])
+    } else {
+      void vscode.window.showInformationMessage('Devtool workspaces successfully configured').then(undefined, (reason) => {
+        logger.error(`Failed to show SDK configuration done message: ${reason}`)
+      })
     }
   }
 }

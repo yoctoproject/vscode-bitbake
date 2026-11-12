@@ -13,7 +13,7 @@ export class ClientNotificationManager {
     this._memento = memento
   }
 
-  showSDKUnavailableError (recipe: string): void {
+  showSDKUnavailableError (recipe?: string): void {
     void window.showErrorMessage('Your version of devtool does not seem to support the `ide-sdk` command. Please update poky to enable SDK features. Alternatively, use the "Devtool: SDK fallback" command with less features.',
       'Run devtool SDK fallback',
       'Close'
@@ -39,7 +39,7 @@ You can configure the sources' workspace to use the Yocto SDK for cross-compilat
       )
         .then((item) => {
           if (item === 'Configure SDK') {
-            void commands.executeCommand('bitbake.devtool-ide-sdk', recipe)
+            void commands.executeCommand('bitbake.devtool-ide-sdk')
           } else if (item === 'Configure devtool fallback') {
             void commands.executeCommand('bitbake.devtool-sdk-fallback', recipe)
           } else if (item === 'Don\'t Show Again') {

@@ -221,10 +221,10 @@ export class BitbakeDriver {
     return `bitbake -c devshell ${recipe}`
   }
 
-  composeDevtoolIDECommand (recipe: string): string {
+  composeDevtoolIDECommand (recipes: string[]): string {
     const sdkImage = this.getBuildConfig('sdkImage')
     const sshTarget = this.getBuildConfig('sshTarget')
-    let command = `devtool ide-sdk -i code ${recipe} ${sdkImage}`
+    let command = `devtool ide-sdk -i code ${recipes.join(' ')} ${sdkImage}`
     if (sshTarget !== undefined && sshTarget !== '') {
       command = appendCommandParam(command, `-t ${sshTarget}`)
     }
