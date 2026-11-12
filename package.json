@@ -537,7 +537,7 @@
       {
         "command": "bitbake.devtool-ide-sdk",
         "title": "BitBake: Devtool: Configure VSCode SDK",
-        "description": "Configure a devtool sources' workspace for cross-compilation and debugging.",
+        "description": "Configure all devtool workspaces for cross-compilation and debugging.",
         "enablement": "!bitbake.eSDKMode"
       },
       {
@@ -712,11 +712,6 @@
           "group": "1@devtool_dev@0"
         },
         {
-          "command": "bitbake.devtool-ide-sdk",
-          "group": "1@devtool_dev@1",
-          "when": "!bitbake.eSDKMode"
-        },
-        {
           "command": "bitbake.devtool-sdk-fallback",
           "group": "1@devtool_dev@2"
         },
@@ -789,6 +784,11 @@
           "command": "bitbake.rescan-project",
           "group": "navigation@1",
           "when": "view == devtoolWorkspaces"
+        },
+        {
+          "command": "bitbake.devtool-ide-sdk",
+          "group": "1@devtool_dev@1",
+          "when": "view == devtoolWorkspaces && !bitbake.eSDKMode"
         },
         {
           "submenu": "devtool/main",
@@ -906,11 +906,6 @@
           "command": "bitbake.devtool-open-workspace",
           "group": "1@devtool_dev@0",
           "when": "viewItem == devtoolWorskpaceCtx"
-        },
-        {
-          "command": "bitbake.devtool-ide-sdk",
-          "group": "1@devtool_dev@1",
-          "when": "viewItem == devtoolWorskpaceCtx && !bitbake.eSDKMode"
         },
         {
           "command": "bitbake.devtool-sdk-fallback",

@@ -185,6 +185,22 @@ describe('BitbakeDriver Tests', () => {
     })
   })
 
+  describe('composeDevtoolIDECommand', () => {
+    it.each([undefined, '', 'root@192.168.0.3'])('should preserve recipe and image ordering with sshTarget %s', (sshTarget) => {
+      const driver = new BitbakeDriver()
+      driver.bitbakeSettings = { pathToBitbakeFolder: '', sdkImage: 'core-image-minimal', sshTarget }
+
+      expect(driver.composeDevtoolIDECommand(['zlib', 'busybox'])).toBe(
+        'devtool ide-sdk -i code zlib busybox core-image-minimal' +
+        (sshTarget === undefined || sshTarget === '' ? '' : ` -t ${sshTarget}`)
+      )
+      expect(driver.composeDevtoolIDECommand(['busybox'])).toBe(
+        'devtool ide-sdk -i code busybox core-image-minimal' +
+        (sshTarget === undefined || sshTarget === '' ? '' : ` -t ${sshTarget}`)
+      )
+    })
+  })
+
   describe('composeBitbakeCommand', () => {
     let bitbakeDriver: BitbakeDriver
     beforeEach(() => {
