@@ -993,7 +993,7 @@
     "jest": "^29.7.0",
     "mocha": "^12.0.0",
     "ovsx": "^0.10.1",
-    "ts-jest": "^29.2.5",
+    "ts-jest": "^29.4.14",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.19.1",
     "vscode-tmgrammar-test": "^0.1.3"
